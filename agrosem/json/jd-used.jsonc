@@ -1,0 +1,50 @@
+/*
+	1 - Трактори
+	2 - Комбайни
+	3 - Обприскувачі
+	4 - Сівалки
+
+	label_1 John Deere
+	label_2 Amazone
+	label_4 CLAAS
+	label_5 KOCKERLING
+	label_6 NEW HOLLAND
+*/
+[
+	{
+		"poster":"../img/product/JD/JD-8530.jpg",
+		"name":"Трактор John Deere 8530",
+		"cat": "8530",
+		"url_serie":"8530",
+		"serie":"1",
+		"brand":"label_1"
+	},{
+		"poster":"../img/product/amazone/ux5200.png",
+		"name":"Обприскувач причіпний Amazone UX5200",
+		"cat": "UX5200",
+		"url_serie":"amazone-ux5200",
+		"serie":"3",
+		"brand":"label_2"
+	},{
+		"poster":"../img/product/CLAAS/claas-570.jpg",
+		"name":"Комбайн Claas Tucano 570",
+		"cat": "Claas Tucano 570",
+		"url_serie":"claas-tucano-570",
+		"serie":"2",
+		"brand":"label_4"
+	},{
+		"poster":"../img/product/kockerling/cs900.jpg",
+		"name":"Сівалка KOCKERLING Ultima CS900",
+		"cat": "KOCKERLING CS900",
+		"url_serie":"kockerling-ultima-cs9000",
+		"serie":"4",
+		"brand":"label_5"
+	},{
+		"poster":"../img/product/new-holland/cr980.webp",
+		"name":"Зеонозбиральний комбайн NEW HOLLAND CR980",
+		"cat": "NEW HOLLAND CR980",
+		"url_serie":"new-holland",
+		"serie":"2",
+		"brand":"label_6"
+	}	
+]

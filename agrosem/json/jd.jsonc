@@ -1,0 +1,353 @@
+[
+	{
+		"poster":"../img/product/JD/8R.webp",
+		"name":"Трактори серії 8R",
+		"cat": "Серія 8R",
+		"url_serie":"8",
+		"serie":"1",
+		"brand":"label_1"
+	},{
+		"poster":"../img/product/JD/8RT.webp",
+		"name":"Трактори серії 8RT",
+		"cat": "Серія 8RT",
+		"url_serie":"8",
+		"serie":"1",
+		"brand":"label_1"
+	},{
+		"poster":"../img/product/JD/8RX.webp",
+		"name":"Трактори серії 8RX",
+		"cat": "Серія 8RX",
+		"url_serie":"8",
+		"serie":"1",
+		"brand":"label_1"
+	},{
+		"poster":"../img/product/JD/9R.webp",
+		"name":"Трактори серії 9R",
+		"cat": "Серія 9R",
+		"url_serie":"9",
+		"serie":"1",
+		"brand":"label_1"
+	},{
+		"poster":"../img/product/JD/9RT.webp",
+		"name":"Трактори серії 9RT",
+		"cat": "Серія 9RT",
+		"url_serie":"9",
+		"serie":"1",
+		"brand":"label_1"
+	},{
+		"poster":"../img/product/JD/9RX.webp",
+		"name":"Трактори серії 9RX",
+		"cat": "Серія 9RX",
+		"url_serie":"9",
+		"serie":"1",
+		"brand":"label_1"
+	},{
+		"poster":"../img/product/JD/6R.webp",
+		"name":"Серія 6R",
+		"cat": "Серія 6R",
+		"url_serie":"6r",
+		"serie":"1",
+		"brand":"label_1"
+	},{
+		"poster":"../img/product/JD/6M.webp",
+		"name":"Серія 6M",
+		"cat": "Серія 6M",
+		"url_serie":"6m",
+		"serie":"1",
+		"brand":"label_1"
+	},{
+		"poster":"../img/product/JD/6B.webp",
+		"name":"Серія 6B",
+		"cat": "Серія 8B",
+		"url_serie":"6b",
+		"serie":"1",
+		"brand":"label_1"
+	},{
+		"poster":"../img/product/harvester/hrv-s790-0.webp",
+		"name":"Комбайни серїі S",
+		"cat": "Серія S",
+		"url_serie":"S",
+		"serie":"3",
+		"brand":"label_1"
+	},{
+		"poster":"../img/product/harvester/hrv-8600-0.webp",
+		"name":"Комбайни серії 8000",
+		"cat": "Серія 8000",
+		"url_serie":"8000",
+		"serie":"3",
+		"brand":"label_1"
+	},{
+		"poster":"../img/product/harvester/hrv-x9-1000-0.webp",
+		"name":"Комбайни серії X9",
+		"cat": "Серія X9",
+		"url_serie":"x9",
+		"serie":"3",
+		"brand":"label_1"
+	},{
+		"poster":"../img/product/sprayers/spr-0.webp",
+		"name":"Обприскувачі серій 400 та 600",
+		"cat": "Серії 400 та 600",
+		"url_serie":"sp-400-600",
+		"serie":"2",
+		"brand":"label_1"
+	},{
+		"poster":"../img/product/sprayers/spr-0.webp",
+		"name":"Обприскувачі серії 4000m",
+		"cat": "Серія 4000m",
+		"url_serie":"sp-4000m",
+		"serie":"2",
+		"brand":"label_1"
+	},{
+		"poster":"../img/product/vaderstad/r300s.jpg",
+		"name":"Spirit R 300S",
+		"cat": "R 300S",
+		"url_serie":"vaderstad",
+		"serie":"4",
+		"brand":"label_2"
+	},{
+		"poster":"../img/product/vaderstad/400cs.webp",
+		"name":"Spirit 400С/S",
+		"cat": "400С/S",
+		"url_serie":"vaderstad",
+		"serie":"4",
+		"brand":"label_2"
+	},{
+		"poster":"../img/product/vaderstad/600-900c.webp",
+		"name":"Spirit 600—900С/S",
+		"cat": "600—900С/S",
+		"url_serie":"vaderstad",
+		"serie":"4",
+		"brand":"label_2"
+	},{
+		"poster":"../img/product/kramer/kt144.jpg",
+		"name":"KT144",
+		"cat": "KT144",
+		"url_serie":"kramer",
+		"serie":"5",
+		"brand":"label_3"
+	},{
+		"poster":"../img/product/kramer/kt276.jpg",
+		"name":"KT276",
+		"cat": "KT276",
+		"url_serie":"kramer",
+		"serie":"5",
+		"brand":"label_3"
+	},{
+		"poster":"../img/product/kramer/kt376.jpg",
+		"name":"KT356",
+		"cat": "KT356",
+		"url_serie":"kramer",
+		"serie":"5",
+		"brand":"label_3"
+	},{
+		"poster":"../img/product/kramer/kt307.jpg",
+		"name":"KT307",
+		"cat": "KT307",
+		"url_serie":"kramer",
+		"serie":"5",
+		"brand":"label_3"
+	},{
+		"poster":"../img/product/kramer/kt357.jpg",
+		"name":"KT357",
+		"cat": "KT357",
+		"url_serie":"kramer",
+		"serie":"5",
+		"brand":"label_3"
+	},{
+		"poster":"../img/product/kramer/kt407.jpg",
+		"name":"KT407",
+		"cat": "KT407",
+		"url_serie":"kramer",
+		"serie":"5",
+		"brand":"label_3"
+	},{
+		"poster":"../img/product/kramer/kt557.jpg",
+		"name":"KT557",
+		"cat": "KT557",
+		"url_serie":"kramer",
+		"serie":"5",
+		"brand":"label_3"
+	},{
+		"poster":"../img/product/kramer/kt559.jpg",
+		"name":"KT559",
+		"cat": "KT559",
+		"url_serie":"kramer",
+		"serie":"5",
+		"brand":"label_3"
+	},{
+		"poster":"../img/product/kramer/kt3610.jpg",
+		"name":"KT3610",
+		"cat": "KT3610",
+		"url_serie":"kramer",
+		"serie":"5",
+		"brand":"label_3"
+	},{
+		"poster":"../img/product/monosem/monisem-0.jpg",
+		"name":"NX ME WingFold Pull",
+		"cat": "WingFold",
+		"url_serie":"monosem-mxme",
+		"serie":"4",
+		"brand":"label_4"
+	},{
+		"poster":"../img/product/lindsay/lindsay-0.jpg",
+		"name":"Зрошувальні системи Lindsay",
+		"cat": "Lindsay",
+		"url_serie":"lindsay",
+		"serie":"2",
+		"brand":"label_5"
+	},{
+		"poster":"../img/product/hagie/sts12-0.jpg",
+		"name":"Hagie™ STS12",
+		"cat": "Hagie",
+		"url_serie":"hagie",
+		"serie":"2",
+		"brand":"label_7"
+	},{
+		"poster":"../img/product/hagie/sts16-0.jpg",
+		"name":"Hagie™ STS16",
+		"cat": "Hagie",
+		"url_serie":"hagie",
+		"serie":"2",
+		"brand":"label_7"
+	},{
+		"poster":"../img/product/g-b/voyager-s70.jpg",
+		"name":"Voyager S70 ",
+		"cat": "Gregorie Besson",
+		"url_serie":"gregory-besson-0",
+		"serie":"6",
+		"brand":"label_8"
+	},{
+		"poster":"../img/product/g-b/voyager-c80.jpg",
+		"name":"Модель Voyager С80",
+		"cat": "Gregorie Besson",
+		"url_serie":"gregory-besson-0",
+		"serie":"6",
+		"brand":"label_8"
+	},{
+		"poster":"../img/product/g-b/rover-40.jpg",
+		"name":"Rover 40",
+		"cat": "Gregorie Besson",
+		"url_serie":"gregory-besson-1",
+		"serie":"7",
+		"brand":"label_8"
+	},{
+		"poster":"../img/product/g-b/rover-60.jpg",
+		"name":"Rover 60",
+		"cat": "Gregorie Besson",
+		"url_serie":"gregory-besson-1",
+		"serie":"7",
+		"brand":"label_8"
+	},{
+		"poster":"../img/product/g-b/prima-70.jpg",
+		"name":"Prima 70",
+		"cat": "Gregorie Besson",
+		"url_serie":"gregory-besson-1",
+		"serie":"7",
+		"brand":"label_8"
+	},{
+		"poster":"../img/product/g-b/discordon-60.jpg",
+		"name":"Discordon 60",
+		"cat": "Gregorie Besson",
+		"url_serie":"gregory-besson-2",
+		"serie":"8",
+		"brand":"label_8"
+	},{
+		"poster":"../img/product/g-b/discordon-t70.jpg",
+		"name":"Discordon T70",
+		"cat": "Gregorie Besson",
+		"url_serie":"gregory-besson-2",
+		"serie":"8",
+		"brand":"label_8"
+	},{
+		"poster":"../img/product/g-b/discordon-t80.jpg",
+		"name":"Discordon T80",
+		"cat": "Gregorie Besson",
+		"url_serie":"gregory-besson-2",
+		"serie":"8",
+		"brand":"label_8"
+	},{
+		"poster":"../img/product/sulky/sulky-dx30.png",
+		"name":"Sulky DX30",
+		"cat": "Sulky",
+		"url_serie":"sulky-0",
+		"serie":"9",
+		"brand":"label_6"
+	},{
+		"poster":"../img/product/sulky/sulky-dx20+.png",
+		"name":"Sulky DX 20+",
+		"cat": "Sulky",
+		"url_serie":"sulky-1",
+		"serie":"9",
+		"brand":"label_6"
+	},{
+		"poster":"../img/product/sulky/sulky-x50.jpg",
+		"name":"Sulky X50+ ECONOV",
+		"cat": "Sulky",
+		"url_serie":"sulky-2",
+		"serie":"9",
+		"brand":"label_6"
+	},{
+		"poster":"../img/product/mazzotti/mazzotti-3180-0.jpg",
+		"name":"IBIS 3180 LP",
+		"cat": "Mazzotti",
+		"url_serie":"mazzotti",
+		"serie":"2",
+		"brand":"label_9"
+	},{
+		"poster":"../img/product/mazzotti/mazzotti-4240-0.jpg",
+		"name":"MAF 4240",
+		"cat": "Mazzotti",
+		"url_serie":"mazzotti",
+		"serie":"2",
+		"brand":"label_9"
+	},{
+		"poster":"../img/product/mazzotti/mazzotti-5240-0.jpg",
+		"name":"MAF 5240",
+		"cat": "Mazzotti",
+		"url_serie":"mazzotti",
+		"serie":"2",
+		"brand":"label_9"
+	},{
+		"poster":"../img/product/geringhoff/geringhoff-mssc.jpg",
+		"name":"Mais Star SC",
+		"cat": "Geringhoff",
+		"url_serie":"geringhoff",
+		"serie":"10",
+		"brand":"label_10"
+	},{
+		"poster":"../img/product/geringhoff/geringhoff-msh.jpg",
+		"name":"Mais Star Horizon",
+		"cat": "Geringhoff",
+		"url_serie":"geringhoff",
+		"serie":"10",
+		"brand":"label_10"
+	},{
+		"poster":"../img/product/geringhoff/geringhoff-rd.jpg",
+		"name":"Rota Disc",
+		"cat": "Geringhoff",
+		"url_serie":"geringhoff",
+		"serie":"10",
+		"brand":"label_10"
+	},{
+		"poster":"../img/product/zimmatic/zimmatic-1.png",
+		"name":"Зрошувальні системи",
+		"cat": "Zimmatic",
+		"url_serie":"zimmatic",
+		"serie":"2",
+		"brand":"label_11"
+	},{
+		"poster":"../img/product/zimmatic/zimmatic-2.png",
+		"name":"Кругові системи",
+		"cat": "Zimmatic",
+		"url_serie":"zimmatic",
+		"serie":"2",
+		"brand":"label_11"
+	},{
+		"poster":"../img/product/zimmatic/zimmatic-3.png",
+		"name":"Фронтальні системи",
+		"cat": "Zimmatic",
+		"url_serie":"zimmatic",
+		"serie":"2",
+		"brand":"label_11"
+	}
+]

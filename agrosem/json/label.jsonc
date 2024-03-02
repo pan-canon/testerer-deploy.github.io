@@ -1,0 +1,47 @@
+[
+	{
+		"name":"John Deere",
+		"label":"label_1",
+		"point":1
+	},{
+		"name":"Vaderstad",
+		"label":"label_2",
+		"point":2
+	},{
+		"name":"Kramer",
+		"label":"label_3",
+		"point":3
+	},{
+		"name":"Monosem",
+		"label":"label_4",
+		"point":4
+	},{
+		"name":"Lindsay",
+		"label":"label_5",
+		"point":5
+	},{
+		"name":"Sulky",
+		"label":"label_6",
+		"point":6
+	},{
+		"name":"Hagie",
+		"label":"label_7",
+		"point":7
+	},{
+		"name":"Gregorie Besson",
+		"label":"label_8",
+		"point":8
+	},{
+		"name":"Mazzotti",
+		"label":"label_9",
+		"point":9
+	},{
+		"name":"Geringhoff",
+		"label":"label_10",
+		"point":10
+	},{
+		"name":"Zimmatic",
+		"label":"label_11",
+		"point":11
+	}
+]

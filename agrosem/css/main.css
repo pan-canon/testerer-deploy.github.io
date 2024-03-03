@@ -6,12 +6,14 @@
 	position: relative;
 }
 
-.breadcrumb > ul li {display: inline-block}
+.breadcrumb > ul li {display: inline-block;}
 
 .breadcrumb > ul li:not(:first-child):before {
 	padding: 0 8px;
 	content: '\002D';
 }
+
+.breadcrumb > ul li:last-child {color: #c6c6c6;}
 
 .gray_and_white {
 	overflow: hidden;
@@ -20,8 +22,8 @@
 	position: relative;
 }
 
-.gray_active {background: #efefef}
-.white_active {background: #fff}
+.gray_active {background: #efefef;}
+.white_active {background: #fff;}
 
 .b_with_round_corn {
 	overflow-y: hidden;
@@ -32,7 +34,7 @@
 }
 
 /* або .crops .b_with_round_corn + .b_with_round_corn {margin-bottom: 0px} */
-.b_with_round_corn_end {margin-bottom: 0px}
+.b_with_round_corn_end {margin-bottom: 0px;}
 
 .b_with_round_corn_s {
 	box-shadow: 
@@ -57,7 +59,7 @@
 	float: right;
 }
 
-.sect_in_halv_right img {align-items: end} /* Поправить */
+.sect_in_halv_right img {align-items: end;} /* Поправить */
 
 .sect_in_halv h3 {
 	font-weight: 400;
@@ -81,7 +83,6 @@
 }
 
 .exclusive_products {
-	align-items: center;
 	border-radius: 10px;
 	background-color: #ff0000;
 	padding: 20px;
@@ -90,11 +91,12 @@
 	width: 100%;
 }
 
-.exclusive_products > p {color: #fff}
+.exclusive_products > p {font-size: 16px; color: #fff;}
 
 .exclusive_products ul {padding-top: 12px}
 
 .exclusive_products li {
+	font-size: 16px;
 	border: solid 1px #ff0000;
 	border-radius: 20px;
 	background-color: #fff;
@@ -115,12 +117,15 @@
 }
 
 .ref_mass {padding-top: 12px}
+/* individual */
+.gray_and_white .sect_in_halv p + .ref_mass {padding-top: 24px}
 
 .ref_mass li {
+	font-size: 18px;
 	border: solid 1px #ff0000;
-	border-radius: 20px;
+	border-radius: 100px;
 	background-color: #fff;
-	padding: 10px 18px;
+	padding: 10px 24px;
 	margin: 0 8px 8px 0;
 	display: inline-block;
 }
@@ -136,9 +141,7 @@
 	content: '';
 }
 
-li.ref_shop {
-	--back: url(../img/icon/icon-upload-red.svg);
-}
+li.ref_shop {--back: url(../img/icon/icon-upload-red.svg)}
 
 li.ref_shop_red {
 	--back: url(../img/icon/arrow_right.svg);
@@ -146,9 +149,7 @@ li.ref_shop_red {
 	color: #fff;
 }
 
-li.ref_down {
-	--back: url(../img/icon/icon-upload.svg);
-}
+li.ref_down {--back: url(../img/icon/icon-upload.svg)}
 
 .small_b_our_partners {display: flex}
 
@@ -161,9 +162,12 @@ li.ref_down {
 	display: inherit;
 }
 
-.small_b_our_partners img {max-width: 100%; width: auto;}
+.small_b_our_partners img {
+	max-width: 100%;
+	width: auto;
+}
 
-@media (max-width: 750px) {
+@media (max-width: 769px) {
 	.gray_and_white {padding: 56px 27px}
 	.b_with_round_corn {padding: 16px}
 	.sect_in_halv, .sect_in_halv img {width: 100%}
@@ -175,7 +179,7 @@ li.ref_down {
 	}
 	.sect_in_halv p, .sect_in_halv li {line-height: 20px; font-size: 14px}
 	.sect_in_halv li, .ref_mass li {padding-right: 10px; padding-left: 11px;}
-	.small_b_our_partners {display: block;}
+	.small_b_our_partners {display: block}
 	.small_b_our_partners li {
 		margin-right: 0;
 		height: 50px;
@@ -188,7 +192,21 @@ li.ref_down {
 		margin-bottom: 15px;
 		width: 33%;
 	}
-	.small_b_our_partners li img {
-		width: 50%;
+	.small_b_our_partners li img {height: 100%}
+}
+
+@media screen and (max-width: 390px) {
+	.block_poster.wide .poster {height: 200px}
+	.sect_in_halv > img {
+		height: 140px !important;
+		width: 100%;
+		object-fit: cover;
 	}
+	.sect_in_halv li {line-height: 14px}
+	.exclusive_products li:after {
+		height: 11px;
+		width: 11px;
+	}
+	.gray_and_white {padding: 40px 27px}
+	.first_gray_and_white {padding: 24px 11px 40px}
 }

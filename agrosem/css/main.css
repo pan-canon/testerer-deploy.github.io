@@ -182,6 +182,9 @@ li.ref_down {--back: url(../img/icon/icon-upload.svg)}
 	width: auto;
 }
 
+/* Modules */
+.ui-tabs-nav {text-align: center}
+
 /* Meadia
 ==========*/
 @media (max-width: 769px) {

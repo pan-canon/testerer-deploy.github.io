@@ -76,6 +76,13 @@
 	opacity: .8;
 }
 
+.sect_in_halv + p {
+	line-height: 24px;
+	font-size: 18px;
+	font-family: 'Inter';
+	opacity: .9;
+}
+
 .sect_in_halv img {
 	pointer-events: none;
 	border-radius: 10px;

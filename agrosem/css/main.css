@@ -76,11 +76,12 @@
 	opacity: .8;
 }
 
-.sect_in_halv + p {
+/* Individual */
+.gray_and_white .sect_in_halv h3+p {
 	line-height: 24px;
 	font-size: 18px;
 	font-family: 'Inter';
-	opacity: .9;
+	opacity: 1;
 }
 
 .sect_in_halv img {
@@ -124,7 +125,7 @@
 }
 
 .ref_mass {padding-top: 12px}
-/* individual */
+/* Individual */
 .gray_and_white .sect_in_halv p + .ref_mass {padding-top: 24px}
 
 .ref_mass li {

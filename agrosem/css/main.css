@@ -228,6 +228,7 @@ li.exclusive_products_not_ic:after {display: none}
 	background: rgba(23, 20, 20, .6);
 	height: 100%;
 	width: 100%;
+	position: relative;
 }
 
 .triple_block_one .triple_block_cont {padding: 140px 49px 0 40px}
@@ -241,10 +242,64 @@ li.exclusive_products_not_ic:after {display: none}
     margin-bottom: 10px;
 }
 
+.triple_block_cont_icon:after {
+	background-repeat: no-repeat;
+	background-size: 100%;
+	background-image: url(../img/icon/top_right.svg);
+	left: 40px; bottom: 40px;
+	height: 40px; width: 60px;
+	position: absolute;
+	content: '';
+}
+
+.block_title {
+	font-weight: 400;
+	line-height: 50px;
+	font-size: 48px;
+	text-transform: uppercase;
+	margin-bottom: 24px;
+	margin-top: 80px;
+	position: relative;
+}
+
+.tabler_scroll {overflow-x: auto}
+
+.tabler table {
+	overflow: hidden;
+	font-weight: 400px;
+	font-size: 18px;
+	border-color: #000;
+	border-radius: 10px;
+	width: 100%;
+}
+.tabler thead {
+	color: #fff;
+	background-color: #ff0000;
+}
+.tabler th, .tabler td {padding: 16px 18px}
+.tabler tbody:nth-child(even) td {background-color: #fafafa}
+.tabler tbody:nth-child(odd) td {background-color: #fff}
+
+
 
 
 /* Modules */
 .ui-tabs-nav {text-align: center}
+
+.ui-tabs-nav li {
+	color: #000;
+	font-size: 18px;
+	border: solid 1px #ff0000;
+	border-radius: 100px;
+	padding: 10px 24px;
+	margin: 0 8px 8px 0;
+	display: inline-block;
+}
+
+li.ui-state-active {
+	color: #fff;
+	background-color: #ff0000;
+}
 
 /* Meadia
 ==========*/
@@ -274,6 +329,10 @@ li.exclusive_products_not_ic:after {display: none}
 		width: 33%;
 	}
 	.small_b_our_partners li img {height: 100%}
+
+	.triple_block_cont {padding: 200px 0 0 0 !important}
+	.triple_block_cont h3 {transform: translate(0, -50%) rotate(-90deg)}
+	.triple_block_cont p {display: none}
 }
 
 @media screen and (max-width: 390px) {

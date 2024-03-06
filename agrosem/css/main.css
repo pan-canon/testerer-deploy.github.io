@@ -131,6 +131,23 @@
 	content: '';
 }
 
+/* Individual - exclusive_products for green && ... */
+.exclusive_products_in_color {background: var(--bgc)}
+/* For Green */
+.exclusive_products_green li {
+	color: #fff;
+	border: 0;
+	background-color: #48a741;
+}
+.exclusive_products_green > p {color: #606060}
+/* For blue */
+.exclusive_products_blue li {
+	color: #fff;
+	border: 0;
+	background-color: #013e7f;
+}
+.exclusive_products_blue > p {color: #606060}
+
 .ref_mass {padding-top: 12px}
 /* Individual */
 .gray_and_white .sect_in_halv p + .ref_mass {padding-top: 24px}
@@ -165,6 +182,9 @@ li.ref_shop_red {
 }
 
 li.ref_down {--back: url(../img/icon/icon-upload.svg)}
+
+/* Individual - li not icon */
+li.exclusive_products_not_ic:after {display: none}
 
 .small_b_our_partners {display: flex}
 

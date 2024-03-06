@@ -20,7 +20,7 @@
 	content: '\002D';
 }
 
-.breadcrumb > ul li:last-child {color: #c6c6c6;}
+.breadcrumb > ul li:last-child span {color: #c6c6c6;}
 
 .gray_and_white {
 	overflow: hidden;

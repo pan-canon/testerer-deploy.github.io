@@ -202,6 +202,47 @@ li.exclusive_products_not_ic:after {display: none}
 	width: auto;
 }
 
+
+
+.triple_block {
+	overflow-y: hidden;
+	padding-bottom: 80px;
+}
+
+.triple_block > * {
+	background-image: url(../img/agroculture/agro-16.webp);
+	height: 590px;
+	width: 33.3%;
+	float: left;
+}
+.triple_block_one {background-position: 20px -150px;}
+.triple_block_two {
+	border-left: 1px solid rgb(255, 255, 255);
+	border-right: 1px solid rgb(255, 255, 255);
+	background-position: -360px -150px;
+}
+.triple_block_three {background-position: -360px -150px;}
+
+.triple_block_cont {
+	color: #fff;
+	background: rgba(23, 20, 20, .6);
+	height: 100%;
+	width: 100%;
+}
+
+.triple_block_one .triple_block_cont {padding: 140px 49px 0 40px}
+.triple_block_two .triple_block_cont {padding: 140px 102px 0 40px}
+.triple_block_three .triple_block_cont {padding: 140px 90px 0 40px}
+
+.triple_block_cont h3 {
+    font-weight: 400;
+    line-height: 40px;
+    font-size: 35px;
+    margin-bottom: 10px;
+}
+
+
+
 /* Modules */
 .ui-tabs-nav {text-align: center}
 

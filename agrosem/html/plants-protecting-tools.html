@@ -10,6 +10,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="../css/swiper.min.css" async defer>
   <link rel="stylesheet" href="../css/main.css" async defer>
+  <!-- Добавляем стили из CDN -->
+  <link rel="stylesheet" type="text/css" href="https://bezramok-tlt.ru/assets/3da9dac/slick.css"/>
+  <!-- Добавляем тему по умолчанию из CDN -->
+  <link rel="stylesheet" type="text/css" href="https://bezramok-tlt.ru/assets/3da9dac/slick-theme.css"/>
+
   <title>Засоби захисту рослин від «Агросем»</title>
   <meta name="description"
         content="Агросем — українська аграрна компанія, яка з 2007 року надає експертизу та допомагає агробізнесу України вийти на новий рівень. Ми пропонуємо якісний посівний матеріал, мінеральні добрива, ЗЗР та сільськогосподарську техніку від провідних світових компаній">
@@ -175,10 +180,18 @@
   <div class="gray_active first_gray_and_white gray_and_white">
     <div class="white_active b_with_round_corn">
       <div class="sect_in_halv_right sect_in_halv">
-        <img style="height: 512px; max-width: 620px;" src="../img/agroculture/agro-7.webp" alt="Кукурудза" />
+        <div class="slider yourclass">
+          <div>
+            <img style="margin: auto; display: block;" src="../img/product/alfa/alfa_1.png" alt="Alfa" />
+          </div>
+          <div>
+            <img style="margin: auto; display: block;" src="../img/product/alfa/alfa_1.png" alt="Alfa" />
+          </div>
+        </div>
       </div>
       <div class="sect_in_halv_left sect_in_halv">
         <div style="padding-right: var(--padding);">
+          <img style="margin: 0 0 25.5px 34.5px; width: 137px" src="../img/partners/alfa.svg" alt="" />
           <h3>ALFA Smart Agro</h3>
           <p>Провідний виробник засобів захисту рослин та мікродобрив. Компанія повністю відповідає вимогам до сучасної європейської компанії з точки зору якості продуктів та розумного підходу до агрономії. Виробництво якісного продукту базується на розумних виробничих технологіях та сучасному обладнанні.</p>
         </div>
@@ -205,9 +218,10 @@
   <div class="white_active gray_and_white">
     <div class="gray_active b_with_round_corn">
       <div class="sect_in_halv_left sect_in_halv">
-        <img style="height: 512px; max-width: 620px;" src="../img/agroculture/agro-20.png" alt="Пшениця озима" />
+        <img style="margin: auto; display: block;" src="../img/product/yara/Yara_zintrac_700.png" alt="Yara_zintrac_700" />
       </div>
       <div class="sect_in_halv_right sect_in_halv" style="padding-left: var(--padding);">
+        <img style="margin: 0 0 25.5px 34.5px; width: 108px" src="../img/partners/yara.svg" alt="" />
         <h3>Yara mila</h3>
         <p>Провідний виробник засобів захисту рослин та мікродобрив. Компанія повністю відповідає вимогам до сучасної європейської компанії з точки зору якості продуктів та розумного підходу до агрономії. Виробництво якісного продукту базується на розумних виробничих технологіях та сучасному обладнанні.</p>
         <div class="exclusive_products_blue exclusive_products_in_color exclusive_products" style="--bgc: #fff;">
@@ -411,7 +425,15 @@
   </div>
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="../js/swiper.min.js"></script>
+<script src="../js/core/jquery-ui.min.js"></script>
+<script src="https://kenwheeler.github.io/slick/slick/slick.js"></script>
+<script>
+$(document).ready(function(){
+  $('.yourclass').slick({
+    setting-name: setting-value
+  });
+});
+</script>
 <script src="../js/search_pages.min.js"></script>
 <script src="../json/voc.js"></script>
 <script src="../js/jquery.maskedinput.min.js" type="module"></script>

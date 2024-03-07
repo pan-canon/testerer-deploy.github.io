@@ -564,6 +564,8 @@ li.ui-state-active:after {
 .slider-nav .slick-next:before {content: '\02F2' !important}
 .slider-nav .slick-prev:before {content: '\02F1' !important}
 
+.slider_one, .slider_two {margin-bottom: 16px}
+
 /* Media
 ==========*/
 @media (max-width: 769px) {

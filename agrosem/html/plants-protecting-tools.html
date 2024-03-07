@@ -190,9 +190,9 @@
   </div>
 
   <div class="gray_active first_gray_and_white gray_and_white">
-    <div class="white_active b_with_round_corn">
+    <div class="white_active b_with_round_corn" style="overflow: hidden">
       <div class="sect_in_halv_right sect_in_halv">
-        <div class="slider yourclass">
+        <div class="slider slider_one">
           <div>
             <img style="margin: auto; display: block;" src="../img/product/alfa/alfa_1.png" alt="Alfa" />
           </div>
@@ -228,12 +228,19 @@
   </div>
 
   <div class="white_active gray_and_white">
-    <div class="gray_active b_with_round_corn">
+    <div class="gray_active b_with_round_corn" style="overflow: hidden">
       <div class="sect_in_halv_left sect_in_halv">
-        <img style="margin: auto; display: block;" src="../img/product/yara/Yara_zintrac_700.png" alt="Yara_zintrac_700" />
+        <div class="slider slider_one">
+          <div>
+            <img style="margin: auto; display: block;" src="../img/product/yara/Yara_zintrac_700.png" alt="Yara_zintrac_700" />
+          </div>
+          <div>
+            <img style="margin: auto; display: block;" src="../img/product/yara/Yara_zintrac_700.png" alt="Yara_zintrac_700" />
+          </div>
+        </div>
       </div>
       <div class="sect_in_halv_right sect_in_halv" style="padding-left: var(--padding);">
-        <img style="margin: 0 0 25.5px 34.5px; width: 108px" src="../img/partners/yara.svg" alt="" />
+        <img style="margin: 0 0 25.5px 0px; width: 206px" src="../img/partners/yara.svg" alt="" />
         <h3>Yara mila</h3>
         <p>Провідний виробник засобів захисту рослин та мікродобрив. Компанія повністю відповідає вимогам до сучасної європейської компанії з точки зору якості продуктів та розумного підходу до агрономії. Виробництво якісного продукту базується на розумних виробничих технологіях та сучасному обладнанні.</p>
         <div class="exclusive_products_blue exclusive_products_in_color exclusive_products" style="--bgc: #fff;">
@@ -427,7 +434,9 @@
 <script src="../js/slick.js"></script>
 <script>
   $(document).ready(function() {
-    $('.yourclass').slick();
+    $(".slider_one, .slider_two").slick({
+      dots: true, 
+    });
   });
 </script>
 <script src="../js/search_pages.min.js"></script>

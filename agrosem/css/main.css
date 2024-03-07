@@ -406,6 +406,9 @@ li.ui-state-active:after {
 	content: '';
 }
 
+/* Individual Ruler */
+.ruler li.ui-state-active:after {display: none}
+
 /* Individual Slider : Big Buddy */
 .big_buddy {
 	margin: 0 22px 0 12px;

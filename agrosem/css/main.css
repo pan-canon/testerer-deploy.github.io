@@ -477,6 +477,40 @@ li.ui-state-active:after {
 /* Individual Ruler */
 .ruler li.ui-state-active:after {display: none}
 
+/* Individual gray_and_white */
+.b_manufacturer {padding-bottom: 8px}
+
+.list_manufacturer li {
+	color: #000;
+	font-size: 18px;
+	vertical-align: middle;
+	border-radius: 100px;
+	background-color: white;
+	padding: 15px 24px 15px 44px;
+	margin: 0 8px 8px 0;
+	display: inline-block;
+	position: relative;
+}
+
+.list_manufacturer li:before {
+	margin-right: 6px;
+	left: 20px;
+	top: 10px;
+	height: 27px;
+	width: 20px;
+	position: absolute;
+	content: '';
+}
+
+.list_manufacturer li:before {background-image: url(../img/icon/alfa-icom-red.svg)}
+.list_manufacturer li.active:before {background-image: url(../img/icon/alfa-icom.svg)}
+
+.list_manufacturer li.active {
+	color: #fff;
+	border-color: #ff0000;
+	background-color: #ff0000;
+}
+
 /* Individual Slider : Big Buddy */
 .big_buddy {
 	margin: 0 22px 0 12px;

@@ -106,7 +106,7 @@
 	width: 100%;
 }
 
-.exclusive_products > p {font-size: 16px; color: #fff;}
+.exclusive_products > p {color: #fff; font-size: 16px;}
 
 .exclusive_products ul {padding-top: 12px}
 
@@ -280,6 +280,27 @@ li.exclusive_products_not_ic:after {display: none}
 .tabler tbody:nth-child(even) td {background-color: #fafafa}
 .tabler tbody:nth-child(odd) td {background-color: #fff}
 
+.list_red {
+	overflow: hidden;
+	border-radius: 10px;
+	background: #fff;
+	padding: 20px;
+}
+
+.list_red li {
+	padding-left: 24px;
+	position: relative;
+}
+
+.list_red li:before {
+	background-repeat: no-repeat;
+	background-size: 100%;
+	background-image: url(../img/icon/check-red.svg);
+	left: 0px;
+	height: 12px; width: 12px;
+	position: absolute;
+	content: '';
+}
 
 
 
@@ -306,7 +327,7 @@ li.ui-state-active {
 @media (max-width: 769px) {
 	.gray_and_white {padding: 56px 27px}
 	.b_with_round_corn {padding: 16px}
-	.sect_in_halv, .sect_in_halv img {width: 100%}
+	.sect_in_halv, .sect_in_halv_right, .sect_in_halv_left, .sect_in_halv img {width: 100%}
 	.sect_in_halv img {height: auto !important}
 	.sect_in_halv {--padding: 0}
 	.sect_in_halv h3 {

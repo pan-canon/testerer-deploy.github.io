@@ -302,8 +302,6 @@ li.exclusive_products_not_ic:after {display: none}
 	content: '';
 }
 
-
-
 /* Modules */
 .ui-tabs-nav {text-align: center}
 
@@ -322,7 +320,60 @@ li.ui-state-active {
 	background-color: #ff0000;
 }
 
-/* Meadia
+/* Individual Slider : Big Buddy */
+.big_buddy {
+	margin: 0 22px 0 12px;
+	max-width: 666px;
+	float: left;
+}
+
+.big_buddy .slick-slide {
+	overflow: hidden;
+	border-radius: 10px;
+}
+
+.big_buddy .slick-slide img {
+	object-fit: cover;
+	/*margin: 0 22px 0 12px;*/
+	max-height: 400px;
+	width: 100%;
+}
+
+/* Individual Slider : Big Buddy - slider-for && slider-nav */
+.slider.slider-for {width: 100%}
+
+.slider.slider-nav {
+	margin: 16px auto 0;
+	max-width: 600px;
+}
+
+.slider-nav .slick-slide {
+	border-radius: 10px;
+	margin: 0 12px 0 0;
+	position: relative;
+}
+
+.slider-nav .slick-slide img {
+	object-fit: cover;
+	height: 100%;
+	width: 100%;
+}
+
+.slider-nav .slick-slide:after {
+	background: rgba(0, 0, 0, .6);
+	left: 0; top: 0;
+	height: 100%; width: 100%;
+	position: absolute;
+	content: '';
+}
+
+.slider-nav .slick-current:after {display: none}
+
+.slider-nav .slick-arrow:before {color: red !important}
+.slider-nav .slick-next:before {content: '\02F2' !important}
+.slider-nav .slick-prev:before {content: '\02F1' !important}
+
+/* Media
 ==========*/
 @media (max-width: 769px) {
 	.gray_and_white {padding: 56px 27px}

@@ -202,8 +202,6 @@ li.exclusive_products_not_ic:after {display: none}
 	width: auto;
 }
 
-
-
 .triple_block {
 	overflow-y: hidden;
 	padding-bottom: 80px;
@@ -262,6 +260,28 @@ li.exclusive_products_not_ic:after {display: none}
 	position: relative;
 }
 
+.ruler {
+	background: #fafafa;
+	padding: 20px;
+	position: relative;
+}
+
+.ruler-top {border-radius: 10px 10px 0 0}
+
+.ruler-top:after {
+	background-color: #c4c4c4;
+	left: 20px; bottom: 0;
+	height: 1px; width: calc(100% - 40px);
+	display: block;
+	position: absolute;
+	content: '';
+}
+
+.ruler-bottom {
+	border-radius: 0 0 10px 10px;
+	margin-bottom: 16px;
+}
+
 .tabler_scroll {overflow-x: auto}
 
 .tabler table {
@@ -288,9 +308,11 @@ li.exclusive_products_not_ic:after {display: none}
 }
 
 .list_red li {
-	padding-left: 24px;
+	padding-left: 24px; padding-bottom: 16px;
 	position: relative;
 }
+.list_red li:not(:first-child) {padding-top: 16px}
+.list_red li:not(:last-child) {border-bottom: solid 1px #f5f5f5}
 
 .list_red li:before {
 	background-repeat: no-repeat;
@@ -302,13 +324,67 @@ li.exclusive_products_not_ic:after {display: none}
 	content: '';
 }
 
+.list_prod {
+	overflow: hidden;
+	padding: 0 0 10px 20px;
+}
+
+.list_prod li {
+	margin-bottom: 10px;
+	list-style: none;
+}
+
+.b_cont_with_manager {
+	text-align: center;
+	padding: 80px 0 100px 0;
+}
+
+.b_cont_with_manager h3 {
+	font-size: 48px;
+	line-height: 50px;
+	font-weight: 400;
+	text-transform: uppercase;
+	padding-bottom: 20px;
+	display: inline-block;
+	position: relative;
+}
+
+.b_cont_with_manager h3:before {
+	border-radius: 50%;
+	background-color: red;
+	right: -70px; top: -30px;
+	height: 50px; width: 50px;
+	position: absolute;
+	content: '';
+}
+
+.b_cont_with_manager p {
+	font-size: 20px;
+	line-height: 50px;
+	font-weight: 400;
+	margin-bottom: 50px;
+}
+
+.big_button {
+	background-color: red;
+	color: #fff;
+	font-weight: 400;
+	line-height: 65px;
+	font-size: 20px;
+	padding: 0 70px;
+	display: inline-block;
+	position: relative;
+}
+
 /* Modules */
 .ui-tabs-nav {text-align: center}
 
 .ui-tabs-nav li {
 	color: #000;
 	font-size: 18px;
-	border: solid 1px #ff0000;
+	border-color: #000;
+	border-width: 1px;
+	border-style: solid;
 	border-radius: 100px;
 	padding: 10px 24px;
 	margin: 0 8px 8px 0;
@@ -317,7 +393,17 @@ li.exclusive_products_not_ic:after {display: none}
 
 li.ui-state-active {
 	color: #fff;
+	border-color: #ff0000;
 	background-color: #ff0000;
+}
+
+li.ui-state-active:after {
+	border-radius: 50%;
+	background-color: black;
+	margin-left: 3px;
+	height: 10px; width: 10px;
+	display: inline-block;
+	content: '';
 }
 
 /* Individual Slider : Big Buddy */

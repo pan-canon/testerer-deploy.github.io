@@ -340,7 +340,7 @@ li.exclusive_products_not_ic:after {display: none}
 
 .tabler table {
 	overflow: hidden;
-	font-weight: 400px;
+	font-weight: 400;
 	font-size: 18px;
 	border-color: #000;
 	border-radius: 10px;
@@ -480,6 +480,8 @@ li.exclusive_products_not_ic:after {display: none}
 	float: left;
 }
 
+.b_grypa_azot_alvent {padding: 80px 40px 7px}
+
 /* Modules */
 .ui-tabs-nav {text-align: center}
 
@@ -601,7 +603,11 @@ li.ui-state-active:after {
 .slider-nav .slick-prev:before {content: '\02F1' !important}
 
 /* Slider for ЗЗР && ... */
-.slider_one, .slider_two {margin-bottom: 16px}
+.slider_one, .slider_two {
+	border: solid 1px #c4c4c4;
+	border-radius: 10px;
+	margin-bottom: 16px;
+}
 
 .slider_one .slick-next, .slider_one .slick-prev, 
 .slider_two .slick-next, .slider_two .slick-prev {z-index: 9}
@@ -717,6 +723,11 @@ li.ui-state-active:after {
 		height: auto;
 		width: 100%;
 	}
+	.block_title {
+		line-height: 28px;
+		font-size: 24px;
+	}
+	.tabler table {font-size: 12px}
 }
 
 @media screen and (max-width: 390px) {
@@ -734,9 +745,17 @@ li.ui-state-active:after {
 	.gray_and_white {padding: 40px 27px}
 	.white_mobile_active {background-color: #fff}
 	.first_gray_and_white {padding: 24px 11px 40px}
+	.b_spec_two {
+		padding-left: 11px;
+		padding-right: 11px;
+	}
 	.b_cont_with_manager_little_hide {display: none}
 	.b_logo_one, .b_logo_two {margin: 0 0 20px 0px !important;}
 	.sect_in_halv > .b_logo_one img, .sect_in_halv > .b_logo_two img {height: 57px !important}
+	.for_micro_padd {padding-left: 10px}
+	.b_grypa_azot_alvent {padding: 40px 0px 7px}
+	.b_grypa_azot_alvent img {margin-bottom: 16px}
+	.b_grypa_azot_alvent p {padding-top: 0 !important}
 	.slider_one .slick-prev, .slider_one .slick-next, 
 	.slider_two .slick-prev, .slider_two .slick-next {
 		-webkit-transform: translate(0, 0%);

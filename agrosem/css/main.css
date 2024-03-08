@@ -7,6 +7,8 @@
 	font-weight: normal;
 }
 
+.font_inter {font-family: "Inter Regular"}
+
 .breadcrumb {
 	padding: 24px 41px 0;
 	width: 100%;
@@ -29,8 +31,9 @@
 	position: relative;
 }
 
-.gray_active {background: #efefef;}
-.white_active {background: #fff;}
+.gray_active {background: #efefef}
+.lite_gray_active {background: #fafafa}
+.white_active {background: #fff}
 
 .b_with_round_corn {
 	overflow-y: hidden;
@@ -173,7 +176,7 @@
 	content: '';
 }
 
-li.ref_shop {--back: url(../img/icon/icon-upload-red.svg)}
+li.ref_shop {--back: url(../img/icon/icon-upload.svg)}
 
 li.ref_shop_red {
 	--back: url(../img/icon/arrow_right.svg);
@@ -182,6 +185,12 @@ li.ref_shop_red {
 }
 
 li.ref_down {--back: url(../img/icon/icon-upload.svg)}
+
+li.ref_down_red {
+	--back: url(../img/icon/icon-upload-white.svg);
+	background-color: #ff0000;
+	color: #fff;
+}
 
 /* Individual - li not icon */
 li.exclusive_products_not_ic:after {display: none}
@@ -389,7 +398,7 @@ li.exclusive_products_not_ic:after {display: none}
 
 .b_cont_with_manager {
 	text-align: center;
-	padding: 80px 0 100px 0;
+	padding: 105px 0 100px 0;
 }
 
 .b_cont_with_manager h3 {
@@ -442,6 +451,16 @@ li.exclusive_products_not_ic:after {display: none}
 	height: auto;
 	width: 118px;
 	float: left;
+}
+
+.b_logo_one {
+	margin: 0 0 25.5px 34.5px;
+	width: 137px !important;
+}
+
+.b_logo_two {
+	margin: 0 0 25.5px 0px;
+	width: 206px !important;
 }
 
 /* Modules */
@@ -564,7 +583,52 @@ li.ui-state-active:after {
 .slider-nav .slick-next:before {content: '\02F2' !important}
 .slider-nav .slick-prev:before {content: '\02F1' !important}
 
+/* Slider for ЗЗР && ... */
 .slider_one, .slider_two {margin-bottom: 16px}
+
+.slider_one .slick-next, .slider_one .slick-prev, 
+.slider_two .slick-next, .slider_two .slick-prev {z-index: 9}
+
+.slider_one .slick-dots, 
+.slider_two .slick-dots {display: none !important}
+
+.slider_one .slick-dots li, 
+.slider_two .slick-dots li {margin: 0 25px 0 0;}
+
+.slider_one .slick-dots li button, 
+.slider_two .slick-dots li button {
+	border-radius: 10px;
+	background-color: white;
+	padding: 0;
+	height: 4px;
+	width: 40px;
+}
+
+.slider_one .slick-dots li button:before, 
+.slider_two .slick-dots li button:before {display: none;}
+
+.slider_one .slick-dots li.slick-active button, 
+.slider_two .slick-dots li.slick-active button {background-color: red}
+
+/*------*/
+
+.slider_one {background-color: white}
+
+.slider_one .slick-next {right: 34px}
+.slider_one .slick-prev {left: 34px}
+
+.slider_one .slick-arrow:before {color: red !important}
+.slider_one .slick-next:before {content: '\276F' !important}
+.slider_one .slick-prev:before {content: '\276E' !important}
+
+/*------*/
+
+.slider_two .slick-next {right: 34px}
+.slider_two .slick-prev {left: 34px}
+
+.slider_two .slick-arrow:before {color: red !important}
+.slider_two .slick-next:before {content: '\276F' !important}
+.slider_two .slick-prev:before {content: '\276E' !important}
 
 /* Media
 ==========*/
@@ -602,7 +666,8 @@ li.ui-state-active:after {
 		left: 50%; top: 50%;
 		position: absolute;
 	}
-	.triple_block_cont p {display: none}
+	.triple_block_cont p, .b_manufacturer {display: none}
+	.b_cont_with_manager {padding-top: 60px}
 	.b_cont_with_manager h3 {
 		line-height: 32px;
 		font-size: 24px;
@@ -646,4 +711,23 @@ li.ui-state-active:after {
 	}
 	.gray_and_white {padding: 40px 27px}
 	.first_gray_and_white {padding: 24px 11px 40px}
+	.b_cont_with_manager_little_hide {display: none}
+	.b_logo_one, .b_logo_two {
+		overflow: hidden;
+		object-fit: contain !important;
+		margin: 0 0 0px 0px !important;
+		width: 160px !important;
+	}
+	.sect_in_halv > img.b_logo_one, .sect_in_halv > img.b_logo_two {height: 57px !important}
+	.slider_one .slick-prev, .slider_one .slick-next, 
+	.slider_two .slick-prev, .slider_two .slick-next {
+		-webkit-transform: translate(0, 0%);
+		-ms-transform: translate(0, 0%);
+		transform: translate(0, 0%);
+		bottom: -22px; top: initial;
+	}
+	.slider_one .slick-next, .slider_two .slick-next {right: 0}
+	.slider_one .slick-prev, .slider_two .slick-prev {left: 0}
+	.slider_one .slick-dots li, .slider_two .slick-dots li {padding-top: 5px}
+	.slider_one .slick-dots, .slider_two .slick-dots {display: block !important}
 }

@@ -654,6 +654,10 @@ li.ui-state-active:after {
 .slider_two .slick-next:before {content: '\276F' !important}
 .slider_two .slick-prev:before {content: '\276E' !important}
 
+/*------*/
+
+.slider-nav .slick-dots li button {display: none}
+
 /* Media
 ==========*/
 @media (max-width: 769px) {

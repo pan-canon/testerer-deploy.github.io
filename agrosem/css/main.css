@@ -10,6 +10,7 @@
 .font_inter {font-family: "Inter Regular"}
 
 .breadcrumb {
+	font-size: 14px;
 	padding: 24px 41px 0;
 	width: 100%;
 	position: relative;

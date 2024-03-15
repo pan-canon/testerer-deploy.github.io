@@ -10,7 +10,7 @@
 					//audioIcon: false, 
 					audioVolume: '2.0', 
 					bgRadius: '50%', 
-					decel: '1.50', 
+					decel: '0.30', 
 					//dragControl: true, 
 					imageRadius: '50%', 
 					//noMouse: true, 
@@ -20,7 +20,7 @@
 					shuffleTags: true, 
 					textColour: "#000000", 
 					//textFont: "", 
-					tooltip: "native", 
+					//tooltip: "native", 
 					weight: true, 
 				});
 			} catch(e) {
@@ -29,14 +29,17 @@
 			}
 		};
 		function tcFront() {
-			//TagCanvas.TagToFront('root', {index: Math.floor(Math.random() * 20), active: 1});
-			TagCanvas.TagToFront('root', {id: "tag1"});
+			TagCanvas.TagToFront('root', {
+				id: "tag1"
+			});
 		}
 	</script>
 </head>
 
 <body>
- <button onclick="tcFront()">TagToFront</button>
+
+	<button onclick="tcFront()">TagToFront</button>
+
 	<div id="myCanvasContainer">
 		<canvas width="300" height="300" id="root">
 			<p>In Internet Explorer versions up to 8, things inside the canvas are inaccessible!</p>
@@ -47,9 +50,10 @@
 		<ul>
 			<li>
 				<a id="tag1" href="http://www.google.com" target="_blank">
-				Biohazard
-				<audio src="./audio/Go_Tell_Aunt_Rhody.ogg"></audio>
-			</a></li>
+					Biohazard
+					<audio src="./audio/Go_Tell_Aunt_Rhody.ogg"></audio>
+				</a>
+			</li>
 			<li>
 				<a href="/fish">Тестовый 2</a>
 				<audio src="./audio/Go_Tell_Aunt_Rhody.ogg"></audio>

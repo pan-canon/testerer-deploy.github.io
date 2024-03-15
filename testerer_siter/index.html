@@ -10,13 +10,33 @@
 					//audioIcon: false, 
 					audioVolume: '2.0', 
 					bgRadius: '50%', 
-					decel: '0.50', 
-					dragControl: true, 
+					decel: '1.50', 
+					//dragControl: true, 
+					imageRadius: '50%', 
+					//noMouse: true, 
+					pinchZoom: true, 
+					//shadow: '#000000', 
+					shape: "DblHelix",
+  lock: "x"
 				});
 			} catch(e) {
 			// something went wrong, hide the canvas container
 				document.getElementById('myCanvasContainer').style.display = 'none';
 			}
+			function DblHelix(n, rx, ry, rz) {
+  var a = Math.PI / n, i, j, p = [],
+    z = rz * 2 / n;
+  for(i = 0; i < n; ++i) {
+    j = a * i;
+    if(i % 2)
+      j += Math.PI;
+    p.push([rx * Math.cos(j),
+      rz - z * i,
+      ry * Math.sin(j)]);
+  }
+  return p;
+}
+
 		};
 	</script>
 </head>

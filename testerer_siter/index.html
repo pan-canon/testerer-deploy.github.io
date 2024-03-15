@@ -17,18 +17,23 @@
 					pinchZoom: true, 
 					//shadow: '#000000', 
 					shape: "vcylinder", 
-					
+					shuffleTags: true, 
+					textColour: "#000000", 
+					//textFont: "", 
+					tooltip: "native", 
+					weight: true, 
 				});
 			} catch(e) {
 			// something went wrong, hide the canvas container
 				document.getElementById('myCanvasContainer').style.display = 'none';
 			}
+			function tcFront() { TagCanvas.TagToFront('exampleCanvas', {index: Math.floor(Math.random() * 20), active: 1}); }
 		};
 	</script>
 </head>
 
 <body>
-
+ <button onclick="tcFront()">TagToFront</button>
 	<div id="myCanvasContainer">
 		<canvas width="300" height="300" id="root">
 			<p>In Internet Explorer versions up to 8, things inside the canvas are inaccessible!</p>

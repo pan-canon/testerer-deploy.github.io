@@ -1,0 +1,15 @@
+html, body {
+	padding: 0;
+	margin: 0;
+}
+
+html, body {
+	height: 100%;
+	width: 100%;
+}
+
+body {
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-image: url(https://upload.wikimedia.org/wikipedia/commons/2/2a/Sectioned_skull_in_profile_to_left_with_the_left_side_of_the_cranium_removed_MET_DP823725.jpg);
+}

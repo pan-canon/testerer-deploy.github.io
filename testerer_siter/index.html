@@ -28,7 +28,10 @@
 				document.getElementById('myCanvasContainer').style.display = 'none';
 			}
 		};
-		function tcFront() { TagCanvas.TagToFront('root', {index: Math.floor(Math.random() * 20), active: 1}); }
+		function tcFront() {
+			//TagCanvas.TagToFront('root', {index: Math.floor(Math.random() * 20), active: 1});
+			TagCanvas.TagToFront('root', {id: "tag1"});
+		}
 	</script>
 </head>
 

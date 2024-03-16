@@ -13,3 +13,16 @@ body {
 	background-size: cover;
 	background-image: url(img/bg.png);
 }
+
+#cloud_container {
+	margin: 0 auto;
+	height: 300px;
+	width: 300px;
+	position: relative;
+}
+
+#tags_root {
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-image: url(./img/biohazard.png);
+}

@@ -20,7 +20,7 @@
 					//audioIcon: false, 
 					audioVolume: '2.0', 
 					bgRadius: '50%', 
-					centreImage: './img/biohazard.png', 
+					//centreImage: './img/biohazard.png', 
 					decel: '0.60', 
 					//dragControl: true, 
 					imageRadius: '50%', 
@@ -36,7 +36,7 @@
 				});
 			} catch(e) {
 				// something went wrong, hide the canvas container
-				document.getElementById('myCanvasContainer').style.display = 'none';
+				document.getElementById('cloud_container').style.display = 'none';
 			}
 		};
 		function tcFront() {
@@ -51,7 +51,7 @@
 
 	<button onclick="tcFront()">TagToFront</button>
 
-	<div id="myCanvasContainer">
+	<div id="cloud_container">
 		<canvas width="300" height="300" id="root">
 			<p>In Internet Explorer versions up to 8, things inside the canvas are inaccessible!</p>
 		</canvas>

@@ -57,7 +57,7 @@ body {
 }
 .fog::before, 
 .fog div::before {
-    background-image: url("./img/fog-1.png");
+    background-image: url("./img/fog-3.png");
     animation: fogmove 20s linear 0s infinite;
 }
 .fog::after, 

@@ -39,9 +39,8 @@
 					//shadow: '#000000', 
 					//shape: "vcylinder", 
 					//shuffleTags: true, 
-					textFont: 'Impact,"Arial Black", sans-serif', 
+					textFont: 'Impact, "Arial Black", sans-serif', 
 					textColour: "#eee", 
-					//textFont: "", 
 					//tooltip: "native", 
 					//weight: true, 
 				});
@@ -51,9 +50,17 @@
 			}
 		};
 
-		function tcFront(e) {
+		function selectBiopunk(e) {
 			e.preventDefault();
-			TagCanvas.Start('biopunk', 'tags_biopunk', {
+			TagCanvas.Start('section', 'tags_section_biopunk', {
+				initial: [0.200, 0.000], 
+				lock: 'y', 
+				shape: 'DblHelix', 
+			});
+		}
+		function selectFolklore(e) {
+			e.preventDefault();
+			TagCanvas.Start('section', 'tags_section_folklore', {
 				initial: [0.200, 0.000], 
 				lock: 'y', 
 				shape: 'DblHelix', 
@@ -84,13 +91,13 @@
 		<div id="tags_root">
 			<ul>
 				<li>
-					<a onclick="tcFront(event)" href="/">
+					<a onclick="selectBiopunk(event)" href="/">
 						biopunk
 						<audio src="./audio/Go_Tell_Aunt_Rhody.ogg"></audio>
 					</a>
 				</li>
 				<li>
-					<a href="/fish">
+					<a onclick="selectFolklore(event)" href="/">
 						folklore
 					</a>
 				</li>
@@ -104,11 +111,11 @@
 	</div>
 	<div id="cloud_container_left">
 		<div class="cloud_container">
-			<canvas id="biopunk" width="300" height="300">
+			<canvas id="section" width="300" height="300">
 				<p>In Internet Explorer versions up to 8, things inside the canvas are inaccessible!</p>
 			</canvas>
 		</div>
-		<div id="tags_biopunk" style="display: none;">
+		<div id="tags_section_biopunk" style="display: none;">
 			<a href="#" onclick="return false">M</a>
 			<a href="#" onclick="return false">P</a>
 			<a href="#" onclick="return false">y</a>
@@ -121,6 +128,9 @@
 			<a href="#" onclick="return false">o</a>
 			<a href="#" onclick="return false">c</a>
 			<a href="#" onclick="return false">n</a>
+		</div>
+		<div id="tags_section_folklore" style="display: none;">
+			<a href="#" onclick="return false">test</a>
 		</div>
 	</div>
 	<div class="fog">

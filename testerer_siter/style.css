@@ -30,8 +30,9 @@ body {background-color: #111}
 	width: 100vw;
 	position: absolute;
 }
-.fog:before, .fog::after, 
-.fog div::before, .fog div::after {
+
+.fog:before, .fog:after, 
+.fog div:before, .fog div:after {
 	content: "";
     position: absolute;
     top: 0;
@@ -42,25 +43,24 @@ body {background-color: #111}
     background-position: center;
     background-repeat: repeat-x;
 }
-.fog div::before, 
-.fog div::after    {
-    left: 100vw;
+
+.fog div:before, .fog div:after {left: 100vw}
+
+.fog:before, .fog div:before {
+	animation: fogmove 25s linear 0s infinite;
+	background-image: url("./img/fog-1.png");
 }
-.fog::before, 
-.fog div::before {
-    background-image: url("./img/fog-1.png");
-    animation: fogmove 25s linear 0s infinite;
+
+.fog:after, .fog div:after {
+	animation: fogmove 15s linear 0s infinite;
+	background-image: url("./img/fog-2.png");
 }
-.fog::after, 
-.fog div::after {
-    background-image: url("./img/fog-2.png");
-    animation: fogmove 15s linear 0s infinite;
-}
+
 @keyframes fogmove {
-    from {
-        transform: translate3d(0, 0, 0);
-    }
-    to {
-        transform: translate3d(-100%, 0, 0);
-    }
+	from {
+		transform: translate3d(0, 0, 0)
+	}
+	to {
+		transform: translate3d(-100vw, 0, 0)
+	}
 }

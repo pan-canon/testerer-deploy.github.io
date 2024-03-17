@@ -55,7 +55,7 @@
 		function selectBiopunk(e) {
 			e.preventDefault();
 			TagCanvas.Start('section', 'tags_section_biopunk', {
-				centreImage: './img/arkham-logo.gif', 
+				centreImage: './img/biohazard.png', 
 				initial: [0.200, 0.000], 
 				lock: 'y', 
 				shape: 'DblHelix', 
@@ -69,6 +69,16 @@
 				shape: "vring(0.5)", 
 				lock: "x", 
 				offsetY: -60, 
+			});
+		}
+
+		function selectMadness(e) {
+			e.preventDefault();
+			TagCanvas.Start('section', 'tags_section_madness', {
+				centreImage: './img/arkham.png', 
+				initial: [0.200, 0.000], 
+				shape: "hcylinder", 
+				lock: "x", 
 			});
 		}
 
@@ -131,14 +141,16 @@
 			<a href="#" onclick="return false">i</a>
 			<a href="#" onclick="return false">y</a>
 			<a href="#" onclick="return false">o</a>
-			<a href="#" onclick="return false">M</a>
-			<a href="#" onclick="return false">P</a>
+			<a href="#" onclick="return false">#m</a>
+			<a href="#" onclick="return false">#p</a>
 		</div>
 		<div id="tags_section_folklore" style="display: none;">
-			<a href="#" onclick="return false">mythology</a>
-			<a href="#" onclick="return false">necro fetishism</a>
-			<a href="#" onclick="return false">test</a>
-			<a href="#" onclick="return false">test</a>
+			<a href="#" onclick="return false">#mythology</a>
+			<a href="#" onclick="return false">#necro fetishism</a>
+		</div>
+		<div id="tags_section_madness" style="display: none;">
+			<a href="#" onclick="return false">#faith</a>
+			<a href="#" onclick="return false">#houses of sorrow</a>
 		</div>
 	</div>
 	<div class="fog">

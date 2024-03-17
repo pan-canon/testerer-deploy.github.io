@@ -28,10 +28,23 @@ body {background-color: #111}
 	max-width: 300px;
 }
 
-#biopunk {
-	background-repeat: no-repeat;
-	background-size: cover;
-	background-image: url(./img/biohazard.svg);
+.biopunk_container:before {
+	content: '           .                  
+         =:        .=.        
+       .%.           %:       
+       #%            *@       
+       @@.  :=++=-.  %@.      
+       *@@-=#+==+#+-%@%       
+    .-=*@@@@*=:.=+%@@@#=-.    
+  =%@%%%@@@@@+..=@@@@@%%%@%+  
+.#+.   ++:+@*    =@*:=*   .=#:
++.     *@=  -+--+=  :@%      +
+:       #@+.-@@@@+ =@%.       
+         -#*-@@@@+=%=         
+           .@@%%@@-           
+         :*@%=  =%@#-.    .   
+    .:-=+=-.      .-=+=-:.    
+';
 }
 
 .fog {

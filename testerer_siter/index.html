@@ -16,8 +16,27 @@
 		window.onload = function() {
 			try {
 				TagCanvas.Start('root', 'tags_root', {
-					  shape: "DblHelix",
-  lock: "x",
+					activeAudio: true, 
+					//audioIcon: false, 
+					audioVolume: '2.0', 
+					bgRadius: '50%', 
+					//centreImage: './img/biohazard.png', 
+					decel: '0.60', 
+					//dragControl: true, 
+					imageRadius: '50%', 
+					//noMouse: true, 
+					pinchZoom: true, 
+					//shadow: '#000000', 
+					shape: "vcylinder", 
+					shuffleTags: true, 
+					textColour: "#000000", 
+					//textFont: "", 
+					//tooltip: "native", 
+					weight: true, 
+				});
+				TagCanvas.Start('tagcanvas6', 'ptTags', {
+					shape: 'DblHelix', 
+					lock: 'y', 
 				});
 			} catch(e) {
 				// something went wrong, hide the canvas container
@@ -29,19 +48,16 @@
 				id: "tag1"
 			});
 		}
-function DblHelix(n, rx, ry, rz) {
-  var a = Math.PI / n, i, j, p = [],
-    z = rz * 2 / n;
-  for(i = 0; i < n; ++i) {
-    j = a * i;
-    if(i % 2)
-      j += Math.PI;
-    p.push([rx * Math.cos(j),
-      rz - z * i,
-      ry * Math.sin(j)]);
-  }
-  return p;
-}
+		function DblHelix(n, rx, ry, rz) {
+			var a = Math.PI / n, i, j, p = [], z = rz * 2 / n;
+			for(i = 0; i < n; ++i) {
+				j = a * i;
+				if (i % 2)
+					j += Math.PI;
+				p.push([rx * Math.cos(j), rz - z * i, ry * Math.sin(j)]);
+			}
+			return p;
+		}
 	</script>
 </head>
 
@@ -50,9 +66,11 @@ function DblHelix(n, rx, ry, rz) {
 	<button onclick="tcFront()">TagToFront</button>
 
 	<div id="cloud_container">
-		<canvas width="300" height="300" id="root">
+		<canvas id="root" width="300" height="300">
 			<p>In Internet Explorer versions up to 8, things inside the canvas are inaccessible!</p>
 		</canvas>
+
+		<canvas id="tagcanvas6" width="300" height="300"></canvas>
 	</div>
 
 	<div id="tags_root">
@@ -77,6 +95,61 @@ function DblHelix(n, rx, ry, rz) {
 			</li>
 		</ul>
 	</div>
+
+<div id="ptTags">
+<a href="#" onclick="return false">A</a>
+<a href="#" onclick="return false">B</a>
+<a href="#" onclick="return false">C</a>
+<a href="#" onclick="return false">D</a>
+<a href="#" onclick="return false">E</a>
+<a href="#" onclick="return false">F</a>
+<a href="#" onclick="return false">G</a>
+<a href="#" onclick="return false">H</a>
+<a href="#" onclick="return false">I</a>
+<a href="#" onclick="return false">J</a>
+<a href="#" onclick="return false">K</a>
+<a href="#" onclick="return false">L</a>
+<a href="#" onclick="return false">M</a>
+<a href="#" onclick="return false">N</a>
+<a href="#" onclick="return false">O</a>
+<a href="#" onclick="return false">P</a>
+<a href="#" onclick="return false">Q</a>
+<a href="#" onclick="return false">R</a>
+<a href="#" onclick="return false">S</a>
+<a href="#" onclick="return false">T</a>
+<a href="#" onclick="return false">U</a>
+<a href="#" onclick="return false">V</a>
+<a href="#" onclick="return false">W</a>
+<a href="#" onclick="return false">X</a>
+<a href="#" onclick="return false">Y</a>
+<a href="#" onclick="return false">Z</a>
+<a href="#" onclick="return false">A</a>
+<a href="#" onclick="return false">B</a>
+<a href="#" onclick="return false">C</a>
+<a href="#" onclick="return false">D</a>
+<a href="#" onclick="return false">E</a>
+<a href="#" onclick="return false">F</a>
+<a href="#" onclick="return false">G</a>
+<a href="#" onclick="return false">H</a>
+<a href="#" onclick="return false">I</a>
+<a href="#" onclick="return false">J</a>
+<a href="#" onclick="return false">K</a>
+<a href="#" onclick="return false">L</a>
+<a href="#" onclick="return false">M</a>
+<a href="#" onclick="return false">N</a>
+<a href="#" onclick="return false">O</a>
+<a href="#" onclick="return false">P</a>
+<a href="#" onclick="return false">Q</a>
+<a href="#" onclick="return false">R</a>
+<a href="#" onclick="return false">S</a>
+<a href="#" onclick="return false">T</a>
+<a href="#" onclick="return false">U</a>
+<a href="#" onclick="return false">V</a>
+<a href="#" onclick="return false">W</a>
+<a href="#" onclick="return false">X</a>
+<a href="#" onclick="return false">Y</a>
+<a href="#" onclick="return false">Z</a>
+</div>
 
 </body>
 </html>

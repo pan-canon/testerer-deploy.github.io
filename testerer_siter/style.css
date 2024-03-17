@@ -6,7 +6,11 @@ html, body {
 	width: 100%;
 }
 
-body {background-color: #111}
+body {
+	overflow-x: auto;
+	background-color: #111;
+	min-width: 600px;
+}
 
 #cloud_container_left {
 	height: 100vh;
@@ -25,7 +29,7 @@ body {background-color: #111}
 .cloud_container {
 	transform: translateY(50%);
 	margin: 0 auto;
-	max-width: 300px;
+	width: 300px;
 }
 
 .biopunk_container {

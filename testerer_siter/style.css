@@ -28,14 +28,15 @@ body {
 }
 
 .fog {
-    position: relative;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 400px;
+    width: 100vw;
+    height: 100vh;
     overflow: hidden;
     /*background: url("background.jpg") center center;  */
     background-size: cover;
+    pointer-events: none;
 }
 .fog::before,
 .fog::after,
@@ -58,12 +59,12 @@ body {
 .fog::before, 
 .fog div::before {
     background-image: url("./img/fog-3.png");
-    animation: fogmove 20s linear 0s infinite;
+    animation: fogmove 25s linear 0s infinite;
 }
 .fog::after, 
 .fog div::after {
     background-image: url("./img/fog-2.png");
-    animation: fogmove 10s linear 0s infinite;
+    animation: fogmove 15s linear 0s infinite;
 }
 @keyframes fogmove {
     from {

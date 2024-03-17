@@ -14,6 +14,7 @@ body {
 
 #cloud_container_left {
 	height: 100vh;
+	min-width: 300px;
 	width: 50vw;
 	float: left;
 	position: relative;
@@ -21,6 +22,7 @@ body {
 
 #cloud_container_right {
 	height: 100vh;
+	min-width: 300px;
 	width: 50vw;
 	float: left;
 	position: relative;

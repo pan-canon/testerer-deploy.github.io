@@ -51,6 +51,7 @@
 		};
 
 		function tcFront() {
+			evt.preventDefault();
 			TagCanvas.Start('biopunk', 'tags_biopunk', {
 				initial: [0.200, 0.000], 
 				lock: 'y', 
@@ -82,7 +83,7 @@
 		<div id="tags_root">
 			<ul>
 				<li>
-					<a onclick="tcFront()" href="#">
+					<a onclick="tcFront()" href="/">
 						biopunk
 						<audio src="./audio/Go_Tell_Aunt_Rhody.ogg"></audio>
 					</a>

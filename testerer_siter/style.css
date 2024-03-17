@@ -6,10 +6,12 @@ html, body {
 	width: 100%;
 }
 
+html {overflow-x: auto}
+
 body {
-	overflow-x: auto;
 	background-color: #111;
 	min-width: 600px;
+	position: relative;
 }
 
 #cloud_container_left {

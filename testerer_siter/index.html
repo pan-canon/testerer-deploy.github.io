@@ -16,7 +16,7 @@
 		window.onload = function() {
 			try {
 				TagCanvas.Start('root', 'tags_root', {
-					activeAudio: true, 
+					//activeAudio: "", 
 					//audioIcon: false, 
 					audioVolume: '2.0', 
 					//bgRadius: '50%', 
@@ -45,20 +45,23 @@
 					//weight: true, 
 				});
 				TagCanvas.Start('biopunk', 'tags_biopunk', {
-					shape: 'DblHelix', 
+					activeAudio: "./audio/Go_Tell_Aunt_Rhody.ogg", 
 					initial: [0.200, 0.000], 
 					lock: 'y', 
+					shape: 'DblHelix', 
 				});
 			} catch(e) {
 				// something went wrong, hide the canvas container
 				document.getElementById('cloud_container_right').style.display = 'none';
 			}
 		};
+
 		function tcFront() {
 			TagCanvas.TagToFront('root', {
 				id: "tag1"
 			});
 		}
+
 		function DblHelix(n, rx, ry, rz) {
 			let a = Math.PI / n, i, j, p = [], z = rz * 2 / n;
 			for(i = 0; i < n; ++i) {
@@ -73,8 +76,6 @@
 </head>
 
 <body>
-
-	<div class="fog"><div></div></div>
 
 	<button onclick="tcFront()">TagToFront</button>
 
@@ -93,10 +94,14 @@
 					</a>
 				</li>
 				<li>
-					<a href="/fish">folklore</a>
+					<a href="/fish">
+						folklore
+					</a>
 				</li>
 				<li>
-					<a href="/chips">madness</a>
+					<a href="/chips">
+						madness
+					</a>
 				</li>
 			</ul>
 		</div>
@@ -121,6 +126,9 @@
 			<a href="#" onclick="return false">c</a>
 			<a href="#" onclick="return false">n</a>
 		</div>
+	</div>
+	<div class="fog">
+		<div></div>
 	</div>
 
 </body>

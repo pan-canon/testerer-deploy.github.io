@@ -16,28 +16,12 @@
 		window.onload = function() {
 			try {
 				TagCanvas.Start('root', 'tags_root', {
-					activeAudio: true, 
-					//audioIcon: false, 
-					audioVolume: '2.0', 
-					bgRadius: '50%', 
-					//centreImage: './img/biohazard.png', 
-					decel: '0.60', 
-					//dragControl: true, 
-					imageRadius: '50%', 
-					//noMouse: true, 
-					pinchZoom: true, 
-					//shadow: '#000000', 
-					shape: "vcylinder", 
-					shuffleTags: true, 
-					textColour: "#000000", 
-					//textFont: "", 
-					//tooltip: "native", 
-					weight: true, 
+					shape: "sphere"
 				});
-				TagCanvas.Start('tagcanvas6', 'ptTags', {
-					shape: 'DblHelix', 
-					lock: 'y', 
-				});
+				//TagCanvas.Start('tagcanvas6', 'ptTags', {
+					//shape: 'DblHelix', 
+					//lock: 'y', 
+				//});
 			} catch(e) {
 				// something went wrong, hide the canvas container
 				document.getElementById('cloud_container').style.display = 'none';
@@ -49,7 +33,7 @@
 			});
 		}
 		function DblHelix(n, rx, ry, rz) {
-			var a = Math.PI / n, i, j, p = [], z = rz * 2 / n;
+			let a = Math.PI / n, i, j, p = [], z = rz * 2 / n;
 			for(i = 0; i < n; ++i) {
 				j = a * i;
 				if (i % 2)
@@ -96,7 +80,7 @@
 		</ul>
 	</div>
 
-<div id="ptTags">
+<div id="ptTags" style="display: none;">
 <a href="#" onclick="return false">A</a>
 <a href="#" onclick="return false">B</a>
 <a href="#" onclick="return false">C</a>

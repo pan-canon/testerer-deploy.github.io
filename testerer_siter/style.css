@@ -34,6 +34,7 @@ body {background-color: #111}
 	background-image: url(./img/biohazard.svg);
 }
 
+/* Fog */
 .fog {
 	pointer-events: none;
 	overflow: hidden;
@@ -47,25 +48,25 @@ body {background-color: #111}
 .fog:before, .fog:after, 
 .fog div:before, .fog div:after {
 	content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100vw;
-    background-size: cover;
-    background-position: center;
-    background-repeat: repeat-x;
+	background-repeat: repeat-x;
+	background-position: center;
+	background-size: cover;
+	left: 0;
+	top: 0;
+	height: 100%;
+	width: 100vw;
+	position: absolute;
 }
 
 .fog div:before, .fog div:after {left: 100vw}
 
 .fog:before, .fog div:before {
-	animation: fogmove 25s linear 0s infinite;
+	animation: fogmove 30s linear 0s infinite;
 	background-image: url("./img/fog-1.png");
 }
 
 .fog:after, .fog div:after {
-	animation: fogmove 15s linear 0s infinite;
+	animation: fogmove 20s linear 0s infinite;
 	background-image: url("./img/fog-2.png");
 }
 

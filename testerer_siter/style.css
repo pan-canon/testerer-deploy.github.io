@@ -18,6 +18,7 @@ body {background-color: #111}
 .cloud_container {
 	transform: translateY(50%);
 	margin: 0 auto;
+	max-width: 300px;
 }
 
 #tags_root {

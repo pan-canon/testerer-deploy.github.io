@@ -53,8 +53,8 @@ body {
 	position: fixed;
 }
 
-.fog:before, .fog div:before, 
-.fog:after, .fog div:after {
+.fog div:before, 
+.fog div:after {
 	content: "";
 	background-repeat: repeat-x;
 	background-position: center;
@@ -69,13 +69,13 @@ body {
 .fog div:before, 
 .fog div:after {left: 100vw}
 
-.fog:before, .fog div:before {
-	animation: fogmove 20s linear 0s infinite;
+.fog div:before {
+	animation: fogmove 40s linear 0s infinite;
 	background-image: url("./img/ash.png");
 }
 
-.fog:after, .fog div:after {
-	animation: fogmove 10s linear 0s infinite;
+.fog div:after {
+	animation: fogmove 20s linear 0s infinite;
 	background-image: url("./img/ash.png");
 }
 

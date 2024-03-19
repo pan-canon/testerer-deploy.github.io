@@ -16,6 +16,7 @@ body {
 
 .root {
 	overflow-x: auto;
+	height: 100vh;
 	display: flex;
 	position: relative;
 }
@@ -24,7 +25,7 @@ body {
 }
 
 .memories {
-	width: 100vw;
+	min-width: 50vw;
 }
 
 .cloud_container {
@@ -68,12 +69,12 @@ body {
 
 .fog:before, .fog div:before {
 	animation: fogmove 40s linear 0s infinite;
-	background-image: url("./img/ash.png");
+	background-image: url("./img/ash1.png");
 }
 
 .fog:after, .fog div:after {
 	animation: fogmove 20s linear 0s infinite;
-	background-image: url("./img/ash.png");
+	background-image: url("./img/ash2.png");
 }
 
 @keyframes fogmove {

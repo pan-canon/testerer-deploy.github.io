@@ -14,20 +14,17 @@ body {
 	position: relative;
 }
 
-#cloud_container_left {
-	height: 100vh;
-	min-width: 300px;
-	width: 50vw;
-	float: left;
+.root {
+	overflow-x: auto;
+	display: flex;
 	position: relative;
 }
+.root::-webkit-scrollbar {
+	display: none;
+}
 
-#cloud_container_right {
-	height: 100vh;
-	min-width: 300px;
+.memories {
 	width: 50vw;
-	float: left;
-	position: relative;
 }
 
 .cloud_container {

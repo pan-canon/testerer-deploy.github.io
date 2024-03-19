@@ -14,21 +14,21 @@ body {
 	position: relative;
 }
 
-.root {
+.b_memory {
 	overflow-x: auto;
 	height: 100vh;
 	display: flex;
 	position: relative;
 }
-.root::-webkit-scrollbar {
+.b_memory:-webkit-scrollbar {
 	display: none;
 }
 
-.memories {
+.b_memory_section {
 	min-width: 50vw;
 }
 
-.cloud_container {
+.b_associative_connections {
 	transform: translateY(50%);
 	margin: 0 auto;
 	width: 300px;

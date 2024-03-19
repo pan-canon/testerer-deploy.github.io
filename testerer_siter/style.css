@@ -53,8 +53,8 @@ body {
 	position: fixed;
 }
 
-.fog div:before, 
-.fog div:after {
+.fog:before, .fog div:before, 
+.fog:after, .fog div:after {
 	content: "";
 	background-repeat: repeat-x;
 	background-position: center;
@@ -69,12 +69,12 @@ body {
 .fog div:before, 
 .fog div:after {left: 100vw}
 
-.fog div:before {
+.fog:before, .fog div:before {
 	animation: fogmove 40s linear 0s infinite;
 	background-image: url("./img/ash.png");
 }
 
-.fog div:after {
+.fog:after, .fog div:after {
 	animation: fogmove 20s linear 0s infinite;
 	background-image: url("./img/ash.png");
 }

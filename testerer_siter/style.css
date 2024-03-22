@@ -22,8 +22,7 @@ body {
 
 .b_memory_section {
 	transform-origin: center;
-	transform: translateY(calc(50vh - 150px));
-	margin: 0 auto;
+	transform: translate(calc(50vw - 150px), calc(50vh - 150px));
 	height: 50%;
 	width: 100%;
 	position: relative;

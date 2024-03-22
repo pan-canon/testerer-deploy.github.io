@@ -15,22 +15,17 @@ body {
 }
 
 .b_memory {
-	width: 100vh;
-	height: 100vw;
-	overflow-y: auto;
 	overflow-x: hidden;
-	transform: rotate(-90deg);
-	transform-origin: right top;
+	overflow-y: auto;
+	transform-origin: top right;
 	transform: rotate(-90deg) translate(0vw, -100vh);
-	-webkit-overflow-scrolling: touch;
+	height: 100vw;
+	width: 100vh;
 }
 
 .b_memory_section {
+	height: 50%;
 	width: 100%;
-	height: 100vh;
-	transform: rotate(90deg) translate(100%, 0);
-	transform-origin: right top;
-	background-color: #fff;
 }
 
 .b_associative_connections {

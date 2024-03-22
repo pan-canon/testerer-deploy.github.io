@@ -15,32 +15,18 @@ body {
 }
 
 .b_memory {
-	overflow-x: hidden;
-	overflow-y: auto;
-	transform-origin: top right;
-	transform: translate(0vw, -100vh) rotate(-90deg);
-	height: 100vw;
-	width: 100vh;
+	overflow: hidden;
+	height: 100vh;
+	width: 100vw;
 }
 
 .b_memory_section {
+	transform-origin: center;
+	transform: translateY(calc(50vh - 150px));
+	margin: 0 auto;
 	height: 50%;
 	width: 100%;
 	position: relative;
-}
-
-.b_associative_connections {
-	transform-origin: center;
-	transform: translateX(calc(50vh - 150px)) rotate(90deg);
-	margin: 0 auto;
-	height: 300px;
-	width: 300px;
-}
-
-.biopunk_container {
-	background-repeat: no-repeat;
-	background-size: cover;
-	background-image: url(./img/biohazard.svg);
 }
 
 /* Fog */

@@ -26,10 +26,12 @@ body {
 .b_memory_section {
 	height: 50%;
 	width: 100%;
+	position: relative;
 }
 
 .b_associative_connections {
-	transform: translateY(50%);
+	transform-origin: center;
+	transform: rotate(90deg) translateX(calc(50vh - 150px));
 	margin: 0 auto;
 	width: 300px;
 }

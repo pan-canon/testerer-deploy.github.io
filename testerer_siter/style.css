@@ -18,7 +18,7 @@ body {
 	overflow-x: hidden;
 	overflow-y: auto;
 	transform-origin: top right;
-	transform: rotate(-90deg) translate(0vw, -100vh);
+	transform: translate(0vw, -100vh) rotate(-90deg);
 	height: 100vw;
 	width: 100vh;
 }
@@ -31,9 +31,9 @@ body {
 
 .b_associative_connections {
 	transform-origin: center;
-	transform: rotate(90deg) translateX(calc(50vh - 150px));
+	transform: translateX(calc(50vh - 150px)) rotate(90deg);
 	margin: 0 auto;
-	height: 150px;
+	height: 300px;
 	width: 300px;
 }
 

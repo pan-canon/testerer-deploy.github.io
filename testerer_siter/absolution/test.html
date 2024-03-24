@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<!--
+	https://the-zilant.github.io/testerer-deploy.github.io/testerer_siter/index.html
+	https://www.goat1000.com/tagcanvas.php#links
+	https://www.goat1000.com/tagcanvas-centre.php#example
+	https://www.goat1000.com/tagcanvas-shapes.php
+	https://www.ascii-art-generator.org/
+	https://ascii-generator.site/
+
+	https://tympanus.net/Development/Scroll3DGrid/
+	https://www.whatfontis.com/ADBE_LoRes-12-OT-Regular.font
+	https://tympanus.net/Development/TypeShuffleAnimation/
+	https://tympanus.net/codrops/2023/02/14/animate-a-camera-fly-through-on-scroll-using-theatre-js-and-react-three-fiber/
+
+	https://waksoft.susu.ru/2017/01/19/61-css-ntxt-effects/
+	https://developer.mozilla.org/ru/docs/Web/API/Window/scrollTo
+	https://codepen.io/GreenSock/pen/ExKNEXY
+	https://gsap.com/docs/v3/Installation/?tab=cdn&module=esm&method=private+registry&tier=free&club=false&require=false&trial=true
+-->
+<html lang="en" class="no-js">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>On-Scroll 3D Grid Animations | Codrops</title>
+
+	<meta name="description" content="On-scroll animations for perspective image grids with different layouts." />
+	<meta name="keywords" content="on scroll animation, 3d, image grid, perspective, gsap, javascript, css grid" />
+
+	<meta name="author" content="Codrops" />
+
+	<link rel="stylesheet" href="https://use.typekit.net/hky5sxh.css">
+	<link rel="shortcut icon" href="favicon.ico">
+	<link rel="stylesheet" type="text/css" href="css/base.css" />
+
+	<script>document.documentElement.className="js";var supportsCssVars=function(){var e,t=document.createElement("style");return t.innerHTML="root: { --tmp-var: bold; }",document.head.appendChild(t),e=!!(window.CSS&&window.CSS.supports&&window.CSS.supports("font-weight","var(--tmp-var)")),t.parentNode.removeChild(t),e};supportsCssVars()||alert("Please view this demo in a modern browser that supports CSS Variables.");</script>
+
+	<!-- <script src="//tympanus.net/codrops/adpacks/analytics.js"></script> -->
+</head>
+
+<body class="loading">
+
+
+	<main>
+
+
+<!-- 		<div class="frame">
+			<a class="frame__back" href="https://tympanus.net/codrops/?p=73075">Back to the article</a>
+			<a class="frame__prev" href="http://tympanus.net/Development/GridFlowEffect/">Previous demo</a>
+		</div> -->
+		<div class="intro">
+			<div class="b_memory_section">
+				<canvas id="root" width="300" height="300">
+					<p>In Internet Explorer versions up to 8, things inside the canvas are inaccessible!</p>
+				</canvas>
+				<div id="memory_root">
+					<ul>
+						<li>
+							<a onclick="selectBiopunk(event)" href="#section1">
+								#biopunk
+								<audio src="./audio/Go_Tell_Aunt_Rhody.ogg"></audio>
+							</a>
+						</li>
+						<li>
+							<a onclick="selectFolklore(event)">
+								#folklore
+							</a>
+						</li>
+						<li>
+							<a onclick="selectMadness(event)" href="/">
+								#madness
+							</a>
+						</li>
+					</ul>
+				</div>
+				<div id="associative_biopunk" style="display: none;">
+					<a href="#" onclick="return false">c</a>
+					<a href="#" onclick="return false">n</a>
+					<a href="#" onclick="return false">i</a>
+					<a href="#" onclick="return false">o</a>
+					<a href="#" onclick="return false">t</a>
+					<a href="#" onclick="return false">s</a>
+					<a href="#" onclick="return false">s</a>
+					<a href="#" onclick="return false">i</a>
+					<a href="#" onclick="return false">y</a>
+					<a href="#" onclick="return false">o</a>
+					<a href="#" onclick="return false">#m</a>
+					<a href="#" onclick="return false">#p</a>
+				</div>
+				<div id="associative_folklore" style="display: none;">
+					<a href="#" onclick="return false">#mythology</a>
+					<a href="#" onclick="return false">#necro fetishism</a>
+				</div>
+				<div id="associative_madness" style="display: none;">
+					<a href="#" onclick="return false">#faith</a>
+					<a href="#" onclick="return false">#houses of sorrow</a>
+				</div>
+			</div>
+<!-- 		 			<h1 class="intro__title">
+						<span class="intro__title-pre">On-Scroll</span>
+						<span class="intro__title-sub">Perspective Grid Animations</span>
+					</h1>
+					<span class="intro__info">Scroll moderately to fully experience the animations</span> -->
+		</div>
+
+
+			<section class="content content--spacing" id="section1">
+			</section>
+
+
+	</main>
+
+
+	<script type="text/javascript" src="./js/core/tagcanvas.min.js"></script>
+	<script type="text/javascript">
+		window.onload = function() {
+			try {
+				TagCanvas.Start('root', 'memory_root', {
+					activeAudio: true, 
+					//audioIcon: false, 
+					audioVolume: '2.0', 
+					//bgRadius: '50%', 
+					//centreImage: './img/biohazard.png', 
+					//decel: '0.60', 
+					//dragControl: true, 
+					//clickToFront: '.6', 
+					//frontSelect: true, 
+					//imageRadius: '50%', 
+					initial: [0.030, -0.070], 
+					lock: 'xy', 
+					maxSpeed: '0.05', 
+					//noMouse: true, 
+					outlineMethod: "colour", 
+					outlineColour: '#b22222', 
+					padding: '20', 
+					pinchZoom: true, 
+					//reverse: 1, 
+					//shadow: '#000000', 
+					//shape: "vcylinder", 
+					//shuffleTags: true, 
+					textFont: '"moret-variable", serif', 
+					textColour: "#eee", 
+					//tooltip: "native", 
+					//weight: true, 
+				});
+			} catch(e) {
+				// something went wrong, hide the canvas container
+				document.getElementById('b_memory_section').style.display = 'none';
+			}
+		};
+
+		function selectBiopunk(e) {
+			TagCanvas.Start('root', 'associative_biopunk', {
+				centreImage: './img/biohazard.png', 
+				initial: [0.200, 0.000], 
+				padding: '20', 
+				lock: 'y', 
+				shape: 'DblHelix', 
+				textColour: null, 
+			});
+		}
+
+		function selectFolklore(e) {
+			e.preventDefault();
+			TagCanvas.Start('root', 'associative_folklore', {
+				initial: [0.200, 0.000], 
+				padding: '20', 
+				shape: "vring(0.5)", 
+				lock: "x", 
+				offsetY: -60, 
+			});
+		}
+
+		function selectMadness(e) {
+			e.preventDefault();
+			TagCanvas.Start('root', 'associative_madness', {
+				centreImage: './img/arkham.png', 
+				initial: [0.200, 0.000], 
+				shape: "hcylinder", 
+				lock: "x", 
+			});
+		}
+
+		function DblHelix(n, rx, ry, rz) {
+			let a = Math.PI / n, i, j, p = [], z = rz * 2 / n;
+			for(i = 0; i < n; ++i) {
+				j = a * i;
+				if (i % 2)
+					j += Math.PI;
+				p.push([rx * Math.cos(j), rz - z * i, ry * Math.sin(j)]);
+			}
+			return p;
+		}
+	</script>
+	<!-- <script src="https://tympanus.net/codrops/adpacks/cda_sponsor.js"></script> -->
+	<script src="js/gsap.min.js"></script>
+	<script src="js/ScrollTrigger.min.js"></script>
+	<script src="js/lenis.min.js"></script>
+	<script>// Custom
+// Detect if a link's href goes to the current page
+function getSamePageAnchor (link) {
+  if (
+    link.protocol !== window.location.protocol ||
+    link.host !== window.location.host ||
+    link.pathname !== window.location.pathname ||
+    link.search !== window.location.search
+  ) {
+    return false;
+  }
+
+  return link.hash;
+}
+
+// Scroll to a given hash, preventing the event given if there is one
+function scrollToHash(hash, e) {
+  const elem = hash ? document.querySelector(hash) : false;
+  if(elem) {
+    if(e) e.preventDefault();
+    gsap.to(window, {scrollTo: elem});
+  }
+}
+
+// If a link's href is within the current page, scroll to it instead
+document.querySelectorAll('a[href]').forEach(a => {
+  a.addEventListener('click', e => {
+    scrollToHash(getSamePageAnchor(a), e);
+  });
+});
+
+// Scroll to the element in the URL's hash on load
+scrollToHash(window.location.hash);</script>
+
+</body>
+</html>

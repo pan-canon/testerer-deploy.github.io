@@ -436,11 +436,8 @@
 		};
 
 		function selectBiopunk(e) {
-			e.preventDefault();
-        document.getElementById("id1").scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-        });
+scroll.scrollBy({top:300, behavior:"smooth"});
+
 			TagCanvas.Start('root', 'associative_biopunk', {
 				centreImage: './img/biohazard.png', 
 				initial: [0.200, 0.000], 

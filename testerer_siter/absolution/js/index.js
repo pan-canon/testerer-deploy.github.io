@@ -263,7 +263,7 @@ const scroll = () => {
 		let animationType;
 		switch (i % 6) {
 			case 0:
-				animationType = 'type1';
+				animationType = 'type4';
 				break;
 			case 1:
 				animationType = 'type2';

@@ -399,6 +399,7 @@
 
 	<script type="text/javascript" src="./js/core/tagcanvas.min.js"></script>
 	<script type="text/javascript">
+		const smoothLinks = document.querySelectorAll("a[href^='#']");
 		window.onload = function() {
 			try {
 				TagCanvas.Start('root', 'memory_root', {
@@ -437,13 +438,13 @@
 
 		function selectBiopunk(e) {
 			e.preventDefault();
-		const smoothLinks = document.querySelectorAll("a[href^='#']");
-        const id = smoothLink.getAttribute("href");
+        	const id = smoothLink.getAttribute("href");
 
-        document.querySelector(id).scrollIntoView({
-            behavior: "smooth",
-            block: "end"
-        });
+	        document.querySelector(id).scrollIntoView({
+	            behavior: "smooth", 
+	            block: "end"
+	        });
+
 			TagCanvas.Start('root', 'associative_biopunk', {
 				centreImage: './img/biohazard.png', 
 				initial: [0.200, 0.000], 

@@ -436,9 +436,8 @@
 		};
 
 		function selectBiopunk(e) {
+			e.preventDefault();
 		const smoothLinks = document.querySelectorAll("a[href^='#']");
-
-        e.preventDefault();
         const id = smoothLink.getAttribute("href");
 
         document.querySelector(id).scrollIntoView({

@@ -435,8 +435,8 @@
 			}
 		};
 
-		function selectBiopunk(e) {
-			function getSamePageAnchor (link) {
+
+		function getSamePageAnchor (link) {
   if (
     link.protocol !== window.location.protocol ||
     link.host !== window.location.host ||
@@ -457,6 +457,9 @@ function scrollToHash(hash, e) {
     gsap.to(window, {scrollTo: elem});
   }
 }
+
+
+		function selectBiopunk(e) {
 
 // If a link's href is within the current page, scroll to it instead
 document.querySelectorAll('a[href]').forEach(a => {

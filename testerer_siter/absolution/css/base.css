@@ -6,6 +6,7 @@
 
 :root {
 	font-size: 16px;
+	--color-bg-alt: rgb(15, 14, 14);
 	--color-text: #fff;
 	--color-bg: #000;
 	--color-link: #fff;
@@ -198,7 +199,10 @@ body #cdawrap {
 }
 
 .intro {
-	height: calc(100vh - 3rem);
+	height: 100vh;
+	width: 100vw;
+		position: fixed;
+	z-index: 1000;
     text-align: center;
     place-items: center;
     display: grid;

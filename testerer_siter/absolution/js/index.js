@@ -308,7 +308,7 @@ function scrollToHash(hash, e) {
   const elem = hash ? document.querySelector(hash) : false;
   if(elem) {
     if(e) e.preventDefault();
-    gsap.to(window, {scrollTo: elem, duration: 2});
+    gsap.to(window, {scrollTo: elem, duration: 4});
   }
 }
 

@@ -436,18 +436,6 @@
 		};
 
 		function selectBiopunk(e) {
-const smoothLinks = document.querySelectorAll("a[href^='#']");
-for (let smoothLink of smoothLinks) {
-    smoothLink.addEventListener("click", function (e) {
-        e.preventDefault();
-        const id = smoothLink.getAttribute("href");
-
-        document.querySelector(id).scrollIntoView({
-            behavior: "smooth",
-            block: "end"
-        });
-    });
-};
 			TagCanvas.Start('root', 'associative_biopunk', {
 				centreImage: './img/biohazard.png', 
 				initial: [0.200, 0.000], 

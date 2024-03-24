@@ -286,7 +286,18 @@ const scroll = () => {
 }
 
 // Custom
+const smoothLinks = document.querySelectorAll("a[href^='#']");
+for (let smoothLink of smoothLinks) {
+    smoothLink.addEventListener("click", function (e) {
+        e.preventDefault();
+        const id = smoothLink.getAttribute("href");
 
+        document.querySelector(id).scrollIntoView({
+            behavior: "smooth",
+            block: "end"
+        });
+    });
+};
 
 // Preload images, initialize smooth scrolling, apply scroll-triggered animations, and remove loading class from body
 preloadImages('.grid__item-inner').then(() => {

@@ -400,7 +400,6 @@
 	<script type="text/javascript" src="./js/core/tagcanvas.min.js"></script>
 	<script type="text/javascript">
 		window.onload = function() {
-
 			try {
 				TagCanvas.Start('root', 'memory_root', {
 					activeAudio: true, 
@@ -436,7 +435,13 @@
 			}
 		};
 
-		/*function selectBiopunk(e) {
+		function selectBiopunk(e) {
+			// If a link's href is within the current page, scroll to it instead
+document.querySelectorAll('a[href]').forEach(a => {
+  a.addEventListener('click', e => {
+    scrollToHash(getSamePageAnchor(a), e);
+  });
+});
 			TagCanvas.Start('root', 'associative_biopunk', {
 				centreImage: './img/biohazard.png', 
 				initial: [0.200, 0.000], 
@@ -445,7 +450,7 @@
 				shape: 'DblHelix', 
 				textColour: null, 
 			});
-		}*/
+		}
 
 		function selectFolklore(e) {
 			e.preventDefault();

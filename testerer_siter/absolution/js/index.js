@@ -285,6 +285,9 @@ const scroll = () => {
 	});
 }
 
+
+
+
 // Custom
 // Detect if a link's href goes to the current page
 function getSamePageAnchor (link) {
@@ -309,12 +312,7 @@ function scrollToHash(hash, e) {
   }
 }
 
-// If a link's href is within the current page, scroll to it instead
-document.querySelectorAll('a[href]').forEach(a => {
-  a.addEventListener('click', e => {
-    scrollToHash(getSamePageAnchor(a), e);
-  });
-});
+
 
 // Scroll to the element in the URL's hash on load
 scrollToHash(window.location.hash);

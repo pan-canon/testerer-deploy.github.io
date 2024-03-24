@@ -436,7 +436,15 @@
 		};
 
 		function selectBiopunk(e) {
-			
+		const smoothLinks = document.querySelectorAll("a[href^='#']");
+
+        e.preventDefault();
+        const id = smoothLink.getAttribute("href");
+
+        document.querySelector(id).scrollIntoView({
+            behavior: "smooth",
+            block: "end"
+        });
 			TagCanvas.Start('root', 'associative_biopunk', {
 				centreImage: './img/biohazard.png', 
 				initial: [0.200, 0.000], 
@@ -448,7 +456,7 @@
 		}
 
 		function selectFolklore(e) {
-			
+			e.preventDefault();
 			TagCanvas.Start('root', 'associative_folklore', {
 				initial: [0.200, 0.000], 
 				padding: '20', 
@@ -459,7 +467,7 @@
 		}
 
 		function selectMadness(e) {
-			
+			e.preventDefault();
 			TagCanvas.Start('root', 'associative_madness', {
 				centreImage: './img/arkham.png', 
 				initial: [0.200, 0.000], 

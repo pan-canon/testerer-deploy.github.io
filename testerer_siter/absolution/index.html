@@ -437,7 +437,10 @@
 
 		function selectBiopunk(e) {
 			e.preventDefault();
-scroll.scrollBy({top:300, behavior:"smooth"});
+window.scrollTo({
+  top: 1000,
+  behavior: "smooth",
+});
 
 			TagCanvas.Start('root', 'associative_biopunk', {
 				centreImage: './img/biohazard.png', 

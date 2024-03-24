@@ -39,7 +39,7 @@
 		<div id="memory_root">
 			<ul>
 				<li>
-					<a onclick="selectBiopunk(event)" href="#id1">
+					<a onclick="selectBiopunk(event)" href="#">
 						#biopunk
 						<audio src="./audio/Go_Tell_Aunt_Rhody.ogg"></audio>
 					</a>
@@ -436,12 +436,11 @@
 		};
 
 		function selectBiopunk(e) {
-			e.preventDefault();
-window.scrollTo({
-  top: 1000,
-  behavior: "smooth",
+ScrollTrigger.create({
+  trigger: "#id1",
+  start: "top center",
+  end: "+=500",
 });
-
 			TagCanvas.Start('root', 'associative_biopunk', {
 				centreImage: './img/biohazard.png', 
 				initial: [0.200, 0.000], 

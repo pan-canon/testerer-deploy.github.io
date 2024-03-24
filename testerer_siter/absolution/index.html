@@ -400,19 +400,6 @@
 	<script type="text/javascript" src="./js/core/tagcanvas.min.js"></script>
 	<script type="text/javascript">
 		const smoothLinks = document.querySelectorAll("a[href^='#']");
-
-for (let smoothLink of smoothLinks) {
-    smoothLink.addEventListener("click", function (e) {
-        e.preventDefault();
-        const id = smoothLink.getAttribute("href");
-
-        document.querySelector(id).scrollIntoView({
-            behavior: "smooth",
-            block: "end"
-        });
-    });
-};
-
 		window.onload = function() {
 			try {
 				TagCanvas.Start('root', 'memory_root', {
@@ -450,6 +437,13 @@ for (let smoothLink of smoothLinks) {
 		};
 
 		function selectBiopunk(e) {
+			e.preventDefault();
+        	const id = smoothLink.getAttribute("href");
+
+	        document.querySelector(id).scrollIntoView({
+	            behavior: "smooth", 
+	            block: "end"
+	        });
 
 			TagCanvas.Start('root', 'associative_biopunk', {
 				centreImage: './img/biohazard.png', 

@@ -399,6 +399,9 @@
 
 	<script type="text/javascript" src="./js/core/tagcanvas.min.js"></script>
 	<script type="text/javascript">
+		window.onload = function() {
+
+
 // Detect if a link's href goes to the current page
 function getSamePageAnchor (link) {
   if (
@@ -432,7 +435,7 @@ document.querySelectorAll('a[href]').forEach(a => {
 // Scroll to the element in the URL's hash on load
 scrollToHash(window.location.hash);
 
-		window.onload = function() {
+
 			try {
 				TagCanvas.Start('root', 'memory_root', {
 					activeAudio: true, 
@@ -468,7 +471,7 @@ scrollToHash(window.location.hash);
 			}
 		};
 
-		function selectBiopunk(e) {
+		/*function selectBiopunk(e) {
 			TagCanvas.Start('root', 'associative_biopunk', {
 				centreImage: './img/biohazard.png', 
 				initial: [0.200, 0.000], 
@@ -477,7 +480,7 @@ scrollToHash(window.location.hash);
 				shape: 'DblHelix', 
 				textColour: null, 
 			});
-		}
+		}*/
 
 		function selectFolklore(e) {
 			e.preventDefault();

@@ -399,6 +399,29 @@
 
 	<script type="text/javascript" src="./js/core/tagcanvas.min.js"></script>
 	<script type="text/javascript">
+		function getSamePageAnchor (link) {
+  if (
+    link.protocol !== window.location.protocol ||
+    link.host !== window.location.host ||
+    link.pathname !== window.location.pathname ||
+    link.search !== window.location.search
+  ) {
+    return false;
+  }
+
+  return link.hash;
+}
+
+// Scroll to a given hash, preventing the event given if there is one
+function scrollToHash(hash, e) {
+  const elem = hash ? document.querySelector(hash) : false;
+  if(elem) {
+    if(e) e.preventDefault();
+    gsap.to(window, {scrollTo: elem});
+  }
+}
+
+
 		window.onload = function() {
 			try {
 				TagCanvas.Start('root', 'memory_root', {
@@ -436,27 +459,7 @@
 		};
 
 
-		function getSamePageAnchor (link) {
-  if (
-    link.protocol !== window.location.protocol ||
-    link.host !== window.location.host ||
-    link.pathname !== window.location.pathname ||
-    link.search !== window.location.search
-  ) {
-    return false;
-  }
 
-  return link.hash;
-}
-
-// Scroll to a given hash, preventing the event given if there is one
-function scrollToHash(hash, e) {
-  const elem = hash ? document.querySelector(hash) : false;
-  if(elem) {
-    if(e) e.preventDefault();
-    gsap.to(window, {scrollTo: elem});
-  }
-}
 
 
 		function selectBiopunk(e) {

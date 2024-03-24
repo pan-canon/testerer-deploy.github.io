@@ -115,6 +115,7 @@ a:not(.card__image):focus-visible {
 }
 
 main {
+	padding-top: 100vh;
 	position: relative;
 	overflow: hidden;
 	width: 100%;
@@ -203,13 +204,13 @@ body #cdawrap {
 	top: 0;
 	height: 100vh;
 	width: 100vw;
-		position: fixed;
+	position: fixed;
 	z-index: 1000;
     text-align: center;
     place-items: center;
     display: grid;
     margin-bottom: 30vh;
-    background: linear-gradient(0deg, transparent, var(--color-bg-alt));
+    background: radial-gradient(closest-side, transparent, var(--color-bg-alt));
 }
 
 .intro__title {

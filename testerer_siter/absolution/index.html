@@ -436,6 +436,7 @@
 		};
 
 		function selectBiopunk(e) {
+			e.preventDefault();
 scroll.scrollBy({top:300, behavior:"smooth"});
 
 			TagCanvas.Start('root', 'associative_biopunk', {

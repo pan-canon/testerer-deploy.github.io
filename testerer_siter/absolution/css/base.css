@@ -31,6 +31,11 @@ body {
 	-moz-osx-font-smoothing: grayscale;
 }
 
+html, body {
+    scrollbar-color: #458245 #714826; /* «цвет ползунка» «цвет полосы скроллбара» */
+    scrollbar-width: auto | thin | none;  /* толщина */
+}
+
 /* полоса прокрутки (скроллбар) */
 ::-webkit-scrollbar {
     width: 24px; /* ширина для вертикального скролла */

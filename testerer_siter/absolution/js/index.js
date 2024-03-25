@@ -361,7 +361,6 @@ scrollToHash(window.location.hash);
 				// something went wrong, hide the canvas container
 				document.getElementById('b_memory_section').style.display = 'none';
 			}
-		};
 
 		function selectBiopunk(e) {
 			TagCanvas.Start('root', 'associative_biopunk', {
@@ -374,8 +373,8 @@ scrollToHash(window.location.hash);
 			});
 		}
 
-		function selectFolklore(e) {
-			e.preventDefault();
+		function selectFolklore() {
+			
 			TagCanvas.Start('root', 'associative_folklore', {
 				initial: [0.200, 0.000], 
 				padding: '20', 
@@ -385,8 +384,8 @@ scrollToHash(window.location.hash);
 			});
 		}
 
-		function selectMadness(e) {
-			e.preventDefault();
+		function selectMadness() {
+			
 			TagCanvas.Start('root', 'associative_madness', {
 				centreImage: './img/arkham.png', 
 				initial: [0.200, 0.000], 
@@ -405,6 +404,8 @@ scrollToHash(window.location.hash);
 			}
 			return p;
 		}
+
+		};
 
 
 

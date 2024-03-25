@@ -289,6 +289,85 @@ const scroll = () => {
 
 
 // Custom
+		window.onload = function() {
+			try {
+				TagCanvas.Start('root', 'memory_root', {
+					activeAudio: true, 
+					//audioIcon: false, 
+					audioVolume: '2.0', 
+					//bgRadius: '50%', 
+					//centreImage: './img/biohazard.png', 
+					//decel: '0.60', 
+					//dragControl: true, 
+					//clickToFront: '.6', 
+					//frontSelect: true, 
+					//imageRadius: '50%', 
+					initial: [0.030, -0.070], 
+					lock: 'xy', 
+					maxSpeed: '0.05', 
+					//noMouse: true, 
+					outlineMethod: "colour", 
+					outlineColour: '#b22222', 
+					padding: '20', 
+					pinchZoom: true, 
+					//reverse: 1, 
+					//shadow: '#000000', 
+					//shape: "vcylinder", 
+					//shuffleTags: true, 
+					textFont: '"moret-variable", serif', 
+					textColour: "#eee", 
+					//tooltip: "native", 
+					//weight: true, 
+				});
+			} catch(e) {
+				// something went wrong, hide the canvas container
+				document.getElementById('b_memory_section').style.display = 'none';
+			}
+		};
+
+		function selectBiopunk(e) {
+			TagCanvas.Start('root', 'associative_biopunk', {
+				centreImage: './img/biohazard.png', 
+				initial: [0.200, 0.000], 
+				padding: '20', 
+				lock: 'y', 
+				shape: 'DblHelix', 
+				textColour: null, 
+			});
+		}
+
+		function selectFolklore(e) {
+			e.preventDefault();
+			TagCanvas.Start('root', 'associative_folklore', {
+				initial: [0.200, 0.000], 
+				padding: '20', 
+				shape: "vring(0.5)", 
+				lock: "x", 
+				offsetY: -60, 
+			});
+		}
+
+		function selectMadness(e) {
+			e.preventDefault();
+			TagCanvas.Start('root', 'associative_madness', {
+				centreImage: './img/arkham.png', 
+				initial: [0.200, 0.000], 
+				shape: "hcylinder", 
+				lock: "x", 
+			});
+		}
+
+		function DblHelix(n, rx, ry, rz) {
+			let a = Math.PI / n, i, j, p = [], z = rz * 2 / n;
+			for(i = 0; i < n; ++i) {
+				j = a * i;
+				if (i % 2)
+					j += Math.PI;
+				p.push([rx * Math.cos(j), rz - z * i, ry * Math.sin(j)]);
+			}
+			return p;
+		}
+
 // Detect if a link's href goes to the current page
 function getSamePageAnchor (link) {
   if (

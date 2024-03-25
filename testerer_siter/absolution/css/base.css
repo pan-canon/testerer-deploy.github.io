@@ -110,7 +110,8 @@ a:not(.card__image):focus-visible {
 
 
 a {
-  
+  overflow: hidden;
+  margin-left: -15px;
   color: transparent;
   text-shadow: 0px 0px 3px #eee, 5px 5px 2px teal, -5px -2px 2px maroon;
   font-weight: 400;

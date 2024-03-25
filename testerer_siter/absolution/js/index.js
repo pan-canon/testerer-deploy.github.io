@@ -51,30 +51,46 @@ const applyAnimation = (grid, animationType) => {
 		case 'type1':
 
 			// Set some CSS related style values
-			grid.style.setProperty('--perspective', '1000px');
-			grid.style.setProperty('--grid-inner-scale', '0.5');
+			grid.style.setProperty('--grid-width', '50%');
+			grid.style.setProperty('--perspective', '3000px');
+			grid.style.setProperty('--grid-item-ratio', '0.8');
+			grid.style.setProperty('--grid-columns', '3');
+			grid.style.setProperty('--grid-gap', '1vw');
 
 			timeline
 			.set(gridWrap, {
-				rotationY: 25
+				transformOrigin: '0% 50%',
+				rotationY: 30,
+				xPercent: -75
 			})
 			.set(gridItems, {
-				z: () => gsap.utils.random(-1600,200)
+				transformOrigin: '50% 0%'
 			})
-			.fromTo(gridItems, {
-				xPercent: () => gsap.utils.random(-1000,-500)
-			}, {
-				xPercent: () => gsap.utils.random(500,1000)
+			.to(gridItems, {
+				duration: 0.5,
+				ease: 'power2',
+				z: 500,
+				stagger: 0.04
 			}, 0)
-			.fromTo(gridItemsInner, {
-				scale: 2
+			.to(gridItems, {
+				duration: 0.5,
+				ease: 'power2.in',
+				z: 0,
+				stagger: 0.04
+			}, 0.5)
+			.fromTo(gridItems, {
+				rotationX: -70,
+				filter: 'brightness(120%)'
 			}, {
-				scale: .5
+				duration: 1,
+				rotationX: 70,
+				filter: 'brightness(0%)',
+				stagger: 0.04
 			}, 0)
 			
 			break;
 
-	  	case 'type2':
+	  case 'type2':
 			
 			// Set some CSS related style values
 			grid.style.setProperty('--grid-width', '160%');
@@ -151,41 +167,25 @@ const applyAnimation = (grid, animationType) => {
 		case 'type4':
 			
 			// Set some CSS related style values
-			grid.style.setProperty('--grid-width', '50%');
-			grid.style.setProperty('--perspective', '3000px');
-			grid.style.setProperty('--grid-item-ratio', '0.8');
-			grid.style.setProperty('--grid-columns', '3');
-			grid.style.setProperty('--grid-gap', '1vw');
+			grid.style.setProperty('--perspective', '1000px');
+			grid.style.setProperty('--grid-inner-scale', '0.5');
 
 			timeline
 			.set(gridWrap, {
-				transformOrigin: '0% 50%',
-				rotationY: 30,
-				xPercent: -75
+				rotationY: 25
 			})
 			.set(gridItems, {
-				transformOrigin: '50% 0%'
+				z: () => gsap.utils.random(-1600,200)
 			})
-			.to(gridItems, {
-				duration: 0.5,
-				ease: 'power2',
-				z: 500,
-				stagger: 0.04
-			}, 0)
-			.to(gridItems, {
-				duration: 0.5,
-				ease: 'power2.in',
-				z: 0,
-				stagger: 0.04
-			}, 0.5)
 			.fromTo(gridItems, {
-				rotationX: -70,
-				filter: 'brightness(120%)'
+				xPercent: () => gsap.utils.random(-1000,-500)
 			}, {
-				duration: 1,
-				rotationX: 70,
-				filter: 'brightness(0%)',
-				stagger: 0.04
+				xPercent: () => gsap.utils.random(500,1000)
+			}, 0)
+			.fromTo(gridItemsInner, {
+				scale: 2
+			}, {
+				scale: .5
 			}, 0)
 			
 			break;
@@ -263,7 +263,7 @@ const scroll = () => {
 		let animationType;
 		switch (i % 6) {
 			case 0:
-				animationType = 'type4'; // type 1
+				animationType = 'type1'; // type 1
 				break;
 			case 1:
 				animationType = 'type2';

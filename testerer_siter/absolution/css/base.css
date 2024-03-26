@@ -137,7 +137,7 @@ body #cdawrap {
 	height: 100vh;
 	width: 100vw;
 	position: fixed;
-	z-index: 1000;
+	z-index: 999;
     text-align: center;
     place-items: center;
     display: grid;

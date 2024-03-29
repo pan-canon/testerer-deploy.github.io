@@ -1,7 +1,7 @@
-*,
-*::after,
-*::before {
-	box-sizing: border-box;
+*, 
+*:after, 
+*:before {
+	box-sizing: border-box
 }
 
 :root {
@@ -22,7 +22,7 @@
 	--grid-inner-scale: 1;
 }
 
-html::-webkit-scrollbar { /* webkit */
+html:-webkit-scrollbar { /* webkit */
     width: 0;
     height: 0;
 }
@@ -38,14 +38,14 @@ body {
 }
 
 /* Page Loader */
-.js .loading::before,
-.js .loading::after {
+.js .loading:before,
+.js .loading:after {
 	content: '';
 	position: fixed;
 	z-index: 1000;
 }
 
-.js .loading::before {
+.js .loading:before {
 	top: 0;
 	left: 0;
 	width: 100%;
@@ -53,7 +53,7 @@ body {
 	background: var(--color-bg);
 }
 
-.js .loading::after {
+.js .loading:after {
 	top: 50%;
 	left: 50%;
 	width: 60px;
@@ -69,7 +69,7 @@ body {
 @keyframes loaderAnim {
 	to {
 		opacity: 1;
-		transform: scale3d(0.5,0.5,1);
+		transform: scale3d(0.5, 0.5, 1);
 	}
 }
 
@@ -96,7 +96,7 @@ a:not(.card__image):focus {
 a:not(.card__image):focus:not(:focus-visible) {
 	/* Remove the focus indicator on mouse-focus for browsers
 	 that do support :focus-visible */
-	background: transparent;
+	background: transparent
 }
 
 a:not(.card__image):focus-visible {
@@ -117,21 +117,20 @@ a:not(.card__image):focus-visible {
 }
 
 .unbutton:focus {
-	outline: none;
+	outline: none
 }
 
 main {
-	padding-top: 100vh;
 	position: relative;
 	overflow: hidden;
 	width: 100%;
 }
 
 body #cdawrap {
-    justify-self: start;
+    justify-self: start
 }
 
-.intro {
+.hat {
 	left: 0;
 	top: 0;
 	height: 100vh;
@@ -145,7 +144,7 @@ body #cdawrap {
     background: radial-gradient(closest-side, transparent, var(--color-bg-alt));
 }
 
-.intro__title {
+.hat__title {
     place-items: center;
     margin: 0;
     line-height: .9;
@@ -154,20 +153,20 @@ body #cdawrap {
     font-weight: 400;
 }
 
-.intro__title-pre {
+.hat__title-pre {
 	font-weight: 300;
-    font-size: clamp(2rem,8vw,5rem);
+    font-size: clamp(2rem, 8vw, 5rem);
     color: var(--color-title);
     text-transform: uppercase;
 }
 
-.intro__title-sub {
-    font-size: clamp(1.5rem,20vw,8rem);
+.hat__title-sub {
+    font-size: clamp(1.5rem, 20vw, 8rem);
     max-width: 15ch;
     margin: 0 auto;
 }
 
-.intro__info {
+.hat__info {
 	max-width: 15ch;
     opacity: .6;
     margin-bottom: 4rem;
@@ -177,7 +176,7 @@ body #cdawrap {
     align-self: end;
 }
 
-.intro__info::after {
+.hat__info:after {
 	content: "";
 	width: 1px;
 	height: 2rem;
@@ -273,7 +272,7 @@ body #cdawrap {
 	height: var(--grid-height);
 	width: var(--grid-width);
 	display: grid;
-	grid-template-columns: repeat(var(--grid-columns),1fr);
+	grid-template-columns: repeat(var(--grid-columns), 1fr);
 	gap: var(--grid-gap);
 	transform-style: preserve-3d;
 }

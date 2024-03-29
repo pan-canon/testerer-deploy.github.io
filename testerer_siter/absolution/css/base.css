@@ -134,7 +134,8 @@ body #cdawrap {
 .hat {
     text-align: center;
     place-items: center;
-	background: radial-gradient(closest-side, transparent, var(--color-bg-alt));
+	background: radial-gradient(ellipse, rgba(178, 24, 24, .16), var(--color-bg-alt));
+	margin-bottom: 100vh;
 	left: 0;
 	top: 0;
 	height: 100vh;
@@ -145,9 +146,9 @@ body #cdawrap {
 }
 
 .hat__title {
+	line-height: .9;
     place-items: center;
     margin: 0;
-    line-height: .9;
     display: grid;
     margin-top: 15vh;
     font-weight: 400;
@@ -218,7 +219,7 @@ body #cdawrap {
 }
 
 .content--spacing {
-	margin-bottom: 100vh;
+	margin-bottom: 100vh
 }
 
 .content__title {

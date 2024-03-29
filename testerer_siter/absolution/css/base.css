@@ -131,17 +131,16 @@ body #cdawrap {
 }
 
 .hat {
+    text-align: center;
+    place-items: center;
+	background: radial-gradient(closest-side, transparent, var(--color-bg-alt));
 	left: 0;
 	top: 0;
 	height: 100vh;
 	width: 100vw;
+	display: grid;
 	position: sticky;
 	z-index: 999;
-    text-align: center;
-    place-items: center;
-    display: grid;
-    margin-bottom: 30vh;
-    background: radial-gradient(closest-side, transparent, var(--color-bg-alt));
 }
 
 .hat__title {

@@ -85,7 +85,6 @@ const applyAnimation = (grid, animationType) => {
 				rotationX: 70, 
 				filter: 'brightness(0%)', 
 				stagger: 0.04, 
-				onToggle: () => selectBiopunk(event), 
 			}, 0)
 
 			break;
@@ -316,6 +315,12 @@ document.querySelectorAll('a[href]').forEach(a => {
 
 // Scroll to the element in the URL's hash on load
 scrollToHash(window.location.hash);
+
+
+ScrollTrigger.create({
+  trigger: ".grid--0",
+  onToggle: () => selectBiopunk(event), 
+});
 
 // Preload images, initialize smooth scrolling, apply scroll-triggered animations, and remove loading class from body
 preloadImages('.grid__item-inner').then(() => {

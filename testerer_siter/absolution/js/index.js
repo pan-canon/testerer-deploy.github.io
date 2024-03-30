@@ -126,7 +126,6 @@ const applyAnimation = (grid, animationType) => {
 				scale: 2
 			}, {
 				scale: 0.5, 
-				onToggle: () => selectFolklore(event), 
 			}, 0)
 
 			break;
@@ -319,7 +318,11 @@ scrollToHash(window.location.hash);
 
 ScrollTrigger.create({
   trigger: ".grid--0",
-  onEnter : () => selectBiopunk(event), 
+  onToggle: () => selectBiopunk(event), 
+});
+ScrollTrigger.create({
+  trigger: ".grid--1",
+  onToggle: () => selectFolklore(event), 
 });
 
 // Preload images, initialize smooth scrolling, apply scroll-triggered animations, and remove loading class from body

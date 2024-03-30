@@ -85,7 +85,7 @@ const applyAnimation = (grid, animationType) => {
 				rotationX: 70, 
 				filter: 'brightness(0%)', 
 				stagger: 0.04, 
-				onEnterBack: () => selectBiopunk(event), 
+				onToggle: () => selectBiopunk(event), 
 			}, 0)
 
 			break;
@@ -127,7 +127,7 @@ const applyAnimation = (grid, animationType) => {
 				scale: 2
 			}, {
 				scale: 0.5, 
-				onEnterBack: () => selectFolklore(event), 
+				onToggle: () => selectFolklore(event), 
 			}, 0)
 
 			break;

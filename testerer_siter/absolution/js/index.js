@@ -152,7 +152,7 @@ const applyAnimation = (grid, animationType) => {
 	// Apply animations to each grid
 	const scroll = () => {
 		grids.forEach((grid, i) => {
-		// Determine animation type
+			// Determine animation type
 			let animationType;
 
 			switch (i % 6) {
@@ -206,6 +206,10 @@ document.querySelectorAll('a[href]').forEach(a => {
 scrollToHash(window.location.hash);
 
 
+ScrollTrigger.create({
+  trigger: ".hat",
+  onToggle: () => memory_root(event), 
+});
 ScrollTrigger.create({
   trigger: ".grid--0",
   onToggle: () => selectBiopunk(event), 

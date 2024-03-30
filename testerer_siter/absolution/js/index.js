@@ -299,8 +299,8 @@ function scrollToHash(hash, e) {
 	if (elem) {
 		if (e) e.preventDefault();
 		gsap.to(window, {
-			scrollTo: elem, 
-			duration: 5, 
+			scrollTo: { y: "max" }, 
+			duration: 6, 
 		});
 	}
 }

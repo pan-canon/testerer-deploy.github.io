@@ -145,7 +145,7 @@ body #cdawrap {
 }
 
 .hat--biohazard {
-	background: radial-gradient(ellipse, rgba(0, 255, 255, .1), rgba(178, 24, 24, .16), var(--color-bg-alt))
+	background: radial-gradient(50vw, rgba(0, 255, 255, .1), rgba(178, 24, 24, .16), var(--color-bg-alt))
 }
 
 .hat__title {

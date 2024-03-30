@@ -1,5 +1,5 @@
 // Import the necessary function for preloading images
-import { preloadImages, getGrid } from './hugr/utils.js';
+import { preloadImages, getGrid } from './utils.js';
 
 // Define a variable that will store the Lenis smooth scrolling object
 let lenis;

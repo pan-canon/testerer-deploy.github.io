@@ -155,7 +155,7 @@ const applyAnimation = (grid, animationType) => {
 			// Determine animation type
 			let animationType;
 
-			switch (i % 6) {
+			switch (i % 3) {
 				case 0: 
 					animationType = 'type1';
 				break;
@@ -209,7 +209,6 @@ scrollToHash(window.location.hash);
 ScrollTrigger.create({
   trigger: ".grid--0", 
   onToggle: () => selectBiopunk(event), 
-  onLeaveBack: () => memory_root(event), 
 });
 ScrollTrigger.create({
   trigger: ".grid--1", 

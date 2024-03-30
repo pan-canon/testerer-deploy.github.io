@@ -319,7 +319,7 @@ scrollToHash(window.location.hash);
 
 ScrollTrigger.create({
   trigger: ".grid--0",
-  onToggle: () => selectBiopunk(event), 
+  onEnter : () => selectBiopunk(event), 
 });
 
 // Preload images, initialize smooth scrolling, apply scroll-triggered animations, and remove loading class from body

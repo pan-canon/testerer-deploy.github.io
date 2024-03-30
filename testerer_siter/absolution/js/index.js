@@ -143,66 +143,6 @@ const applyAnimation = (grid, animationType) => {
 
 			break;
 
-		case 'type4': 
-			// Set some CSS related style values
-			grid.style.setProperty('--perspective', '1000px');
-			grid.style.setProperty('--grid-inner-scale', '0.5');
-
-			timeline
-			.set(gridWrap, {
-				rotationY: 25
-			})
-			.set(gridItems, {
-				z: () => gsap.utils.random(-1600,200)
-			})
-			.fromTo(gridItems, {
-				xPercent: () => gsap.utils.random(-1000,-500)
-			}, {
-				xPercent: () => gsap.utils.random(500,1000)
-			}, 0)
-			.fromTo(gridItemsInner, {
-				scale: 2
-			}, {
-				scale: .5
-			}, 0)
-
-			break;
-
-		case 'type5': 
-			// Set some CSS related style values
-			grid.style.setProperty('--grid-width', '120%');
-			grid.style.setProperty('--grid-columns', '8');
-			grid.style.setProperty('--grid-gap', '0');
-
-			const gridObj = getGrid(gridItems);
-
-			timeline
-			.set(gridWrap, {
-				rotationX: 50
-			})
-			.to(gridWrap, {
-				rotationX: 30
-			})
-			.fromTo(gridItems, {
-				filter: 'brightness(0%)'
-			}, {
-				filter: 'brightness(100%)'
-			}, 0)
-			.to(gridObj.rows('even'), {
-				xPercent: -100, 
-				ease: 'power1'
-			}, 0)
-			.to(gridObj.rows('odd'), {
-				xPercent: 100, 
-				ease: 'power1'
-			}, 0)
-			.addLabel('rowsEnd', '>-=0.15')
-			.to(gridItems, {
-				ease: 'power1', 
-				yPercent: () => gsap.utils.random(-100, 200),
-			}, 'rowsEnd');
-			break;
-
 		default:
 			console.error('Unknown animation type.');
 			break;
@@ -224,12 +164,6 @@ const applyAnimation = (grid, animationType) => {
 				break;
 				case 2: 
 					animationType = 'type3';
-				break;
-				case 3: 
-					animationType = 'type4';
-				break;
-				case 4: 
-					animationType = 'type5';
 				break;
 			}
 			applyAnimation(grid, animationType);

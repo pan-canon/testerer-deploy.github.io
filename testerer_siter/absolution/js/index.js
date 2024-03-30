@@ -203,29 +203,6 @@ const applyAnimation = (grid, animationType) => {
 			}, 'rowsEnd');
 			break;
 
-		case 'type6': 
-			// Set some CSS related style values
-			grid.style.setProperty('--perspective', '2500px');
-			grid.style.setProperty('--grid-width', '100%');
-			grid.style.setProperty('--grid-gap', '6');
-			grid.style.setProperty('--grid-columns', '3');
-			grid.style.setProperty('--grid-item-ratio', '1');
-
-			timeline
-			.fromTo(gridItems, {
-				transformOrigin: '50% 200%', 
-				rotationX: 0, 
-				yPercent: 400,
-			}, {
-				yPercent: 0, 
-				rotationY: 360, 
-				opacity: 0.2, 
-				scale: 0.8, 
-				stagger: 0.03,
-			})
-
-			break;
-
 		default:
 			console.error('Unknown animation type.');
 			break;
@@ -253,9 +230,6 @@ const applyAnimation = (grid, animationType) => {
 				break;
 				case 4: 
 					animationType = 'type5';
-				break;
-				case 5: 
-					animationType = 'type6';
 				break;
 			}
 			applyAnimation(grid, animationType);

@@ -41,7 +41,8 @@ const applyAnimation = (grid, animationType) => {
 			trigger: gridWrap, 
 			start: 'top bottom+=5%', 
 			end: 'bottom top-=5%', 
-			scrub: true
+			scrub: true, 
+			onUpdate (self) => {selectBiopunk(event)}, 
 		}
 	});
 

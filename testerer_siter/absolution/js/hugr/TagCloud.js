@@ -29,7 +29,7 @@
 				padding: '20', 
 				lock: 'y', 
 				shape: 'DblHelix', 
-				textFont: '"moret-variable", serif', 
+				textFont: '"Press Start 2P", system-ui', 
 				textColour: null, 
 			});
 		}
@@ -41,7 +41,7 @@
 				shape: "vring(0.5)", 
 				lock: "x", 
 				offsetY: -60, 
-				textFont: '"moret-variable", serif', 
+				textFont: '"Henny Penny", system-ui', 
 			});
 		}
 
@@ -51,7 +51,7 @@
 				initial: [0.200, 0.000], 
 				shape: "hcylinder", 
 				lock: "x", 
-				textFont: '"moret-variable", serif', 
+				textFont: '"Rye", serif', 
 			});
 		}
 

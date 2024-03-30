@@ -94,7 +94,7 @@
 	</div>
 
 	<main>
-		<section class="content content--spacing">
+		<section class="content">
 			<div class="grid grid--0">
 				<div class="grid-wrap">
 					<div class="grid__item"><div class="grid__item-inner" style="background-image:url(img/d.jpg)"></div></div>
@@ -127,7 +127,7 @@
 			<div id="section1"></div>
 		</section>
 
-		<section class="content content--spacing">
+		<section class="content">
 			<div class="grid grid--1">
 				<div class="grid-wrap">
 					<div class="grid__item"><div class="grid__item-inner" style="background-image:url(img/18.jpg)"></div></div>
@@ -222,15 +222,8 @@
 			try {
 				TagCanvas.Start('root', 'memory_root', {
 					activeAudio: true, 
-					//audioIcon: false, 
 					audioVolume: '2.0', 
-					//bgRadius: '50%', 
-					//centreImage: './img/biohazard.png', 
-					//decel: '0.60', 
 					dragControl: true, 
-					//clickToFront: '.6', 
-					//frontSelect: true, 
-					//imageRadius: '50%', 
 					initial: [0.030, -0.070], 
 					lock: 'xy', 
 					maxSpeed: '0.05', 
@@ -239,14 +232,8 @@
 					outlineColour: '#b22222', 
 					padding: '20', 
 					pinchZoom: false, 
-					//reverse: 1, 
-					//shadow: '#000000', 
-					//shape: "vcylinder", 
-					//shuffleTags: true, 
 					textFont: '"moret-variable", serif', 
 					textColour: "#eee", 
-					//tooltip: "native", 
-					//weight: true, 
 				});
 			} catch(e) {
 				// something went wrong, hide the canvas container

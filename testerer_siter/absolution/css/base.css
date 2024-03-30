@@ -123,7 +123,7 @@ a:not(.card__image):focus-visible {
 main {
 	position: relative;
 	overflow: hidden;
-	
+	padding-top: 100vh;
 	width: 100%;
 }
 

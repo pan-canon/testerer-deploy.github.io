@@ -214,6 +214,10 @@ ScrollTrigger.create({
   trigger: ".grid--1",
   onToggle: () => selectFolklore(event), 
 });
+ScrollTrigger.create({
+  trigger: ".grid--2",
+  onToggle: () => selectMadness(event), 
+});
 
 // Preload images, initialize smooth scrolling, apply scroll-triggered animations, and remove loading class from body
 preloadImages('.grid__item-inner').then(() => {

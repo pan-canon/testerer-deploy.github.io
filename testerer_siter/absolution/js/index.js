@@ -126,7 +126,8 @@ const applyAnimation = (grid, animationType) => {
 			.fromTo(gridItemsInner, {
 				scale: 2
 			}, {
-				scale: 0.5
+				scale: 0.5, 
+				onEnterBack: () => selectFolklore(event), 
 			}, 0)
 
 			break;

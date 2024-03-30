@@ -114,37 +114,32 @@ const applyAnimation = (grid, animationType) => {
 
 		case 'type3': 
 			// Set some CSS related style values
-			grid.style.setProperty('--grid-width', '120%');
+			grid.style.setProperty('--grid-width', '105%');
 			grid.style.setProperty('--grid-columns', '8');
-			grid.style.setProperty('--grid-gap', '0');
-
-			const gridObj = getGrid(gridItems);
+			grid.style.setProperty('--perspective', '1500px');
+			grid.style.setProperty('--grid-inner-scale', '0.5');
 
 			timeline
-			.set(gridWrap, {
-				rotationX: 50
-			})
-			.to(gridWrap, {
-				rotationX: 30
-			})
-			.fromTo(gridItems, {
+			.set(gridItems, {
+				transformOrigin: '50% 0%', 
+				z: () => gsap.utils.random(-5000,-2000), 
+				rotationX: () => gsap.utils.random(-65,-25), 
 				filter: 'brightness(0%)'
-			}, {
-				filter: 'brightness(100%)'
-			}, 0)
-			.to(gridObj.rows('even'), {
-				xPercent: -100, 
-				ease: 'power1'
-			}, 0)
-			.to(gridObj.rows('odd'), {
-				xPercent: 100, 
-				ease: 'power1'
-			}, 0)
-			.addLabel('rowsEnd', '>-=0.15')
+			})
 			.to(gridItems, {
-				ease: 'power1', 
-				yPercent: () => gsap.utils.random(-100, 200),
-			}, 'rowsEnd');
+				xPercent: () => gsap.utils.random(-150,150), 
+				yPercent: () => gsap.utils.random(-300,300), 
+				rotationX: 0, 
+				filter: 'brightness(200%)'
+			}, 0)
+			.to(gridWrap, {
+				z: 6500
+			}, 0)
+			.fromTo(gridItemsInner, {
+				scale: 2
+			}, {
+				scale: 0.5
+			}, 0);
 
 			break;
 

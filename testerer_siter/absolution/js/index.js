@@ -91,73 +91,60 @@ const applyAnimation = (grid, animationType) => {
 
 		case 'type2': 
 			// Set some CSS related style values
-			grid.style.setProperty('--grid-width', '160%');
-			grid.style.setProperty('--perspective', '2000px');
-			grid.style.setProperty('--grid-inner-scale', '0.5');
-			grid.style.setProperty('--grid-item-ratio', '0.8');
-			grid.style.setProperty('--grid-columns', '6');
-			grid.style.setProperty('--grid-gap', '14vw');
+			grid.style.setProperty('--perspective', '2500px');
+			grid.style.setProperty('--grid-width', '100%');
+			grid.style.setProperty('--grid-gap', '6');
+			grid.style.setProperty('--grid-columns', '3');
+			grid.style.setProperty('--grid-item-ratio', '1');
 
 			timeline
-			.set(gridWrap, {
-				rotationX: 20
-			})
-			.set(gridItems, {
-				z: () => gsap.utils.random(-3000,-1000)
-			})
 			.fromTo(gridItems, {
-				yPercent: () => gsap.utils.random(100,1000), 
-				rotationY: -45, 
-				filter: 'brightness(200%)'
+				transformOrigin: '50% 200%', 
+				rotationX: 0, 
+				yPercent: 400,
 			}, {
-				ease: 'power2', 
-				yPercent: () => gsap.utils.random(-1000,-100), 
-				rotationY: 45, 
-				filter: 'brightness(0%)'
-			}, 0)
-			.fromTo(gridWrap, {
-				rotationZ: -5,
-			}, {
-				rotationX: -20, 
-				rotationZ: 10, 
-				scale: 1.2
-			}, 0)
-			.fromTo(gridItemsInner, {
-				scale: 2
-			}, {
-				scale: 0.5, 
-			}, 0)
+				yPercent: 0, 
+				rotationY: 360, 
+				opacity: 0.2, 
+				scale: 0.8, 
+				stagger: 0.03,
+			})
 
 			break;
 
 		case 'type3': 
 			// Set some CSS related style values
-			grid.style.setProperty('--grid-width', '105%');
+			grid.style.setProperty('--grid-width', '120%');
 			grid.style.setProperty('--grid-columns', '8');
-			grid.style.setProperty('--perspective', '1500px');
-			grid.style.setProperty('--grid-inner-scale', '0.5');
+			grid.style.setProperty('--grid-gap', '0');
+
+			const gridObj = getGrid(gridItems);
 
 			timeline
-			.set(gridItems, {
-				transformOrigin: '50% 0%', 
-				z: () => gsap.utils.random(-5000,-2000), 
-				rotationX: () => gsap.utils.random(-65,-25), 
-				filter: 'brightness(0%)'
+			.set(gridWrap, {
+				rotationX: 50
 			})
-			.to(gridItems, {
-				xPercent: () => gsap.utils.random(-150,150), 
-				yPercent: () => gsap.utils.random(-300,300), 
-				rotationX: 0, 
-				filter: 'brightness(200%)'
-			}, 0)
 			.to(gridWrap, {
-				z: 6500
-			}, 0)
-			.fromTo(gridItemsInner, {
-				scale: 2
+				rotationX: 30
+			})
+			.fromTo(gridItems, {
+				filter: 'brightness(0%)'
 			}, {
-				scale: 0.5
-			}, 0);
+				filter: 'brightness(100%)'
+			}, 0)
+			.to(gridObj.rows('even'), {
+				xPercent: -100, 
+				ease: 'power1'
+			}, 0)
+			.to(gridObj.rows('odd'), {
+				xPercent: 100, 
+				ease: 'power1'
+			}, 0)
+			.addLabel('rowsEnd', '>-=0.15')
+			.to(gridItems, {
+				ease: 'power1', 
+				yPercent: () => gsap.utils.random(-100, 200),
+			}, 'rowsEnd');
 
 			break;
 

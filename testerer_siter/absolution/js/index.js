@@ -42,7 +42,6 @@ const applyAnimation = (grid, animationType) => {
 			start: 'top bottom+=5%', 
 			end: 'bottom top-=5%', 
 			scrub: true, 
-			onEnter: () => selectBiopunk(event), 
 		}
 	});
 
@@ -85,7 +84,8 @@ const applyAnimation = (grid, animationType) => {
 				duration: 1, 
 				rotationX: 70, 
 				filter: 'brightness(0%)', 
-				stagger: 0.04
+				stagger: 0.04, 
+				onEnter: () => selectBiopunk(event), 
 			}, 0)
 
 			break;

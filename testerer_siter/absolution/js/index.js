@@ -42,7 +42,7 @@ const applyAnimation = (grid, animationType) => {
 			start: 'top bottom+=5%', 
 			end: 'bottom top-=5%', 
 			scrub: true, 
-			onEnter:selectBiopunk(event), 
+			onEnter: () => selectBiopunk(event), 
 		}
 	});
 

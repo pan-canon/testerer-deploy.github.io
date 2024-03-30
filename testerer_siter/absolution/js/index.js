@@ -207,8 +207,8 @@ scrollToHash(window.location.hash);
 
 
 ScrollTrigger.create({
-  trigger: ".hat",
-  onToggle: () => memory_root(event), 
+  trigger: ".grid--0",
+  onLeaveBack: () => memory_root(event), 
 });
 ScrollTrigger.create({
   trigger: ".grid--0",

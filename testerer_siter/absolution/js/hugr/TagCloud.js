@@ -36,6 +36,9 @@
 
 		function selectFolklore() {
 			TagCanvas.Start('root', 'associative_folklore', {
+				activeAudio: "./audio/Go_Tell_Aunt_Rhody.ogg", 
+				centreImage: './img/icon/biohazard.png', 
+				dragControl: true, 
 				initial: [0.200, 0.000], 
 				padding: '20', 
 				shape: "vring(0.5)", 
@@ -47,7 +50,9 @@
 
 		function selectMadness() {
 			TagCanvas.Start('root', 'associative_madness', {
+				activeAudio: "./audio/Go_Tell_Aunt_Rhody.ogg", 
 				centreImage: './img/icon/arkham.png', 
+				dragControl: true, 
 				initial: [0.200, 0.000], 
 				shape: "hcylinder", 
 				lock: "x", 

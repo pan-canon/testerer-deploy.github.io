@@ -42,7 +42,7 @@ const applyAnimation = (grid, animationType) => {
 			start: 'top bottom+=5%', 
 			end: 'bottom top-=5%', 
 			scrub: true, 
-			onUpdate (self) => {selectBiopunk(event)}, 
+			onUpdate: (self) => {selectBiopunk(event)}, 
 		}
 	});
 
@@ -300,8 +300,8 @@ function scrollToHash(hash, e) {
 	if (elem) {
 		if (e) e.preventDefault();
 		gsap.to(window, {
-			scrollTo: { y: "max" }, 
-			duration: 6, 
+			scrollTo: elem, 
+			duration: 4, 
 		});
 	}
 }

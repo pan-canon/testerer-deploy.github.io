@@ -207,19 +207,16 @@ scrollToHash(window.location.hash);
 
 
 ScrollTrigger.create({
-  trigger: ".grid--0",
+  trigger: ".grid--0", 
+  onToggle: () => selectBiopunk(event), 
   onLeaveBack: () => memory_root(event), 
 });
 ScrollTrigger.create({
-  trigger: ".grid--0",
-  onToggle: () => selectBiopunk(event), 
-});
-ScrollTrigger.create({
-  trigger: ".grid--1",
+  trigger: ".grid--1", 
   onToggle: () => selectFolklore(event), 
 });
 ScrollTrigger.create({
-  trigger: ".grid--2",
+  trigger: ".grid--2", 
   onToggle: () => selectMadness(event), 
 });
 

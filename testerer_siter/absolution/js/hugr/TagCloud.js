@@ -35,7 +35,7 @@ function selectBiopunk() {
 }
 
 function selectFolklore() {
-	TagCanvas.Start('root', 'associative_folklore', {
+	TagCanvas.Start('root_folklore', 'associative_folklore', {
 		activeAudio: "./audio/Go_Tell_Aunt_Rhody.ogg", 
 		centreImage: './img/icon/biohazard.png', 
 		dragControl: true, 
@@ -49,7 +49,7 @@ function selectFolklore() {
 }
 
 function selectMadness() {
-	TagCanvas.Start('root', 'associative_madness', {
+	TagCanvas.Start('root_madness', 'associative_madness', {
 		activeAudio: "./audio/Go_Tell_Aunt_Rhody.ogg", 
 		centreImage: './img/icon/arkham.png', 
 		dragControl: true, 
@@ -61,12 +61,14 @@ function selectMadness() {
 }
 
 function DblHelix(n, rx, ry, rz) {
+
 	let a = Math.PI / n, i, j, p = [], z = rz * 2 / n;
-	for(i = 0; i < n; ++i) {
+
+	for (i = 0; i < n; ++i) {
 		j = a * i;
 		if (i % 2)
 			j += Math.PI;
 			p.push([rx * Math.cos(j), rz - z * i, ry * Math.sin(j)]);
 		}
-		return p;
+	return p;
 }

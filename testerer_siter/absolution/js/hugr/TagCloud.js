@@ -10,9 +10,9 @@ window.onload = function() {
 			outlineMethod: "colour", 
 			outlineColour: '#b22222', 
 			padding: '20', 
-			pinchZoom: false, 
+			pinchZoom: true, 
 			textFont: null, 
-			textColour: "#eee", 
+			textColour: null, 
 		});
 	} catch(e) {
 		// something went wrong, hide the canvas container

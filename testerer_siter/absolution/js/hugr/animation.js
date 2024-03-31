@@ -172,12 +172,12 @@ const scroll = () => {
 
 ScrollTrigger.create({
   trigger: ".grid--0", 
-  onEnter : () => selectBiopunk(event), 
+  onEnter: () => selectBiopunk(event), 
   onEnterBack: () => selectBiopunk(event), 
 });
 ScrollTrigger.create({
   trigger: ".grid--1", 
-  onEnter : () => selectFolklore(event), 
+  onEnter: () => selectFolklore(event), 
   onEnterBack: () => selectFolklore(event), 
 });
 ScrollTrigger.create({
@@ -206,7 +206,7 @@ function scrollToHash(hash, e) {
 		if (e) e.preventDefault();
 		gsap.to(window, {
 			scrollTo: elem, 
-			duration: 4, 
+			duration: 6, 
 		});
 	}
 }

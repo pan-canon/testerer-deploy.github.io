@@ -11,7 +11,7 @@ window.onload = function() {
 			outlineColour: '#b22222', 
 			padding: '20', 
 			pinchZoom: false, 
-			//textFont: '"moret-variable", serif', 
+			textFont: null, 
 			textColour: "#eee", 
 		});
 	} catch(e) {

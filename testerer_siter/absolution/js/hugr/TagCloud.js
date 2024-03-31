@@ -21,7 +21,7 @@ window.onload = function() {
 };
 
 function selectBiopunk() {
-	TagCanvas.Start('root', 'associative_biopunk', {
+	TagCanvas.Start('root_biopunk', 'associative_biopunk', {
 		activeAudio: "./audio/Go_Tell_Aunt_Rhody.ogg", 
 		centreImage: './img/icon/biohazard.png', 
 		dragControl: true, 

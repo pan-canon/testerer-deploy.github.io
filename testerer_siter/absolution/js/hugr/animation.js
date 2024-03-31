@@ -1,5 +1,5 @@
 // Import the necessary function for preloading images
-import { preloadImages, getGrid } from './utils.js';
+import {preloadImages, getGrid} from './utils.js';
 
 // Define a variable that will store the Lenis smooth scrolling object
 let lenis;
@@ -36,7 +36,7 @@ const applyAnimation = (grid, animationType) => {
 
 	// Define GSAP timeline with ScrollTrigger
 	const timeline = gsap.timeline({
-		defaults: { ease: 'none' }, 
+		defaults: {ease: 'none'}, 
 		scrollTrigger: {
 			trigger: gridWrap, 
 			start: 'top bottom+=5%', 
@@ -108,12 +108,7 @@ const applyAnimation = (grid, animationType) => {
 				opacity: 0.2, 
 				scale: 0.8, 
 				stagger: 0.03,
-			}, 
-			ScrollTrigger: {
-  trigger: '.grid--0', 
-  onEnter: () => selectBiopunk(event), 
-  onEnterBack: () => selectBiopunk(event), 
-})
+			})
 
 			break;
 
@@ -127,13 +122,13 @@ const applyAnimation = (grid, animationType) => {
 			timeline
 			.set(gridItems, {
 				transformOrigin: '50% 0%', 
-				z: () => gsap.utils.random(-5000,-2000), 
-				rotationX: () => gsap.utils.random(-65,-25), 
+				z: () => gsap.utils.random(-5000, -2000), 
+				rotationX: () => gsap.utils.random(-65, -25), 
 				filter: 'brightness(0%)'
 			})
 			.to(gridItems, {
-				xPercent: () => gsap.utils.random(-150,150), 
-				yPercent: () => gsap.utils.random(-300,300), 
+				xPercent: () => gsap.utils.random(-150, 150), 
+				yPercent: () => gsap.utils.random(-300, 300), 
 				rotationX: 0, 
 				filter: 'brightness(200%)'
 			}, 0)
@@ -175,7 +170,7 @@ const scroll = () => {
 	});
 }
 
-/*ScrollTrigger.create({
+ScrollTrigger.create({
   trigger: ".grid--0", 
   onEnter: () => selectBiopunk(event), 
   onEnterBack: () => selectBiopunk(event), 
@@ -189,7 +184,7 @@ ScrollTrigger.create({
   trigger: ".grid--2", 
   onEnter: () => selectMadness(event), 
   onEnterBack: () => selectMadness(event), 
-});*/
+});
 
 // Detect if a link's href goes to the current page
 function getSamePageAnchor (link) {

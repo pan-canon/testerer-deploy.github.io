@@ -47,15 +47,15 @@ const applyAnimation = (grid, animationType) => {
 
 ScrollTrigger.create({
   trigger: ".grid--0", 
-  onToggle: () => selectBiopunk(event), 
+  onUpdate: () => selectBiopunk(event), 
 });
 ScrollTrigger.create({
   trigger: ".grid--1", 
-  onToggle: () => selectFolklore(event), 
+  onUpdate: () => selectFolklore(event), 
 });
 ScrollTrigger.create({
   trigger: ".grid--2", 
-  onToggle: () => selectMadness(event), 
+  onUpdate: () => selectMadness(event), 
 });
 
 	// Apply different animations based on type

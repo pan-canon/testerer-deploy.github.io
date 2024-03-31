@@ -242,12 +242,16 @@ body #cdawrap {
 	font-size: clamp(1.5rem, 15vw, 6.5rem);
 }
 
+#section1 .content__title {font-family: "Press Start 2P", system-ui}
+#section2 .content__title {font-family: "Press Start 2P", system-ui}
+#section3 .content__title {font-family: "Rye", serif}
+
 .content__title--top {
-	align-items: start;
+	align-items: start
 }
 
 .content__title--bottom {
-	align-items: end;
+	align-items: end
 }
 
 .content__title--left {

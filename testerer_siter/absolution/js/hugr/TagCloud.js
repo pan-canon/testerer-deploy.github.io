@@ -44,7 +44,7 @@ function selectFolklore() {
 		shape: "vring(0.5)", 
 		lock: "x", 
 		offsetY: -60, 
-		textFont: '"Henny Penny", system-ui', 
+		textFont: '"Rye", serif', 
 	});
 }
 
@@ -56,7 +56,7 @@ function selectMadness() {
 		initial: [0.200, 0.000], 
 		shape: "hcylinder", 
 		lock: "x", 
-		textFont: '"Rye", serif', 
+		textFont: '"Henny Penny", system-ui', 
 	});
 }
 

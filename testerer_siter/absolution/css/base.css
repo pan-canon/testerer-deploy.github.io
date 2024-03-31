@@ -121,6 +121,7 @@ body #cdawrap {
 }
 
 .hat {
+	animation: pulse 2.5s linear infinite;
     text-align: center;
     place-items: center;
 	left: 0;
@@ -134,6 +135,18 @@ body #cdawrap {
 
 .hat--biohazard {
 	background: radial-gradient(50vw, rgba(0, 255, 255, .20), rgba(178, 24, 24, .15), var(--color-bg-alt))
+}
+
+@keyframes pulse {
+  0% {
+    background: radial-gradient(50vw, rgba(0, 255, 255, .20), rgba(178, 24, 24, .15), var(--color-bg-alt))
+  }
+  50% {
+    background: radial-gradient(25vw, rgba(0, 255, 255, .10), rgba(178, 24, 24, .20), var(--color-bg-alt))
+  }
+  100% {
+    background: radial-gradient(50vw, rgba(0, 255, 255, .20), rgba(178, 24, 24, .15), var(--color-bg-alt))
+  }
 }
 
 .hat__title {

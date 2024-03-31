@@ -112,7 +112,7 @@ a:not(.card__image):focus-visible {
 main {
 	position: relative;
 	overflow: hidden;
-	/*padding-top: 100vh;*/
+	padding-top: 100vh;
 	width: 100%;
 }
 
@@ -123,7 +123,6 @@ body #cdawrap {
 .hat {
     text-align: center;
     place-items: center;
-	margin-bottom: 100vh;
 	left: 0;
 	top: 0;
 	height: 100vh;

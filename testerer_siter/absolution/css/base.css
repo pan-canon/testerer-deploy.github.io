@@ -121,7 +121,7 @@ body #cdawrap {
 }
 
 .hat {
-	animation: pulse 2.5s linear infinite;
+	animation: pulse .3s linear infinite;
     text-align: center;
     place-items: center;
 	left: 0;
@@ -142,10 +142,10 @@ body #cdawrap {
     background: radial-gradient(50vw, rgba(0, 255, 255, .20), rgba(178, 24, 24, .15), var(--color-bg-alt))
   }
   50% {
-    background: radial-gradient(25vw, rgba(0, 255, 255, .10), rgba(178, 24, 24, .20), var(--color-bg-alt))
+    background: radial-gradient(51.5vw, rgba(0, 255, 255, .21), rgba(178, 24, 24, .16), var(--color-bg-alt))
   }
   100% {
-    background: radial-gradient(50vw, rgba(0, 255, 255, .20), rgba(178, 24, 24, .15), var(--color-bg-alt))
+    background: radial-gradient(53vw, rgba(0, 255, 255, .20), rgba(178, 24, 24, .15), var(--color-bg-alt))
   }
 }
 

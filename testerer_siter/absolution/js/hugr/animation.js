@@ -146,29 +146,29 @@ const applyAnimation = (grid, animationType) => {
 		default:
 			console.error('Unknown animation type.');
 			break;
+	}
+}
+
+// Apply animations to each grid
+const scroll = () => {
+	grids.forEach((grid, i) => {
+		// Determine animation type
+		let animationType;
+
+		switch (i % 3) {
+			case 0: 
+				animationType = 'type1';
+			break;
+			case 1: 
+				animationType = 'type2';
+			break;
+			case 2: 
+				animationType = 'type3';
+			break;
 		}
-	}
-
-	// Apply animations to each grid
-	const scroll = () => {
-		grids.forEach((grid, i) => {
-			// Determine animation type
-			let animationType;
-
-			switch (i % 3) {
-				case 0: 
-					animationType = 'type1';
-				break;
-				case 1: 
-					animationType = 'type2';
-				break;
-				case 2: 
-					animationType = 'type3';
-				break;
-			}
-			applyAnimation(grid, animationType);
-		});
-	}
+		applyAnimation(grid, animationType);
+	});
+}
 
 ScrollTrigger.create({
   trigger: ".grid--0", 
@@ -220,9 +220,6 @@ document.querySelectorAll('a[href]').forEach(a => {
 
 // Scroll to the element in the URL's hash on load
 scrollToHash(window.location.hash);
-
-
-
 
 // Preload images, initialize smooth scrolling, apply scroll-triggered animations, and remove loading class from body
 preloadImages('.grid__item-inner').then(() => {

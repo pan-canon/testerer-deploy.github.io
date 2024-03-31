@@ -124,12 +124,9 @@ body #cdawrap {
 	animation: pulse .3s linear infinite;
     text-align: center;
     place-items: center;
-	left: 0;
-	top: 0;
 	height: 100vh;
 	width: 100vw;
 	display: grid;
-	position: fixed;
 	z-index: 999;
 }
 

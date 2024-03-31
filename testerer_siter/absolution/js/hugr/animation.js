@@ -42,22 +42,7 @@ const applyAnimation = (grid, animationType) => {
 			start: 'top bottom+=5%', 
 			end: 'bottom top-=5%', 
 			scrub: true, 
-		}, 
-ScrollTrigger: {
-  trigger: ".grid--0", 
-  onEnter: () => selectBiopunk(event), 
-  onEnterBack: () => selectBiopunk(event), 
-}, 
-ScrollTrigger: {
-  trigger: ".grid--1", 
-  onEnter: () => selectFolklore(event), 
-  onEnterBack: () => selectFolklore(event), 
-}, 
-ScrollTrigger: {
-  trigger: ".grid--2", 
-  onEnter: () => selectMadness(event), 
-  onEnterBack: () => selectMadness(event), 
-}, 
+		}
 	});
 
 	// Apply different animations based on type
@@ -123,7 +108,12 @@ ScrollTrigger: {
 				opacity: 0.2, 
 				scale: 0.8, 
 				stagger: 0.03,
-			})
+			}, 
+			ScrollTrigger: {
+  trigger: ".grid--0", 
+  onEnter: () => selectBiopunk(event), 
+  onEnterBack: () => selectBiopunk(event), 
+})
 
 			break;
 
@@ -185,7 +175,21 @@ const scroll = () => {
 	});
 }
 
-
+/*ScrollTrigger.create({
+  trigger: ".grid--0", 
+  onEnter: () => selectBiopunk(event), 
+  onEnterBack: () => selectBiopunk(event), 
+});
+ScrollTrigger.create({
+  trigger: ".grid--1", 
+  onEnter: () => selectFolklore(event), 
+  onEnterBack: () => selectFolklore(event), 
+});
+ScrollTrigger.create({
+  trigger: ".grid--2", 
+  onEnter: () => selectMadness(event), 
+  onEnterBack: () => selectMadness(event), 
+});*/
 
 // Detect if a link's href goes to the current page
 function getSamePageAnchor (link) {

@@ -110,7 +110,7 @@ const applyAnimation = (grid, animationType) => {
 				stagger: 0.03,
 			}, 
 			ScrollTrigger: {
-  trigger: ".grid--0", 
+  trigger: '.grid--0', 
   onEnter: () => selectBiopunk(event), 
   onEnterBack: () => selectBiopunk(event), 
 })

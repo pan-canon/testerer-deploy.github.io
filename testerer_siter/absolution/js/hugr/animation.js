@@ -45,6 +45,19 @@ const applyAnimation = (grid, animationType) => {
 		}
 	});
 
+ScrollTrigger.create({
+  trigger: ".grid--0", 
+  onToggle: () => selectBiopunk(event), 
+});
+ScrollTrigger.create({
+  trigger: ".grid--1", 
+  onToggle: () => selectFolklore(event), 
+});
+ScrollTrigger.create({
+  trigger: ".grid--2", 
+  onToggle: () => selectMadness(event), 
+});
+
 	// Apply different animations based on type
 	switch(animationType) {
 
@@ -206,18 +219,7 @@ document.querySelectorAll('a[href]').forEach(a => {
 scrollToHash(window.location.hash);
 
 
-ScrollTrigger.create({
-  trigger: ".grid--0", 
-  onToggle: () => selectBiopunk(event), 
-});
-ScrollTrigger.create({
-  trigger: ".grid--1", 
-  onToggle: () => selectFolklore(event), 
-});
-ScrollTrigger.create({
-  trigger: ".grid--2", 
-  onToggle: () => selectMadness(event), 
-});
+
 
 // Preload images, initialize smooth scrolling, apply scroll-triggered animations, and remove loading class from body
 preloadImages('.grid__item-inner').then(() => {

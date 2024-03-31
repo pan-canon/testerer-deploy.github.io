@@ -170,22 +170,6 @@ const scroll = () => {
 	});
 }
 
-ScrollTrigger.create({
-  trigger: ".grid--0", 
-  onEnter: () => selectBiopunk(event), 
-  onEnterBack: () => selectBiopunk(event), 
-});
-ScrollTrigger.create({
-  trigger: ".grid--1", 
-  onEnter: () => selectFolklore(event), 
-  onEnterBack: () => selectFolklore(event), 
-});
-ScrollTrigger.create({
-  trigger: ".grid--2", 
-  onEnter: () => selectMadness(event), 
-  onEnterBack: () => selectMadness(event), 
-});
-
 // Detect if a link's href goes to the current page
 function getSamePageAnchor (link) {
 	if (

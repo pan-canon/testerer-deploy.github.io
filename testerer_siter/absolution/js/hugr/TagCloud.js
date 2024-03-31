@@ -34,11 +34,6 @@ function selectBiopunk() {
 	});
 }
 
-ScrollTrigger.create({
-  trigger: ".grid--0", 
-  onEnter: () => selectBiopunk(event)
-});
-
 function selectFolklore() {
 	TagCanvas.Start('root_folklore', 'associative_folklore', {
 		activeAudio: "./audio/Go_Tell_Aunt_Rhody.ogg", 
@@ -53,11 +48,6 @@ function selectFolklore() {
 	});
 }
 
-ScrollTrigger.create({
-  trigger: ".grid--1", 
-  onEnter: () => selectFolklore(event)
-});
-
 function selectMadness() {
 	TagCanvas.Start('root_madness', 'associative_madness', {
 		activeAudio: "./audio/Go_Tell_Aunt_Rhody.ogg", 
@@ -69,11 +59,6 @@ function selectMadness() {
 		textFont: '"Henny Penny", system-ui', 
 	});
 }
-
-ScrollTrigger.create({
-  trigger: ".grid--2", 
-  onEnter: () => selectMadness(event)
-});
 
 function DblHelix(n, rx, ry, rz) {
 

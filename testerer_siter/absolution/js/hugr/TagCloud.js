@@ -14,7 +14,13 @@ window.onload = function() {
 			textFont: '"moret-variable", serif', 
 			textColour: "#eee", 
 		});
+	} catch(e) {
+		// something went wrong, hide the canvas container
+		document.getElementById('b_memory_section').style.display = 'none';
+	}
+};
 
+function selectBiopunk() {
 	TagCanvas.Start('root_biopunk', 'associative_biopunk', {
 		activeAudio: "./audio/Go_Tell_Aunt_Rhody.ogg", 
 		centreImage: './img/icon/biohazard.png', 
@@ -26,14 +32,6 @@ window.onload = function() {
 		textFont: '"Press Start 2P", system-ui', 
 		textColour: null, 
 	});
-	} catch(e) {
-		// something went wrong, hide the canvas container
-		document.getElementById('b_memory_section').style.display = 'none';
-	}
-};
-
-function selectBiopunk() {
-
 }
 
 function selectFolklore() {

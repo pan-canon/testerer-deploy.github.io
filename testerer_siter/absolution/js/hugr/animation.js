@@ -48,14 +48,17 @@ const applyAnimation = (grid, animationType) => {
 ScrollTrigger.create({
   trigger: ".grid--0", 
   onEnter : () => selectBiopunk(event), 
+  onEnterBack: () => selectMadness(event), 
 });
 ScrollTrigger.create({
   trigger: ".grid--1", 
   onEnter : () => selectFolklore(event), 
+  onEnterBack: () => selectMadness(event), 
 });
 ScrollTrigger.create({
   trigger: ".grid--2", 
-  onEnter : () => selectMadness(event), 
+  onEnter: () => selectMadness(event), 
+  onEnterBack: () => selectMadness(event), 
 });
 
 	// Apply different animations based on type

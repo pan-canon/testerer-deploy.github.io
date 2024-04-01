@@ -146,7 +146,7 @@ body #cdawrap {
 
 .b_memory_section {
 	height: 300px;
-	width: 300px;
+	max-width: 700px;
 }
 
 .b_memory_section-biohazard {

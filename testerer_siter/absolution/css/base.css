@@ -31,6 +31,7 @@ html:-webkit-scrollbar { /* webkit */
 
 body {
 	margin: 0;
+	background: var(--color-bg);
 	color: var(--color-text);
 	font-family: "moret-variable", serif;
 	font-variation-settings: "ital" 0, "wght" 300;

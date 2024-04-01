@@ -24,6 +24,14 @@
 	--grid-inner-scale: 1;
 }
 
+html {
+	background-image: url(./img/bg.webp);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
 html:-webkit-scrollbar { /* webkit */
     width: 0;
     height: 0;

@@ -136,7 +136,6 @@ body #cdawrap {
 .hat:after {
 	content: '';
 	background: radial-gradient(20vw, transparent, rgba(0, 0, 0, .90));
-	background-attachment: fixed;
 	left: 0;
 	top: 0;
 	height: inherit;

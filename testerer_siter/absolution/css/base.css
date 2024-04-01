@@ -24,14 +24,6 @@
 	--grid-inner-scale: 1;
 }
 
-html {
-	background-image: url(../img/bg2.jpg);
-  background-position: center;
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-}
-
 html:-webkit-scrollbar { /* webkit */
     width: 0;
     height: 0;
@@ -40,7 +32,8 @@ html:-webkit-scrollbar { /* webkit */
 body {
 	margin: 0;
 	color: var(--color-text);
-	background-color: rgba(0, 0, 0, .70);
+	background: radial-gradient(20vw, transparent, rgba(0, 0, 0, .90));
+	background-attachment: fixed;
 	font-family: "moret-variable", serif;
 	font-variation-settings: "ital" 0, "wght" 300;
 	-webkit-font-smoothing: antialiased;
@@ -130,6 +123,11 @@ body #cdawrap {
 .hat {
     text-align: center;
     place-items: center;
+	background-image: url(../img/bg2.jpg);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 	height: 100vh;
 	width: 100vw;
 	display: grid;

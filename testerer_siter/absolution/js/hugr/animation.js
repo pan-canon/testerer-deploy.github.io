@@ -203,7 +203,7 @@ function scrollToHash(hash, e) {
 		if (e) e.preventDefault();
 		gsap.to(window, {
 			scrollTo: elem, 
-			duration: 6, 
+			duration: 4, 
 		});
 	}
 }

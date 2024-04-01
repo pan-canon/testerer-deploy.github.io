@@ -133,7 +133,7 @@ body #cdawrap {
 	z-index: 999;
 }
 
-.hat:after {
+.hat:before {
 	content: '';
 	background: radial-gradient(20vw, transparent, rgba(0, 0, 0, .90));
 	left: 0;

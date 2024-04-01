@@ -120,7 +120,6 @@ body #cdawrap {
 }
 
 .hat {
-	animation: pulse .3s linear infinite;
     text-align: center;
     place-items: center;
 	height: 100vh;
@@ -129,62 +128,25 @@ body #cdawrap {
 	z-index: 999;
 }
 
-.hat--biohazard {
-	background: radial-gradient(50vw, rgba(0, 255, 255, .20), rgba(178, 24, 24, .15), var(--color-bg-alt))
+.b_memory_section {
+	height: 300px;
+	width: 300px;
+}
+
+.b_memory_section-biohazard {
+	animation: pulse .3s linear infinite
 }
 
 @keyframes pulse {
   0% {
-    background: radial-gradient(50vw, rgba(0, 255, 255, .20), rgba(178, 24, 24, .15), var(--color-bg-alt))
+    background: radial-gradient(200px, rgba(0, 255, 255, .20), rgba(178, 24, 24, .15), transparent)
   }
   50% {
-    background: radial-gradient(51.5vw, rgba(0, 255, 255, .21), rgba(178, 24, 24, .16), var(--color-bg-alt))
+    background: radial-gradient(201.5px, rgba(0, 255, 255, .21), rgba(178, 24, 24, .15), transparent)
   }
   100% {
-    background: radial-gradient(53vw, rgba(0, 255, 255, .20), rgba(178, 24, 24, .15), var(--color-bg-alt))
+    background: radial-gradient(203px, rgba(0, 255, 255, .20), rgba(178, 24, 24, .15), transparent)
   }
-}
-
-.hat__title {
-	line-height: .9;
-    place-items: center;
-    margin: 0;
-    display: grid;
-    margin-top: 15vh;
-    font-weight: 400;
-}
-
-.hat__title-pre {
-	font-weight: 300;
-    font-size: clamp(2rem, 8vw, 5rem);
-    color: var(--color-title);
-    text-transform: uppercase;
-}
-
-.hat__title-sub {
-    font-size: clamp(1.5rem, 20vw, 8rem);
-    max-width: 15ch;
-    margin: 0 auto;
-}
-
-.hat__info {
-	max-width: 15ch;
-    opacity: .6;
-    margin-bottom: 4rem;
-    padding-bottom: 1rem;
-    line-height: 1.2;
-    position: relative;
-    align-self: end;
-}
-
-.hat__info:after {
-	content: "";
-	width: 1px;
-	height: 2rem;
-	background: #fff;
-	position: absolute;
-	top: 100%;
-	left: 50%;
 }
 
 .linkBiopunk {font-family: "Press Start 2P", system-ui}

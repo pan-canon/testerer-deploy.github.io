@@ -22,7 +22,7 @@ window.onload = function() {
 
 function selectBiopunk() {
 	TagCanvas.Start('root_biopunk', 'associative_biopunk', {
-		activeAudio: "./audio/Go_Tell_Aunt_Rhody.ogg", 
+		activeAudio: true, 
 		centreImage: './img/icon/biohazard.png', 
 		dragControl: true, 
 		initial: [0.200, 0.000], 
@@ -36,7 +36,7 @@ function selectBiopunk() {
 
 function selectFolklore() {
 	TagCanvas.Start('root_folklore', 'associative_folklore', {
-		activeAudio: "./audio/Go_Tell_Aunt_Rhody.ogg", 
+		activeAudio: true, 
 		centreImage: './img/icon/biohazard.png', 
 		dragControl: true, 
 		initial: [0.200, 0.000], 
@@ -50,7 +50,7 @@ function selectFolklore() {
 
 function selectMadness() {
 	TagCanvas.Start('root_madness', 'associative_madness', {
-		activeAudio: "./audio/Go_Tell_Aunt_Rhody.ogg", 
+		activeAudio: true, 
 		centreImage: './img/icon/arkham.png', 
 		dragControl: true, 
 		initial: [0.200, 0.000], 

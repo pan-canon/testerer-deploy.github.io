@@ -10,7 +10,6 @@ window.onload = function() {
 			outlineMethod: "colour", 
 			outlineColour: '#b22222', 
 			padding: '20', 
-			pinchZoom: true, 
 			textFont: null, 
 			textColour: null, 
 		});

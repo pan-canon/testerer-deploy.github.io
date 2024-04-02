@@ -134,6 +134,7 @@ body #cdawrap {
 }
 
 .hat:before {
+	pointer-events: none;
 	content: '';
 	background: radial-gradient(20vw, transparent, rgba(0, 0, 0, .90));
 	left: 0;
@@ -141,7 +142,6 @@ body #cdawrap {
 	height: inherit;
 	width: inherit;
 	position: absolute;
-	z-index: -1;
 }
 
 .b_memory_section {

@@ -180,7 +180,7 @@ ScrollTrigger.create({
 });
 ScrollTrigger.create({
   trigger: ".grid--2", 
-  onEnter: () => selectMadness(event)
+  onEnter: () => selectDreams(event)
 });
 
 // Detect if a link's href goes to the current page

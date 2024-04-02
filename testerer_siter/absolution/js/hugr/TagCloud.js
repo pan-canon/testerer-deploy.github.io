@@ -48,8 +48,8 @@ function selectFolklore() {
 	});
 }
 
-function selectMadness() {
-	TagCanvas.Start('root_madness', 'associative_madness', {
+function selectDreams() {
+	TagCanvas.Start('root_dreams', 'associative_dreams', {
 		activeAudio: true, 
 		centreImage: './img/icon/arkham.png', 
 		dragControl: true, 

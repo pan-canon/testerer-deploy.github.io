@@ -9,7 +9,6 @@ window.onload = function() {
 			maxSpeed: '0.05', 
 			outlineMethod: "colour", 
 			outlineColour: '#b22222', 
-			//padding: '20', 
 			textFont: null, 
 			textColour: null, 
 		});
@@ -25,7 +24,6 @@ function selectBiopunk() {
 		centreImage: './img/icon/biohazard.png', 
 		dragControl: true, 
 		initial: [0.200, 0.000], 
-		//padding: '20', 
 		lock: 'y', 
 		shape: 'DblHelix', 
 		textFont: '"Press Start 2P", system-ui', 
@@ -39,7 +37,6 @@ function selectFolklore() {
 		centreImage: './img/icon/biohazard.png', 
 		dragControl: true, 
 		initial: [0.200, 0.000], 
-		//padding: '20', 
 		shape: "vring(0.5)", 
 		lock: "x", 
 		offsetY: -60, 

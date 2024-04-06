@@ -220,6 +220,44 @@ body #cdawrap {
 }
 
 #section1 .content__title {font-family: "Press Start 2P", system-ui}
+#section1 h3 {
+	color: #fee;
+	text-shadow: 0 -40px 100px, 0 0 2px, 0 0 1em #ff4444, 0 0 0.5em #ff4444, 0 0 0.1em #ff4444, 0 10px 3px #000;
+}
+#section1 .animation--run {animation: blink linear infinite 2s;}
+@keyframes blink {
+  78% {
+    color: inherit;
+    text-shadow: inherit;
+  }
+  79%{
+     color: #333;
+  }
+  80% {
+    
+    text-shadow: none;
+  }
+  81% {
+    color: inherit;
+    text-shadow: inherit;
+  }
+  82% {
+    color: #333;
+    text-shadow: none;
+  }
+  83% {
+    color: inherit;
+    text-shadow: inherit;
+  }
+  92% {
+    color: #333;
+    text-shadow: none;
+  }
+  92.5% {
+    color: inherit;
+    text-shadow: inherit;
+  }
+}
 #section2 .content__title {font-family: "Rye", serif}
 #section3 .content__title {font-family: "Henny Penny", system-ui}
 

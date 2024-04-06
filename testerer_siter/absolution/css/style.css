@@ -149,11 +149,11 @@ body #cdawrap {
 	max-width: 700px;
 }
 
-.b_memory_section-biohazard {
+/*.b_memory_section-biohazard {
 	animation: pulse .3s linear infinite
-}
+}*/
 
-@keyframes pulse {
+/*@keyframes pulse {
   0% {
     background: radial-gradient(200px, rgba(0, 255, 255, .20), rgba(178, 24, 24, .15), transparent)
   }
@@ -163,7 +163,7 @@ body #cdawrap {
   100% {
     background: radial-gradient(203px, rgba(0, 255, 255, .20), rgba(178, 24, 24, .15), transparent)
   }
-}
+}*/
 
 .linkBiopunk {font-family: "Press Start 2P", system-ui}
 .linkFolklore {font-family: "Rye", serif}

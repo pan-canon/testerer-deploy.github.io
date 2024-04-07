@@ -222,7 +222,7 @@ body #cdawrap {
 #section1 .content__title {font-family: "Press Start 2P", system-ui}
 #section1 h3 {
 	color: #fee;
-	text-shadow: 0 -40px 100px, 0 0 2px, 0 0 1em #ff4444, 0 0 0.5em #ff4444, 0 0 0.1em #ff4444, 0 10px 3px #000;
+	text-shadow: 0 -40px 100px, 0 0 2px, 0 0 1em #0FF, 0 0 0.5em #0FF, 0 0 0.1em #0FF, 0 10px 3px #000;
 }
 #section1 .animation--run {animation: blink linear infinite 2s;}
 @keyframes blink {

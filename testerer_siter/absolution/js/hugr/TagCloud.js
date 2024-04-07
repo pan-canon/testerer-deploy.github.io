@@ -34,7 +34,7 @@ function selectBiopunk() {
 function selectFolklore() {
 	TagCanvas.Start('root_folklore', 'associative_folklore', {
 		activeAudio: true, 
-		centreImage: './img/icon/biohazard.png', 
+		centreImage: './img/icon/folklore.png', 
 		dragControl: true, 
 		initial: [0.200, 0.000], 
 		shape: "vring(0.5)", 

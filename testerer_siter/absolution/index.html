@@ -50,7 +50,6 @@
 	<meta name="author" content="Vsezlotov" />
 
 	<link rel="shortcut icon" href="favicon.ico">
-	<link rel="stylesheet" href="https://www.curtainsjs.com/examples/simple-plane/style.css" type="text/css">
 	<link rel="stylesheet" type="text/css" href="css/style.css" />
 
 	<script>document.documentElement.className="js";var supportsCssVars=function(){var e,t=document.createElement("style");return t.innerHTML="root: { --tmp-var: bold; }",document.head.appendChild(t),e=!!(window.CSS&&window.CSS.supports&&window.CSS.supports("font-weight","var(--tmp-var)")),t.parentNode.removeChild(t),e};supportsCssVars()||alert("Please view this demo in a modern browser that supports CSS Variables.");</script>
@@ -92,8 +91,10 @@
 		<section class="content" id="section1">
 			<div class="grid grid--0">
 				<div class="grid-wrap" id="page-wrap">
-					<div id="canvas" style="width: 100%; height: 100%;"></div> <!-- NEW -->
-					<div class="curtain grid__item" crossorigin="" data-sampler="simplePlaneTexture"><div class="grid__item-inner" style="background-image:url(img/biopunk/1.jpg)"></div></div>
+					<div class="curtain grid__item">
+						<div id="canvas"></div> <!-- NEW -->
+						<div crossorigin="" data-sampler="simplePlaneTexture" class="grid__item-inner" style="background-image:url(img/biopunk/1.jpg)"></div>
+					</div>
 					<div class="grid__item"><div class="grid__item-inner" style="background-image:url(img/biopunk/2.jpg)"></div></div>
 					<div class="grid__item"><div class="grid__item-inner" style="background-image:url(img/biopunk/3.jpg)"></div></div>
 					<div class="grid__item"><div class="grid__item-inner" style="background-image:url(img/biopunk/4.jpg)"></div></div>

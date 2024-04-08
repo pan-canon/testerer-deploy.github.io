@@ -335,3 +335,38 @@ body #cdawrap {
 	    justify-self: end
 	}
 }
+
+
+
+    #canvas {
+        height: 300px;
+        width: 100px;
+    }
+
+/*.curtain {
+        position: absolute;
+        top: 5%;
+        right: 5%;
+        bottom: 5%;
+        left: 5%;
+    }
+
+    .curtain img {
+        display: none;
+    }*/
+
+    /*** handling errors ***/
+
+    .no-curtains .curtain {
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .no-curtains .curtain img {
+        display: block;
+        min-width: 100%;
+        min-height: 100%;
+        object-fit: cover;
+    }

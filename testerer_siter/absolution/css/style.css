@@ -341,7 +341,8 @@ body #cdawrap {
     #canvas {
     	max-width: 680px;
     	width: 100%;
-    	height: inherit;
+    	height: 100%;
+    	max-height: 680px;
     }
 
 /*.curtain {

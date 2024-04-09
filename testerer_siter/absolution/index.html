@@ -33,6 +33,8 @@
 	https://codepen.io/martinlaxenaire/pen/OJVKVYa
 	https://codepen.io/martinlaxenaire/pen/OJVKVYa
 
+	https://ru.stackoverflow.com/questions/822070/%D0%9A%D0%B0%D0%BA-%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D1%82%D1%8C-%D1%8D%D1%84%D1%84%D0%B5%D0%BA%D1%82-%D0%92%D0%BE%D0%B4%D1%8B
+
 	#biopunk #poison #mystic 
 	#folklore #mythology #militarism #necro_fetishism #industry 
 	#dreams #house of sorrow #faith 
@@ -92,7 +94,19 @@
 			<div class="grid grid--0">
 				<div class="grid-wrap" id="page-wrap">
 					<div class="curtain grid__item">
-						<div class="grid__biopunk grid__item-inner" style="background-image:url(img/biopunk/1.jpg)"></div>
+						<div class="grid__biopunk grid__item-inner" style="background-image:url(img/biopunk/1.jpg)">
+							<svg xmlns="http://www.w3.org/2000/svg" version="1.1"   viewBox="0 0 500 300">
+  <defs>
+    <filter id="myFilter" >
+      <feTurbulence type="turbulence" baseFrequency="0.0001" numOctaves="1" result="turbulence" >
+     <animate attributeName="baseFrequency" dur="18s" values="0.0001;0.02;0.0001;0.02;0.0001" begin="img1.mouseover" end="img1.mouseout" />
+      </feTurbulence>
+     <feDisplacementMap xChannelSelector="R" yChannelSelector="G" scale="25" in="SourceGraphic" in2="turbulence" />
+    </filter>
+  </defs>
+<image id="img1" xlink:href="img/biopunk/1.jpg" width="100%" height="100%" filter="url(#myFilter)" /> 
+  </svg>
+						</div>
 					</div>
 					<div class="grid__item">
 						<div class="grid__biopunk grid__item-inner" style="background-image:url(img/biopunk/2.jpg)"></div>
@@ -314,7 +328,7 @@
 	<script type="text/javascript" src="js/lenis.min.js"></script>
 	<script type="text/javascript" src="js/imagesloaded.pkgd.min.js"></script>
 	<script type="module" src="js/hugr/animation.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+<!-- 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
 	<script src="https://sirxemic.github.io/jquery.ripples/jquery.ripples.js"></script>
 	<script type="text/javascript">
 		$(document).ready(function(){ 
@@ -323,7 +337,7 @@
     dropRadius: 20,
     perturbance: 0.04
 });});
-	</script>
+	</script> -->
 
 </body>
 </html>

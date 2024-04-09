@@ -91,15 +91,10 @@
 		<section class="content" id="section1">
 			<div class="grid grid--0">
 				<div class="grid-wrap" id="page-wrap">
-					<div id="canvas"></div>
 					<div class="curtain grid__item">
-						<!-- <div class="grid__item-inner" style="background-image:url(img/biopunk/1.jpg)"></div> -->
-						<img crossorigin="" data-sampler="simplePlaneTexture" class="grid__item-inner" src="img/biopunk/1.jpg" />
+						<div class="grid__item-inner" style="background-image:url(img/biopunk/1.jpg)"></div>
 					</div>
-					<div class="grid__item">
-						<!-- <div class="grid__item-inner" style="background-image:url(img/biopunk/2.jpg)"></div> -->
-						<img crossorigin="" data-sampler="simplePlaneTexture" class="grid__item-inner" src="img/biopunk/2.jpg" />
-					</div>
+					<div class="grid__item"><div class="grid__item-inner" style="background-image:url(img/biopunk/2.jpg)"></div></div>
 					<div class="grid__item"><div class="grid__item-inner" style="background-image:url(img/biopunk/3.jpg)"></div></div>
 					<div class="grid__item"><div class="grid__item-inner" style="background-image:url(img/biopunk/4.jpg)"></div></div>
 					<div class="grid__item"><div class="grid__item-inner" style="background-image:url(img/biopunk/5.webp)"></div></div>
@@ -273,7 +268,15 @@
 	<script type="text/javascript" src="js/lenis.min.js"></script>
 	<script type="text/javascript" src="js/imagesloaded.pkgd.min.js"></script>
 	<script type="module" src="js/hugr/animation.js"></script>
-	<script type="module" src="https://www.curtainsjs.com/examples/simple-plane/js/simple.plane.setup.js"></script>
+	<script src="https://atuin.ru/demo/ripples/jquery.ripples.js"></script>
+	<script src="https://atuin.ru/demo/ripples/jquery.ripples-min.js"></script>
+	<script type="text/javascript">
+		$('.grid__item-inner').ripples({
+    resolution: 256,
+    dropRadius: 20,
+    perturbance: 0.04
+});
+	</script>
 
 </body>
 </html>

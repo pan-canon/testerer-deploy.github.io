@@ -5,76 +5,51 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 		<!-- Metas -->
-		<title>curtains.js | Simple plane example</title>
+		<title>test</title>
 	    <meta name="description" content="A WebGL plane with a ripple effect on mouse move using curtains.js">
-	    <link rel="canonical" href="https://www.curtainsjs.com/examples/simple-plane/index.html">
 
-	    <!-- Facebook OG -->
-	    <meta property="og:title" content="curtains.js | Simple plane example">
-	    <meta property="og:type" content="website">
-	    <meta property="og:description" content="A WebGL plane with a ripple effect on mouse move using curtains.js">
-	    <meta property="og:url" content="https://www.curtainsjs.com/examples/simple-plane/index.html">
-	    <meta property="og:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+<style>
+body {background: #b22}
 
-	    <!-- Twitter card -->
-	    <meta name="twitter:card" content="summary_large_image">
-	    <meta name="twitter:site" content="@martinlaxenaire">
-		<meta name="twitter:creator" content="@martinlaxenaire">
-		<meta name="twitter:title" content="curtains.js | Simple plane example">
-		<meta name="twitter:description" content="A WebGL plane with a ripple effect on mouse move using curtains.js">
-		<meta name="twitter:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+.item {
+  width: 300px;
+  height: 300px;
+}
 
-		<!-- Favicon -->
-		<link rel="apple-touch-icon" sizes="180x180" href="../../images/favicons/apple-touch-icon.png">
-		<link rel="icon" type="image/png" sizes="32x32" href="../../images/favicons/favicon-32x32.png">
-		<link rel="icon" type="image/png" sizes="16x16" href="../../images/favicons/favicon-16x16.png">
-		<link rel="manifest" href="../../images/favicons/site.webmanifest">
-		<link rel="mask-icon" href="../../images/favicons/safari-pinned-tab.svg" color="#202340">
-		<link rel="shortcut icon" href="../../images/favicons/favicon.ico">
-		<meta name="msapplication-TileColor" content="#202340">
-		<meta name="msapplication-config" content="../../images/favicons/browserconfig.xml">
-		<meta name="theme-color" content="#202340">
+#tubeLiquid {
+  background-color: #74ccf4;
+  clip-path: polygon(42% 32%, 42% 32%, 49% 34%, 49% 34%, 56% 34%, 56% 34%, 62% 35%, 62% 35%, 66% 39%, 66% 39%, 71% 42%, 71% 42%, 74% 47%, 74% 47%, 76% 53%, 76% 53%, 78% 59%, 78% 59%, 78% 65%, 78% 65%, 76% 71%, 76% 71%, 74% 75%, 74% 75%, 70% 80%, 70% 80%, 64% 84%, 64% 84%, 58% 87%, 58% 87%, 51% 89%, 51% 89%, 42% 88%, 42% 88%, 37% 85%, 37% 85%, 32% 82%, 32% 82%, 27% 77%, 27% 81%, 24% 70%, 24% 70%, 22% 63%, 22% 63%, 23% 56%, 23% 56%, 25% 51%, 25% 51%, 28% 45%, 28% 52%, 31% 40%, 31% 40%, 35% 38%, 35% 38%, 38% 35%, 38% 35%);
+}
 
-		<link href="https://fonts.googleapis.com/css?family=PT+Sans:400" rel="stylesheet">
-		<link rel="stylesheet" href="https://www.curtainsjs.com/examples/simple-plane/style.css" type="text/css">
+#bottleMask{
+  background-color: #FFFFFF;
+  clip-path: polygon(42% 32%, 42% 32%, 49% 34%, 49% 34%, 56% 34%, 56% 34%, 62% 35%, 62% 35%, 66% 39%, 66% 39%, 71% 42%, 71% 42%, 74% 47%, 74% 47%, 76% 53%, 76% 53%, 78% 59%, 78% 59%, 78% 65%, 78% 65%, 76% 71%, 76% 71%, 74% 75%, 74% 75%, 70% 80%, 70% 80%, 64% 84%, 64% 84%, 58% 87%, 58% 87%, 51% 89%, 51% 89%, 42% 88%, 42% 88%, 37% 85%, 37% 85%, 32% 82%, 32% 82%, 27% 77%, 27% 81%, 24% 70%, 24% 70%, 22% 63%, 22% 63%, 23% 56%, 23% 56%, 25% 51%, 25% 51%, 28% 45%, 28% 52%, 31% 40%, 31% 40%, 35% 38%, 35% 38%, 38% 35%, 38% 35%);
+}</style>
+
 	</head>
 	<body>
-        <div id="page-wrap">
 
 
-			<div id="canvas"></div>
 
-			<a href="https://www.curtainsjs.com/" title="back to curtains.js website" id="back-to-lib-link" target="_blank">back to curtains.js website</a>
+<div class="item">
 
-            <a href="https://github.com/martinlaxenaire/curtainsjs/blob/master/examples/simple-plane/js/simple.plane.setup.js" title="Show source code" id="source-code-link" target="_blank">&lt;/ &gt;</a>
+<svg viewBox="0 0 300 300">
+	<defs>
+		<mask id="bottleMask" fill="white">
+			<image id="img1" xlink:href="img/biopunk/11.jpg" width="100%" height="100%" filter="url(#myFilter)" />
+		</mask>
+		<filter id="myFilter">
+			<feTurbulence type="turbulence" baseFrequency="0.0001" numOctaves="1" result="turbulence">
+				<animate attributeName="baseFrequency" dur="18s" values="0.0001;0.02;0.0001;0.02;0.0001" begin="img1.load" end="img1.mouseout" />
+			</feTurbulence>
+			<feDisplacementMap xChannelSelector="R" yChannelSelector="G" scale="25" in="SourceGraphic" in2="turbulence" />
+		</filter>
+	</defs>
+	<image id="img1" width="300" xlink:href="https://the-zilant.github.io/testerer-deploy.github.io/testerer_siter/absolution//img/bottle1.png" />
+	<path id="tubeLiquid" fill="#b22" d="M0,0h300v300H0V0z" clip-path="url(#liquidClip)" mask="url(#bottleMask)" />
+</svg>
 
-			<div class="curtain">
-				<div class="grid__item"><div crossorigin="" data-sampler="simplePlaneTexture" class="grid__item-inner" style="background-image:url(img/biopunk/1.jpg)"></div></div>
-				
-			</div>
-		</div>
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1"   viewBox="0 0 500 300">
-  <defs>
-    <filter id="myFilter" >
-      <feTurbulence type="turbulence" baseFrequency="0.0001" numOctaves="1" result="turbulence" >
-     <animate attributeName="baseFrequency" dur="18s" values="0.0001;0.02;0.0001;0.02;0.0001" begin="img1.mouseover" end="img1.mouseout" />
-      </feTurbulence>
-     <feDisplacementMap xChannelSelector="R" yChannelSelector="G" scale="25" in="SourceGraphic" in2="turbulence" />
-    </filter>
-  </defs>
-<image id="img1" xlink:href="img/biopunk/1.jpg" width="100%" height="100%" filter="url(#myFilter)" /> 
-  </svg>
-        <script src="https://www.curtainsjs.com/examples/simple-plane/js/simple.plane.setup.js" type="module"></script>
+</div>
 
-		<!-- Global site tag (gtag.js) - Google Analytics -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-141413267-1"></script>
-		<script>
-		  	window.dataLayer = window.dataLayer || [];
-		  	function gtag(){dataLayer.push(arguments);}
-		  	gtag('js', new Date());
-
-		  	gtag('config', 'UA-141413267-1');
-		</script>
-
-	</body>
+</body>
 </html>

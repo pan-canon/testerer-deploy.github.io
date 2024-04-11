@@ -9,22 +9,19 @@
 	    <meta name="description" content="A WebGL plane with a ripple effect on mouse move using curtains.js">
 
 <style>
-body {background: #b22}
+body {background: #000}
 
 .item {
   width: 300px;
   height: 300px;
 }
 
-#tubeLiquid {
+.bottleMask {
   background-color: #74ccf4;
-  clip-path: polygon(42% 32%, 42% 32%, 49% 34%, 49% 34%, 56% 34%, 56% 34%, 62% 35%, 62% 35%, 66% 39%, 66% 39%, 71% 42%, 71% 42%, 74% 47%, 74% 47%, 76% 53%, 76% 53%, 78% 59%, 78% 59%, 78% 65%, 78% 65%, 76% 71%, 76% 71%, 74% 75%, 74% 75%, 70% 80%, 70% 80%, 64% 84%, 64% 84%, 58% 87%, 58% 87%, 51% 89%, 51% 89%, 42% 88%, 42% 88%, 37% 85%, 37% 85%, 32% 82%, 32% 82%, 27% 77%, 27% 81%, 24% 70%, 24% 70%, 22% 63%, 22% 63%, 23% 56%, 23% 56%, 25% 51%, 25% 51%, 28% 45%, 28% 52%, 31% 40%, 31% 40%, 35% 38%, 35% 38%, 38% 35%, 38% 35%);
+  clip-path: circle(29% at 50% 60%);
 }
 
-#bottleMask{
-  background-color: #FFFFFF;
-  clip-path: polygon(42% 32%, 42% 32%, 49% 34%, 49% 34%, 56% 34%, 56% 34%, 62% 35%, 62% 35%, 66% 39%, 66% 39%, 71% 42%, 71% 42%, 74% 47%, 74% 47%, 76% 53%, 76% 53%, 78% 59%, 78% 59%, 78% 65%, 78% 65%, 76% 71%, 76% 71%, 74% 75%, 74% 75%, 70% 80%, 70% 80%, 64% 84%, 64% 84%, 58% 87%, 58% 87%, 51% 89%, 51% 89%, 42% 88%, 42% 88%, 37% 85%, 37% 85%, 32% 82%, 32% 82%, 27% 77%, 27% 81%, 24% 70%, 24% 70%, 22% 63%, 22% 63%, 23% 56%, 23% 56%, 25% 51%, 25% 51%, 28% 45%, 28% 52%, 31% 40%, 31% 40%, 35% 38%, 35% 38%, 38% 35%, 38% 35%);
-}</style>
+</style>
 
 	</head>
 	<body>
@@ -33,21 +30,43 @@ body {background: #b22}
 
 <div class="item">
 
-<svg viewBox="0 0 300 300">
+<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
 	<defs>
-		<mask id="bottleMask" fill="white">
-			<image id="img1" xlink:href="img/biopunk/1.jpg" width="100%" height="100%" filter="url(#myFilter)" />
-		</mask>
-		<filter id="myFilter">
+		<filter id="poisonFilter">
 			<feTurbulence type="turbulence" baseFrequency="0.0001" numOctaves="1" result="turbulence">
-				<animate attributeName="baseFrequency" dur="18s" values="0.0001;0.02;0.0001;0.02;0.0001" begin="img1.load" end="img1.mouseout" />
+				<animate attributeName="baseFrequency" dur="15s" values="0.0001;0.02;0.0001;0.02;0.0001" begin="imgBiopunk1.load" repeatDur="indefinite" />
 			</feTurbulence>
 			<feDisplacementMap xChannelSelector="R" yChannelSelector="G" scale="25" in="SourceGraphic" in2="turbulence" />
 		</filter>
+		<mask id="bottleMask" fill="white">
+			<image id="imgBiopunk1" xlink:href="img/biopunk/1.jpg" width="100%" height="100%" filter="url(#poisonFilter)" />
+		</mask>
 	</defs>
-	<image id="img1" width="300" xlink:href="https://the-zilant.github.io/testerer-deploy.github.io/testerer_siter/absolution//img/bottle2.png" />
-	<path id="tubeLiquid" fill="#000" d="M0,0h300v300H0V0z" clip-path="url(#liquidClip)" mask="url(#bottleMask)" />
+	<image xlink:href="img/bottle2.png" width="300" />
+	<path class="bottleMask" mask="url(#bottleMask)" fill="#b22" d="M0,0h300v300H0V0z" />
 </svg>
+
+
+<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+
+	<defs>
+		<filter id="poisonFilter">
+			<feTurbulence type="turbulence" baseFrequency="0.0001" numOctaves="1" result="turbulence">
+				<animate attributeName="baseFrequency" dur="25s" values="0.0001;0.02;0.0001;0.02;0.0001" begin="imgBiopunk2.load" repeatDur="indefinite" />
+			</feTurbulence>
+			<feDisplacementMap xChannelSelector="R" yChannelSelector="G" scale="25" in="SourceGraphic" in2="turbulence" />
+		</filter>
+
+		<mask id="bottleMask2" fill="white">
+			<image id="imgBiopunk2" xlink:href="img/biopunk/3.jpg" width="100%" height="100%" filter="url(#poisonFilter)" />
+		</mask>
+	</defs>
+
+	<image xlink:href="img/bottle2.png" width="300" />
+	<path class="tubeLiquid" mask="url(#bottleMask2)" fill="#b22" d="M0,0h300v300H0V0z" />
+
+</svg>
+
 
 </div>
 

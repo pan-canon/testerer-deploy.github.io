@@ -105,7 +105,7 @@
 	<defs>
 		<filter id="poisonFilter">
 			<feTurbulence type="turbulence" baseFrequency="0.0001" numOctaves="1" result="turbulence">
-				<animate attributeName="baseFrequency" dur="15s" values="0.0001;0.02;0.0001;0.02" begin="imgBiopunk1.load" repeatDur="indefinite" />
+				<animate attributeName="baseFrequency" dur="15s" values="0.0001;0.02;0.0001;0.02;0.0001" begin="imgBiopunk1.load" repeatDur="indefinite" />
 			</feTurbulence>
 			<feDisplacementMap xChannelSelector="R" yChannelSelector="G" scale="25" in="SourceGraphic" in2="turbulence" />
 		</filter>
@@ -114,7 +114,8 @@
 		</mask>
 	</defs>
 	<image xlink:href="img/bottle-white.png" width="300" />
-	<path class="bottleMask" mask="url(#bottleMask)" fill="#b22" d="M0,0h300v300H0V0z" />
+	<path class="bottleMask" mask="url(#bottleMask)" fill="#0ff" d="M0, 0h300v300H0V0z" />
+	<rect width="40" height="33" x="130" y="0" fill="#f4f4f4" />
 </svg>
 
 						</div>

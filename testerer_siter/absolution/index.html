@@ -141,7 +141,25 @@
 						</div>
 					</div>
 					<div class="grid__item">
-						<div class="grid__biopunk grid__item-inner" style="background-image:url(img/biopunk/3.jpg)"></div>
+						<div class="grid__biopunk grid__item-inner">
+<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+	<defs>
+		<filter id="poisonFilter3">
+			<feTurbulence type="turbulence" baseFrequency="0.0001" numOctaves="1" result="turbulence">
+				<animate attributeName="baseFrequency" dur="15s" values="0.0001;0.02;0.0001;0.02;0.0001" begin="imgBiopunk3.load" repeatDur="indefinite" />
+			</feTurbulence>
+			<feDisplacementMap xChannelSelector="R" yChannelSelector="G" scale="25" in="SourceGraphic" in2="turbulence" />
+		</filter>
+		<mask id="bottleMask3" fill="white">
+			<image id="imgBiopunk3" xlink:href="img/biopunk/3.jpg" width="100%" height="120%" filter="url(#poisonFilter3)" />
+		</mask>
+	</defs>
+	<image xlink:href="img/bottle-white.webp" width="300" />
+	<path class="bottleMask" mask="url(#bottleMask3)" fill="#0ff" d="M0, 0h300v300H0V0z" />
+	<image xlink:href="img/bottle-white.webp" width="300" />
+	<rect width="40" height="33" x="130" y="0" fill="#fff" />
+</svg>
+						</div>
 					</div>
 					<div class="grid__item">
 						<div class="grid__biopunk grid__item-inner" style="background-image:url(img/biopunk/4.jpg)"></div>

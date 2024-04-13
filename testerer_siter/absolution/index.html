@@ -183,10 +183,46 @@
 						</div>
 					</div>
 					<div class="grid__item">
-						<div class="grid__biopunk grid__item-inner" style="background-image:url(img/biopunk/5.webp)"></div>
+						<div class="grid__biopunk grid__item-inner">
+<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+	<defs>
+		<filter id="poisonFilter5">
+			<feTurbulence type="turbulence" baseFrequency="0.0001" numOctaves="1" result="turbulence">
+				<animate attributeName="baseFrequency" dur="15s" values="0.0001;0.02;0.0001;0.02;0.0001" begin="imgBiopunk5.load" repeatDur="indefinite" />
+			</feTurbulence>
+			<feDisplacementMap xChannelSelector="R" yChannelSelector="G" scale="25" in="SourceGraphic" in2="turbulence" />
+		</filter>
+		<mask id="bottleMask5" fill="white">
+			<image id="imgBiopunk5" xlink:href="img/biopunk/5.webp" width="100%" height="120%" filter="url(#poisonFilter5)" />
+		</mask>
+	</defs>
+	<image xlink:href="img/bottle-white.webp" width="300" />
+	<path class="bottleMask" mask="url(#bottleMask5)" fill="#0ff" d="M0, 0h300v300H0V0z" />
+	<image xlink:href="img/bottle-white.webp" width="300" />
+	<rect width="40" height="33" x="130" y="0" fill="#fff" />
+</svg>
+						</div>
 					</div>
 					<div class="grid__item">
-						<div class="grid__biopunk grid__item-inner" style="background-image:url(img/biopunk/6.webp)"></div>
+						<div class="grid__biopunk grid__item-inner">
+<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+	<defs>
+		<filter id="poisonFilter6">
+			<feTurbulence type="turbulence" baseFrequency="0.0001" numOctaves="1" result="turbulence">
+				<animate attributeName="baseFrequency" dur="15s" values="0.0001;0.02;0.0001;0.02;0.0001" begin="imgBiopunk6.load" repeatDur="indefinite" />
+			</feTurbulence>
+			<feDisplacementMap xChannelSelector="R" yChannelSelector="G" scale="25" in="SourceGraphic" in2="turbulence" />
+		</filter>
+		<mask id="bottleMask6" fill="white">
+			<image id="imgBiopunk6" xlink:href="img/biopunk/6.webp" width="100%" height="120%" filter="url(#poisonFilter6)" />
+		</mask>
+	</defs>
+	<image xlink:href="img/bottle-white.webp" width="300" />
+	<path class="bottleMask" mask="url(#bottleMask6)" fill="#0ff" d="M0, 0h300v300H0V0z" />
+	<image xlink:href="img/bottle-white.webp" width="300" />
+	<rect width="40" height="33" x="130" y="0" fill="#fff" />
+</svg>
+						</div>
 					</div>
 					<div class="grid__item">
 						<div class="grid__biopunk grid__item-inner" style="background-image:url(img/biopunk/7.webp)"></div>

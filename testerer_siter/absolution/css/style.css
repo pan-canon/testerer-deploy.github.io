@@ -217,6 +217,7 @@ body #cdawrap {
 	text-align: center;
 	font-weight: 300;
 	font-size: clamp(1.5rem, 2.5vw, 6.5rem);
+	background: radial-gradient(20vw, rgba(0, 0, 0, .90), transparent);
 }
 
 #section1 .content__title {font-family: "Press Start 2P", system-ui}

@@ -1,19 +1,21 @@
 <!doctype html>
+<!--/*
+https://codepen.io/oduska/pen/JEreqV
+*/-->
 <html>
 <head>
 
     <meta charset="utf-8">
-    <meta name="description" content="WebRTC code samples">
     <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1">
-    <meta itemprop="description" content="Client-side WebRTC code samples">
-    <meta itemprop="image" content="../../../images/webrtc-icon-192x192.png">
-    <meta itemprop="name" content="WebRTC code samples">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="">
+    <meta itemprop="name" content="">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta id="theme-color" name="theme-color" content="#ffffff">
+    <meta id="theme-color" name="theme-color" content="#000000">
 
     <title>Select audio and video sources</title>
 
-    <link rel="icon" sizes="192x192" href="../../../images/webrtc-icon-192x192.png">
+    <link rel="icon" sizes="192x192" href="">
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="css/style.css">
 
@@ -36,26 +38,49 @@
 
     <div id="container">
 
-        <video id="video" playsinline autoplay></video>
+        <video id="video" class="hidden" playsinline autoplay></video>
+
+        <div class="radar"></div>
+        <img class="hidden monsters" src="img/TheSiren.webp" />
+
+        <a href="#" class="logo" onclick="openNav()">scp radar</a>
+
+   </div>
+
+   <div id="mySidepanel" class="sidepanel">
+
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
 
         <div class="select">
             <label for="audioSource">Audio input source: </label><select id="audioSource"></select>
         </div>
-
         <div class="select">
             <label for="audioOutput">Audio output destination: </label><select id="audioOutput"></select>
         </div>
-
         <div class="select">
             <label for="videoSource">Video source: </label><select id="videoSource"></select>
         </div>
 
-   </div>
+    </div>
 
    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
    <script src="js/main.js" async></script>
    <script type="text/javascript">
-alert(navigator.geolocation.getCurrentPosition());</script>
+   /* Установите ширину боковой панели на 250 пикселей (показать его) */
+    function openNav() {
+        document.getElementById("mySidepanel").style.width = "250px";
+    }
+    /* Установите ширину боковой панели в 0 (скройте ее) */
+    function closeNav() {
+        document.getElementById("mySidepanel").style.width = "0";
+    }
+    /* Закрытие радара и открытие монстра */
+    document.querySelector('.radar').onclick = function() {
+        document.querySelector('.radar').classList.toggle('hidden');
+        document.querySelector('.monsters').classList.toggle('hidden');
+        document.getElementById('video').classList.toggle('hidden');
+    }
+</script>
 
 </body>
 </html>

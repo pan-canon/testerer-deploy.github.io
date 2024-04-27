@@ -443,7 +443,7 @@ left: 50%;
   width: 0; /* 0 ширина-измените это с помощью JavaScript */
   position: fixed; /* Оставаться на месте */
   z-index: 1; /* Оставайтесь на вершине */
-  top: 0;
+  top: 30px;
   left: 0;
   background-color: #111; /* Черный */
   overflow-x: hidden; /* Отключить горизонтальную прокрутку */
@@ -468,9 +468,7 @@ left: 50%;
 
 /* Положение и стиль кнопки закрытия (верхний правый угол) */
 .sidepanel .closebtn {
-  position: absolute;
-  top: 0;
-  right: 25px;
   font-size: 36px;
   margin-left: 50px;
+  display: block;
 }

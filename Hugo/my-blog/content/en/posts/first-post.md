@@ -1,6 +1,6 @@
 ---
-title: "First Post 1"
-date: 2024-05-05T20:21:26+03:00
+title: "First Post"
+date: 2024-05-08T04:18:19+03:00
 
 # format for string: "xxxx-xx-xx"
 # lastmod: "2022-10-01"
@@ -9,9 +9,9 @@ date: 2024-05-05T20:21:26+03:00
 draft: false
 # one category: ["category-1"] 
 # more categories: ["category-1", "category-2", ...]
-categories: ["test"]
+categories: []
 # refer to categories
-tags: ["lol"]
+tags: []
 # seires
 series: []
 # Top image for the post

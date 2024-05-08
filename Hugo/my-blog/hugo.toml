@@ -9,21 +9,22 @@
 
 
 baseURL = 'https://example.org/'
-languageCode = 'en-us'
+
+
 
 # website title
 # 网站标题
-title = 'NewBee'
+title = 'SirenPunk'
 # theme
 # 主题
 theme = "NewBee"
 # default content of website
 # 网站默认语言
-defaultContentLanguage = "en"
+deFaultContentLanguage = "en"
 
 
 
-
+#languageCode = 'en-us' #Bugs!
 
 [languages] 
     [languages.de] 
@@ -32,6 +33,7 @@ defaultContentLanguage = "en"
     [languages.en] 
         languageName = 'en'
         contentDir = 'content/en'
+
 # whether to use robots.txt
 # 是否使用 robots.txt
 enableRobotsTXT = true

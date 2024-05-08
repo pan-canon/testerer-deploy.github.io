@@ -5,34 +5,26 @@
 #URL = "https://associative-connection.github.io/"
 #publishDir = "public/docs"
 
-
-
-
 baseURL = 'https://example.org/'
 
-
-
 # website title
-# 网站标题
 title = 'SirenPunk'
 # theme
-# 主题
 theme = "NewBee"
 # default content of website
-# 网站默认语言
-deFaultContentLanguage = "en"
+deFaultContentLanguage = "uk"
 
-
-
-#languageCode = 'en-us' #Bugs!
-
-[languages] 
-    [languages.de] 
-        languageName = 'de'
-        contentDir = 'content/de'
-    [languages.en] 
-        languageName = 'en'
-        contentDir = 'content/en'
+[languages]
+    [languages.uk]
+        languageCode = 'uk'
+        languageName = 'Український'
+        contentDir = 'content/uk'
+        weight = 1
+    [languages.ru]
+        languageCode = 'ru'
+        languageName = 'Русский'
+        contentDir = 'content/ru'
+        weight = 2
 
 # whether to use robots.txt
 # 是否使用 robots.txt

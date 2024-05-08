@@ -13,7 +13,7 @@ categories: []
 # refer to categories
 tags: []
 # seires
-series: []
+series: [""]
 # Top image for the post
 image: ""
 # Hide from home page

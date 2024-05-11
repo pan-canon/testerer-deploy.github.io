@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>SirenPunk</title>
+    <link>http://localhost:1313/uk/</link>
+    <description>Recent content on SirenPunk</description>
+    <generator>Hugo</generator>
+    <language>uk</language>
+    <lastBuildDate>Wed, 08 May 2024 04:18:19 +0300</lastBuildDate>
+    <atom:link href="http://localhost:1313/uk/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>First Post</title>
+      <link>http://localhost:1313/uk/posts/first-post/</link>
+      <pubDate>Wed, 08 May 2024 04:18:19 +0300</pubDate>
+      <guid>http://localhost:1313/uk/posts/first-post/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>

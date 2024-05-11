@@ -2,92 +2,92 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/posts/first-post/</loc>
+    <loc>http://localhost:1313/uk/posts/first-post/</loc>
     <lastmod>2024-05-08T04:18:19+03:00</lastmod>
     <xhtml:link
                 rel="alternate"
-                hreflang="ru"
-                href="http://localhost:1313/ru/posts/first-post/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="uk"
+                hreflang="en"
                 href="http://localhost:1313/posts/first-post/"
                 />
-  </url><url>
-    <loc>http://localhost:1313/posts/</loc>
-    <lastmod>2024-05-08T04:18:19+03:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="ru"
-                href="http://localhost:1313/ru/posts/"
-                />
     <xhtml:link
                 rel="alternate"
                 hreflang="uk"
+                href="http://localhost:1313/uk/posts/first-post/"
+                />
+  </url><url>
+    <loc>http://localhost:1313/uk/posts/</loc>
+    <lastmod>2024-05-08T04:18:19+03:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
                 href="http://localhost:1313/posts/"
                 />
+    <xhtml:link
+                rel="alternate"
+                hreflang="uk"
+                href="http://localhost:1313/uk/posts/"
+                />
   </url><url>
-    <loc>http://localhost:1313/</loc>
+    <loc>http://localhost:1313/uk/</loc>
     <lastmod>2024-05-08T04:18:19+03:00</lastmod>
     <xhtml:link
                 rel="alternate"
-                hreflang="ru"
-                href="http://localhost:1313/ru/"
+                hreflang="en"
+                href="http://localhost:1313/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="uk"
-                href="http://localhost:1313/"
+                href="http://localhost:1313/uk/"
                 />
   </url><url>
-    <loc>http://localhost:1313/about/</loc>
+    <loc>http://localhost:1313/uk/about/</loc>
     <lastmod>2024-05-05T20:31:34+03:00</lastmod>
     <xhtml:link
                 rel="alternate"
-                hreflang="ru"
-                href="http://localhost:1313/ru/about/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="uk"
+                hreflang="en"
                 href="http://localhost:1313/about/"
                 />
-  </url><url>
-    <loc>http://localhost:1313/categories/</loc>
-    <xhtml:link
-                rel="alternate"
-                hreflang="ru"
-                href="http://localhost:1313/ru/categories/"
-                />
     <xhtml:link
                 rel="alternate"
                 hreflang="uk"
+                href="http://localhost:1313/uk/about/"
+                />
+  </url><url>
+    <loc>http://localhost:1313/uk/categories/</loc>
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
                 href="http://localhost:1313/categories/"
                 />
-  </url><url>
-    <loc>http://localhost:1313/series/</loc>
-    <xhtml:link
-                rel="alternate"
-                hreflang="ru"
-                href="http://localhost:1313/ru/series/"
-                />
     <xhtml:link
                 rel="alternate"
                 hreflang="uk"
+                href="http://localhost:1313/uk/categories/"
+                />
+  </url><url>
+    <loc>http://localhost:1313/uk/series/</loc>
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
                 href="http://localhost:1313/series/"
                 />
-  </url><url>
-    <loc>http://localhost:1313/tags/</loc>
     <xhtml:link
                 rel="alternate"
-                hreflang="ru"
-                href="http://localhost:1313/ru/tags/"
+                hreflang="uk"
+                href="http://localhost:1313/uk/series/"
+                />
+  </url><url>
+    <loc>http://localhost:1313/uk/tags/</loc>
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="http://localhost:1313/tags/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="uk"
-                href="http://localhost:1313/tags/"
+                href="http://localhost:1313/uk/tags/"
                 />
   </url>
 </urlset>

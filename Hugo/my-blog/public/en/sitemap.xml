@@ -3,11 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>http://localhost:1313/posts/first-post/</loc>
-    <lastmod>2024-05-08T04:18:19+03:00</lastmod>
+    <lastmod>2024-05-08T04:17:55+03:00</lastmod>
     <xhtml:link
                 rel="alternate"
-                hreflang="de"
-                href="http://localhost:1313/de/posts/first-post/"
+                hreflang="uk"
+                href="http://localhost:1313/uk/posts/first-post/"
                 />
     <xhtml:link
                 rel="alternate"
@@ -16,11 +16,11 @@
                 />
   </url><url>
     <loc>http://localhost:1313/posts/</loc>
-    <lastmod>2024-05-08T04:18:19+03:00</lastmod>
+    <lastmod>2024-05-08T04:17:55+03:00</lastmod>
     <xhtml:link
                 rel="alternate"
-                hreflang="de"
-                href="http://localhost:1313/de/posts/"
+                hreflang="uk"
+                href="http://localhost:1313/uk/posts/"
                 />
     <xhtml:link
                 rel="alternate"
@@ -29,11 +29,11 @@
                 />
   </url><url>
     <loc>http://localhost:1313/</loc>
-    <lastmod>2024-05-08T04:18:19+03:00</lastmod>
+    <lastmod>2024-05-08T04:17:55+03:00</lastmod>
     <xhtml:link
                 rel="alternate"
-                hreflang="de"
-                href="http://localhost:1313/de/"
+                hreflang="uk"
+                href="http://localhost:1313/uk/"
                 />
     <xhtml:link
                 rel="alternate"
@@ -45,8 +45,8 @@
     <lastmod>2024-05-05T20:31:34+03:00</lastmod>
     <xhtml:link
                 rel="alternate"
-                hreflang="de"
-                href="http://localhost:1313/de/about/"
+                hreflang="uk"
+                href="http://localhost:1313/uk/about/"
                 />
     <xhtml:link
                 rel="alternate"
@@ -57,8 +57,8 @@
     <loc>http://localhost:1313/categories/</loc>
     <xhtml:link
                 rel="alternate"
-                hreflang="de"
-                href="http://localhost:1313/de/categories/"
+                hreflang="uk"
+                href="http://localhost:1313/uk/categories/"
                 />
     <xhtml:link
                 rel="alternate"
@@ -69,8 +69,8 @@
     <loc>http://localhost:1313/series/</loc>
     <xhtml:link
                 rel="alternate"
-                hreflang="de"
-                href="http://localhost:1313/de/series/"
+                hreflang="uk"
+                href="http://localhost:1313/uk/series/"
                 />
     <xhtml:link
                 rel="alternate"
@@ -81,8 +81,8 @@
     <loc>http://localhost:1313/tags/</loc>
     <xhtml:link
                 rel="alternate"
-                hreflang="de"
-                href="http://localhost:1313/de/tags/"
+                hreflang="uk"
+                href="http://localhost:1313/uk/tags/"
                 />
     <xhtml:link
                 rel="alternate"

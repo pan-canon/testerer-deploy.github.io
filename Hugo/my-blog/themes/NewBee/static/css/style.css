@@ -3,18 +3,10 @@
 	Theme URI: localhost
 	Author: Sam aka Сиреноголова
 	Author URI: https://github.com/vsezlotov
-	Version: 19.2
+	Version: 19.3
 */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Metal+Mania&family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
 @import url('/css/font-awesome.min.css');
-
-:root {
-    --gradient-background: rgba(46, 13, 36, 0.93);
-    --gradient-right: rgba(248, 70, 180, 0.301);
-    --gradient-left: rgba(9, 243, 99, 0.247);
-    --gradient-background-right: rgba(70, 227, 248, 0);
-    --gradient-background-left: rgba(239, 243, 9, 0.13);
-}
 
 @font-face {
     font-family: 'FontAwesome';
@@ -51,8 +43,7 @@ header, footer, aside, nav, section, article, svg, canvas, figure, figcaption {d
  * base elements
  */
 html {
-    background: radial-gradient(farthest-side at top right, var(--gradient-right), transparent 500px ), radial-gradient( farthest-corner at top left, var(--gradient-left), transparent 600px ), radial-gradient( farthest-corner at bottom right, var(--gradient-background-right), transparent 500px ), radial-gradient( farthest-corner at bottom left, var(--gradient-background-left), transparent 600px);
-    background-color: var(--gradient-background);
+    background: #b22;
     -webkit-animation: zoom 1s linear 1 alternate;
     -moz-animation: zoom 1s linear 1 alternate;
     -o-animation: zoom 1s linear 1 alternate;
@@ -464,7 +455,7 @@ option {
 
 .menu-main ul li a {
     display: block;
-    font-family: 'Cormorant Garamond', serif; line-height: 45px; font-weight: 600; color: #bbc3c6; text-decoration: none;
+    font-family: 'Cormorant Garamond', serif; line-height: 45px; font-weight: 600; color: #f5f5dc; text-decoration: none;
 }
 
 .menu-main ul li.menuBtn a {padding-left: 14px;}

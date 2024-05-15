@@ -32,6 +32,7 @@ Another item
 
 
     <link rel="stylesheet" href='/css/style.css' />
+    <link rel="stylesheet" href='/css/Tykhon.css' />
     <link rel="stylesheet" href='/css/search.css' />
     <link rel="stylesheet" href='/css/shortcode.css' />
     
@@ -137,10 +138,10 @@ Another item
             <div class="hero-title">First Post</div>
             <div class="hero-subtitle"></div>
             <div class="hero-date">
-                    <span class="no-wrap"><i class="fa fa-calendar"></i> : 2022-5-8 &nbsp;</span>
-                    <span class="no-wrap"><i class="fa fa-calendar-check-o"></i> : 2022-5-8 &nbsp;</span>
+                    <span class="no-wrap"><i class="fa fa-calendar"></i> 发布于: 2022-5-8 &nbsp;</span>
+                    <span class="no-wrap"><i class="fa fa-calendar-check-o"></i> 更新于: 2022-5-8 &nbsp;</span>
                     <span class="no-wrap"><i class="fa fa-folder"></i>
-                        :
+                        收录于:
                         
                             <a href='
                                 /categories/biopunk
@@ -150,8 +151,8 @@ Another item
                     </span>    
             </div>
             <div class="timelong">
-                <span class="no-wrap"><i class="fa fa-pencil"></i> : 6 &nbsp;</span>
-                <span class="no-wrap"><i class="fa fa-clock-o"></i> : 1  &nbsp;</span>
+                <span class="no-wrap"><i class="fa fa-pencil"></i> 文章字数: 6 &nbsp;</span>
+                <span class="no-wrap"><i class="fa fa-clock-o"></i> 阅读时间: 1 分钟 &nbsp;</span>
                 
             </div>
         </div>
@@ -232,7 +233,7 @@ Another item
 
 <div class="sponsor">
     <div class="sponsor-self">
-        <div class="sponsor-title"></div>
+        <div class="sponsor-title">赞赏</div>
         <div class="sponsor-btn">
             
                 
@@ -264,7 +265,7 @@ Another item
                 
             
         </div>
-        <div class="cancel efct-button"></div>
+        <div class="cancel efct-button">取消</div>
     </div>
 </div>
 
@@ -291,11 +292,11 @@ Another item
     <div class="search">
         <div class="sheader anniu">
             <div class="sh-l">
-                <input type="text" placeholder='' id="search-key">
+                <input type="text" placeholder='请输入关键词' id="search-key">
                 <span class="sclear"><i class="fa fa-close"></i></span>
             </div>
             <div class="sh-r">
-                <button></button>
+                <button>搜索</button>
             </div>
         </div>
         <div class="sbody">
@@ -340,11 +341,11 @@ Another item
     var mode_custom = "auto";
     var postsCount =  6 ;
     var arrPosts = [{"link":"http://localhost:1313/posts/first-post6/","plain":"","pubDate":"2024-05-15","title":"First Post6"},{"link":"http://localhost:1313/posts/first-post5/","plain":"","pubDate":"2024-05-15","title":"First Post5"},{"link":"http://localhost:1313/posts/first-post4/","plain":"","pubDate":"2024-05-15","title":"First Post4"},{"link":"http://localhost:1313/posts/first-post3/","plain":"","pubDate":"2024-05-15","title":"First Post3"},{"link":"http://localhost:1313/posts/first-post2/","plain":"","pubDate":"2024-05-15","title":"First Post2"},{"link":"http://localhost:1313/posts/first-post/","plain":"Heading 2 First item Another item ","pubDate":"2022-05-08","title":"First Post"}];
-    var search_theEnd = "";
-    var search_nothing = "";
-    var search_found = "";
-    var search_result = "";
-    var search_results = "";
+    var search_theEnd = "到底了";
+    var search_nothing = "什么也没找到";
+    var search_found = "找到";
+    var search_result = "条结果";
+    var search_results = "条结果";
     var enable_mermaid =  null ;
 
     var baseURL = "http://localhost:1313/";

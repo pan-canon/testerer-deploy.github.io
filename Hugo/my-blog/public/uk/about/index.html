@@ -29,6 +29,15 @@
     <script type="text/javascript" src="/js/core/jquery-1.12.4.min.js"></script>
     <script type="text/javascript" src="/js/core/jquery.cookie.min.js"></script>
     <script type="text/javascript" src="/js/jquery-ui-1.9.1.custom.min.js"></script>
+
+<link href="/pagefind/pagefind_ui/modular/css/ui.css" rel="stylesheet">
+<script src="/pagefind/pagefind_ui/default/ui.js"></script>
+
+<script>
+    window.addEventListener('DOMContentLoaded', (event) => {
+        new PagefindUI({ element: "#search", showSubResults: true });
+    });
+</script>
 </head><body>
 
         <div class="base_width p_relative wrap"> <div id="overlay" class="base_width p_fixed"></div><div class="center media_base_width p_relative breadcrumbs" prefix="v: http://rdf.data-vocabulary.org/#"></div>
@@ -91,6 +100,12 @@
 </ul>
         
     </div>
+
+
+
+<div id="search"></div>
+
+
 </div>
 
 
@@ -121,33 +136,6 @@
 
 
         <div id="container" class="center media_base_width p_relative clearfix">
-
-
-
-
-
-
-    
-        
-        
-        
-    
-
-
-
-
-    <div class="castration base_width p_relative preview">
-        
-            <div class="hero-img">
-                <img class="lazyload" src="/images/thumbnail.gif" data-src="/images/about.jpg" alt="">
-            </div>
-        
-        <div class="hero-content">
-            <div class="hero-title">About</div>
-            <div>description of about page</div>
-        </div>
-    </div>
-
 
 <div class="zhuti-0">
     <div class="container">

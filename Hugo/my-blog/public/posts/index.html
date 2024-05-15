@@ -375,33 +375,37 @@
 
     </div>
 
+    <script type="text/javascript" src="/js/intro.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.tagcanvas.min.js"></script>
+    <script type="text/javascript" src="/js/hugr.js"></script>
+    <script type="text/javascript">
+        window.onload = function () {
+        
+            introJs().setOptions({
+                tooltipClass: 'customTooltip',
+                position: 'left',
+                showButtons: false
+            }).addHints();
+        };
+
+        $(document).ready(function() {
+        
+            if (!$('#myCanvas').tagcanvas({
+                textColour: '#ffffff',
+                outlineThickness: 1,
+                maxSpeed: 0.2,
+                depth: 0.75
+            })) { 
+                $('#myCanvasContainer').hide();
+            }
+        });
+    </script>
 
 
-<script type="text/javascript" src="/js/intro.min.js"></script>
-<script type="text/javascript" src="/js/jquery.tagcanvas.min.js"></script>
-<script type="text/javascript" src="/js/hugr.js"></script>
-<script type="text/javascript">
-window.onload = function () {
 
-introJs().setOptions({
-tooltipClass: 'customTooltip', 
-position: 'left', 
-showButtons: false
-}).addHints();
-};
-
-$(document).ready(function() {
-
-if (!$('#myCanvas').tagcanvas({
-textColour: '#ffffff', 
-outlineThickness: 1, 
-maxSpeed: 0.2, 
-depth: 0.75
-})) { 
-$('#myCanvasContainer').hide();
-}
-});
-</script>
+    <script src="/js/search.js"></script>
+    <script src="/js/md_nb.js"></script>
+    <script src="/js/yes.js"></script>
 
 
 
@@ -410,15 +414,10 @@ $('#myCanvasContainer').hide();
     
     
     <script src="/js/lazysizes.min.js" async=""></script>
-    
-    <script src="/js/search.js"></script>
-    <script src="/js/md_nb.js"></script>
-    <script src="/js/yes.js"></script>
+
     
         <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
     
-
-
 
 </body>
 </html>

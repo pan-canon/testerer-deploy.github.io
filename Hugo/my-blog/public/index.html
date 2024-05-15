@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"><head>
-	<meta name="generator" content="Hugo 0.125.4"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+	<meta name="generator" content="Hugo 0.125.6"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -434,33 +434,37 @@
 
     </div>
 
+    <script type="text/javascript" src="/js/intro.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.tagcanvas.min.js"></script>
+    <script type="text/javascript" src="/js/hugr.js"></script>
+    <script type="text/javascript">
+        window.onload = function () {
+        
+            introJs().setOptions({
+                tooltipClass: 'customTooltip',
+                position: 'left',
+                showButtons: false
+            }).addHints();
+        };
+
+        $(document).ready(function() {
+        
+            if (!$('#myCanvas').tagcanvas({
+                textColour: '#ffffff',
+                outlineThickness: 1,
+                maxSpeed: 0.2,
+                depth: 0.75
+            })) { 
+                $('#myCanvasContainer').hide();
+            }
+        });
+    </script>
 
 
-<script type="text/javascript" src="/js/intro.min.js"></script>
-<script type="text/javascript" src="/js/jquery.tagcanvas.min.js"></script>
-<script type="text/javascript" src="/js/hugr.js"></script>
-<script type="text/javascript">
-window.onload = function () {
 
-introJs().setOptions({
-tooltipClass: 'customTooltip', 
-position: 'left', 
-showButtons: false
-}).addHints();
-};
-
-$(document).ready(function() {
-
-if (!$('#myCanvas').tagcanvas({
-textColour: '#ffffff', 
-outlineThickness: 1, 
-maxSpeed: 0.2, 
-depth: 0.75
-})) { 
-$('#myCanvasContainer').hide();
-}
-});
-</script>
+    <script src="/js/search.js"></script>
+    <script src="/js/md_nb.js"></script>
+    <script src="/js/yes.js"></script>
 
 
 
@@ -469,15 +473,10 @@ $('#myCanvasContainer').hide();
     
     
     <script src="/js/lazysizes.min.js" async=""></script>
-    
-    <script src="/js/search.js"></script>
-    <script src="/js/md_nb.js"></script>
-    <script src="/js/yes.js"></script>
+
     
         <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
     
-
-
 
 </body>
 </html>

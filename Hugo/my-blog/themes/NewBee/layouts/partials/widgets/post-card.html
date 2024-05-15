@@ -2,17 +2,18 @@
 {{ $isMultiLingual := and (ne .Site.Language.Weight 1) (and .Site.IsMultiLingual (not .Site.Params.Site.OnlyOneLang)) }}
 {{ $includedIn := "newnewnew" }}
 
-<div class="card-large">
-    <div class="card-large-img">
+<li class="castration base_width p_relative grid">
+    <div class="castration fl p_relative text">
+        <a class="castration fl p_relative grid_cover" href="{{ .Permalink }}">
+            {{ with .Params.image }}
+                    <img class="cover p_absolute lazyload" src="/images/thumbnail.gif" data-src="{{ . }}" alt='{{ i18n "imageLoadingFailed" }}'>
+            {{ else }}
+                    <img class="cover p_absolute lazyload cover p_absolute" src="/images/thumbnail.gif" data-src="{{ .Site.Params.page.defaultPostImg }}" alt='{{ i18n "imageLoadingFailed" }}'>
+            {{ end }}
+        </a>
+        <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
 
-        {{ with .Params.image }}
-                <img class="lazyload" src="/images/thumbnail.gif" data-src="{{ . }}" alt='{{ i18n "imageLoadingFailed" }}'>
-        {{ else }}
-                <img class="lazyload" src="/images/thumbnail.gif" data-src="{{ .Site.Params.page.defaultPostImg }}" alt='{{ i18n "imageLoadingFailed" }}'>
-        {{ end }}
-    </div>
-    <div class="card-large-content">
-        <div class="up-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></div>
+
         <div class="up-date">
             <span class="no-wrap"><i class="fa fa-calendar"></i> {{ i18n "postInfo_postedOn" }}: {{ .PublishDate.Format "2006-1-2" }} &nbsp;</span>
             <span class="no-wrap"><i class="fa fa-calendar-check-o"></i> {{ i18n "postInfo_updatedOn" }}: {{ .Lastmod.Format "2006-1-2" }} &nbsp;</span>
@@ -33,38 +34,26 @@
                     {{ i18n "postInfo_notIncluded" }}
                 {{ end }}
             </span>
-        </div>
-        <div class="down-summary">{{ .Summary }}</div>
-    </div>
-    <div class="card-readmore">
-        <a href="{{ .Permalink }}">
-            <span><i class="fa fa-arrow-right"></i></span>
-        </a>
-    </div>
-</div>
-
 {{ $tagsCount := 0 }}
 {{ with .Params.tags }}
     {{ $tagsCount = 1 }}
 {{ end }}
 {{ if eq $tagsCount 1 }}
-    <div class="down-type">
-        {{ range $tag := .Params.tags }}
-        <span class="down-type-item">
-            <div class="shuxian-root">
-                <div class="shuxian"></div>
-            </div>
-            <div class="type-text">
-                <a href='{{ if $isMultiLingual }}
-                            {{ $langNow | relURL}}/tags/{{ $tag | urlize }}
-                        {{ else }}
-                            {{ "tags/" | relURL }}{{ $tag | urlize }}
-                        {{ end }}'>
-                    <i class="fa fa-tag"></i> {{ . }}
-                </a>
-            </div>
-        </span>
-        {{ end }}
-    </div>
+    {{ range $tag := .Params.tags }}
+    <a href='{{ if $isMultiLingual }}
+        {{ $langNow | relURL}}/tags/{{ $tag | urlize }}
+    {{ else }}
+        {{ "tags/" | relURL }}{{ $tag | urlize }}
+    {{ end }}'>
+        <i class="fa fa-tag"></i> {{ . }}
+    </a>
 {{ end }}
-<div class="dang"></div>
+{{ end }}
+        </div>
+        <div class="down-summary">
+        {{ .Summary }}
+        </div>
+
+
+    </div>
+</li>

@@ -2,6 +2,25 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>http://localhost:1313/categories/biopunk/</loc>
+    <lastmod>2024-05-08T04:17:55+03:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/categories/</loc>
+    <lastmod>2024-05-08T04:17:55+03:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="uk"
+                href="http://localhost:1313/uk/categories/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="http://localhost:1313/categories/"
+                />
+  </url><url>
+    <loc>http://localhost:1313/tags/drugs/</loc>
+    <lastmod>2024-05-08T04:17:55+03:00</lastmod>
+  </url><url>
     <loc>http://localhost:1313/posts/first-post/</loc>
     <lastmod>2024-05-08T04:17:55+03:00</lastmod>
     <xhtml:link
@@ -41,6 +60,19 @@
                 href="http://localhost:1313/"
                 />
   </url><url>
+    <loc>http://localhost:1313/tags/</loc>
+    <lastmod>2024-05-08T04:17:55+03:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="uk"
+                href="http://localhost:1313/uk/tags/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="http://localhost:1313/tags/"
+                />
+  </url><url>
     <loc>http://localhost:1313/about/</loc>
     <lastmod>2024-05-05T20:31:34+03:00</lastmod>
     <xhtml:link
@@ -54,18 +86,6 @@
                 href="http://localhost:1313/about/"
                 />
   </url><url>
-    <loc>http://localhost:1313/categories/</loc>
-    <xhtml:link
-                rel="alternate"
-                hreflang="uk"
-                href="http://localhost:1313/uk/categories/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="http://localhost:1313/categories/"
-                />
-  </url><url>
     <loc>http://localhost:1313/series/</loc>
     <xhtml:link
                 rel="alternate"
@@ -76,18 +96,6 @@
                 rel="alternate"
                 hreflang="en"
                 href="http://localhost:1313/series/"
-                />
-  </url><url>
-    <loc>http://localhost:1313/tags/</loc>
-    <xhtml:link
-                rel="alternate"
-                hreflang="uk"
-                href="http://localhost:1313/uk/tags/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="http://localhost:1313/tags/"
                 />
   </url>
 </urlset>

@@ -1,0 +1,121 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  HUMANE_VERSION: "0.9.0"
+  WASM_PACK_VERSION: "v0.10.3"
+
+jobs:
+  test:
+    name: Test
+    runs-on: ${{matrix.os}}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        include:
+          - build: linux
+            os: ubuntu-latest
+            rust: beta
+            target: x86_64-unknown-linux-musl
+            cross: false
+          - build: macos
+            os: macos-latest
+            rust: beta
+            target: x86_64-apple-darwin
+            cross: false
+          - build: windows
+            os: windows-latest
+            rust: beta
+            target: x86_64-pc-windows-msvc
+            cross: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.rustup
+            target
+          key: ${{ runner.os }}-${{ matrix.rust }}-min165
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: ${{ matrix.rust }}
+            target: ${{ matrix.target }}
+            override: true
+            default: true
+            components: rustfmt, clippy
+
+      - name: Check versions
+        run: |
+          cargo --version
+          rustc --version
+
+      - name: Install wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: ${{env.WASM_PACK_VERSION}}
+
+      - name: Install humane
+        uses: supplypike/setup-bin@v3
+        with:
+          uri: "https://github.com/CloudCannon/humane/releases/download/v${{env.HUMANE_VERSION}}/humane-v${{env.HUMANE_VERSION}}-${{matrix.target}}.tar.gz"
+          name: "humane"
+          version: ${{env.HUMANE_VERSION}}
+
+      - name: Build Coupled JS
+        working-directory: ./pagefind_web_js
+        run: npm i && npm run build-coupled
+
+      - name: Build WASM
+        working-directory: ./pagefind_web
+        run: ./local_build.sh
+
+      - name: Build UI
+        working-directory: ./pagefind_ui/default
+        run: npm i && npm run build
+
+      - name: Build Modular UI
+        working-directory: ./pagefind_ui/modular
+        run: npm i && npm run build
+
+      - name: Test Web
+        working-directory: ./pagefind_web
+        run: cargo test --release
+
+      - name: Build Testing Binary
+        working-directory: ./pagefind
+        run: cargo build --release --features extended
+
+      - name: Upload Testing Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: pagefind-${{ matrix.target }}
+          path: target/release/pagefind${{ matrix.build == 'windows' && '.exe' || '' }}
+
+      - name: Test Lib
+        working-directory: ./pagefind
+        run: cargo test --release --lib --features extended
+
+      - name: Test CLI
+        working-directory: ./pagefind
+        run: TEST_BINARY=../target/release/pagefind humane

@@ -1,29 +1,79 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
     {{- partial "head.html" . -}}
-    <body style="font-family: {{ .Site.Params.page.font }}{{ if ne .Site.Params.page.font "" }},{{ end }}'Helvetica Neue', Helvetica, Arial, 'PingFang SC', 'Hiragino Sans GB', 'Heiti SC', 'Microsoft YaHei', 'WenQuanYi Micro Hei', sans-serif;">
-        <div class="loading">
-            <div class="loading-bg"></div>
-            <div class="loading-long">
-                <div class="loading-short"></div>
-            </div>
-        </div>
 
-        {{ if ne .Kind "404"}}
-            {{- partial "header.html" . -}}
-        {{ end }}
+    <body>
 
-        <div id="content">
+        <div class="base_width p_relative wrap"> <div id="overlay" class="base_width p_fixed"></div>
+
+        {{- partial "header.html" . -}}
+
+        {{ partial "widgets/hero.html" . }}
+
+        <div id="container" class="center media_base_width p_relative clearfix">
             {{- block "main" . }}{{- end }}
         </div>
 
-        {{ if ne .Kind "404"}}
-            {{- partial "footer.html" . -}}
-        {{ end }}
-        
+        {{- partial "footer.html" . -}}
         {{ partial "search.html" . }}
         {{ partial "widgets/vars.html" . }}
-        
-    </body>
-</html>
 
+    </div>
+
+
+
+<script type="text/javascript" src="/js/intro.min.js"></script>
+<script type="text/javascript" src="/js/jquery.tagcanvas.min.js"></script>
+<script type="text/javascript" src="/js/hugr.js"></script>
+<script type="text/javascript">
+window.onload = function () {
+// introJs
+introJs().setOptions({
+tooltipClass: 'customTooltip', 
+position: 'left', 
+showButtons: false
+}).addHints();
+};
+
+$(document).ready(function() {
+// TagCanvas
+if (!$('#myCanvas').tagcanvas({
+textColour: '#ffffff', 
+outlineThickness: 1, 
+maxSpeed: 0.2, 
+depth: 0.75
+})) { // TagCanvas failed to load
+$('#myCanvasContainer').hide();
+}
+});
+</script>
+
+
+
+    {{ if .Site.Params.aplayer.enable }}
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+    {{ end }}
+    {{ if .Site.Params.valine.enable }}
+        <script src='//cdnjs.cloudflare.com/ajax/libs/valine/1.5.0/Valine.min.js'></script>
+    {{ end }}
+    {{ if .Params.math }}
+        {{- partial "math-jax.html" . -}}
+    {{ end }}
+    {{ if .Params.mermaid }}
+        <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    {{ end }}
+    <script src="/js/lazysizes.min.js" async=""></script>
+    
+    <script src="/js/search.js"></script>
+    <script src="/js/md_nb.js"></script>
+    <script src="/js/yes.js"></script>
+    {{ if and .Site.Params.footer.enable .Site.Params.footer.visitor }}
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    {{ end }}
+
+
+
+</body>
+</html>

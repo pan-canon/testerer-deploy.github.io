@@ -1,16 +1,10 @@
 {{ define "main" }}
-{{ partial "widgets/hero.html" . }}
-<div class="zhuti-0">
-    <div class="container">
-        <div class="zhuti">
-            <div class="zhuti-l">
-                {{ partial "widgets/content-all.html" . }}
-            </div>
-            <div class="zhuti-r">
-                {{ partial "widgets/zhuti-r.html" . }}
-            </div>
-        </div>
-    </div>
-</div>
-{{ partial "widgets/sponsor.html" . }}
+<section class="base_width p_relative wide_page">
+    <article class="aMessage">
+        {{ partial "widgets/content-all.html" . }}
+    </article>
+    <footer class="castration base_width p_relative footer_info">
+        {{ partial "widgets/sponsor.html" . }}
+    </footer>
+</section>
 {{ end }}

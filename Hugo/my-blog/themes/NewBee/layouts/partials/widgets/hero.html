@@ -45,7 +45,7 @@
 {{ end }}
 
 {{ if eq .Kind "home" }}
-    <div class="hero">
+    <div class="castration base_width p_relative preview">
         {{ with .Site.Params.page.homeTopImg }}
         <div class="hero-img-home">
             <img class="lazyload" src="/images/thumbnail.gif" data-src="{{ . }}" alt="">
@@ -67,7 +67,7 @@
     </div>
 
 {{ else if eq .Kind "page" }}
-    <div class="hero">
+    <div class="castration base_width p_relative preview">
         {{ with .Params.image }}
             <div class="hero-img">
                 <img class="lazyload" src="/images/thumbnail.gif" data-src="{{ . }}" alt="">
@@ -106,7 +106,7 @@
     </div>
 
 {{ else if or (eq .Kind "section") (eq .Kind "taxonomy") }}
-    <div class="hero">
+    <div class="castration base_width p_relative preview">
         {{ with $hero_img }}
             <div class="hero-img">
                 <img class="lazyload" src="/images/thumbnail.gif" data-src="{{ . }}" alt="">
@@ -119,7 +119,7 @@
     </div>
 
 {{ else if eq .Kind "term" }}
-    <div class="hero">
+    <div class="castration base_width p_relative preview">
         {{ $firstChild := index .Pages 0 }}
             {{ with $firstChild.Params.image }}
                 <div class="hero-img">
@@ -136,4 +136,3 @@
     </div>
 
 {{ end }}
-

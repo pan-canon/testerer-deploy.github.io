@@ -26,6 +26,67 @@ deFaultContentLanguage = "en"
         contentDir = 'content/uk'
         weight = 2
 
+
+
+
+
+        [languages.uk.menus] # 和默认[menus]的配置一样，只是增加了一个前缀：'language.en.'
+            # navigation
+            # 导航栏
+            [[languages.uk.menus.main]]
+                name = "Home" # 名称
+                url = "/uk" # 路径，在'/'之后加上该语言标识符，而默认语言则不需要，这很重要！！！。下同
+                weight = 1 # 排序的权重，越小越靠前（左），最小为1 # order weight, more small more close to left,  at least 1
+                pre = "<i class='fa fa-home'></i>" # 图标，本主题使用的图标来自FontAwesome
+            [[languages.uk.menus.main]]
+                name = "Posts"
+                url = "/en/posts"
+                weight = 2
+                pre = "<i class='fa fa-book'></i>"
+            [[languages.uk.menus.main]]
+                name = "Categories"
+                url = "/en/categories"
+                weight = 3
+                pre = "<i class='fa fa-folder-open'></i>"
+            [[languages.uk.menus.main]]
+                name = "Tags"
+                url = "/en/tags"
+                weight = 5
+                pre = "<i class='fa fa-tags'></i>"        
+            [[languages.uk.menus.main]]
+                name = "About"
+                url = "/en/about"
+                weight = 6
+                pre = "<i class='fa fa-info-circle'></i>"
+
+            # social
+            # 社交链接
+            [[languages.uk.menus.social]]
+                name = "GitHub"
+                url = "https://github.com/xioyito"
+                pre = "<i class='fa fa-github'></i>"
+                weight = 1
+            [[languages.uk.menus.social]]
+                name = "YouTube"
+                url = "https://www.youtube.com"
+                pre = "<i class='fa fa-youtube'></i>"
+                weight = 2
+
+            # sponsor
+            # 赞赏卡片
+            [[languages.uk.menus.sponsor]]
+                name = "Wechat"
+                url = "/images/sponsor/Wechat.jpeg"
+                weight = 1
+            [[languages.uk.menus.sponsor]]
+                name = "Alipay"
+                url = "/images/sponsor/Alipay.jpeg"
+                weight = 2
+
+
+
+
+
 # whether to use robots.txt
 # 是否使用 robots.txt
 enableRobotsTXT = true

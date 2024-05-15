@@ -19,7 +19,8 @@ image: ""
 # Hide from home page
 hideFromHomePage: false
 ---
-
+## Heading 2
+1. First item
+2. Another item
 
 <!--more-->
-

@@ -53,7 +53,7 @@ const applyAnimation = (grid, animationType) => {
 			grid.style.setProperty('--grid-width', '50%');
 			grid.style.setProperty('--perspective', '3000px');
 			grid.style.setProperty('--grid-item-ratio', '0.8');
-			grid.style.setProperty('--grid-columns', '4');
+			grid.style.setProperty('--grid-columns', '3');
 			grid.style.setProperty('--grid-gap', '1vw');
 
 			timeline

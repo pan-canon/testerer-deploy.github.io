@@ -136,12 +136,9 @@
 
 
         <div id="container" class="center media_base_width p_relative clearfix">
-
-<div class="zhuti-0">
-    <div class="container">
-        <div class="zhuti">
-            <div class="zhuti-l">
-                
+<section class="base_width p_relative wide_page">
+    <article class="aMessage">
+        
 
 
 
@@ -170,143 +167,9 @@
 </div>
 
 
-            </div>
-            <div class="zhuti-r">
-                
-<aside class="fr p_relative sidebar">
-    <section class="update">
-
-        <ul class="castration fr p_relative tabs-titles">
-            <li class="castration p_relative">
-                <a class="base_width p_relative" href="#update-categories"><span>Вселенная</span></a>
-            </li>
-            <li class="castration p_relative">
-                <a class="base_width p_relative" href="#update-interesting"><span>Клетка тегов</span></a>
-            </li>
-            <li class="castration p_relative">
-                <a class="base_width p_relative" href="#update-test"><span>Однажды</span></a>
-            </li>
-        </ul>
-
-        <div class="castration fl p_relative inner">
-            <div id="update-categories">
-                
-            </div>
-            <div id="update-interesting">
-                
-
-<div class="about-zuozhe">
-    <div class="zuozhe">
+    </article>
+    <footer class="castration base_width p_relative footer_info">
         
-            <div class="datou">
-                <img class="lazyload" src="/images/thumbnail.gif" data-src="/images/author.jpeg" alt="">
-            </div>
-        
-        <div class="name-jianjie">
-            <div class="name">xioyito</div>
-            <div class="jianjie">
-                Be Water, My Friend.
-            </div>
-        </div>
-    </div>
-
-    <div class="type">
-        <a href='
-                    /uk/posts
-                '>
-            <p>posts</p>
-            <p>1</p>
-        </a>
-        <a href='
-                    /uk/categories
-                '>
-            <p>categories</p>
-            <p>0</p>
-        </a>
-        <a href='
-                    /uk/tags
-                '>
-            <p>tags</p>
-            <p>0</p>
-        </a>
-    </div>
-
-    <a href="https://github.com/xioyito">
-        <div class="follow">Follow Me</div>
-    </a>
-    <div class="link">
-        
-        <a href="https://github.com/xioyito" class="link-item is-hidden-desktop" title="GitHub">
-            <span class="icon"><i class='fa fa-github'></i></span>
-        </a>
-        
-        <a href="https://www.youtube.com" class="link-item is-hidden-desktop" title="YouTube">
-            <span class="icon"><i class='fa fa-youtube'></i></span>
-        </a>
-        
-    </div>
-</div>
-                <div class="mulu">
-    <div class="dong"></div>
-    <div class="zhi">
-        <div class="wenzi">
-            <div class="zhi-mulu text-wbd">Table of Contents</div>
-            <div class="mulu-items">
-            </div>
-        </div>
-    </div>
-</div>
-                
-
-
-
-
-<div class="other">
-    <div class="other-up">
-        <div class="other-qita text-wbd">latest Posts</div>
-        <div class="xian"></div>
-    </div>
-    <div class="list">
-        
-            <a href="http://localhost:1313/uk/posts/first-post/">
-                
-<a href="http://localhost:1313/uk/posts/first-post/">
-    <div class="list-item">
-        <div class="icon-other-root">
-            
-                <div class="icon-other" style="background-image: url( /images/default.jpg );"></div>
-            
-        </div>
-        <div class="list-right">
-            <div class="other-title">
-                First Post
-            </div>
-            <div class="other-summary"><h2 id="heading-2">Heading 2</h2>
-<ol>
-<li>First item</li>
-<li>Another item</li>
-</ol></div>
-            <div class="other-date">2024-5-8</div>
-        </div>
-    </div>
-</a>
-            </a>
-        
-    </div>
-</div>
-            </div>
-            <div id="update-test">
-                
-            </div>
-        </div>
-
-    </section>
-</aside>
-            </div>
-        </div>
-    </div>
-</div>
-
     
 
 <div class="sponsor">
@@ -347,6 +210,8 @@
     </div>
 </div>
 
+    </footer>
+</section>
 
         </div><footer class="castration center media_base_width p_relative shoes">
     <section>
@@ -433,33 +298,37 @@
 
     </div>
 
+    <script type="text/javascript" src="/js/intro.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.tagcanvas.min.js"></script>
+    <script type="text/javascript" src="/js/hugr.js"></script>
+    <script type="text/javascript">
+        window.onload = function () {
+        
+            introJs().setOptions({
+                tooltipClass: 'customTooltip',
+                position: 'left',
+                showButtons: false
+            }).addHints();
+        };
+
+        $(document).ready(function() {
+        
+            if (!$('#myCanvas').tagcanvas({
+                textColour: '#ffffff',
+                outlineThickness: 1,
+                maxSpeed: 0.2,
+                depth: 0.75
+            })) { 
+                $('#myCanvasContainer').hide();
+            }
+        });
+    </script>
 
 
-<script type="text/javascript" src="/js/intro.min.js"></script>
-<script type="text/javascript" src="/js/jquery.tagcanvas.min.js"></script>
-<script type="text/javascript" src="/js/hugr.js"></script>
-<script type="text/javascript">
-window.onload = function () {
 
-introJs().setOptions({
-tooltipClass: 'customTooltip', 
-position: 'left', 
-showButtons: false
-}).addHints();
-};
-
-$(document).ready(function() {
-
-if (!$('#myCanvas').tagcanvas({
-textColour: '#ffffff', 
-outlineThickness: 1, 
-maxSpeed: 0.2, 
-depth: 0.75
-})) { 
-$('#myCanvasContainer').hide();
-}
-});
-</script>
+    <script src="/js/search.js"></script>
+    <script src="/js/md_nb.js"></script>
+    <script src="/js/yes.js"></script>
 
 
 
@@ -468,15 +337,10 @@ $('#myCanvasContainer').hide();
     
     
     <script src="/js/lazysizes.min.js" async=""></script>
-    
-    <script src="/js/search.js"></script>
-    <script src="/js/md_nb.js"></script>
-    <script src="/js/yes.js"></script>
+
     
         <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
     
-
-
 
 </body>
 </html>

@@ -101,14 +101,14 @@ summaryLength = 50
 hasCJKLanguage = false
 
 [author]
-    name = "xioyito"
+    name = "Sam"
     description = "Be Water, My Friend."
     # profile photo of author in author card
     # 作者头像
     image = "/images/author.jpeg"
     # link of followme in author card and footer
     # 作者卡片里 followme 和页脚作者的链接
-    link = "https://github.com/xioyito"
+    link = "https://github.com/vsezlotov"
 
 # Taxonomies, Currently, only the following 3 taxonomies are supported
 # If you don't want one of them，delete it in [menus] instead here
@@ -181,25 +181,7 @@ hasCJKLanguage = false
         # 最新文章最大显示数量
         maxPageNewestCount = 5
 
-    # Valine comment
-    # Valine评论（详情请移步：https://valine.js.org/）
-    [params.valine]
-        # 是否开启Valine评论系统
-        enable = false
-        # appid，具体请参考：https://valine.js.org/configuration.html#appId
-        appid = 'xxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxx'
-        # appKey，具体请参考：https://valine.js.org/configuration.html#appKey
-        appkey = 'xxxxxxxxxxxxxxxxxxxxxxxx'
-        # 输入框提示文字
-        placeholder = '输入你的评论'
-        # 头像，具体请参考：https://valine.js.org/avatar.html
-        avatar = 'robohash'
-        # 评论时要求的必须填写项，可选值：['nick']或['nick','mail']
-        requiredFields = ['nick']
-        # 文章访问量统计
-        visitor = true
-        # 单页最大评论数目
-        pageSize = 5
+
 
     # footer
     # 页面底部配置
@@ -208,9 +190,7 @@ hasCJKLanguage = false
         enable = true
         # copyright
         copyRight = true
-        from = 2022
-        # wheher to enable count of visitor and view
-        visitor = true
+        from = 2020
         # wheher to enable theme information
         themeInfo = true
 
@@ -330,4 +310,3 @@ hasCJKLanguage = false
     # [markup.goldmark]
     #     [markup.goldmark.renderer]
     #         unsafe = true
-  

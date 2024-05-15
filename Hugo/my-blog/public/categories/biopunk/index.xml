@@ -6,12 +6,47 @@
     <description>Recent content in Biopunk on SirenPunk</description>
     <generator>Hugo</generator>
     <language>en</language>
-    <lastBuildDate>Wed, 08 May 2024 04:17:55 +0300</lastBuildDate>
+    <lastBuildDate>Wed, 15 May 2024 14:39:06 +0300</lastBuildDate>
     <atom:link href="http://localhost:1313/categories/biopunk/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>First Post6</title>
+      <link>http://localhost:1313/posts/first-post6/</link>
+      <pubDate>Wed, 15 May 2024 14:39:06 +0300</pubDate>
+      <guid>http://localhost:1313/posts/first-post6/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>First Post5</title>
+      <link>http://localhost:1313/posts/first-post5/</link>
+      <pubDate>Wed, 15 May 2024 14:39:03 +0300</pubDate>
+      <guid>http://localhost:1313/posts/first-post5/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>First Post4</title>
+      <link>http://localhost:1313/posts/first-post4/</link>
+      <pubDate>Wed, 15 May 2024 14:39:00 +0300</pubDate>
+      <guid>http://localhost:1313/posts/first-post4/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>First Post3</title>
+      <link>http://localhost:1313/posts/first-post3/</link>
+      <pubDate>Wed, 15 May 2024 14:38:57 +0300</pubDate>
+      <guid>http://localhost:1313/posts/first-post3/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>First Post2</title>
+      <link>http://localhost:1313/posts/first-post2/</link>
+      <pubDate>Wed, 15 May 2024 14:38:51 +0300</pubDate>
+      <guid>http://localhost:1313/posts/first-post2/</guid>
+      <description></description>
+    </item>
     <item>
       <title>First Post</title>
       <link>http://localhost:1313/posts/first-post/</link>
-      <pubDate>Wed, 08 May 2024 04:17:55 +0300</pubDate>
+      <pubDate>Sun, 08 May 2022 04:17:55 +0300</pubDate>
       <guid>http://localhost:1313/posts/first-post/</guid>
       <description>&lt;h2 id=&#34;heading-2&#34;&gt;Heading 2&lt;/h2&gt;&#xA;&lt;ol&gt;&#xA;&lt;li&gt;First item&lt;/li&gt;&#xA;&lt;li&gt;Another item&lt;/li&gt;&#xA;&lt;/ol&gt;</description>
     </item>

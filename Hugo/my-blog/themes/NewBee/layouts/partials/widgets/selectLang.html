@@ -1,5 +1,5 @@
 {{ $nowIsDefaultLang := eq .Site.Language.Weight 1 }}
-<h3>{{ .Language.LanguageName }}</h3>
+<h3>select : {{ .Language.LanguageName }}</h3>
 <ul class="lang-up">
     {{ range $.Site.Home.AllTranslations }}
     <li data—permalink="{{ .Permalink }}" class="lang"><a href="{{ .Permalink }}">{{ .Language.LanguageName }}</a></li>

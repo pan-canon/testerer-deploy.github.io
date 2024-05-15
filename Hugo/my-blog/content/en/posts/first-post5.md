@@ -1,6 +1,6 @@
 ---
-title: "First Post"
-date: 2022-05-08T04:17:55+03:00
+title: "First Post5"
+date: 2024-05-15T14:39:03+03:00
 
 # format for string: "xxxx-xx-xx"
 # lastmod: "2022-10-01"
@@ -11,7 +11,7 @@ draft: false
 # more categories: ["category-1", "category-2", ...]
 categories: ["biopunk"]
 # refer to categories
-tags: ["drugs"]
+tags: []
 # seires
 series: []
 # Top image for the post
@@ -19,9 +19,6 @@ image: ""
 # Hide from home page
 hideFromHomePage: false
 ---
-## Heading 2
-1. First item
-2. Another item
 
 
 <!--more-->

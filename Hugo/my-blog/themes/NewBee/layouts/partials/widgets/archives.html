@@ -1,19 +1,16 @@
-<div class="year-row">
-    {{ range (.Site.RegularPages.GroupByDate "2006") }}
-    <div class="year">
-        <h3 class="year-head">{{ .Key }}</h3>
-        <div class="year-items">
+{{ range (.Site.RegularPages.GroupByDate "2006") }}
+<div class="content-block">
+    <div class="content-list-col">
+        <h3>{{ .Key }}</h3>
+        <ul>
             {{ range (where .Pages "Type" "posts") }}
-            <a href="{{ .RelPermalink }}">
-                <div class="year-item">
-                    <div class="dot"></div>
-                    <div class="item-title">{{ .Title }}</div>
-                    <div class="connect-line"></div>
-                    <div class="item-date">{{ .PublishDate.Format "01-02" }}</div>
-                </div>
-            </a>
+            <li>
+                <a href="{{ .RelPermalink }}">
+                    {{ .Title }} | {{ .PublishDate.Format "01-02" }}
+                </a>
+            </li>
             {{ end }}
-        </div>
+        </ul>
     </div>
-    {{ end }}
 </div>
+{{ end }}

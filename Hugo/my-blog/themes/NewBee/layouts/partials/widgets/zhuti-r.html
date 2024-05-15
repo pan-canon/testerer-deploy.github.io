@@ -16,22 +16,13 @@
 
         <div class="castration fl p_relative inner">
             <div id="update-categories">
-                {{ if $enable_mulu }}
-                    <div class="button-r">
-                        <button class="button-mulu efct-button" type="button"><span><i class="fa fa-bars"></i></span><span class="bars-text"> {{ i18n "sidebar_content" }}</span></button>
-                        <button class="button-comment efct-button" type="button"><span><i class="fa fa-comment"></i></span><span class="comment-text"> {{ i18n "sidebar_comment" }}</span></button>
-                    </div>
-                {{ end }}
+                {{ partial "widgets/author-card.html" . }}
             </div>
             <div id="update-interesting">
-                {{ partial "widgets/author-card.html" . }}
                 {{ partial "widgets/mulu.html" . }}
-                {{ partial "widgets/other.html" . }}
             </div>
             <div id="update-test">
-                {{ if $enable_mulu }}
-                    {{- partial "comments.html" . -}}
-                {{ end }}
+                {{ partial "widgets/other.html" . }}
             </div>
         </div>
 

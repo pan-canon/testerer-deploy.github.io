@@ -1,3 +1,10 @@
+/*
+	Theme Name: Necrounicorn for pan Tykhon
+	Theme URI: localhost
+	Author: Sam aka Сиреноголова
+	Author URI: https://github.com/vsezlotov
+	Version: 0.5
+*/
 :root {
 	--def_white: rgb(255, 228, 225);
 	--def_dominant: rgb(128, 0, 128);
@@ -8,19 +15,19 @@
 	--gradient-background-left: rgba(239, 243, 9, 0.13);
 }
 
-html {
+html.rooTykhon {
 	background: radial-gradient(farthest-side at top right, var(--gradient-right), transparent 500px ), radial-gradient( farthest-corner at top left, var(--gradient-left), transparent 600px ), radial-gradient( farthest-corner at bottom right, var(--gradient-background-right), transparent 500px ), radial-gradient( farthest-corner at bottom left, var(--gradient-background-left), transparent 600px);
 	background-color: var(--gradient-background);
 }
 
-#container {
+.rooTykhon #container {
 	background: var(--def_white);
 }
 
-.sidebar section .inner,
-.sidebar section.update .tabs-titles,
-.sidebar section.update .tabs-titles li a::after {
+.rooTykhon .sidebar section .inner,
+.rooTykhon .sidebar section.update .tabs-titles,
+.rooTykhon .sidebar section.update .tabs-titles li a::after {
 	background: var(--def_dominant);
 }
 
-.grid .text h3 a {color: var(--def_dominant);}
+.rooTykhon .grid .text h3 a {color: var(--def_dominant);}

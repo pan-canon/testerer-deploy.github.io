@@ -5,13 +5,11 @@
 
     <title>{{ .Site.Title }}{{ if not .IsHome }}{{ with .Title }} | {{ . }}{{ end }}{{ end }}</title>
     <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ with .Summary }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}{{ end }} ">
-    <link rel="canonical" href="{{ .Permalink }}" />
-    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
     {{ template "_internal/opengraph.html" . }}
     {{ template "_internal/twitter_cards.html" . }}
-
-    <link rel="stylesheet" href='{{ "css/style.css" | relURL }}' />
-    <link rel="stylesheet" href='{{ "css/Tykhon.css" | relURL }}' />
+    <link rel="canonical" href="{{ .Permalink }}" />
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <link rel="stylesheet" href='{{ "css/hugr.css" | relURL }}' />
     <link rel="stylesheet" href='{{ "css/search.css" | relURL }}' />
     <link rel="stylesheet" href='{{ "css/shortcode.css" | relURL }}' />
     <!--[if lt IE 9]>
@@ -30,13 +28,5 @@
     <script type="text/javascript" src="/js/core/jquery-1.12.4.min.js"></script>
     <script type="text/javascript" src="/js/core/jquery.cookie.min.js"></script>
     <script type="text/javascript" src="/js/jquery-ui-1.9.1.custom.min.js"></script>
-
-<link href="/pagefind/pagefind_ui/modular/css/ui.css" rel="stylesheet">
-<script src="/pagefind/pagefind_ui/default/ui.js"></script>
-
-<script>
-    window.addEventListener('DOMContentLoaded', (event) => {
-        new PagefindUI({ element: "#search", showSubResults: true });
-    });
-</script>
+    <script src="/js/search.js"></script>
 </head>

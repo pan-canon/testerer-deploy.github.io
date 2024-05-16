@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html{{ if eq .Site.Language.LanguageCode "en" }} class="rooTykhon" {{ end }} lang="{{ .Site.Language.LanguageCode }}" xmlns="http://www.w3.org/1999/xhtml">
+
     {{- partial "head.html" . -}}
 
     <body>
@@ -48,7 +49,7 @@
 
 
 
-    <script src="/js/search.js"></script>
+    
     <script src="/js/md_nb.js"></script>
     <script src="/js/yes.js"></script>
 

@@ -18,8 +18,7 @@
 <meta name="twitter:description" content="">
 
 
-    <link rel="stylesheet" href='/css/style.css' />
-    <link rel="stylesheet" href='/css/search.css' />
+    <link rel="stylesheet" href='/css/hugr.css' />
     <link rel="stylesheet" href='/css/shortcode.css' />
     
     
@@ -124,7 +123,7 @@
     <div class="castration base_width p_relative preview">
         
         <div class="hero-content">
-            <div class="hero-title"></div>
+            <div class="hero-title">系列</div>
             <div></div>
         </div>
     </div>
@@ -151,9 +150,6 @@
         <div class="castration fl p_relative inner">
             <div id="update-categories">
                 
-            </div>
-            <div id="update-interesting">
-                
 
 <div class="about-zuozhe">
     <div class="zuozhe">
@@ -174,19 +170,19 @@
         <a href='
                     /posts/
                 '>
-            <p></p>
+            <p>文章</p>
             <p>6</p>
         </a>
         <a href='
                     /categories/
                 '>
-            <p></p>
+            <p>分类</p>
             <p>1</p>
         </a>
         <a href='
                     /tags/
                 '>
-            <p></p>
+            <p>标签</p>
             <p>1</p>
         </a>
     </div>
@@ -206,16 +202,20 @@
         
     </div>
 </div>
+            </div>
+            <div id="update-interesting">
                 <div class="mulu">
     <div class="dong"></div>
     <div class="zhi">
         <div class="wenzi">
-            <div class="zhi-mulu text-wbd"></div>
+            <div class="zhi-mulu text-wbd">目录</div>
             <div class="mulu-items">
             </div>
         </div>
     </div>
 </div>
+            </div>
+            <div id="update-test">
                 
 
 
@@ -223,7 +223,7 @@
 
 <div class="other">
     <div class="other-up">
-        <div class="other-qita text-wbd"></div>
+        <div class="other-qita text-wbd">最新文章</div>
         <div class="xian"></div>
     </div>
     <div class="list">
@@ -286,9 +286,6 @@
     </div>
 </div>
             </div>
-            <div id="update-test">
-                
-            </div>
         </div>
 
     </section>
@@ -320,7 +317,7 @@
     
         <p>
             
-                © 2020-15150 <a href="https://github.com/vsezlotov">Sam</a> <br />
+                © 2020-16160 <a href="https://github.com/vsezlotov">Sam</a> | 
             
             
                 Powered by <a href="https://gohugo.io/">Hugo</a>
@@ -334,11 +331,11 @@
     <div class="search">
         <div class="sheader anniu">
             <div class="sh-l">
-                <input type="text" placeholder='' id="search-key">
+                <input type="text" placeholder='请输入关键词' id="search-key">
                 <span class="sclear"><i class="fa fa-close"></i></span>
             </div>
             <div class="sh-r">
-                <button></button>
+                <button>搜索</button>
             </div>
         </div>
         <div class="sbody">
@@ -382,12 +379,12 @@
 <script type="text/javascript">
     var mode_custom = "auto";
     var postsCount =  6 ;
-    var arrPosts = [{"link":"http://localhost:1313/posts/first-post6/","plain":"","pubDate":"2024-05-15","title":"First Post6"},{"link":"http://localhost:1313/posts/first-post5/","plain":"","pubDate":"2024-05-15","title":"First Post5"},{"link":"http://localhost:1313/posts/first-post4/","plain":"","pubDate":"2024-05-15","title":"First Post4"},{"link":"http://localhost:1313/posts/first-post3/","plain":"","pubDate":"2024-05-15","title":"First Post3"},{"link":"http://localhost:1313/posts/first-post2/","plain":"","pubDate":"2024-05-15","title":"First Post2"},{"link":"http://localhost:1313/posts/first-post/","plain":"Heading 2 First item Another item ","pubDate":"2024-05-08","title":"First Post"}];
-    var search_theEnd = "";
-    var search_nothing = "";
-    var search_found = "";
-    var search_result = "";
-    var search_results = "";
+    var arrPosts = [{"link":"http://localhost:1313/posts/first-post6/","plain":"","pubDate":"2024-05-15","title":"First Post6"},{"link":"http://localhost:1313/posts/first-post5/","plain":"","pubDate":"2024-05-15","title":"First Post5"},{"link":"http://localhost:1313/posts/first-post4/","plain":"","pubDate":"2024-05-15","title":"First Post4"},{"link":"http://localhost:1313/posts/first-post3/","plain":"","pubDate":"2024-05-15","title":"First Post3"},{"link":"http://localhost:1313/posts/first-post2/","plain":"","pubDate":"2024-05-15","title":"First Post2"},{"link":"http://localhost:1313/posts/first-post/","plain":"Heading 2 First item Another item ","pubDate":"2022-05-08","title":"First Post"}];
+    var search_theEnd = "到底了";
+    var search_nothing = "什么也没找到";
+    var search_found = "找到";
+    var search_result = "条结果";
+    var search_results = "条结果";
     var enable_mermaid =  null ;
 
     var baseURL = "http://localhost:1313/";
@@ -434,7 +431,6 @@
 
 
 
-    
     
     
     

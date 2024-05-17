@@ -2,7 +2,6 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <title>{{ .Site.Title }}{{ if not .IsHome }}{{ with .Title }} | {{ . }}{{ end }}{{ end }}</title>
     <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ with .Summary }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}{{ end }} ">
     {{ template "_internal/opengraph.html" . }}
@@ -24,7 +23,6 @@
     <!--[if IE 7]>
         <link rel="stylesheet" type="text/css" href="/css/IE7.css?v=0.1" />
     <![endif]-->
-
     <script type="text/javascript" src="/js/core/jquery-1.12.4.min.js"></script>
     <script type="text/javascript" src="/js/core/jquery.cookie.min.js"></script>
     <script type="text/javascript" src="/js/jquery-ui-1.9.1.custom.min.js"></script>

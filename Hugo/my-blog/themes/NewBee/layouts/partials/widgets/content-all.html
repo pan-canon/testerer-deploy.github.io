@@ -50,15 +50,3 @@
     {{ end }}
 </div>
 {{ end }}
-
-{{ if $isPage }}
-{{ if or .Site.Menus.sponsor .Site.Params.valine.enable }}
-<div class="content-last">
-    {{ if .Site.Menus.sponsor }}
-    <button class="aixin content-last-item efct-button">
-        <i class="fa fa-heart"></i>
-    </button>
-    {{ end }}
-</div>
-{{ end }}
-{{ end }}

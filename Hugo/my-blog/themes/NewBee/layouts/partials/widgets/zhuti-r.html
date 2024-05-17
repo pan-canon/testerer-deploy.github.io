@@ -1,4 +1,3 @@
-{{ $enable_mulu := and .Site.Params.Valine.enable (or (eq .Section "about") (eq .Kind "page")) }}
 <aside class="fr p_relative sidebar">
     <section class="update">
 
@@ -7,10 +6,10 @@
                 <a class="base_width p_relative" href="#update-categories"><span>Вселенная</span></a>
             </li>
             <li class="castration p_relative">
-                <a class="base_width p_relative" href="#update-interesting"><span>Клетка тегов</span></a>
+                <a class="base_width p_relative" href="#update-interesting"><span>{{ i18n "Home_latestPosts" }}</span></a>
             </li>
             <li class="castration p_relative">
-                <a class="base_width p_relative" href="#update-test"><span>Однажды</span></a>
+                <a class="base_width p_relative" href="#update-test"><span>Online</span></a>
             </li>
         </ul>
 
@@ -19,10 +18,10 @@
                 {{ partial "widgets/author-card.html" . }}
             </div>
             <div id="update-interesting">
-                {{ partial "widgets/mulu.html" . }}
+                {{ partial "widgets/other.html" . }}
             </div>
             <div id="update-test">
-                {{ partial "widgets/other.html" . }}
+                {{ partial "widgets/stat.html" . }}
             </div>
         </div>
 

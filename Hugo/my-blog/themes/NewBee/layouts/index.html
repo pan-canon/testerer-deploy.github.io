@@ -3,13 +3,6 @@
 {{ partial "widgets/zhuti-r.html" . }}
 
 <section class="castration fl p_relative modules">
-
-    <div class="castration cover p_relative atcCentral">
-        <h3>
-            {{ i18n "Home_latestPosts" }}
-        </h3>
-    </div>
-
     <ul id="content">
         {{ range first .Site.Params.page.maxHomePostCount .Site.RegularPages }}
             {{ if and (not .Params.hideFromHomePage) (eq $kind "home") }}
@@ -18,11 +11,12 @@
         {{ end }}
     </ul>
 
-    <a href='{{ if and (ne .Site.Language.Weight 1) (and .Site.IsMultiLingual (not .Site.Params.Site.OnlyOneLang)) }}
-        {{ .Lang | relURL}}/posts
-    {{ else }}
-        {{ "posts" | relURL }}
-    {{ end }}' class="efct-button">{{ i18n "Home_allPosts" }}</a>
-
+    <div class="not_twitch">
+        <a class="page-numbers" href='{{ if and (ne .Site.Language.Weight 1) (and .Site.IsMultiLingual (not .Site.Params.Site.OnlyOneLang)) }}
+            {{ .Lang | relURL}}/posts
+        {{ else }}
+            {{ "posts" | relURL }}
+        {{ end }}' class="page-numbers">{{ i18n "Home_allPosts" }}</a>
+    </div>
 </section>
 {{ end }}

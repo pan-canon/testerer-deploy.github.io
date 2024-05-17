@@ -1,7 +1,5 @@
-
-
 $(document).ready(function () {
-    
+
     $(".search-in").click(function() {
         $(".search-root").show();
         $(".search").animate({
@@ -37,10 +35,9 @@ function search() {
     clearPosts();
     var key = document.getElementById("search-key").value;
     var postCount = 0;
-    var searchBy = 'Search by <a href="https://github.com/xioyito/NewBee" class="search-by" >NewBee</a>';
 
     if (!key) {
-        $(".stip").html(search_nothing + '，' + searchBy);
+        $(".stip").html(search_nothing + '，');
         $(".at-bottom").hide();
         $(".sbody").show();
         return;
@@ -66,15 +63,15 @@ function search() {
         }
     }
     if (postCount == 0) {
-        $(".stip").html(search_nothing + '，' + searchBy);
+        $(".stip").html(search_nothing + '，');
     } else {
-        $(".stip").html(search_found + ' ' + postCount + (postCount>1?(' ' + search_results + ', '):(' ' + search_result + ', ')) + searchBy);
+        $(".stip").html(search_found + ' ' + postCount + (postCount>1?(' ' + search_results + ', '):(' ' + search_result + ', ')) );
         $(".sbody-1").append('<div class="at-bottom">' + search_theEnd + '</div>');
     }
     $(".sbody").show();
 }
 
-// 向页面中添加元素
+// add el
 function addItem(title, pubDate, mark, link) {
     var pHtml = "<a href=\"" + link + "\" target=\"_blank\" class=\"post\" >" +
             "<div class=\"post-header\">" +
@@ -89,13 +86,13 @@ function addItem(title, pubDate, mark, link) {
     document.getElementsByClassName('sbody-1')[0].appendChild(div);
 }
 
-// 初始化搜索页面
+// init
 function clearPosts() {
     $(".sbody").hide();
     $(".post-root, .at-bottom").remove();
 }
 
-// 截取段落
+// intercept paragraph
 function toMark(oPlain, key) {
     var kIdx = oPlain.indexOf(key);
     
@@ -143,7 +140,7 @@ function toMarkTitle(oPlain, key) {
     return oPlain; 
 }
 
-// 高亮关键字
+// keywords
 function hlHtml(oMark, key) {
     var keyIdx = oMark.indexOf(key);
     if (oMark && keyIdx >= 0) {
@@ -162,4 +159,3 @@ function hlHtml(oMark, key) {
     return oMark;
 
 }
-

@@ -7,7 +7,7 @@ date: {{ .Date }}
 
 # set false when you want the post publish
 draft: true
-# one category: ["category-1"] 
+# one category: ["category-1"]
 # more categories: ["category-1", "category-2", ...]
 categories: []
 # refer to categories
@@ -20,6 +20,4 @@ image: ""
 hideFromHomePage: false
 ---
 
-
 <!--more-->
-

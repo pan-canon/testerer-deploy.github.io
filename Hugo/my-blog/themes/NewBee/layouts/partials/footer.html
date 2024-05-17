@@ -4,7 +4,7 @@
     {{ if .Site.Params.footer.enable }}
         <p>
             {{ if .Site.Params.footer.copyRight }}
-                © {{ .Site.Params.footer.from }}-{{ now.Format "2020" }} <a href="{{ .Site.Author.link }}">{{ .Site.Author.name }}</a> | 
+                © {{ .Site.Params.footer.from }} <a href="{{ .Site.Author.link }}">{{ .Site.Author.name }}</a> | 
             {{ end }}
             {{ if .Site.Params.footer.themeInfo }}
                 Powered by <a href="https://gohugo.io/">Hugo</a>

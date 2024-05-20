@@ -9,11 +9,11 @@ date: 2022-05-08T04:17:55+03:00
 draft: false
 # one category: ["category-1"] 
 # more categories: ["category-1", "category-2", ...]
-categories: ["biopunk"]
+categories: ["biopunk", "horror"]
 # refer to categories
 tags: ["drugs"]
 # seires
-series: []
+series: ["tester"]
 # Top image for the post
 image: ""
 # Hide from home page

@@ -7,110 +7,15 @@
 
 baseURL = 'https://associative-connection.github.io/'
 # website title
-title = 'SirenPunk'
+title = 'Associative Connection'
 # theme
-theme = "NewBee"
+theme = "necrounicorn"
 # whether to use robots.txt
 enableRobotsTXT = true
 # length of summary
 summaryLength = 50
-
-[menus]
-    [[menus.main]]
-        name = "Home"
-        url = "/"
-        # order weight, more small more close to left, at least 1
-        weight = 1
-        # icon from FontAwesome in front of single entry
-        pre = "<i class='fa fa-home'></i>"
-    [[menus.main]]
-        name = "Posts"
-        url = "/posts"
-        weight = 2
-        pre = "<i class='fa fa-book'></i>"
-    [[menus.main]]
-        name = "Categories"
-        url = "/categories"
-        weight = 3
-        pre = "<i class='fa fa-folder-open'></i>"
-    [[menus.main]]
-        name = "Tags"
-        url = "/tags"
-        weight = 5
-        pre = "<i class='fa fa-tags'></i>"
-    [[menus.main]]
-        name = "About"
-        url = "/about"
-        weight = 6
-        pre = "<i class='fa fa-info-circle'></i>"
-
-    # social, maxum 6
-    [[menus.social]]
-        name = "GitHub"
-        url = "https://github.com/xioyito"
-        weight = 1
-        pre = "<i class='fa fa-github'></i>"
-    [[menus.social]]
-        name = "YouTube"
-        url = "https://www.youtube.com"
-        weight = 2
-        pre = "<i class='fa fa-youtube'></i>"
-
 # default content of website
 deFaultContentLanguage = "en"
-
-[languages]
-    [languages.en]
-        languageCode = 'en'
-        languageName = 'English'
-        contentDir = 'content/en'
-        weight = 1
-    [languages.uk]
-        languageCode = 'uk'
-        languageName = 'Український'
-        contentDir = 'content/uk'
-        weight = 2
-
-        [languages.uk.menus]
-            # navigation
-            [[languages.uk.menus.main]]
-                name = "Home"
-                url = "/uk"
-                weight = 1
-                pre = "<i class='fa fa-home'></i>"
-            [[languages.uk.menus.main]]
-                name = "Posts"
-                url = "/uk/posts"
-                weight = 2
-                pre = "<i class='fa fa-book'></i>"
-            [[languages.uk.menus.main]]
-                name = "Categories"
-                url = "/uk/categories"
-                weight = 3
-                pre = "<i class='fa fa-folder-open'></i>"
-            [[languages.uk.menus.main]]
-                name = "Tags"
-                url = "/uk/tags"
-                weight = 5
-                pre = "<i class='fa fa-tags'></i>"
-            [[languages.uk.menus.main]]
-                name = "About"
-                url = "/uk/about"
-                weight = 6
-                pre = "<i class='fa fa-info-circle'></i>"
-
-            # social
-            [[languages.uk.menus.social]]
-                name = "GitHub"
-                url = "https://github.com/xioyito"
-                pre = "<i class='fa fa-github'></i>"
-                weight = 1
-            [[languages.uk.menus.social]]
-                name = "YouTube"
-                url = "https://www.youtube.com"
-                pre = "<i class='fa fa-youtube'></i>"
-                weight = 2
-
 # If true, auto-detect Chinese/Japanese/Korean Languages in the content.
 # This will make .Summary and .WordCount behave correctly for CJK languages.
 hasCJKLanguage = false
@@ -118,8 +23,6 @@ hasCJKLanguage = false
 [params]
     [params.site]
         onlyOneLang = false
-        # style of theme: auto, light, dark
-        mode = 'auto'
 
     # page configuration
     [params.page]
@@ -168,6 +71,114 @@ hasCJKLanguage = false
         # wheher to enable theme information
         themeInfo = true
 
+[menus]
+    [[menus.main]]
+        name = "Home"
+        url = "/"
+        # order weight, more small more close to left, at least 1
+        weight = 1
+        # icon from FontAwesome in front of single entry
+        pre = ""
+    [[menus.main]]
+        name = "Collections"
+        url = "/series"
+        weight = 2
+        pre = ""
+    [[menus.main]]
+        name = "Categories"
+        url = "/categories"
+        weight = 3
+        pre = ""
+    [[menus.main]]
+        name = "Tags"
+        url = "/tags"
+        weight = 4
+        pre = ""
+    [[menus.main]]
+        name = "Posts"
+        url = "/posts"
+        weight = 5
+        pre = ""
+    [[menus.main]]
+        name = "About"
+        url = "/about"
+        weight = 6
+        pre = ""
+
+    # social, maxum 6
+    [[menus.social]]
+        name = "Roblox"
+        url = "https://roblox.com/"
+        weight = 1
+        pre = ""
+    [[menus.social]]
+        name = "YouTube"
+        url = "https://www.youtube.com/@spirits-show"
+        weight = 2
+        pre = "<i class='fa fa-youtube'></i>"
+
+[languages]
+    [languages.en]
+        languageCode = 'en'
+        languageName = 'English'
+        contentDir = 'content/en'
+        weight = 1
+    [languages.uk]
+        languageCode = 'uk'
+        languageName = 'Український'
+        contentDir = 'content/uk'
+        weight = 2
+
+        [languages.uk.menus]
+            # navigation
+            [[languages.uk.menus.main]]
+                name = "Root"
+                url = "/uk"
+                weight = 1
+                pre = ""
+            [[languages.uk.menus.main]]
+                name = "Колекції"
+                url = "/uk/series"
+                weight = 2
+                pre = ""
+            [[languages.uk.menus.main]]
+                name = "Категорії"
+                url = "/uk/categories"
+                weight = 3
+                pre = ""
+            [[languages.uk.menus.main]]
+                name = "Теги"
+                url = "/uk/tags"
+                weight = 4
+                pre = ""
+            [[languages.uk.menus.main]]
+                name = "Пости"
+                url = "/uk/posts"
+                weight = 5
+                pre = ""
+            [[languages.uk.menus.main]]
+                name = "Про нас"
+                url = "/uk/about"
+                weight = 6
+                pre = ""
+
+            # social
+            [[languages.uk.menus.social]]
+                name = "GitHub"
+                url = "https://github.com/vsezlotov"
+                pre = "<i class='fa fa-github'></i>"
+                weight = 1
+            [[languages.uk.menus.social]]
+                name = "Telegram"
+                url = "https://t.me/spiritsshow"
+                pre = "<i class='fa fa-telegram'></i>"
+                weight = 2
+            [[languages.uk.menus.social]]
+                name = "YouTube"
+                url = "https://www.youtube.com/@spirits-show"
+                pre = "<i class='fa fa-youtube'></i>"
+                weight = 3
+
 [author]
     name = "Sam"
     description = "Be Water, My Friend."
@@ -176,13 +187,12 @@ hasCJKLanguage = false
     # link of followme in author card and footer
     link = "https://github.com/vsezlotov"
 
-
 # Taxonomies, Currently, only the following 3 taxonomies are supported
 # If you don't want one of them，delete it in [menus] instead here
 [taxonomies]
+    series = "series"
     category = "categories"
     tag = "tags"
-    series = "series"
 
 # related configuration, see more: https://gohugo.io/content-management/related/
 [related]

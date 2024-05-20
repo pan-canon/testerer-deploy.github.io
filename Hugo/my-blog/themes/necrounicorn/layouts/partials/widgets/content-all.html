@@ -1,0 +1,46 @@
+{{ $class1 := "" }}
+{{ $isPage := or (eq .Kind "page") (eq .Section "about") }}
+{{ $langNow := .Lang }}
+{{ $isMultiLingual := and (ne .Site.Language.Weight 1) (and .Site.IsMultiLingual (not .Site.Params.Site.OnlyOneLang)) }}
+
+{{ if $isPage }}
+<article class="aMessage">
+    {{ .Content }}
+
+    {{ if eq .Kind "page" }}
+    <p>
+        {{ range $tag := .Params.tags }}
+        <a href='{{ if $isMultiLingual }}
+            {{ $langNow | relURL}}/tags/{{ $tag | urlize }}
+        {{ else }}
+            {{ "tags/" | relURL }}{{ $tag | urlize }}
+        {{ end }}'>
+            <i class="fa fa-tag"></i> {{ . }}
+        </a>
+        {{ end }}
+    </p>
+    {{ end }}
+</article>
+
+{{ if eq .Kind "page" }}
+{{ if or .PrevInSection .NextInSection }}
+<footer class="castration base_width p_relative footer_info">
+    {{ partial "widgets/pre-next.html" . }}
+</footer>
+{{ end }}
+{{ end }}
+
+{{ else if eq .Kind "term" }}
+{{ range .Pages }}
+    {{ partial "widgets/post-card.html" . }}
+{{ end }}
+
+{{ else if eq .Kind "taxonomy" }}
+<div class='taxo-row {{ if eq .Section "tags" }}taxo-row-tag{{ end }}'>
+    {{ if eq .Section "tags" }}
+        {{ partial "widgets/tag-card.html" . }}
+    {{ else }}
+        {{ partial "widgets/category-card.html" . }}
+    {{ end }}
+</div>
+{{ end }}

@@ -29,7 +29,7 @@ hasCJKLanguage = false
     # top image in home page, note that the "/" in path is necessary, the same applies below
     homeTopImg = "/images/home.jpg"
     # title in home top image, support Markdown
-    homeTitle = "XIOYITO"
+    homeTitle = "Associative Connection"
     # font size(px)
     homeTitleFontSize = 40
     # content in home top image, support Markdown

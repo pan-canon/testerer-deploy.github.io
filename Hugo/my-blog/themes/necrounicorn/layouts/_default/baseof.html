@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html{{ if eq .Site.Language.LanguageCode "en" }} class="rooTykhon" {{ end }} lang="{{ .Site.Language.LanguageCode }}" xmlns="http://www.w3.org/1999/xhtml">
 
-    {{- partial "head.html" . -}}
+    {{- partial "head/head.html" . -}}
 
     <body>
 
@@ -11,8 +11,8 @@
                 <!--<span itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">{{ i18n "Home_latestPosts" }}</span>-->
             </div>
 
-            {{- partial "header.html" . -}}
-            {{ partial "search.html" . }}
+            {{- partial "header/header.html" . -}}
+            {{ partial "header/search.html" . }}
             {{ partial "widgets/vars.html" . }}
 
             {{ partial "widgets/hero.html" . }}
@@ -21,11 +21,11 @@
                 {{- block "main" . }}{{- end }}
             </div>
 
-            {{- partial "footer.html" . -}}
+            {{- partial "footer/footer.html" . -}}
 
         </div>
 
-        {{- partial "shoes.html" . -}}
+        {{- partial "footer/hugr-init.html" . -}}
 
     </body>
 </html>

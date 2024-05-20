@@ -2,63 +2,6 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/</loc>
-    <lastmod>2024-05-15T14:39:06+03:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="uk"
-                href="http://localhost:1313/uk/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="http://localhost:1313/"
-                />
-  </url><url>
-    <loc>http://localhost:1313/categories/biopunk/</loc>
-    <lastmod>2024-05-15T14:39:06+03:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/categories/</loc>
-    <lastmod>2024-05-15T14:39:06+03:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="uk"
-                href="http://localhost:1313/uk/categories/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="http://localhost:1313/categories/"
-                />
-  </url><url>
-    <loc>http://localhost:1313/posts/first-post6/</loc>
-    <lastmod>2024-05-15T14:39:06+03:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/posts/</loc>
-    <lastmod>2024-05-15T14:39:06+03:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="uk"
-                href="http://localhost:1313/uk/posts/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="http://localhost:1313/posts/"
-                />
-  </url><url>
-    <loc>http://localhost:1313/posts/first-post5/</loc>
-    <lastmod>2024-05-15T14:39:03+03:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/posts/first-post4/</loc>
-    <lastmod>2024-05-15T14:39:00+03:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/posts/first-post3/</loc>
-    <lastmod>2024-05-15T14:38:57+03:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/posts/first-post2/</loc>
-    <lastmod>2024-05-15T14:38:51+03:00</lastmod>
-  </url><url>
     <loc>http://localhost:1313/about/</loc>
     <lastmod>2024-05-05T20:31:34+03:00</lastmod>
     <xhtml:link
@@ -72,27 +15,32 @@
                 href="http://localhost:1313/about/"
                 />
   </url><url>
-    <loc>http://localhost:1313/tags/drugs/</loc>
-    <lastmod>2022-05-08T04:17:55+03:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/posts/first-post/</loc>
-    <lastmod>2022-05-08T04:17:55+03:00</lastmod>
+    <loc>http://localhost:1313/</loc>
+    <lastmod>2024-05-05T20:31:34+03:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="uk"
-                href="http://localhost:1313/uk/posts/first-post/"
+                href="http://localhost:1313/uk/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="http://localhost:1313/posts/first-post/"
+                href="http://localhost:1313/"
                 />
   </url><url>
-    <loc>http://localhost:1313/categories/horror/</loc>
-    <lastmod>2022-05-08T04:17:55+03:00</lastmod>
+    <loc>http://localhost:1313/categories/</loc>
+    <xhtml:link
+                rel="alternate"
+                hreflang="uk"
+                href="http://localhost:1313/uk/categories/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="http://localhost:1313/categories/"
+                />
   </url><url>
     <loc>http://localhost:1313/series/</loc>
-    <lastmod>2022-05-08T04:17:55+03:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="uk"
@@ -105,7 +53,6 @@
                 />
   </url><url>
     <loc>http://localhost:1313/tags/</loc>
-    <lastmod>2022-05-08T04:17:55+03:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="uk"
@@ -116,8 +63,5 @@
                 hreflang="en"
                 href="http://localhost:1313/tags/"
                 />
-  </url><url>
-    <loc>http://localhost:1313/series/tester/</loc>
-    <lastmod>2022-05-08T04:17:55+03:00</lastmod>
   </url>
 </urlset>

@@ -2,45 +2,6 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/uk/</loc>
-    <lastmod>2024-05-08T04:18:19+03:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="http://localhost:1313/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="uk"
-                href="http://localhost:1313/uk/"
-                />
-  </url><url>
-    <loc>http://localhost:1313/uk/posts/first-post/</loc>
-    <lastmod>2024-05-08T04:18:19+03:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="http://localhost:1313/posts/first-post/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="uk"
-                href="http://localhost:1313/uk/posts/first-post/"
-                />
-  </url><url>
-    <loc>http://localhost:1313/uk/posts/</loc>
-    <lastmod>2024-05-08T04:18:19+03:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="http://localhost:1313/posts/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="uk"
-                href="http://localhost:1313/uk/posts/"
-                />
-  </url><url>
     <loc>http://localhost:1313/uk/about/</loc>
     <lastmod>2024-05-05T20:31:34+03:00</lastmod>
     <xhtml:link
@@ -52,6 +13,19 @@
                 rel="alternate"
                 hreflang="uk"
                 href="http://localhost:1313/uk/about/"
+                />
+  </url><url>
+    <loc>http://localhost:1313/uk/</loc>
+    <lastmod>2024-05-05T20:31:34+03:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="http://localhost:1313/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="uk"
+                href="http://localhost:1313/uk/"
                 />
   </url><url>
     <loc>http://localhost:1313/uk/categories/</loc>

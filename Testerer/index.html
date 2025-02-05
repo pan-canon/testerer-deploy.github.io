@@ -93,7 +93,7 @@
     window.addEventListener('load', async function() {
       try {
         const BASE_PATH = "/Testerer"; // Укажите "" если сайт в корне
-        const registration = await navigator.serviceWorker.register(`${BASE_PATH}/service-worker.js`);
+        const registration = await navigator.serviceWorker.register(`${BASE_PATH}/serviceWorker.js`);
         console.log('✅ Service Worker зарегистрирован с областью:', registration.scope);
       } catch (error) {
         console.error('❌ Ошибка при регистрации Service Worker:', error);
@@ -101,5 +101,6 @@
     });
   }
 </script>
+
 </body>
 </html>

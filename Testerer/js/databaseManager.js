@@ -42,23 +42,25 @@ export class DatabaseManager {
     // Кодируем в base64
     const base64 = btoa(binaryStr);
     localStorage.setItem("diaryDB", base64);
-
-  console.log("💾 База данных сохранена! Проверяем данные...");
-const storedDb = localStorage.getItem("diaryDB");
-console.log("📂 Содержимое localStorage[diaryDB]:", storedDb ? "✅ Найдено" : "❌ Отсутствует");
-
   }
 
-  async addDiaryEntry(entry) {
+async addDiaryEntry(entry) {
     if (!this.db) {
-      console.error("⚠️ Database not initialized!");
-      return;
+        console.error("⚠️ Database not initialized!");
+        return;
     }
-    const timestamp = new Date().toISOString();
-    this.db.run("INSERT INTO diary (entry, timestamp) VALUES (?, ?)", [entry, timestamp]);
-    console.log("✅ Entry added:", entry);
-    this.saveDatabase();
-  }
+
+    try {
+        const timestamp = new Date().toISOString();
+        this.db.run("INSERT INTO diary (entry, timestamp) VALUES (?, ?)", [entry, timestamp]);
+        this.saveDatabase();
+
+        console.log("✅ Запись добавлена:", entry);
+    } catch (error) {
+        console.error("❌ Ошибка при добавлении записи в дневник:", error);
+    }
+}
+
 
   getDiaryEntries() {
     if (!this.db) {

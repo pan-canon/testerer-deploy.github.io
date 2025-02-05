@@ -7,15 +7,9 @@ export class ProfileManager {
     return JSON.parse(localStorage.getItem('profile'));
   }
   
-saveProfile(profile) {
+  saveProfile(profile) {
     localStorage.setItem('profile', JSON.stringify(profile));
-    console.log("✅ Профиль сохранён!", profile);
-
-    // Проверяем, действительно ли данные записаны
-    const storedProfile = localStorage.getItem("profile");
-    console.log("📂 Сохранённый профиль:", storedProfile ? JSON.parse(storedProfile) : "❌ Отсутствует");
-}
-
+  }
   
 resetProfile() {
   localStorage.removeItem('profile');

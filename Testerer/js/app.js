@@ -69,10 +69,6 @@ async init() {
   }
 }
 
-console.log("📋 Проверяем сохранённый профиль...");
-const storedProfile = this.profileManager.getProfile();
-console.log("🔍 Найденный профиль:", storedProfile ? storedProfile : "❌ Не найден");
-
   
   validateRegistration() {
     if (this.nameInput.value.trim() !== "" && this.genderSelect.value !== "") {

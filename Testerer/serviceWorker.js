@@ -8,7 +8,12 @@ const urlsToCache = [
   `${BASE_PATH}/index.html`,
   "https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css",
   `${BASE_PATH}/js/main.js`,
-  `${BASE_PATH}/js/locales.js`,  // Добавляем локали
+  `${BASE_PATH}/js/app.js`,   // ✅ Добавляем сам App
+  `${BASE_PATH}/js/cameraManager.js`, // ✅ Добавляем модули
+  `${BASE_PATH}/js/eventManager.js`,
+  `${BASE_PATH}/js/profileManager.js`,
+  `${BASE_PATH}/js/databaseManager.js`,
+  `${BASE_PATH}/js/languageManager.js`,
   `${BASE_PATH}/locales/locales.json`
 ];
 

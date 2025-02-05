@@ -11,11 +11,17 @@ isEventLogged(eventKey) {
   return entries.some(entry => entry.entry === eventKey);
 }
   
-  async addDiaryEntry(key) {
+async addDiaryEntry(key) {
     const localizedText = this.languageManager.locales[this.languageManager.getLanguage()][key] || key;
     await this.databaseManager.addDiaryEntry(localizedText);
     this.updateDiaryDisplay();
-  }
+
+    // Проверяем кнопку камеры после записи
+    if (this.app && this.app.checkCameraButtonVisibility) {
+        this.app.checkCameraButtonVisibility();
+    }
+}
+
   
 updateDiaryDisplay() {
   if (!this.diaryContainer) {

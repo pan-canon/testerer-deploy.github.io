@@ -60,17 +60,14 @@ bindEvents() {
 
   
 async init() {
-    await this.databaseManager.initDatabasePromise;
-    
-    if (this.profileManager.isProfileSaved()) {
-        this.showMainScreen();
-        this.eventManager.updateDiaryDisplay();
-        this.checkCameraButtonVisibility();  // 🔹 Проверяем кнопку камеры после обновления дневника
-    } else {
-        this.showRegistrationScreen();
-    }
+  await this.databaseManager.initDatabasePromise;
+  if (this.profileManager.isProfileSaved()) {
+    this.showMainScreen();
+    this.eventManager.updateDiaryDisplay();
+  } else {
+    this.showRegistrationScreen();
+  }
 }
-
   
   validateRegistration() {
     if (this.nameInput.value.trim() !== "" && this.genderSelect.value !== "") {
@@ -142,36 +139,30 @@ captureSelfie() {
 }
 
   
-completeRegistration() {
+  completeRegistration() {
     if (!this.selfiePreview.src || this.selfiePreview.src === "") {
-        alert("Please capture your selfie before completing registration.");
-        return;
+      alert("Please capture your selfie before completing registration.");
+      return;
     }
-
     const regDataStr = localStorage.getItem('regData');
     if (!regDataStr) {
-        alert("Registration data missing.");
-        return;
+      alert("Registration data missing.");
+      return;
     }
-
     const regData = JSON.parse(regDataStr);
     const profile = {
-        name: regData.name,
-        gender: regData.gender,
-        language: regData.language,
-        selfie: this.selfiePreview.src
+      name: regData.name,
+      gender: regData.gender,
+      language: regData.language,
+      selfie: this.selfiePreview.src
     };
-
     this.profileManager.saveProfile(profile);
     this.cameraManager.stop();
     this.showMainScreen();
 
-    this.checkCameraButtonVisibility();  // Проверяем кнопку камеры!
-
     // Звонок через 5 секунд после завершения регистрации
     setTimeout(() => this.startPhoneCall(), 5000);
-}
-
+  }
   
 startPhoneCall() {
     const ringtone = new Audio('audio/phone_ringtone.mp3');

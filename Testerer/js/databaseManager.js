@@ -44,9 +44,6 @@ export class DatabaseManager {
     localStorage.setItem("diaryDB", base64);
   }
 
-console.log("💾 База данных сохранена! Проверяем данные...");
-const storedDb = localStorage.getItem("diaryDB");
-console.log("📂 Содержимое localStorage[diaryDB]:", storedDb ? "✅ Найдено" : "❌ Отсутствует");
 
 
   async addDiaryEntry(entry) {

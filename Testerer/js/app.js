@@ -61,14 +61,18 @@ bindEvents() {
   
 async init() {
   await this.databaseManager.initDatabasePromise;
-  if (this.profileManager.isProfileSaved()) {
+
+  // ✅ Загружаем профиль при запуске
+  const profile = this.profileManager.getProfile();
+  if (profile) {
+    console.log("✅ Профиль загружен при старте:", profile);
     this.showMainScreen();
     this.eventManager.updateDiaryDisplay();
   } else {
+    console.log("❌ Профиль не найден, показываем регистрацию");
     this.showRegistrationScreen();
   }
 }
-
   
   validateRegistration() {
     if (this.nameInput.value.trim() !== "" && this.genderSelect.value !== "") {
@@ -230,19 +234,20 @@ showMirrorTask() {
 
 // 🔹 Добавляем кнопку камеры
 showCameraButton() {
-    let cameraToggle = document.getElementById("camera-toggle");
-
-    if (!cameraToggle) {
-        cameraToggle = document.createElement("button");
-        cameraToggle.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["open_camera"];
-        cameraToggle.id = "camera-toggle";
-        cameraToggle.addEventListener("click", () => this.toggleCameraView());
-
-        this.mainScreen.appendChild(cameraToggle);
-        console.log("📷 Добавлена кнопка 'Открыть камеру'");
-    } else {
-        console.log("⚠️ Кнопка 'Открыть камеру' уже существует!");
+    let existingButton = document.getElementById("camera-toggle");
+    if (existingButton) {
+        console.log("❌ Кнопка 'Открыть камеру' уже существует!");
+        return;
     }
+
+    const cameraToggle = document.createElement("button");
+    cameraToggle.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["open_camera"];
+    cameraToggle.id = "camera-toggle";
+
+    cameraToggle.addEventListener("click", () => this.toggleCameraView());
+    this.mainScreen.appendChild(cameraToggle);
+
+    console.log("📷 Добавлена кнопка 'Открыть камеру'");
 }
 
 

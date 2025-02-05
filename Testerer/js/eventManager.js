@@ -13,16 +13,18 @@ isEventLogged(eventKey) {
   
 async addDiaryEntry(key) {
     const localizedText = this.languageManager.locales[this.languageManager.getLanguage()][key] || key;
-    console.log(`📝 Попытка добавить запись: ${localizedText}`);
+    console.log("📝 Попытка добавить запись:", localizedText);
 
     await this.databaseManager.addDiaryEntry(localizedText);
     
-    // Проверяем, обновились ли данные
-    const entries = this.databaseManager.getDiaryEntries();
-    console.log("📖 Записи в дневнике после добавления:", entries);
-
-    this.updateDiaryDisplay();
+    // ⏳ Добавляем задержку, чтобы база успела обновиться
+    setTimeout(() => {
+        const entries = this.databaseManager.getDiaryEntries();
+        console.log("📖 Записи в дневнике после добавления:", entries);
+        this.updateDiaryDisplay();
+    }, 500);
 }
+
 
   
 updateDiaryDisplay() {

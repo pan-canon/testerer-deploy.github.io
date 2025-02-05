@@ -3,32 +3,13 @@ export class ProfileManager {
     return !!localStorage.getItem('profile');
   }
   
-getProfile() {
-    const profile = localStorage.getItem('profile');
-
-    if (!profile) {
-        console.warn("⚠️ Профиль не найден в localStorage.");
-        return null;
-    }
-
-    try {
-        return JSON.parse(profile);
-    } catch (error) {
-        console.error("❌ Ошибка при загрузке профиля:", error);
-        return null;
-    }
-}
-
+  getProfile() {
+    return JSON.parse(localStorage.getItem('profile'));
+  }
   
-saveProfile(profile) {
+  saveProfile(profile) {
     localStorage.setItem('profile', JSON.stringify(profile));
-    console.log("✅ Профиль сохранён!", profile);
-
-    // Проверяем, действительно ли данные записаны
-    const storedProfile = localStorage.getItem("profile");
-    console.log("📂 Сохранённый профиль:", storedProfile ? JSON.parse(storedProfile) : "❌ Отсутствует");
-}
-
+  }
   
 resetProfile() {
   localStorage.removeItem('profile');

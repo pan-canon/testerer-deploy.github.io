@@ -60,18 +60,13 @@ bindEvents() {
 
   
 async init() {
-    await this.databaseManager.initDatabasePromise;
-
-    const profile = this.profileManager.getProfile();
-    console.log("📂 Загруженный профиль:", profile);
-
-    if (profile) {
-        this.showMainScreen();
-        this.eventManager.updateDiaryDisplay();
-    } else {
-        console.warn("⚠️ Профиль отсутствует, показываем экран регистрации.");
-        this.showRegistrationScreen();
-    }
+  await this.databaseManager.initDatabasePromise;
+  if (this.profileManager.isProfileSaved()) {
+    this.showMainScreen();
+    this.eventManager.updateDiaryDisplay();
+  } else {
+    this.showRegistrationScreen();
+  }
 }
   
   validateRegistration() {
@@ -219,7 +214,7 @@ triggerMirrorEffect() {
         document.body.style.background = "";
     }, 1000);
 
-    const staticNoise = new Audio(`${BASE_PATH}/audio/static_noise.mp3`);
+    const staticNoise = new Audio('audio/static_noise.mp3');
     staticNoise.play();
     setTimeout(() => staticNoise.pause(), 3000);
 }
@@ -234,26 +229,15 @@ showMirrorTask() {
 
 // 🔹 Добавляем кнопку камеры
 showCameraButton() {
-    let cameraToggle = document.getElementById("camera-toggle");
-
-    if (!cameraToggle) {
-        cameraToggle = document.createElement("button");
+    if (!document.getElementById("camera-toggle")) {
+        const cameraToggle = document.createElement("button");
         cameraToggle.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["open_camera"];
         cameraToggle.id = "camera-toggle";
+
         cameraToggle.addEventListener("click", () => this.toggleCameraView());
         this.mainScreen.appendChild(cameraToggle);
     }
-
-    // Проверяем, был ли добавлен триггерный вызов
-    if (this.eventManager.isEventLogged("mirror_quest")) {
-        console.log("📷 Добавлена кнопка 'Открыть камеру'");
-        cameraToggle.style.display = "block";
-    } else {
-        cameraToggle.style.display = "none";
-    }
 }
-
-
 
 // 🔹 Переключение между камерой и дневником
 toggleCameraView() {

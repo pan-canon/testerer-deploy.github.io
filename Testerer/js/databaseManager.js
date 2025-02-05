@@ -6,7 +6,7 @@ export class DatabaseManager {
 
   async initDatabase() {
     const SQL = await initSqlJs({
-      locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
+      locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js`
     });
     // Проверяем, сохранена ли база в localStorage
     const savedDb = localStorage.getItem("diaryDB");
@@ -44,24 +44,16 @@ export class DatabaseManager {
     localStorage.setItem("diaryDB", base64);
   }
 
-async addDiaryEntry(entry) {
+  async addDiaryEntry(entry) {
     if (!this.db) {
-        console.error("⚠️ Database not initialized!");
-        return;
+      console.error("⚠️ Database not initialized!");
+      return;
     }
-
-    try {
-        const timestamp = new Date().toISOString();
-        this.db.run("INSERT INTO diary (entry, timestamp) VALUES (?, ?)", [entry, timestamp]);
-        this.saveDatabase();
-
-        console.log("✅ Запись добавлена в дневник:", entry);
-    } catch (error) {
-        console.error("❌ Ошибка при добавлении записи в дневник:", error);
-    }
-}
-
-
+    const timestamp = new Date().toISOString();
+    this.db.run("INSERT INTO diary (entry, timestamp) VALUES (?, ?)", [entry, timestamp]);
+    console.log("✅ Entry added:", entry);
+    this.saveDatabase();
+  }
 
   getDiaryEntries() {
     if (!this.db) {

@@ -11,29 +11,11 @@ isEventLogged(eventKey) {
   return entries.some(entry => entry.entry === eventKey);
 }
   
-async addDiaryEntry(key) {
+  async addDiaryEntry(key) {
     const localizedText = this.languageManager.locales[this.languageManager.getLanguage()][key] || key;
-
-    console.log("📝 Попытка добавить запись:", localizedText);
-
-    try {
-        await this.databaseManager.addDiaryEntry(localizedText);
-
-        // Проверяем, реально ли запись сохранилась
-        const entries = this.databaseManager.getDiaryEntries();
-        console.log("📖 Записи в дневнике после добавления:", entries);
-
-        if (entries.length === 0) {
-            console.error("❌ Запись не сохранилась!");
-        }
-    } catch (error) {
-        console.error("❌ Ошибка при добавлении записи:", error);
-    }
-
+    await this.databaseManager.addDiaryEntry(localizedText);
     this.updateDiaryDisplay();
-}
-
-
+  }
   
 updateDiaryDisplay() {
   if (!this.diaryContainer) {

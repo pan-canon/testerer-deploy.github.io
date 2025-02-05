@@ -1,27 +1,18 @@
 import { App } from './app.js';
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const app = new App();
 
+  // Регистрация сервис-воркера (без дублирования)
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(registration => console.log('Service Worker зарегистрирован:', registration.scope))
-      .catch(error => console.error('Ошибка регистрации Service Worker:', error));
-  }
-});
-
-// Инициализация приложения
-document.addEventListener("DOMContentLoaded", () => {
-  const app = new App();
-  
-  // Регистрация сервис-воркера
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/serviceWorker.js')
-      .then(function(registration) {
-         console.log('Service Worker registered with scope:', registration.scope);
-      })
-      .catch(function(error) {
-         console.error('Service Worker registration failed:', error);
-      });
+    try {
+      const BASE_PATH = window.location.pathname.includes("/Testerer/") 
+        ? "/testerer-deploy.github.io/Testerer"
+        : "";
+      const registration = await navigator.serviceWorker.register(`${BASE_PATH}/serviceWorker.js`);
+      console.log('✅ Service Worker зарегистрирован с областью:', registration.scope);
+    } catch (error) {
+      console.error('❌ Ошибка при регистрации Service Worker:', error);
+    }
   }
 });

@@ -8,7 +8,6 @@ const urlsToCache = [
   `${BASE_PATH}/index.html`,
   "https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css",
   `${BASE_PATH}/js/main.js`,
-  `${BASE_PATH}/js/sql-wasm.js`,
   `${BASE_PATH}/js/locales.js`,  // Добавляем локали
   `${BASE_PATH}/locales/locales.json`
 ];

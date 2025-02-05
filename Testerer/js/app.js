@@ -4,7 +4,7 @@ import { ProfileManager } from './profileManager.js';
 import { DatabaseManager } from './databaseManager.js';
 import { EventManager } from './eventManager.js';
 
-class App {
+export class App {
   constructor() {
     // DOM-элементы экранов
     this.registrationScreen = document.getElementById('registration-screen');

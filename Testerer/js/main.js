@@ -1,4 +1,6 @@
 import { App } from './app.js';
+import { locales } from './locales.js';
+console.log(locales.en.greeting);
 
 document.addEventListener("DOMContentLoaded", () => {
   const app = new App();

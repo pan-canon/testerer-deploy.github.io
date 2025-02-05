@@ -5,8 +5,8 @@ export class DatabaseManager {
   }
 
   async initDatabase() {
-    const SQL = await initSqlJs({ locateFile: file => 
-      `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}` 
+    const SQL = await initSqlJs({
+      locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
     });
     // Проверяем, сохранена ли база в localStorage
     const savedDb = localStorage.getItem("diaryDB");

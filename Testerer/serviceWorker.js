@@ -38,16 +38,22 @@ self.addEventListener("install", (event) => {
   );
 });
 
+// Активация Service Worker и удаление старых кэшей
 self.addEventListener("activate", (event) => {
+  console.log("✅ Активация Service Worker...");
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cacheName) => caches.delete(cacheName)) // Удаляем все старые кеши!
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            console.log(`🗑 Удаление старого кеша: ${cacheName}`);
+            return caches.delete(cacheName);
+          }
+        })
       );
-    }).then(() => self.clients.claim())
+    })
   );
 });
-
 
 // Обработчик запросов: сначала ищем в кэше, потом обновляем
 self.addEventListener("fetch", (event) => {

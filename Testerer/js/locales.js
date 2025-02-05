@@ -1,4 +1,4 @@
-const locales = {
+export const locales = {
   "en": {
     "welcome": "Welcome!",
     "enter_name": "Enter your name:",

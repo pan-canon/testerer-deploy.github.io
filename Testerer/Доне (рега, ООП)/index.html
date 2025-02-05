@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Registration</title>
+  <!-- Подключаем стиль Pico.css и дополнительные стили -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Экран регистрации (Шаг 1) -->
+<div id="registration-screen">
+  <h1 data-i18n="welcome">Welcome!</h1>
+  <form id="registration-form">
+    <label for="player-name" data-i18n="enter_name">Enter your name:</label>
+    <input type="text" id="player-name" required>
+
+    <label for="player-gender" data-i18n="select_gender">Select your gender:</label>
+    <select id="player-gender" required>
+      <option value="" disabled selected>Select</option>
+      <option value="male" data-i18n="male">Male</option>
+      <option value="female" data-i18n="female">Female</option>
+      <option value="other" data-i18n="other">Other</option>
+    </select>
+
+    <label for="language-selector" data-i18n="select_language">Select Language:</label>
+    <select id="language-selector">
+      <option value="en">English</option>
+      <option value="ru">Русский</option>
+      <option value="uk">Українська</option>
+    </select>
+
+    <button type="button" id="next-step-btn" data-i18n="next" disabled>Next</button>
+  </form>
+
+  <!-- Импорт профиля (альтернативный вход) -->
+  <div id="import-profile-container">
+    <h2 data-i18n="import_profile">Import Profile</h2>
+    <input type="file" id="import-file" accept=".json">
+    <button type="button" id="import-profile-btn" data-i18n="import">Import</button>
+  </div>
+</div>
+  
+  <!-- Экран создания селфи (Шаг 2) -->
+  <div id="selfie-screen" style="display: none;">
+    <h1 data-i18n="take_selfie">Take a Selfie</h1>
+    <video id="selfie-video" autoplay playsinline style="width: 100%; max-width: 400px;"></video>
+    <br>
+    <button type="button" id="capture-btn" data-i18n="capture">Capture</button>
+    <br>
+    <img id="selfie-preview" src="" alt="Selfie Preview" style="display: none; max-width: 400px;">
+    <br>
+    <button type="button" id="complete-registration" data-i18n="complete" disabled>Complete</button>
+  </div>
+  
+<!-- Основной экран (например, дневник) – после регистрации -->
+<div id="main-screen" style="display: none;">
+  <h2 data-i18n="diary">Your Diary</h2>
+  <div id="profile-info">
+    <img id="profile-photo" alt="Profile Photo" style="display: none; max-width: 100px; border-radius: 50%;">
+    <p id="profile-name"></p>
+  </div>
+  <!-- Кнопка сброса данных -->
+  <button type="button" id="reset-data" data-i18n="reset">Reset Data</button>
+  <!-- Новая кнопка экспорта профиля -->
+  <button type="button" id="export-profile" data-i18n="export">Export Profile</button>
+</div>
+  
+  <!-- Скрипты -->
+  <!-- Подключаем sql.js через CDN для работы с SQLite -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+  <!-- Основной скрипт -->
+  <script src="js/main.js"></script>
+  <!-- Регистрация сервис-воркера -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('service-worker.js')
+          .then(function(registration) {
+            console.log('Service Worker зарегистрирован с областью:', registration.scope);
+          })
+          .catch(function(error) {
+            console.error('Ошибка при регистрации Service Worker:', error);
+          });
+      });
+    }
+  </script>
+</body>
+</html>

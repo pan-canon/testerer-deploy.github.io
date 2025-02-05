@@ -55,11 +55,12 @@ async addDiaryEntry(entry) {
         this.db.run("INSERT INTO diary (entry, timestamp) VALUES (?, ?)", [entry, timestamp]);
         this.saveDatabase();
 
-        console.log("✅ Запись добавлена:", entry);
+        console.log("✅ Запись добавлена в дневник:", entry);
     } catch (error) {
         console.error("❌ Ошибка при добавлении записи в дневник:", error);
     }
 }
+
 
 
   getDiaryEntries() {

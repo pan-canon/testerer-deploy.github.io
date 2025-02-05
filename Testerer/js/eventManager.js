@@ -16,18 +16,23 @@ async addDiaryEntry(key) {
 
     console.log("📝 Попытка добавить запись:", localizedText);
 
-    await this.databaseManager.addDiaryEntry(localizedText);
+    try {
+        await this.databaseManager.addDiaryEntry(localizedText);
 
-    // Проверяем, реально ли запись сохранилась
-    const entries = this.databaseManager.getDiaryEntries();
-    console.log("📖 Записи в дневнике после добавления:", entries);
+        // Проверяем, реально ли запись сохранилась
+        const entries = this.databaseManager.getDiaryEntries();
+        console.log("📖 Записи в дневнике после добавления:", entries);
 
-    if (entries.length === 0) {
-        console.error("❌ Запись не сохранилась!");
+        if (entries.length === 0) {
+            console.error("❌ Запись не сохранилась!");
+        }
+    } catch (error) {
+        console.error("❌ Ошибка при добавлении записи:", error);
     }
 
     this.updateDiaryDisplay();
 }
+
 
   
 updateDiaryDisplay() {

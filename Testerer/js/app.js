@@ -60,18 +60,18 @@ bindEvents() {
 
   
 async init() {
-  await this.databaseManager.initDatabasePromise;
+    await this.databaseManager.initDatabasePromise;
 
-  // ✅ Загружаем профиль при запуске
-  const profile = this.profileManager.getProfile();
-  if (profile) {
-    console.log("✅ Профиль загружен при старте:", profile);
-    this.showMainScreen();
-    this.eventManager.updateDiaryDisplay();
-  } else {
-    console.log("❌ Профиль не найден, показываем регистрацию");
-    this.showRegistrationScreen();
-  }
+    const profile = this.profileManager.getProfile();
+    console.log("📂 Загруженный профиль:", profile);
+
+    if (profile) {
+        this.showMainScreen();
+        this.eventManager.updateDiaryDisplay();
+    } else {
+        console.warn("⚠️ Профиль отсутствует, показываем экран регистрации.");
+        this.showRegistrationScreen();
+    }
 }
   
   validateRegistration() {
@@ -234,21 +234,25 @@ showMirrorTask() {
 
 // 🔹 Добавляем кнопку камеры
 showCameraButton() {
-    let existingButton = document.getElementById("camera-toggle");
-    if (existingButton) {
-        console.log("❌ Кнопка 'Открыть камеру' уже существует!");
-        return;
+    let cameraToggle = document.getElementById("camera-toggle");
+
+    if (!cameraToggle) {
+        cameraToggle = document.createElement("button");
+        cameraToggle.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["open_camera"];
+        cameraToggle.id = "camera-toggle";
+        cameraToggle.addEventListener("click", () => this.toggleCameraView());
+        this.mainScreen.appendChild(cameraToggle);
     }
 
-    const cameraToggle = document.createElement("button");
-    cameraToggle.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["open_camera"];
-    cameraToggle.id = "camera-toggle";
-
-    cameraToggle.addEventListener("click", () => this.toggleCameraView());
-    this.mainScreen.appendChild(cameraToggle);
-
-    console.log("📷 Добавлена кнопка 'Открыть камеру'");
+    // Проверяем, был ли добавлен триггерный вызов
+    if (this.eventManager.isEventLogged("mirror_quest")) {
+        console.log("📷 Добавлена кнопка 'Открыть камеру'");
+        cameraToggle.style.display = "block";
+    } else {
+        cameraToggle.style.display = "none";
+    }
 }
+
 
 
 // 🔹 Переключение между камерой и дневником

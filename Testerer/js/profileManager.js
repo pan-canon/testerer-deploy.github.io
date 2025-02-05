@@ -3,9 +3,22 @@ export class ProfileManager {
     return !!localStorage.getItem('profile');
   }
   
-  getProfile() {
-    return JSON.parse(localStorage.getItem('profile'));
-  }
+getProfile() {
+    const profile = localStorage.getItem('profile');
+
+    if (!profile) {
+        console.warn("⚠️ Профиль не найден в localStorage.");
+        return null;
+    }
+
+    try {
+        return JSON.parse(profile);
+    } catch (error) {
+        console.error("❌ Ошибка при загрузке профиля:", error);
+        return null;
+    }
+}
+
   
 saveProfile(profile) {
     localStorage.setItem('profile', JSON.stringify(profile));

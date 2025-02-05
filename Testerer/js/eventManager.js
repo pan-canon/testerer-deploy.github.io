@@ -11,11 +11,19 @@ isEventLogged(eventKey) {
   return entries.some(entry => entry.entry === eventKey);
 }
   
-  async addDiaryEntry(key) {
+async addDiaryEntry(key) {
     const localizedText = this.languageManager.locales[this.languageManager.getLanguage()][key] || key;
+    console.log(`📝 Попытка добавить запись: ${localizedText}`);
+
     await this.databaseManager.addDiaryEntry(localizedText);
+    
+    // Проверяем, обновились ли данные
+    const entries = this.databaseManager.getDiaryEntries();
+    console.log("📖 Записи в дневнике после добавления:", entries);
+
     this.updateDiaryDisplay();
-  }
+}
+
   
 updateDiaryDisplay() {
   if (!this.diaryContainer) {

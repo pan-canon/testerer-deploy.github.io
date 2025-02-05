@@ -68,6 +68,11 @@ async init() {
     this.showRegistrationScreen();
   }
 }
+
+console.log("📋 Проверяем сохранённый профиль...");
+const storedProfile = this.profileManager.getProfile();
+console.log("🔍 Найденный профиль:", storedProfile ? storedProfile : "❌ Не найден");
+
   
   validateRegistration() {
     if (this.nameInput.value.trim() !== "" && this.genderSelect.value !== "") {
@@ -229,15 +234,21 @@ showMirrorTask() {
 
 // 🔹 Добавляем кнопку камеры
 showCameraButton() {
-    if (!document.getElementById("camera-toggle")) {
-        const cameraToggle = document.createElement("button");
+    let cameraToggle = document.getElementById("camera-toggle");
+
+    if (!cameraToggle) {
+        cameraToggle = document.createElement("button");
         cameraToggle.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["open_camera"];
         cameraToggle.id = "camera-toggle";
-
         cameraToggle.addEventListener("click", () => this.toggleCameraView());
+
         this.mainScreen.appendChild(cameraToggle);
+        console.log("📷 Добавлена кнопка 'Открыть камеру'");
+    } else {
+        console.log("⚠️ Кнопка 'Открыть камеру' уже существует!");
     }
 }
+
 
 // 🔹 Переключение между камерой и дневником
 toggleCameraView() {

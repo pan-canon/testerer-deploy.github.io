@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // Регистрация сервис-воркера
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('js/serviceWorker.js')
+    navigator.serviceWorker.register('/service-worker.js')
       .then(function(registration) {
          console.log('Service Worker registered with scope:', registration.scope);
       })

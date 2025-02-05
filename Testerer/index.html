@@ -87,18 +87,19 @@
   <script src="js/locales.js"></script>
   <script type="module" src="js/main.js"></script>
   <!-- Регистрация сервис-воркера -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register('js/serviceWorker.js')
-          .then(function(registration) {
-            console.log('Service Worker зарегистрирован с областью:', registration.scope);
-          })
-          .catch(function(error) {
-            console.error('Ошибка при регистрации Service Worker:', error);
-          });
-      });
-    }
-  </script>
+<!-- Регистрация сервис-воркера -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async function() {
+      try {
+        const BASE_PATH = "/Testerer"; // Укажите "" если сайт в корне
+        const registration = await navigator.serviceWorker.register(`${BASE_PATH}/service-worker.js`);
+        console.log('✅ Service Worker зарегистрирован с областью:', registration.scope);
+      } catch (error) {
+        console.error('❌ Ошибка при регистрации Service Worker:', error);
+      }
+    });
+  }
+</script>
 </body>
 </html>

@@ -3,7 +3,6 @@ import { CameraManager } from './cameraManager.js';
 import { ProfileManager } from './profileManager.js';
 import { DatabaseManager } from './databaseManager.js';
 import { EventManager } from './eventManager.js';
-import { EventManager } from './visualEffectsManager.js';
 
 export class App {
   constructor() {
@@ -37,7 +36,6 @@ export class App {
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
-    this.visualEffectsManager = new VisualEffectsManager();
     
     this.bindEvents();
     this.init();
@@ -182,18 +180,14 @@ startPhoneCall() {
         answerCallBtn.remove();
         ignoreCallBtn.remove();
 
-        this.visualEffectsManager.triggerDarkScreenEffect();  // 🔹 Затемнение экрана
-        this.visualEffectsManager.triggerStaticNoise(true);  // 🔹 Включаем шум
+        this.triggerMirrorEffect(); // Эффект помех
 
         setTimeout(() => {
             if (!this.eventManager.isEventLogged("mirror_quest")) {
                 this.eventManager.addDiaryEntry("mirror_quest");
             }
-            this.visualEffectsManager.showMirrorTask(
-                this.languageManager.locales[this.languageManager.getLanguage()]["go_to_mirror"]
-            );  // 🔹 Добавляем задание
-
-            this.visualEffectsManager.showCameraButton(this);  // 🔹 Показываем кнопку камеры
+            this.showMirrorTask(); // Добавляем задание
+            this.showCameraButton(); // Добавляем кнопку камеры
         }, 3000);
     });
 
@@ -205,14 +199,45 @@ startPhoneCall() {
         }
         answerCallBtn.remove();
         ignoreCallBtn.remove();
-        this.visualEffectsManager.showCameraButton(this);  // 🔹 Показываем кнопку камеры
+        this.showCameraButton(); // Всё равно включаем кнопку камеры
     });
 
     this.mainScreen.appendChild(answerCallBtn);
     this.mainScreen.appendChild(ignoreCallBtn);
 }
 
+// 🔹 Эффект затемнения + помехи
+triggerMirrorEffect() {
+    document.body.style.transition = "background 1s";
+    document.body.style.background = "black";
+    setTimeout(() => {
+        document.body.style.background = "";
+    }, 1000);
 
+    const staticNoise = new Audio('audio/static_noise.mp3');
+    staticNoise.play();
+    setTimeout(() => staticNoise.pause(), 3000);
+}
+
+// 🔹 Новое задание "Подойти к зеркалу"
+showMirrorTask() {
+    const mirrorTask = document.createElement("p");
+    mirrorTask.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["go_to_mirror"];
+    mirrorTask.id = "mirror-task";
+    document.getElementById("diary").appendChild(mirrorTask);
+}
+
+// 🔹 Добавляем кнопку камеры
+showCameraButton() {
+    if (!document.getElementById("camera-toggle")) {
+        const cameraToggle = document.createElement("button");
+        cameraToggle.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["open_camera"];
+        cameraToggle.id = "camera-toggle";
+
+        cameraToggle.addEventListener("click", () => this.toggleCameraView());
+        this.mainScreen.appendChild(cameraToggle);
+    }
+}
 
 // 🔹 Переключение между камерой и дневником
 toggleCameraView() {
@@ -234,50 +259,37 @@ toggleCameraView() {
         return;
     }
 
-    const isCameraActive = cameraContainer.style.display !== "none";
-
-    if (!isCameraActive) {
+    if (cameraContainer.style.display === "none") {
         console.log("📸 Переключаемся на камеру...");
 
-        diary.style.display = "none"; // Скрываем дневник
+        diary.style.display = "none"; // Скрываем блог
         cameraContainer.style.display = "flex"; // Показываем камеру
 
         // Переключаем кнопки
-        toggleCameraBtn.style.display = "none"; 
-        toggleDiaryBtn.style.display = "inline-block"; 
+        toggleCameraBtn.style.display = "none";  // Скрываем кнопку "Камера"
+        toggleDiaryBtn.style.display = "inline-block";  // Показываем кнопку "Блог"
 
         // 🔹 Скрываем ненужные кнопки
         buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
 
         this.cameraManager.videoElement = videoElement;
         this.cameraManager.start();
-
-        // 🔹 Если взято задание "mirror_quest", включаем помехи
-        if (this.eventManager.isEventLogged("mirror_quest")) {
-            console.log("🔺 Помехи включены!");
-            this.visualEffectsManager.triggerStaticNoise(true);
-        }
-
     } else {
-        console.log("📓 Возвращаемся в дневник...");
+        console.log("📓 Возвращаемся в блог...");
 
-        diary.style.display = "block"; // Показываем дневник
+        diary.style.display = "block"; // Показываем блог
         cameraContainer.style.display = "none"; // Скрываем камеру
 
         // Переключаем кнопки
-        toggleCameraBtn.style.display = "inline-block"; 
-        toggleDiaryBtn.style.display = "none"; 
+        toggleCameraBtn.style.display = "inline-block"; // Показываем кнопку "Камера"
+        toggleDiaryBtn.style.display = "none"; // Скрываем кнопку "Блог"
 
         // 🔹 Показываем скрытые кнопки обратно
         buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
 
         this.cameraManager.stop();
-
-        // 🔹 Отключаем помехи
-        this.visualEffectsManager.triggerStaticNoise(false);
     }
 }
-
   
   showMainScreen() {
     this.registrationScreen.style.display = 'none';

@@ -1,15 +1,32 @@
-const CACHE_NAME = "game-cache-v2";
-const BASE_PATH = "/Testerer"; // Укажите "" если сайт в корне
+const BASE_PATH = self.location.pathname.includes("/Testerer/") 
+  ? "/testerer-deploy.github.io/Testerer" 
+  : "";
 
+const CACHE_NAME = "game-cache-v1";
 const urlsToCache = [
   `${BASE_PATH}/`,
   `${BASE_PATH}/index.html`,
   "https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css",
-  `${BASE_PATH}/js/app.js`,
   `${BASE_PATH}/js/main.js`,
   `${BASE_PATH}/js/sql-wasm.js`,
+  `${BASE_PATH}/js/locales.js`,  // Добавляем локали
   `${BASE_PATH}/locales/locales.json`
 ];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
+  );
+});
+
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
+    })
+  );
+});
+
 
 // Установка Service Worker и кеширование файлов
 self.addEventListener("install", (event) => {

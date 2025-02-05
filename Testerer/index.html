@@ -95,7 +95,7 @@
         const BASE_PATH = window.location.pathname.includes("/Testerer/") 
           ? "/testerer-deploy.github.io/Testerer"
           : "";
-        const registration = await navigator.serviceWorker.register(`${BASE_PATH}/service-worker.js`);
+        const registration = await navigator.serviceWorker.register(`${BASE_PATH}/serviceWorker.js`);
         console.log('✅ Service Worker зарегистрирован с областью:', registration.scope);
       } catch (error) {
         console.error('❌ Ошибка при регистрации Service Worker:', error);

@@ -441,6 +441,7 @@ async captureSelfie() {
 }
 
 
+
 // Методы для обработки изображений (grayscale и сравнение)
 App.prototype.convertToGrayscale = function(canvas) {
   const ctx = canvas.getContext("2d");

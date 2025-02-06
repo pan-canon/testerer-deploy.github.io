@@ -23,6 +23,7 @@ export class QuestManager {
     if (hasQuest && !doneQuest) {
       console.log("🪞 Mirror quest активно. Запускаем проверку...");
       setTimeout(async () => {
+        console.log("⏱ Запуск compareCurrentFrame() через 3 сек...");
         const success = await this.app.compareCurrentFrame();
         if (success) {
           if (!this.eventManager.isEventLogged("mirror_done")) {

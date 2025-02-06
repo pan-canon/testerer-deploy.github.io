@@ -94,16 +94,19 @@ completeApartment() {
     }
 
 saveApartmentPlan() {
-    const roomData = JSON.stringify(this.floors);
-    this.databaseManager.saveApartmentPlan(this.currentFloor, roomData);
+  if (!this.databaseManager) {
+    console.error("⚠️ Database Manager is not initialized.");
+    return;
+  }
+  const roomData = JSON.stringify(this.rooms); // исправлено на this.rooms
+  this.databaseManager.saveApartmentPlan(this.currentFloor, roomData);
 
-    console.log("🏠 План этажа сохранён:", this.currentFloor);
+  console.log("🏠 План этажа сохранён:", this.currentFloor);
 
-    // После сохранения плана квартиры, переходим на главный экран
-    window.app.showMainScreen();
-
-    // Звонок через 5 секунд после завершения регистрации и планирования
-    setTimeout(() => window.app.startPhoneCall(), 5000);
+  // После сохранения плана квартиры, переходим на главный экран
+  window.app.showMainScreen();
+  setTimeout(() => window.app.startPhoneCall(), 5000);
 }
+
 
 }

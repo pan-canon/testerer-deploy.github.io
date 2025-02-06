@@ -45,6 +45,13 @@ this.tempCanvas = document.createElement("canvas");
 this.tempCtx = this.tempCanvas.getContext("2d");
 
     this.bindEvents();
+document.getElementById('next-floor-btn').addEventListener('click', () => {
+    this.apartmentManager.nextFloor();
+});
+
+document.getElementById('prev-floor-btn').addEventListener('click', () => {
+    this.apartmentManager.prevFloor();
+});
     this.init();
   }
   
@@ -64,15 +71,6 @@ bindEvents() {
     document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
     document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
 }
-
-document.getElementById('next-floor-btn').addEventListener('click', function() {
-    app.apartmentManager.nextFloor();
-});
-
-document.getElementById('prev-floor-btn').addEventListener('click', function() {
-    app.apartmentManager.prevFloor();
-});
-
 
 
 

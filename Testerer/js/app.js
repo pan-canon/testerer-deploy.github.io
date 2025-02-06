@@ -182,13 +182,17 @@ startPhoneCall() {
 
         this.triggerMirrorEffect(); // Эффект помех
 
-        setTimeout(() => {
-            if (!this.eventManager.isEventLogged("mirror_quest")) {
-                this.eventManager.addDiaryEntry("mirror_quest");
-            }
-            this.showMirrorTask(); // Добавляем задание
-            this.showCameraButton(); // Добавляем кнопку камеры
-        }, 3000);
+setTimeout(() => {
+    if (!this.eventManager.isEventLogged("mirror_quest")) {
+        this.eventManager.addDiaryEntry("mirror_quest");
+    }
+    this.showMirrorTask(); // Оставляем как есть
+
+    // Вместо this.showCameraButton(), делаем:
+    const cameraBtn = document.getElementById("toggle-camera");
+    cameraBtn.style.display = "inline-block"; // или "block"
+
+}, 3000);
     });
 
     // Игнорирование звонка
@@ -199,7 +203,7 @@ startPhoneCall() {
         }
         answerCallBtn.remove();
         ignoreCallBtn.remove();
-        this.showCameraButton(); // Всё равно включаем кнопку камеры
+        
     });
 
     this.mainScreen.appendChild(answerCallBtn);
@@ -227,17 +231,7 @@ showMirrorTask() {
     document.getElementById("diary").appendChild(mirrorTask);
 }
 
-// 🔹 Добавляем кнопку камеры
-showCameraButton() {
-    if (!document.getElementById("camera-toggle")) {
-        const cameraToggle = document.createElement("button");
-        cameraToggle.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["open_camera"];
-        cameraToggle.id = "camera-toggle";
 
-        cameraToggle.addEventListener("click", () => this.toggleCameraView());
-        this.mainScreen.appendChild(cameraToggle);
-    }
-}
 
 // 🔹 Переключение между камерой и дневником
 toggleCameraView() {

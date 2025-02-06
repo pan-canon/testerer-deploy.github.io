@@ -61,15 +61,18 @@ bindEvents() {
   
 async init() {
   await this.databaseManager.initDatabasePromise;
+
   if (this.profileManager.isProfileSaved()) {
     this.showMainScreen();
     this.eventManager.updateDiaryDisplay();
 
-    // ✨ Проверяем, записано ли событие "mirror_quest" (или любой ваш «триггер»)
-    if (this.eventManager.isEventLogged("mirror_quest") || this.eventManager.isEventLogged("ignored_call")) {
+    // ✨ Проверяем, есть ли события (mirror_quest или ignored_call) в дневнике
+    if (this.eventManager.isEventLogged("mirror_quest") || 
+        this.eventManager.isEventLogged("ignored_call")) {
       const cameraBtn = document.getElementById("toggle-camera");
       cameraBtn.style.display = "inline-block";
     }
+
   } else {
     this.showRegistrationScreen();
   }

@@ -270,8 +270,6 @@ async toggleCameraView() {
     const videoElement = document.getElementById("camera-view");
     const toggleCameraBtn = document.getElementById("toggle-camera");
     const toggleDiaryBtn = document.getElementById("toggle-diary");
-
-    // 🔹 Кнопки, которые должны скрываться в режиме камеры
     const buttonsToHide = [
         document.getElementById("reset-data"),
         document.getElementById("export-profile"),
@@ -285,36 +283,38 @@ async toggleCameraView() {
 
     if (cameraContainer.style.display === "none") {
         console.log("📸 Переключаемся на камеру...");
-
-        diary.style.display = "none"; // Скрываем блог
-        cameraContainer.style.display = "flex"; // Показываем камеру
-
-        // Переключаем кнопки
-        toggleCameraBtn.style.display = "none";  // Скрываем кнопку "Камера"
-        toggleDiaryBtn.style.display = "inline-block";  // Показываем кнопку "Блог"
-
-        // 🔹 Скрываем ненужные кнопки
+        diary.style.display = "none";
+        cameraContainer.style.display = "flex";
+        toggleCameraBtn.style.display = "none";
+        toggleDiaryBtn.style.display = "inline-block";
         buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
 
         this.cameraManager.videoElement = videoElement;
         await this.cameraManager.start();
+
+        // Дождаться, пока видео загрузит метаданные
+        await new Promise(resolve => {
+          if (videoElement.readyState >= 2) {
+            resolve();
+          } else {
+            videoElement.onloadedmetadata = () => resolve();
+          }
+        });
+        console.log("Видео готово:", videoElement.videoWidth, videoElement.videoHeight);
+
+        // Запускаем проверку квеста
         this.questManager.checkMirrorQuestOnCamera();
     } else {
         console.log("📓 Возвращаемся в блог...");
-
-        diary.style.display = "block"; // Показываем блог
-        cameraContainer.style.display = "none"; // Скрываем камеру
-
-        // Переключаем кнопки
-        toggleCameraBtn.style.display = "inline-block"; // Показываем кнопку "Камера"
-        toggleDiaryBtn.style.display = "none"; // Скрываем кнопку "Блог"
-
-        // 🔹 Показываем скрытые кнопки обратно
+        diary.style.display = "block";
+        cameraContainer.style.display = "none";
+        toggleCameraBtn.style.display = "inline-block";
+        toggleDiaryBtn.style.display = "none";
         buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
-
         this.cameraManager.stop();
     }
 }
+
   
   showMainScreen() {
     this.registrationScreen.style.display = 'none';
@@ -396,6 +396,7 @@ importProfile() {
 }
 
 async compareCurrentFrame() {
+  console.log("▶️ Вызов compareCurrentFrame()");
   if (!this.selfieData) {
     console.warn("❌ Нет сохранённого селфи!");
     return false;

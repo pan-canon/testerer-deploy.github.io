@@ -79,9 +79,9 @@ prevFloor() {
         });
     }
 
-/*// После сохранения плана квартиры, переходим на главный экран
-app.showMainScreen();
+// После сохранения плана квартиры, переходим на главный экран
+window.app.showMainScreen();
 
 // Звонок через 5 секунд после завершения регистрации и планирования
-setTimeout(() => app.startPhoneCall(), 5000);*/
+setTimeout(() => window.app.startPhoneCall(), 5000);
 }

@@ -65,13 +65,15 @@ bindEvents() {
     document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
 }
 
-document.getElementById('next-floor-btn').addEventListener('click', () => {
-    this.apartmentManager.nextFloor();
+document.getElementById('next-floor-btn').addEventListener('click', function() {
+    app.apartmentManager.nextFloor();
 });
 
-document.getElementById('prev-floor-btn').addEventListener('click', () => {
-    this.apartmentManager.prevFloor();
+document.getElementById('prev-floor-btn').addEventListener('click', function() {
+    app.apartmentManager.prevFloor();
 });
+
+
 
 
   

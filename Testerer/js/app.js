@@ -37,7 +37,10 @@ export class App {
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
-    
+
+this.tempCanvas = document.createElement("canvas");
+this.tempCtx = this.tempCanvas.getContext("2d");
+
     this.bindEvents();
     this.init();
   }

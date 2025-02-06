@@ -433,7 +433,7 @@ async compareCurrentFrame() {
   }
 }
 
-App.prototype.convertToGrayscale = function(canvas) {
+convertToGrayscale = function(canvas) {
   const ctx = canvas.getContext("2d");
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const pixels = imageData.data;
@@ -447,7 +447,7 @@ App.prototype.convertToGrayscale = function(canvas) {
   return canvas.toDataURL("image/png");
 };
 
-App.prototype.pixelWiseComparison = function(img1, img2) {
+pixelWiseComparison = function(img1, img2) {
   let image1 = atob(img1.split(',')[1]);
   let image2 = atob(img2.split(',')[1]);
   let matchCount = 0;
@@ -460,7 +460,7 @@ App.prototype.pixelWiseComparison = function(img1, img2) {
   return matchCount / length;
 };
 
-App.prototype.createHistogram = function(img) {
+createHistogram = function(img) {
   let hist = new Array(256).fill(0);
   let imgData = atob(img.split(',')[1]);
   for (let i = 0; i < imgData.length; i++) {
@@ -469,7 +469,7 @@ App.prototype.createHistogram = function(img) {
   return hist;
 };
 
-App.prototype.histogramComparison = function(img1, img2) {
+histogramComparison = function(img1, img2) {
   let hist1 = this.createHistogram(img1);
   let hist2 = this.createHistogram(img2);
   let diff = 0;

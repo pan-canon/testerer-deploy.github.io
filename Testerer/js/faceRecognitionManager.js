@@ -5,6 +5,39 @@ class FaceRecognitionManager {
     this.model = null; // Модель загружаем лениво
   }
 
+ async loadModel() {
+    if (!this.model) {  // Проверяем, загружена ли уже модель
+      try {
+        console.log("🔄 Загружаем модель распознавания лиц...");
+        this.model = await faceLandmarksDetection.load(
+          faceLandmarksDetection.SupportedPackages.mediapipeFacemesh
+        );
+        console.log("✅ Модель распознавания лиц загружена.");
+      } catch (error) {
+        console.error("❌ Ошибка загрузки модели распознавания:", error);
+      }
+    } else {
+      console.log("⚠️ Модель уже загружена, пропускаем повторную загрузку.");
+    }
+  }
+
+  async detectFace(videoElement) {
+    if (!this.model) {
+      console.warn("⚠️ Модель не загружена! Загружаем перед обработкой...");
+      await this.loadModel();
+    }
+
+    try {
+      const predictions = await this.model.estimateFaces({ input: videoElement });
+      console.log("📸 Результаты распознавания:", predictions);
+      return predictions;
+    } catch (error) {
+      console.error("❌ Ошибка при распознавании лица:", error);
+      return [];
+    }
+  }
+
+
   /**
    * Показываем или обновляем «статусную» модалку (overlay) с текстом message.
    */

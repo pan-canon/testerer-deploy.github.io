@@ -3,7 +3,7 @@ import { CameraManager } from './cameraManager.js';
 import { ProfileManager } from './profileManager.js';
 import { DatabaseManager } from './databaseManager.js';
 import { EventManager } from './eventManager.js';
-import { EventManager } from './questManager.js';
+import { QuestManager } from './questManager.js';
 
 export class App {
   constructor() {

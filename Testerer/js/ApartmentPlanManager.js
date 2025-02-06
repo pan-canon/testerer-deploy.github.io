@@ -15,7 +15,7 @@ nextFloor() {
     this.currentFloor++;
     this.loadFromDB();
 }
- 
+
 prevFloor() {
     if (this.currentFloor > 1) {
         this.currentFloor--;
@@ -79,9 +79,9 @@ prevFloor() {
         });
     }
 
-// После сохранения плана квартиры, переходим на главный экран
+/*// После сохранения плана квартиры, переходим на главный экран
 app.showMainScreen();
 
 // Звонок через 5 секунд после завершения регистрации и планирования
-setTimeout(() => app.startPhoneCall(), 5000);
+setTimeout(() => app.startPhoneCall(), 5000);*/
 }

@@ -220,7 +220,7 @@ answerCallBtn.addEventListener("click", async () => {
 setTimeout(async () => {
   await this.eventManager.addDiaryEntry("mirror_quest");
   this.toggleCameraView();
-}, 3000);
+}, 5000);
 });
 
     // При игнорировании

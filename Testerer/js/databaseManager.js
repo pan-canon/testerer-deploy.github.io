@@ -2,6 +2,7 @@ export class DatabaseManager {
   console.log("databaseManager.js загружен!")
   constructor() {
     this.db = null;
+    console.log("Вызвали constructor DatabaseManager!")
     this.initDatabasePromise = this.initDatabase();
   }
 

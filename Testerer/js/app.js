@@ -32,10 +32,7 @@ export class App {
     
     // Менеджеры
     this.languageManager = new LanguageManager('language-selector');
-    this.cameraManager = new CameraManager('selfie-video', this.faceRecManager);
-// ДОБАВЛЯЕМ ПОСЛЕ this.cameraManager = new CameraManager('selfie-video');
-this.faceRecManager = new FaceRecognitionManager();
-
+    this.cameraManager = new CameraManager('selfie-video');
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
@@ -108,7 +105,7 @@ async init() {
     this.completeBtn.disabled = true;
   }
   
-async captureSelfie() {
+captureSelfie() {
     console.log("📸 Попытка сделать снимок...");
 
     if (!this.cameraManager.videoElement || !this.cameraManager.videoElement.srcObject) {
@@ -145,30 +142,6 @@ async captureSelfie() {
         if (!selfieData || selfieData.length < 100) {
             throw new Error("Ошибка обработки изображения.");
         }
-
-
-// ...
-ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-const selfieData = canvas.toDataURL("image/png");
-const img = new Image();
-img.src = selfieData;
-// Ждём, пока загрузится временное изображение, чтобы faceRecManager мог его проверить
-await new Promise(resolve => {
-  img.onload = resolve;
-  img.onerror = resolve; // чтобы не зависало
-});
-
-// Проверяем «достаточно ли близко лицо»
-const isOk = await this.faceRecManager.checkDistanceDuringSelfie(img);
-if (!isOk) {
-  console.warn("❌ Селфи отклонено: лицо слишком далеко или не найдено");
-  alert("Лицо слишком далеко от камеры, сделайте селфи ещё раз!");
-  return; // Выходим из captureSelfie, не присваивая preview
-}
-this.selfiePreview.src = selfieData;
-this.selfiePreview.style.display = 'block';
-this.completeBtn.disabled = false;
-
 
         this.selfiePreview.src = selfieData;
         this.selfiePreview.style.display = 'block';
@@ -323,26 +296,6 @@ toggleCameraView() {
 
         this.cameraManager.videoElement = videoElement;
         this.cameraManager.start();
-const profile = this.profileManager.getProfile();
-if (profile && profile.selfie) {
-  setTimeout(async () => {
-    console.log("➡️ Начинаем сравнение лица с селфи...");
-    
-    // Грузим embedding из селфи
-    const embedding = await this.faceRecManager.loadSelfieEmbedding(profile.selfie);
-    if (!embedding) {
-      console.warn("❌ Не удалось получить лицо из селфи. Сравнение отменяем.");
-      return;
-    }
-    // Сравниваем
-    const isMatch = await this.faceRecManager.compareFaces(videoElement, embedding);
-    if (isMatch) {
-      this.faceRecManager.showVerificationModal("match");
-    } else {
-      this.faceRecManager.showVerificationModal("no-match");
-    }
-  }, 3000);
-}
     } else {
         console.log("📓 Возвращаемся в блог...");
 

@@ -26,11 +26,11 @@ export class DatabaseManager {
           entry TEXT,
           timestamp TEXT
         );
-    CREATE TABLE IF NOT EXISTS apartment_plan (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        floor_number INTEGER,
-        room_data TEXT
-    );
+        CREATE TABLE IF NOT EXISTS apartment_plan (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            floor_number INTEGER,
+            room_data TEXT
+        );
       `);
     }
     console.log("📖 Database initialized!");

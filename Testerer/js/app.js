@@ -410,7 +410,7 @@ async compareCurrentFrame() {
     return false;
   }
   
-  // Захватываем текущий кадр с камеры
+  // Настройка временной канвы для захвата текущего кадра
   this.tempCanvas.width = this.cameraManager.videoElement.videoWidth || 640;
   this.tempCanvas.height = this.cameraManager.videoElement.videoHeight || 480;
   this.tempCtx.drawImage(this.cameraManager.videoElement, 0, 0, this.tempCanvas.width, this.tempCanvas.height);
@@ -438,9 +438,7 @@ async compareCurrentFrame() {
   }
 }
 
-
-
-// Методы для работы с изображениями (grayscale и сравнение)
+// Методы для обработки изображений (grayscale и сравнение)
 App.prototype.convertToGrayscale = function(canvas) {
   const ctx = canvas.getContext("2d");
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -487,5 +485,6 @@ App.prototype.histogramComparison = function(img1, img2) {
   const total1 = hist1.reduce((a, b) => a + b, 0);
   return 1 - (diff / (total1 * 1.2));
 };
+
 
 }

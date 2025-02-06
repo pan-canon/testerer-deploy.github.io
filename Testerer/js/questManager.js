@@ -8,21 +8,18 @@ export class QuestManager {
     this.app = appInstance;
   }
 
-  // ЗАМЕНЯЕМ весь метод activateMirrorQuest() на следующий:
   async activateMirrorQuest() {
     if (!this.eventManager.isEventLogged("mirror_quest")) {
-      console.log("🔔 Активируем задание mirror_quest...");
+      console.log("🔔 Активируем mirror_quest...");
       await this.eventManager.addDiaryEntry("mirror_quest");
     }
   }
 
-  // ЗАМЕНЯЕМ или ДОБАВЛЯЕМ метод checkMirrorQuestOnCamera():
   async checkMirrorQuestOnCamera() {
     const hasQuest = this.eventManager.isEventLogged("mirror_quest");
     const doneQuest = this.eventManager.isEventLogged("mirror_done");
     if (hasQuest && !doneQuest) {
       console.log("🪞 Mirror quest активно. Запускаем проверку...");
-      // Ждём 3 секунды, чтобы камера «устоялась»
       setTimeout(async () => {
         const success = await this.app.compareCurrentFrame();
         if (success) {

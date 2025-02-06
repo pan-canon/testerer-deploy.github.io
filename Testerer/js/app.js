@@ -400,43 +400,46 @@ importProfile() {
 
 
 
-async compareCurrentFrame() {
-  if (!this.selfieData) {
-    console.warn("❌ Нет сохранённого селфи!");
-    return false;
-  }
+async captureSelfie() {
+  console.log("📸 Попытка сделать снимок...");
+
   if (!this.cameraManager.videoElement || !this.cameraManager.videoElement.srcObject) {
-    console.warn("❌ Камера не активна!");
-    return false;
+    console.error("❌ Камера не активна!");
+    alert("Ошибка: Камера не включена.");
+    return;
   }
   
-  // Настройка временной канвы для захвата текущего кадра
-  this.tempCanvas.width = this.cameraManager.videoElement.videoWidth || 640;
-  this.tempCanvas.height = this.cameraManager.videoElement.videoHeight || 480;
-  this.tempCtx.drawImage(this.cameraManager.videoElement, 0, 0, this.tempCanvas.width, this.tempCanvas.height);
+  const video = this.cameraManager.videoElement;
+  if (video.readyState < 2) {
+    console.warn("⏳ Камера ещё не готова...");
+    alert("Подождите, пока камера загрузится.");
+    return;
+  }
   
-  const currentData = this.convertToGrayscale(this.tempCanvas);
-  
-  let matchPixel = this.pixelWiseComparison(this.selfieData, currentData);
-  let matchHistogram = this.histogramComparison(this.selfieData, currentData);
-  
-  console.log(`🔎 Сравнение кадров: Pixel=${matchPixel.toFixed(2)}, Histogram=${matchHistogram.toFixed(2)}`);
-  
-  const currentLang = this.languageManager.getLanguage();
-  let whatWasItText = this.languageManager.locales[currentLang]["what_was_it"] || "What was it?";
-  
-  if (matchPixel > 0.6 && matchHistogram > 0.7) {
-    alert("✅ Вы перед зеркалом!");
-    await this.eventManager.addDiaryEntry(`${whatWasItText}\n[photo attached]\n${currentData}`);
-    if (!this.eventManager.isEventLogged("mirror_done")) {
-      await this.eventManager.addDiaryEntry("mirror_done");
-    }
-    return true;
-  } else {
-    alert("❌ Нет совпадения!");
-    return false;
+  try {
+    // Настраиваем временную канву для захвата кадра
+    this.tempCanvas.width = video.videoWidth || 640;
+    this.tempCanvas.height = video.videoHeight || 480;
+    this.tempCtx.drawImage(video, 0, 0, this.tempCanvas.width, this.tempCanvas.height);
+    
+    // Получаем изображение в оттенках серого
+    const grayscaleData = this.convertToGrayscale(this.tempCanvas);
+    
+    // Сохраняем полученное изображение в поле this.selfieData для дальнейшего сравнения
+    this.selfieData = grayscaleData;
+    
+    // Отображаем полученное селфи в предварительном просмотре
+    this.selfiePreview.src = grayscaleData;
+    this.selfiePreview.style.display = 'block';
+    this.completeBtn.disabled = false;
+    
+    console.log("✅ Снимок успешно сделан (grayscale)!");
+  } catch (error) {
+    console.error("❌ Ошибка при создании снимка:", error);
+    alert("Ошибка при создании снимка! Попробуйте снова.");
   }
 }
+
 
 // Методы для обработки изображений (grayscale и сравнение)
 App.prototype.convertToGrayscale = function(canvas) {

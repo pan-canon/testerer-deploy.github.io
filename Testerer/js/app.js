@@ -1,5 +1,6 @@
 import { LanguageManager } from './languageManager.js';
 import { CameraManager } from './cameraManager.js';
+import { FaceRecognitionManager } from './faceRecognitionManager.js';
 import { ProfileManager } from './profileManager.js';
 import { DatabaseManager } from './databaseManager.js';
 import { EventManager } from './eventManager.js';
@@ -36,7 +37,8 @@ export class App {
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
-    
+    this.faceRecognitionManager = new FaceRecognitionManager();
+
     this.bindEvents();
     this.init();
   }
@@ -101,39 +103,6 @@ async init() {
     localStorage.setItem('regData', JSON.stringify(regData));
     this.registrationScreen.style.display = 'none';
     this.selfieScreen.style.display = 'block';
-
-
-const profile = this.profileManager.getProfile();
-if (!profile || !profile.selfie) {
-    console.error("❌ Ошибка: Селфи не найдено!");
-    return;
-}
-
-// Загружаем селфи
-const selfieEmbedding = await this.cameraManager.loadSelfieEmbedding(profile.selfie);
-
-if (!selfieEmbedding) {
-    console.error("⚠️ Невозможно загрузить селфи!");
-    return;
-}
-
-// Запускаем камеру
-this.cameraManager.videoElement = videoElement;
-this.cameraManager.start();
-
-// Проверяем совпадение лица после 3 секунд
-setTimeout(async () => {
-    const isMatch = await this.cameraManager.compareFaces(videoElement, selfieEmbedding);
-    
-    if (isMatch) {
-        this.showVerificationModal("match");
-    } else {
-        this.showVerificationModal("no-match");
-    }
-}, 3000);
-
-
-
     this.cameraManager.start();
     this.completeBtn.disabled = true;
   }
@@ -328,6 +297,39 @@ toggleCameraView() {
         buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
 
         this.cameraManager.videoElement = videoElement;
+
+
+const profile = this.profileManager.getProfile();
+if (!profile || !profile.selfie) {
+    console.error("❌ Ошибка: Селфи не найдено!");
+    return;
+}
+
+// Загружаем селфи
+const selfieEmbedding = await this.faceRecognitionManager.getFaceEmbedding(profile.selfie);
+
+if (!selfieEmbedding) {
+    console.error("⚠️ Невозможно загрузить селфи!");
+    return;
+}
+
+// Запускаем камеру
+this.cameraManager.videoElement = videoElement;
+this.cameraManager.start();
+
+// Проверяем совпадение лица после 3 секунд
+setTimeout(async () => {
+    const isMatch = await this.faceRecognitionManager.compareFaces(videoElement, selfieEmbedding);
+    
+    if (isMatch) {
+        this.showVerificationModal("match");
+    } else {
+        this.showVerificationModal("no-match");
+    }
+}, 3000);
+
+
+
         this.cameraManager.start();
     } else {
         console.log("📓 Возвращаемся в блог...");

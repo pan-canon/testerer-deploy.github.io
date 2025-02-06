@@ -6,6 +6,21 @@
   <title>Game Registration</title>
   <!-- Подключаем стиль Pico.css и дополнительные стили -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+<style>
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+    text-align: center;
+  }
+</style>
 </head>
 
 <body>
@@ -87,30 +102,13 @@
     <button onclick="document.getElementById('verification-modal').style.display='none'">OK</button>
   </div>
 </div>
-
-<style>
-  .modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
-    text-align: center;
-  }
-</style>
-
   
   <!-- Скрипты -->
   <!-- Основной скрипт -->
   <script src="js/sql-wasm.js"></script>
   <script src="js/locales.js"></script>
   <script type="module" src="js/main.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection"></script>
 
 

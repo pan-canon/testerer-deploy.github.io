@@ -11,59 +11,62 @@ export class EventManager {
     return entries.some(entry => entry.entry === eventKey);
   }
   
-  async addDiaryEntry(key) {
-    // Храним в базе именно ключ, а не локализованный текст
-    await this.databaseManager.addDiaryEntry(key);
-    this.updateDiaryDisplay();
-  }
+async addDiaryEntry(key, data = null) {
+  const currentLanguage = this.languageManager.getLanguage();
+  // Если data передана, сохраняем её, иначе локализуем ключ (если есть соответствие)
+  const entryText = data || (this.languageManager.locales[currentLanguage][key] || key);
+  await this.databaseManager.addDiaryEntry(entryText);
+  this.updateDiaryDisplay();
+}
+
   
-  updateDiaryDisplay() {
-    if (!this.diaryContainer) {
-      console.error("Diary container not found!");
-      return;
-    }
-    // Очищаем контейнер дневника
-    this.diaryContainer.innerHTML = "";
-    const entries = this.databaseManager.getDiaryEntries();
-    const seen = new Set();
-    const currentLanguage = this.languageManager.getLanguage();
-    
-    entries.forEach(entry => {
-      const entryKey = entry.entry;
-      if (seen.has(entryKey)) return;
-      seen.add(entryKey);
-      
-      // Если запись начинается с "data:image" – считаем её изображением
-      if (entryKey.startsWith("data:image")) {
-        const wrapper = document.createElement("div");
-        
-        const img = document.createElement("img");
-        img.src = entryKey;
-        // Для alt можно попытаться получить локализованный вариант, если он определён
-        const altText =
-          this.languageManager.locales[currentLanguage]["photo_attached"] ||
-          "Photo attached";
-        img.alt = altText;
-        // Можно добавить стили, например: img.style.maxWidth = "100%";
-        wrapper.appendChild(img);
-        
-        // Добавляем подпись (например, временную метку)
-        const caption = document.createElement("span");
-        caption.textContent = ` (${entry.timestamp})`;
-        wrapper.appendChild(caption);
-        
-        this.diaryContainer.appendChild(wrapper);
-      } else {
-        // Для текстовых записей пытаемся найти локализацию по ключу
-        const localizedText =
-          this.languageManager.locales[currentLanguage][entryKey] || entryKey;
-        const p = document.createElement("p");
-        p.textContent = `${localizedText} (${entry.timestamp})`;
-        this.diaryContainer.appendChild(p);
-      }
-    });
-    console.log("📖 Diary updated.");
+updateDiaryDisplay() {
+  if (!this.diaryContainer) {
+    console.error("Diary container not found!");
+    return;
   }
+  // Очищаем контейнер дневника
+  this.diaryContainer.innerHTML = "";
+  const entries = this.databaseManager.getDiaryEntries();
+  const seen = new Set();
+  const currentLanguage = this.languageManager.getLanguage();
+  
+  entries.forEach(entry => {
+    const entryData = entry.entry;
+    if (seen.has(entryData)) return;
+    seen.add(entryData);
+    
+    // Если запись начинается с "data:image" – отображаем как изображение
+    if (typeof entryData === "string" && entryData.startsWith("data:image")) {
+      const wrapper = document.createElement("div");
+      
+      const img = document.createElement("img");
+      img.src = entryData;
+      const altText =
+        this.languageManager.locales[currentLanguage]["photo_attached"] ||
+        "Photo attached";
+      img.alt = altText;
+      img.style.maxWidth = "100%";
+      wrapper.appendChild(img);
+      
+      // Добавляем подпись с временной меткой
+      const caption = document.createElement("span");
+      caption.textContent = ` (${new Date(entry.timestamp).toLocaleString()})`;
+      wrapper.appendChild(caption);
+      
+      this.diaryContainer.appendChild(wrapper);
+    } else {
+      // Для текстовых записей пытаемся локализовать ключ
+      const localizedText =
+        this.languageManager.locales[currentLanguage][entryData] || entryData;
+      const p = document.createElement("p");
+      p.textContent = `${localizedText} (${new Date(entry.timestamp).toLocaleString()})`;
+      this.diaryContainer.appendChild(p);
+    }
+  });
+  console.log("📖 Diary updated.");
+}
+
   
   startMirrorQuest() {
     // Добавляем запись с ключом "mirror_quest" – при отображении будет локализовано

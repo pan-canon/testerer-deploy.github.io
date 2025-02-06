@@ -407,7 +407,7 @@ async compareCurrentFrame() {
     return false;
   }
   
-  // Настройка временной канвы для захвата текущего кадра
+  // Настраиваем временную канву для захвата текущего кадра
   this.tempCanvas.width = this.cameraManager.videoElement.videoWidth || 640;
   this.tempCanvas.height = this.cameraManager.videoElement.videoHeight || 480;
   this.tempCtx.drawImage(this.cameraManager.videoElement, 0, 0, this.tempCanvas.width, this.tempCanvas.height);
@@ -420,11 +420,12 @@ async compareCurrentFrame() {
   console.log(`🔎 Сравнение кадров: Pixel=${matchPixel.toFixed(2)}, Histogram=${matchHistogram.toFixed(2)}`);
   
   const currentLang = this.languageManager.getLanguage();
-  let whatWasItText = this.languageManager.locales[currentLang]["what_was_it"] || "What was it?";
+  const whatWasItText = this.languageManager.locales[currentLang]["what_was_it"] || "What was it?";
   
   if (matchPixel > 0.6 && matchHistogram > 0.7) {
     alert("✅ Вы перед зеркалом!");
-    await this.eventManager.addDiaryEntry(`${whatWasItText}\n[photo attached]\n${currentData}`);
+    // Добавляем в дневник запись с изображением (currentData) и ключом для локализации
+    await this.eventManager.addDiaryEntry(whatWasItText, currentData);
     if (!this.eventManager.isEventLogged("mirror_done")) {
       await this.eventManager.addDiaryEntry("mirror_done");
     }
@@ -434,6 +435,7 @@ async compareCurrentFrame() {
     return false;
   }
 }
+
 
 
 

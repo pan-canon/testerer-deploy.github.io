@@ -26,6 +26,23 @@ async start() {
 }
 
 
+captureFrame() {
+  if (!this.videoElement) {
+    console.error("🚨 Ошибка: Видеоэлемент не найден!");
+    return null;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = this.videoElement.videoWidth || 640;
+  canvas.height = this.videoElement.videoHeight || 480;
+  const ctx = canvas.getContext('2d');
+
+  ctx.drawImage(this.videoElement, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/png'); // Возвращаем изображение в base64
+}
+
+
+
   stop() {
     if (this.stream) {
       this.stream.getTracks().forEach(track => track.stop());

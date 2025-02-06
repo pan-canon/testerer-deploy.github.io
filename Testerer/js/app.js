@@ -56,6 +56,10 @@ bindEvents() {
     // 🔹 Переключение между камерой и дневником
     document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
     document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
+
+document.getElementById("close-face-check").addEventListener("click", () => {
+  document.getElementById("face-check-modal").classList.remove("show");
+});
 }
 
   
@@ -101,7 +105,8 @@ async init() {
     localStorage.setItem('regData', JSON.stringify(regData));
     this.registrationScreen.style.display = 'none';
     this.selfieScreen.style.display = 'block';
-    this.cameraManager.start();
+this.cameraManager.start();
+setTimeout(() => this.checkFaceMatch(), 1000);
     this.completeBtn.disabled = true;
   }
   
@@ -312,6 +317,40 @@ toggleCameraView() {
         this.cameraManager.stop();
     }
 }
+
+async checkFaceMatch() {
+  console.log("📸 Проверка лица...");
+
+  // Получаем сохранённое селфи
+  const profile = this.profileManager.getProfile();
+  if (!profile || !profile.selfie) {
+    console.error("🚨 Ошибка: Селфи не найдено!");
+    return;
+  }
+
+  // Делаем захват текущего кадра
+  const currentFrame = this.cameraManager.captureFrame();
+  if (!currentFrame) {
+    console.error("🚨 Ошибка: Не удалось получить кадр с камеры!");
+    return;
+  }
+
+  // Открываем модальное окно
+  document.getElementById("face-check-modal").classList.add("show");
+  document.getElementById("face-check-status").textContent = "Checking...";
+
+  // Здесь можно добавить сравнение изображений (пока просто логика эмуляции)
+  const match = Math.random() > 0.5; // Заглушка: 50% вероятность совпадения
+
+  setTimeout(() => {
+    if (match) {
+      document.getElementById("face-check-status").textContent = "✅ You are in front of the mirror!";
+    } else {
+      document.getElementById("face-check-status").textContent = "❌ Face not recognized.";
+    }
+  }, 2000);
+}
+
   
   showMainScreen() {
     this.registrationScreen.style.display = 'none';

@@ -1,4 +1,4 @@
-const locales = {
+window.locales = {
   "en": {
     "welcome": "Welcome!",
     "enter_name": "Enter your name:",
@@ -22,7 +22,8 @@ const locales = {
     "open_camera": "Open Camera",
     "open_diary": "Open Diary",
     "mirror_quest": "They are asking me to come to the mirror...",
-    "ignored_call": "I didn't answer, I don't know who it was."
+    "ignored_call": "I didn't answer, I don't know who it was.",
+    "what_was_it": "What was it?"
   },
   "ru": {
     "welcome": "Добро пожаловать!",
@@ -47,7 +48,8 @@ const locales = {
     "open_camera": "Открыть камеру",
     "open_diary": "Открыть дневник",
     "mirror_quest": "Они просят подойти меня к зеркалу.",
-    "ignored_call": "Я не ответил(а), я не знаю, кто это."
+    "ignored_call": "Я не ответил(а), я не знаю, кто это.",
+    "what_was_it": "Что это было?"
   },
   "uk": {
     "welcome": "Ласкаво просимо!",
@@ -72,6 +74,7 @@ const locales = {
     "open_camera": "Відкрити камеру",
     "open_diary": "Відкрити щоденник",
     "mirror_quest": "Вони просять підійти мене до дзеркала.",
-    "ignored_call": "Я не відповів(ла), я не знаю, хто це."
+    "ignored_call": "Я не відповів(ла), я не знаю, хто це.",
+    "what_was_it": "Що це було?"
   }
 };

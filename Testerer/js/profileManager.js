@@ -39,9 +39,24 @@ resetProfile() {
       console.error(e);
       return false;
     }
+// ДОБАВЛЯЕМ В ФУНКЦИЮ `importProfile()`
+if (importedData.apartment) {
+    importedData.apartment.forEach(room => {
+        this.databaseManager.addApartmentRoom(room);
+    });
+}
+
   }
   
   exportProfile() {
     return localStorage.getItem('profile');
+// ДОБАВЛЯЕМ В ФУНКЦИЮ `exportProfile()`
+const apartmentPlan = this.databaseManager.getApartmentPlan();
+const exportData = {
+    profile: JSON.parse(profileStr),
+    diary: diaryEntries,
+    apartment: apartmentPlan
+};
+
   }
 }

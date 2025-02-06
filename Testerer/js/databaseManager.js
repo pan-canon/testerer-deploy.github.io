@@ -26,6 +26,12 @@ export class DatabaseManager {
           entry TEXT,
           timestamp TEXT
         );
+    CREATE TABLE IF NOT EXISTS apartment_plan (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        floor_number INTEGER,
+        room_data TEXT
+    );
+`);
       `);
     }
     console.log("📖 Database initialized!");
@@ -66,4 +72,23 @@ export class DatabaseManager {
     }
     return [];
   }
+
+// ДОБАВЛЯЕМ ПОСЛЕ `getDiaryEntries()`
+
+addApartmentRoom(rooms) {
+    const roomsJSON = JSON.stringify(rooms);
+    this.db.run("INSERT INTO apartment_plan (floor_number, room_data) VALUES (?, ?)", [rooms[0].floor, roomsJSON]);
+    this.saveDatabase();
+}
+
+getApartmentPlan(floor, callback) {
+    const result = this.db.exec("SELECT room_data FROM apartment_plan WHERE floor_number = ?", [floor]);
+    if (result.length > 0) {
+        const rooms = JSON.parse(result[0].values[0][0]);
+        callback(rooms);
+    } else {
+        callback([]);
+    }
+}
+
 }

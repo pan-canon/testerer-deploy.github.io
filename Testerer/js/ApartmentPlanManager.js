@@ -1,41 +1,74 @@
 export class ApartmentPlanManager {
-    constructor(canvasId) {
+    constructor(canvasId, dbManager) {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext("2d");
-        this.floors = [{}]; // Храним массив этажей
-        this.currentFloor = 0;
-
-        this.canvas.addEventListener("mousedown", (e) => this.startSelection(e));
+        this.dbManager = dbManager;
+        this.rooms = [];
+        this.currentFloor = 1;
+        this.drawing = false;
+        this.startX = 0;
+        this.startY = 0;
+        this.init();
     }
 
-    addFloor() {
-        this.floors.push({});
-        this.currentFloor = this.floors.length - 1;
+    init() {
+        this.canvas.addEventListener("mousedown", (e) => this.startDrawing(e));
+        this.canvas.addEventListener("mousemove", (e) => this.draw(e));
+        this.canvas.addEventListener("mouseup", () => this.stopDrawing());
+    }
+
+    startDrawing(event) {
+        this.drawing = true;
+        const rect = this.canvas.getBoundingClientRect();
+        this.startX = event.clientX - rect.left;
+        this.startY = event.clientY - rect.top;
+    }
+
+    draw(event) {
+        if (!this.drawing) return;
+        const rect = this.canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
         this.clearCanvas();
+        this.drawAllRooms();
+        this.ctx.strokeStyle = "red";
+        this.ctx.strokeRect(this.startX, this.startY, x - this.startX, y - this.startY);
     }
 
-    removeFloor() {
-        if (this.floors.length > 1) {
-            this.floors.splice(this.currentFloor, 1);
-            this.currentFloor = Math.max(0, this.currentFloor - 1);
-            this.clearCanvas();
-        }
+    stopDrawing() {
+        this.drawing = false;
+        const roomType = prompt("Введите тип помещения (спальня, кухня и т. д.)") || "Неизвестное";
+        this.rooms.push({ floor: this.currentFloor, x: this.startX, y: this.startY, width: 50, height: 50, type: roomType });
+        this.saveToDB();
+        this.drawAllRooms();
     }
 
-    startSelection(event) {
-        // Логика выбора зоны
-        const x = event.offsetX;
-        const y = event.offsetY;
-        this.ctx.fillStyle = "rgba(0, 255, 0, 0.5)";
-        this.ctx.fillRect(x - 20, y - 20, 40, 40);
-        this.floors[this.currentFloor][`${x}-${y}`] = true;
-    }
-
-    savePlan() {
-        localStorage.setItem("apartmentPlan", JSON.stringify(this.floors));
+    drawAllRooms() {
+        this.rooms.forEach(room => {
+            this.ctx.fillStyle = "rgba(0, 150, 255, 0.5)";
+            this.ctx.fillRect(room.x, room.y, room.width, room.height);
+            this.ctx.strokeRect(room.x, room.y, room.width, room.height);
+        });
     }
 
     clearCanvas() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
+
+    saveToDB() {
+        this.dbManager.addApartmentRoom(this.rooms);
+    }
+
+    loadFromDB() {
+        this.dbManager.getApartmentPlan(this.currentFloor, (rooms) => {
+            this.rooms = rooms;
+            this.drawAllRooms();
+        });
+    }
+
+// После сохранения плана квартиры, переходим на главный экран
+app.showMainScreen();
+
+// Звонок через 5 секунд после завершения регистрации и планирования
+setTimeout(() => app.startPhoneCall(), 5000);
 }

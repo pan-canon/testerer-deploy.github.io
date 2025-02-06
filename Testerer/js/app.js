@@ -39,6 +39,7 @@ export class App {
     this.databaseManager = new DatabaseManager();
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
 this.questManager = new QuestManager(this.eventManager, this);
+this.apartmentManager = new ApartmentPlanManager('apartment-canvas', this.databaseManager);
 // Технические поля для обработки изображений
 this.tempCanvas = document.createElement("canvas");
 this.tempCtx = this.tempCanvas.getContext("2d");
@@ -177,10 +178,16 @@ this.selfieData = grayscaleData;
     };
     this.profileManager.saveProfile(profile);
     this.cameraManager.stop();
-    this.showMainScreen();
+// Переход к созданию плана квартиры
+this.selfieScreen.style.display = 'none';
+document.getElementById('apartment-screen').style.display = 'block';
+  }
 
-    // Звонок через 5 секунд после завершения регистрации
-    setTimeout(() => this.startPhoneCall(), 5000);
+  showApartmentScreen() {
+      this.registrationScreen.style.display = 'none';
+      this.selfieScreen.style.display = 'none';
+      this.mainScreen.style.display = 'none';
+      document.getElementById('apartment-screen').style.display = 'block';
   }
 
 async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventKey) {
@@ -518,5 +525,18 @@ createHistogram(img) {
     }
     return hist;
 }
+
+// ДОБАВЛЯЕМ В КОНЕЦ ФАЙЛА
+window.nextFloor = function() {
+    app.apartmentManager.currentFloor++;
+    app.apartmentManager.loadFromDB();
+};
+
+window.prevFloor = function() {
+    if (app.apartmentManager.currentFloor > 1) {
+        app.apartmentManager.currentFloor--;
+        app.apartmentManager.loadFromDB();
+    }
+};
 
 }

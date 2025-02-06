@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition Demo</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <style>
+        #modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <h1>Face Recognition Demo</h1>
+    <video id="video" width="320" height="240" autoplay></video>
+    <button id="capture">Take Selfie</button>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <button id="compare" style="display:none;">Compare Face</button>
+    
+    <div id="modal">
+        <p id="modal-text"></p>
+        <button id="close-modal">OK</button>
+    </div>
+
+    <script>
+        const video = document.getElementById("video");
+        const captureButton = document.getElementById("capture");
+        const compareButton = document.getElementById("compare");
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const modal = document.getElementById("modal");
+        const modalText = document.getElementById("modal-text");
+        const closeModal = document.getElementById("close-modal");
+        let storedFaceDescriptor = null;
+
+        async function setupCamera() {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+            video.srcObject = stream;
+        }
+
+        async function loadModels() {
+            await faceapi.nets.tinyFaceDetector.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/models");
+            await faceapi.nets.faceLandmark68Net.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/models");
+            await faceapi.nets.faceRecognitionNet.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/models");
+        }
+
+        captureButton.addEventListener("click", async () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const detection = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+            if (detection) {
+                storedFaceDescriptor = detection.descriptor;
+                compareButton.style.display = "block";
+            } else {
+                showModal("No face detected. Try again.");
+            }
+        });
+
+        compareButton.addEventListener("click", async () => {
+            const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+            if (detection && storedFaceDescriptor) {
+                const distance = faceapi.euclideanDistance(storedFaceDescriptor, detection.descriptor);
+                showModal(distance < 0.6 ? "Match Found!" : "Faces do not match.");
+            } else {
+                showModal("No face detected.");
+            }
+        });
+
+        function showModal(message) {
+            modalText.textContent = message;
+            modal.style.display = "block";
+        }
+
+        closeModal.addEventListener("click", () => {
+            modal.style.display = "none";
+        });
+
+        (async () => {
+            await loadModels();
+            await setupCamera();
+        })();
+    </script>
+</body>
+</html>

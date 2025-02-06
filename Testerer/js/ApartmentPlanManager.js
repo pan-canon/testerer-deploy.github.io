@@ -79,9 +79,17 @@ prevFloor() {
         });
     }
 
-// После сохранения плана квартиры, переходим на главный экран
-window.app.showMainScreen();
+saveApartmentPlan() {
+    const roomData = JSON.stringify(this.floors);
+    this.databaseManager.saveApartmentPlan(this.currentFloor, roomData);
 
-// Звонок через 5 секунд после завершения регистрации и планирования
-setTimeout(() => window.app.startPhoneCall(), 5000);
+    console.log("🏠 План этажа сохранён:", this.currentFloor);
+
+    // После сохранения плана квартиры, переходим на главный экран
+    window.app.showMainScreen();
+
+    // Звонок через 5 секунд после завершения регистрации и планирования
+    setTimeout(() => window.app.startPhoneCall(), 5000);
+}
+
 }

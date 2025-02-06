@@ -1,6 +1,6 @@
 import { LanguageManager } from './languageManager.js';
 import { CameraManager } from './cameraManager.js';
-//import { FaceRecognitionManager } from './faceRecognitionManager.js';
+import { FaceRecognitionManager } from './faceRecognitionManager.js';
 import { ProfileManager } from './profileManager.js';
 import { DatabaseManager } from './databaseManager.js';
 import { EventManager } from './eventManager.js';
@@ -37,7 +37,7 @@ export class App {
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
-    //this.faceRecognitionManager = new FaceRecognitionManager();
+    this.faceRecognitionManager = new FaceRecognitionManager();
 
     this.bindEvents();
     this.init();

@@ -217,13 +217,14 @@ answerCallBtn.addEventListener("click", async () => {
 
     this.triggerMirrorEffect();
 
-    // 1) Ждём 5 секунд, например
-setTimeout(async () => {
-  await this.toggleCameraView();
-  this.questManager.activateMirrorQuest();
-}, 5000);
-
+    setTimeout(async () => {
+      // Сначала активируем задание через QuestManager
+      await this.questManager.activateMirrorQuest();
+      // Затем переключаемся на камеру
+      this.toggleCameraView();
+    }, 5000);
 });
+
 
     // При игнорировании
     ignoreCallBtn.addEventListener("click", async () => {

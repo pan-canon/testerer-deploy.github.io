@@ -49,7 +49,7 @@ if (importedData.apartment) {
   }
   
   exportProfile() {
-    return localStorage.getItem('profile');
+    
 // ДОБАВЛЯЕМ В ФУНКЦИЮ `exportProfile()`
 const apartmentPlan = this.databaseManager.getApartmentPlan();
 const exportData = {
@@ -57,6 +57,6 @@ const exportData = {
     diary: diaryEntries,
     apartment: apartmentPlan
 };
-
+return localStorage.getItem('profile');
   }
 }

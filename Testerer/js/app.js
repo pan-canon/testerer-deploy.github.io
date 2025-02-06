@@ -64,10 +64,17 @@ async init() {
   if (this.profileManager.isProfileSaved()) {
     this.showMainScreen();
     this.eventManager.updateDiaryDisplay();
+
+    // ✨ Проверяем, записано ли событие "mirror_quest" (или любой ваш «триггер»)
+    if (this.eventManager.isEventLogged("mirror_quest") || this.eventManager.isEventLogged("ignored_call")) {
+      const cameraBtn = document.getElementById("toggle-camera");
+      cameraBtn.style.display = "inline-block";
+    }
   } else {
     this.showRegistrationScreen();
   }
 }
+
   
   validateRegistration() {
     if (this.nameInput.value.trim() !== "" && this.genderSelect.value !== "") {

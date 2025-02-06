@@ -146,6 +146,8 @@ const grayscaleData = this.convertToGrayscale(canvas);
 this.selfiePreview.src = grayscaleData;
 this.selfiePreview.style.display = 'block';
 this.completeBtn.disabled = false;
+
+// Сохраняем полученное селфи для сравнения
 this.selfieData = grayscaleData;
  
         console.log("✅ Снимок успешно сделан!");
@@ -217,12 +219,10 @@ answerCallBtn.addEventListener("click", async () => {
 
     this.triggerMirrorEffect();
 
-    setTimeout(async () => {
-      // Сначала активируем задание через QuestManager
-      await this.questManager.activateMirrorQuest();
-      // Затем переключаемся на камеру
-      this.toggleCameraView();
-    }, 5000);
+setTimeout(async () => {
+  await this.eventManager.addDiaryEntry("mirror_quest");
+  this.toggleCameraView();
+}, 5000);
 });
 
 
@@ -407,11 +407,13 @@ async compareCurrentFrame() {
     return false;
   }
   
+  // Настройка временной канвы для захвата текущего кадра
   this.tempCanvas.width = this.cameraManager.videoElement.videoWidth || 640;
   this.tempCanvas.height = this.cameraManager.videoElement.videoHeight || 480;
   this.tempCtx.drawImage(this.cameraManager.videoElement, 0, 0, this.tempCanvas.width, this.tempCanvas.height);
   
   const currentData = this.convertToGrayscale(this.tempCanvas);
+  
   let matchPixel = this.pixelWiseComparison(this.selfieData, currentData);
   let matchHistogram = this.histogramComparison(this.selfieData, currentData);
   
@@ -432,6 +434,7 @@ async compareCurrentFrame() {
     return false;
   }
 }
+
 
 
 // ДОБАВЛЯЕМ ПОСЛЕ captureSelfie()

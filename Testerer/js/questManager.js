@@ -8,7 +8,7 @@ export class QuestManager {
     this.app = appInstance;
   }
 
-  // ЗАМЕНЯЕМ метод activateMirrorQuest() на следующий:
+  // ЗАМЕНЯЕМ метод activateMirrorQuest() на:
   async activateMirrorQuest() {
     if (!this.eventManager.isEventLogged("mirror_quest")) {
       console.log("🔔 Активируем mirror_quest...");
@@ -17,27 +17,26 @@ export class QuestManager {
   }
 
   // ДОБАВЛЯЕМ метод checkMirrorQuestOnCamera():
-async checkMirrorQuestOnCamera() {
-  const hasQuest = this.eventManager.isEventLogged("mirror_quest");
-  const doneQuest = this.eventManager.isEventLogged("mirror_done");
-  if (hasQuest && !doneQuest) {
-    console.log("🪞 Mirror quest активно. Запускаем проверку...");
-    setTimeout(async () => {
-      console.log("⏱ Запуск compareCurrentFrame() через 3 сек...");
-      const success = await this.app.compareCurrentFrame();
-      console.log("⏱ Результат compareCurrentFrame():", success);
-      if (success) {
-        if (!this.eventManager.isEventLogged("mirror_done")) {
-          await this.eventManager.addDiaryEntry("mirror_done");
+  async checkMirrorQuestOnCamera() {
+    const hasQuest = this.eventManager.isEventLogged("mirror_quest");
+    const doneQuest = this.eventManager.isEventLogged("mirror_done");
+    if (hasQuest && !doneQuest) {
+      console.log("🪞 Mirror quest активно. Запускаем проверку...");
+      setTimeout(async () => {
+        console.log("⏱ Запуск compareCurrentFrame() через 3 сек...");
+        const success = await this.app.compareCurrentFrame();
+        console.log("⏱ Результат compareCurrentFrame():", success);
+        if (success) {
+          if (!this.eventManager.isEventLogged("mirror_done")) {
+            await this.eventManager.addDiaryEntry("mirror_done");
+          }
+          alert("✅ Задание «подойти к зеркалу» выполнено!");
+        } else {
+          alert("❌ Нет совпадения. Попробуйте ещё раз!");
         }
-        alert("✅ Задание «подойти к зеркалу» выполнено!");
-      } else {
-        alert("❌ Нет совпадения. Попробуйте ещё раз!");
-      }
-    }, 3000);
-  } else {
-    console.log("🪞 Проверка зеркального задания не требуется (либо выполнена).");
+      }, 3000);
+    } else {
+      console.log("🪞 Проверка зеркального задания не требуется (либо выполнена).");
+    }
   }
-}
-
 }

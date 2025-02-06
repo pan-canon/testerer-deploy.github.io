@@ -264,7 +264,7 @@ showMirrorTask() {
 
 
 // 🔹 Переключение между камерой и дневником
-toggleCameraView() {
+async toggleCameraView() {
     const diary = document.getElementById("diary");
     const cameraContainer = document.getElementById("camera-container");
     const videoElement = document.getElementById("camera-view");
@@ -297,7 +297,7 @@ toggleCameraView() {
         buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
 
         this.cameraManager.videoElement = videoElement;
-        this.cameraManager.start();
+        await this.cameraManager.start();
         this.questManager.checkMirrorQuestOnCamera();
     } else {
         console.log("📓 Возвращаемся в блог...");

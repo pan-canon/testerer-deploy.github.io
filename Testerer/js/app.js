@@ -65,6 +65,15 @@ bindEvents() {
     document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
 }
 
+document.getElementById('next-floor-btn').addEventListener('click', () => {
+    this.apartmentManager.nextFloor();
+});
+
+document.getElementById('prev-floor-btn').addEventListener('click', () => {
+    this.apartmentManager.prevFloor();
+});
+
+
   
 async init() {
   // Сначала ждём инициализации БД
@@ -526,17 +535,6 @@ createHistogram(img) {
     return hist;
 }
 
-// ДОБАВЛЯЕМ В КОНЕЦ ФАЙЛА
-window.nextFloor = function() {
-    app.apartmentManager.currentFloor++;
-    app.apartmentManager.loadFromDB();
-};
 
-window.prevFloor = function() {
-    if (app.apartmentManager.currentFloor > 1) {
-        app.apartmentManager.currentFloor--;
-        app.apartmentManager.loadFromDB();
-    }
-};
 
 }

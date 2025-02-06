@@ -11,6 +11,19 @@ export class ApartmentPlanManager {
         this.init();
     }
 
+nextFloor() {
+    this.currentFloor++;
+    this.loadFromDB();
+}
+
+prevFloor() {
+    if (this.currentFloor > 1) {
+        this.currentFloor--;
+        this.loadFromDB();
+    }
+}
+
+
     init() {
         this.canvas.addEventListener("mousedown", (e) => this.startDrawing(e));
         this.canvas.addEventListener("mousemove", (e) => this.draw(e));

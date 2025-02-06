@@ -11,11 +11,18 @@ isEventLogged(eventKey) {
   return entries.some(entry => entry.entry === eventKey);
 }
   
-  async addDiaryEntry(key) {
-    const localizedText = this.languageManager.locales[this.languageManager.getLanguage()][key] || key;
-    await this.databaseManager.addDiaryEntry(localizedText);
-    this.updateDiaryDisplay();
+async addDiaryEntry(key) {
+  // Для специальных ключей не выполняем локализацию
+  let localizedText;
+  if (key === "mirror_quest" || key === "mirror_done") {
+    localizedText = key;
+  } else {
+    localizedText = this.languageManager.locales[this.languageManager.getLanguage()][key] || key;
   }
+  await this.databaseManager.addDiaryEntry(localizedText);
+  this.updateDiaryDisplay();
+}
+
   
 updateDiaryDisplay() {
   if (!this.diaryContainer) {

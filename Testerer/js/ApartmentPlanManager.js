@@ -20,18 +20,23 @@ constructor(canvasId, dbManager) {
 
 
 nextFloor() {
-    this.currentFloor++;
-    this.loadFromDB();
-    console.log(`🔼 Переключено на этаж ${this.currentFloor}`);
+    if (!this.isSwitchingFloor) {  // 🔹 Проверка на двойное нажатие
+        this.isSwitchingFloor = true;
+        setTimeout(() => { this.isSwitchingFloor = false; }, 200); // 🔹 Защита от двойного клика
+        this.currentFloor++;
+        this.loadFromDB();
+    }
 }
 
 prevFloor() {
-    if (this.currentFloor > 1) {
+    if (!this.isSwitchingFloor && this.currentFloor > 1) {
+        this.isSwitchingFloor = true;
+        setTimeout(() => { this.isSwitchingFloor = false; }, 200);
         this.currentFloor--;
         this.loadFromDB();
-        console.log(`🔽 Переключено на этаж ${this.currentFloor}`);
     }
 }
+
 
 completeApartment() {
     this.saveApartmentPlan();
@@ -116,7 +121,8 @@ saveApartmentPlan() {
   }
   
   const roomData = JSON.stringify(this.rooms); 
-  this.dbManager.saveApartmentPlan(this.currentFloor, roomData);
+  this.saveApartmentPlan();
+
 
   console.log("🏠 План этажа сохранён:", this.currentFloor);
   window.app.showMainScreen(); // Переход на главный экран

@@ -31,7 +31,7 @@
     <h1>Face API Test</h1>
     <video id="video" autoplay></video>
     <br>
-    <button id="captureBtn">📸 Capture Selfie</button>
+    <button id="captureBtn" disabled>📸 Capture Selfie</button>
     <button id="compareBtn" disabled>🔍 Compare Face</button>
 
     <div id="modal">
@@ -60,12 +60,11 @@
         async function loadModels() {
             try {
                 console.log("⏳ Загружаем модели...");
-                await Promise.all([
-                    faceapi.nets.ssdMobilenetv1.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights"),
-                    faceapi.nets.faceLandmark68Net.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights"),
-                    faceapi.nets.faceRecognitionNet.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights")
-                ]);
+                await faceapi.nets.ssdMobilenetv1.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights");
+                await faceapi.nets.faceLandmark68Net.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights");
+                await faceapi.nets.faceRecognitionNet.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights");
                 console.log("✅ Модели загружены!");
+                captureBtn.disabled = false; // Разблокируем кнопку
             } catch (error) {
                 console.error("❌ Ошибка загрузки моделей:", error);
             }
@@ -82,7 +81,7 @@
                 const detections = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
                 
                 if (!detections) {
-                    console.log("❌ Лицо не найдено!");
+                    console.log("❌ Лицо не найдено! Попробуйте подойти ближе.");
                     return;
                 }
                 

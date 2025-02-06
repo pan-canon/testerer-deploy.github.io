@@ -209,25 +209,24 @@ startPhoneCall() {
     ignoreCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["ignore"];
 
     // При ответе
-    answerCallBtn.addEventListener("click", async () => {
-        // 1) Останавливаем звонок
-        // 2) Убираем кнопки
-        // 3) (Опционально) Mirror-эффект и пауза
-        this.triggerMirrorEffect();
+answerCallBtn.addEventListener("click", async () => {
+    ringtone.pause();
+    answerCallBtn.remove();
+    ignoreCallBtn.remove();
 
-        // Допустим, у нас есть задержка 3 секунды на визуальные «помехи»
-        setTimeout(async () => {
-            // Показываем задание у зеркала
-            this.showMirrorTask();
-            // И сохраняем событие + показываем камеру
-            await this.endCall(
-              ringtone,
-              answerCallBtn,
-              ignoreCallBtn,
-              "mirror_quest"
-            );
-        }, 3000);
-    });
+    this.triggerMirrorEffect();
+
+    // 1) Ждём 5 секунд, например
+    setTimeout(() => {
+        // 2) Добавляем запись + показываем камеру
+        if (!this.eventManager.isEventLogged("mirror_quest")) {
+            this.eventManager.addDiaryEntry("mirror_quest");
+        }
+
+        // Сразу переключаемся на камеру
+        this.toggleCameraView();
+    }, 3000);
+});
 
     // При игнорировании
     ignoreCallBtn.addEventListener("click", async () => {

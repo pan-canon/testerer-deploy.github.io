@@ -258,13 +258,23 @@ async compareCurrentFrame() {
       - Histogram Match: ${matchHistogram.toFixed(2)}`);
 
     // Простой порог
-    if (matchPixel > 0.6 && matchHistogram > 0.7) {
-      return true;
-        alert("✅ Вы перед зеркалом!");
-    } else {
-        alert("❌ Нет совпадения!");
-        return false;
-    }
+if (matchPixel > 0.6 && matchHistogram > 0.7) {
+  alert("✅ Вы перед зеркалом!");
+
+  // Добавляем запись в дневник
+  await this.eventManager.addDiaryEntry(`${whatWasItText}\n[photo attached]\n${currentData}`);
+
+  // Дополнительно отмечаем, что задание выполнено
+  if (!this.eventManager.isEventLogged("mirror_done")) {
+    await this.eventManager.addDiaryEntry("mirror_done");
+  }
+
+  return true;
+} else {
+  alert("❌ Нет совпадения!");
+  return false;
+}
+
 }
 
 

@@ -434,51 +434,61 @@ async compareCurrentFrame() {
 }
 
 
-convertToGrayscale = function(canvas) {
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const pixels = imageData.data;
-  for (let i = 0; i < pixels.length; i += 4) {
-    let avg = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
-    pixels[i] = avg;
-    pixels[i + 1] = avg;
-    pixels[i + 2] = avg;
-  }
-  ctx.putImageData(imageData, 0, 0);
-  return canvas.toDataURL("image/png");
-};
+// 🔹 Конвертация в оттенки серого
+function convertToGrayscale(canvas) {
+    let ctx = canvas.getContext("2d");
+    let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    let pixels = imageData.data;
 
-pixelWiseComparison = function(img1, img2) {
-  let image1 = atob(img1.split(',')[1]);
-  let image2 = atob(img2.split(',')[1]);
-  let matchCount = 0;
-  const length = Math.min(image1.length, image2.length);
-  for (let i = 0; i < length; i++) {
-    if (Math.abs(image1.charCodeAt(i) - image2.charCodeAt(i)) < 100) {
-      matchCount++;
+    for (let i = 0; i < pixels.length; i += 4) {
+        let avg = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+        pixels[i] = avg;
+        pixels[i + 1] = avg;
+        pixels[i + 2] = avg;
     }
-  }
-  return matchCount / length;
-};
 
-createHistogram = function(img) {
-  let hist = new Array(256).fill(0);
-  let imgData = atob(img.split(',')[1]);
-  for (let i = 0; i < imgData.length; i++) {
-    hist[imgData.charCodeAt(i)]++;
-  }
-  return hist;
-};
+    ctx.putImageData(imageData, 0, 0);
+    return canvas.toDataURL("image/png"); // ⬅️ Сохраняем изменённое изображение
+}
 
-histogramComparison = function(img1, img2) {
-  let hist1 = this.createHistogram(img1);
-  let hist2 = this.createHistogram(img2);
-  let diff = 0;
-  for (let i = 0; i < hist1.length; i++) {
-    diff += Math.abs(hist1[i] - hist2[i]);
-  }
-  const total1 = hist1.reduce((a, b) => a + b, 0);
-  return 1 - (diff / (total1 * 1.2));
-};
+// 🔹 Улучшенное Pixel-wise Comparison
+function pixelWiseComparison(img1, img2) {
+    let image1 = atob(img1.split(',')[1]);
+    let image2 = atob(img2.split(',')[1]);
+
+    let matchCount = 0;
+    for (let i = 0; i < image1.length; i++) {
+        if (Math.abs(image1.charCodeAt(i) - image2.charCodeAt(i)) < 100) { // ⬅️ Разница увеличена
+            matchCount++;
+        }
+    }
+
+    return matchCount / image1.length;
+}
+
+// 🔹 Улучшенное Histogram Comparison
+function histogramComparison(img1, img2) {
+    let hist1 = createHistogram(img1);
+    let hist2 = createHistogram(img2);
+    let diff = 0;
+
+    for (let i = 0; i < hist1.length; i++) {
+        diff += Math.abs(hist1[i] - hist2[i]);
+    }
+
+    return 1 - (diff / (hist1.reduce((a, b) => a + b, 0) * 1.2)); // ⬅️ Разрешаем до 20% расхождений
+}
+
+// 🔹 Гистограмма изображения
+function createHistogram(img) {
+    let hist = new Array(256).fill(0);
+    let imgData = atob(img.split(',')[1]);
+
+    for (let i = 0; i < imgData.length; i++) {
+        hist[imgData.charCodeAt(i)]++;
+    }
+
+    return hist;
+}
 
 }

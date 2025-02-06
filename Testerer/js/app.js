@@ -407,34 +407,44 @@ async compareCurrentFrame() {
     return false;
   }
   
-  // Настраиваем временную канву для захвата текущего кадра
+  // Настройка временной канвы для захвата текущего кадра
   this.tempCanvas.width = this.cameraManager.videoElement.videoWidth || 640;
   this.tempCanvas.height = this.cameraManager.videoElement.videoHeight || 480;
-  this.tempCtx.drawImage(this.cameraManager.videoElement, 0, 0, this.tempCanvas.width, this.tempCanvas.height);
+  this.tempCtx.drawImage(
+    this.cameraManager.videoElement,
+    0,
+    0,
+    this.tempCanvas.width,
+    this.tempCanvas.height
+  );
   
+  // Получаем обработанное изображение текущего кадра (градации серого)
   const currentData = this.convertToGrayscale(this.tempCanvas);
   
+  // Выполняем сравнения
   let matchPixel = this.pixelWiseComparison(this.selfieData, currentData);
   let matchHistogram = this.histogramComparison(this.selfieData, currentData);
   
-  console.log(`🔎 Сравнение кадров: Pixel=${matchPixel.toFixed(2)}, Histogram=${matchHistogram.toFixed(2)}`);
+  console.log(
+    `🔎 Сравнение кадров: Pixel=${matchPixel.toFixed(2)}, Histogram=${matchHistogram.toFixed(2)}`
+  );
   
+  // Получаем локализованный текст для ключа "what_was_it"
   const currentLang = this.languageManager.getLanguage();
-  const whatWasItText = this.languageManager.locales[currentLang]["what_was_it"] || "What was it?";
+  const whatWasItText =
+    this.languageManager.locales[currentLang]["what_was_it"] || "What was it?";
   
   if (matchPixel > 0.6 && matchHistogram > 0.7) {
     alert("✅ Вы перед зеркалом!");
-    // Добавляем в дневник запись с изображением (currentData) и ключом для локализации
+    // Записываем в дневник запись, включающую ключ и изображение
     await this.eventManager.addDiaryEntry(whatWasItText, currentData);
-    if (!this.eventManager.isEventLogged("mirror_done")) {
-      await this.eventManager.addDiaryEntry("mirror_done");
-    }
     return true;
   } else {
     alert("❌ Нет совпадения!");
     return false;
   }
 }
+
 
 
 

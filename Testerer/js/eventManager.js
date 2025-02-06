@@ -11,13 +11,17 @@ export class EventManager {
     return entries.some(entry => entry.entry === eventKey);
   }
   
-async addDiaryEntry(key, data = null) {
-  const currentLanguage = this.languageManager.getLanguage();
-  // Если data передана, сохраняем её, иначе локализуем ключ (если есть соответствие)
-  const entryText = data || (this.languageManager.locales[currentLanguage][key] || key);
-  await this.databaseManager.addDiaryEntry(entryText);
+async addDiaryEntry(key, imageData = null) {
+  // Если передано изображение, сохраняем запись в виде:
+  // "<текст ключа>\n[photo attached]\n<dataURL изображения>"
+  let entry = key;
+  if (imageData) {
+    entry = `${key}\n[photo attached]\n${imageData}`;
+  }
+  await this.databaseManager.addDiaryEntry(entry);
   this.updateDiaryDisplay();
 }
+
 
   
 updateDiaryDisplay() {
@@ -32,40 +36,48 @@ updateDiaryDisplay() {
   const currentLanguage = this.languageManager.getLanguage();
   
   entries.forEach(entry => {
-    const entryData = entry.entry;
-    if (seen.has(entryData)) return;
-    seen.add(entryData);
+    // Если уже выводили такую запись, пропускаем
+    if (seen.has(entry.entry)) return;
+    seen.add(entry.entry);
     
-    // Если запись начинается с "data:image" – отображаем как изображение
-    if (typeof entryData === "string" && entryData.startsWith("data:image")) {
+    // Если запись содержит метку "[photo attached]", разбиваем её
+    if (entry.entry.includes("[photo attached]")) {
+      const parts = entry.entry.split("\n[photo attached]\n");
+      const textPart = parts[0];
+      const imageData = parts[1];
+      
+      // Создаём обёртку
       const wrapper = document.createElement("div");
       
+      // Отображаем текст (локализованный, если есть)
+      const p = document.createElement("p");
+      const localizedText =
+        this.languageManager.locales[currentLanguage][textPart] || textPart;
+      p.textContent = `${localizedText} (${entry.timestamp})`;
+      wrapper.appendChild(p);
+      
+      // Отображаем изображение
       const img = document.createElement("img");
-      img.src = entryData;
-      const altText =
+      img.src = imageData;
+      img.alt =
         this.languageManager.locales[currentLanguage]["photo_attached"] ||
         "Photo attached";
-      img.alt = altText;
       img.style.maxWidth = "100%";
       wrapper.appendChild(img);
       
-      // Добавляем подпись с временной меткой
-      const caption = document.createElement("span");
-      caption.textContent = ` (${new Date(entry.timestamp).toLocaleString()})`;
-      wrapper.appendChild(caption);
-      
       this.diaryContainer.appendChild(wrapper);
     } else {
-      // Для текстовых записей пытаемся локализовать ключ
+      // Для текстовых записей – локализуем, если нужно
       const localizedText =
-        this.languageManager.locales[currentLanguage][entryData] || entryData;
+        this.languageManager.locales[currentLanguage][entry.entry] || entry.entry;
       const p = document.createElement("p");
-      p.textContent = `${localizedText} (${new Date(entry.timestamp).toLocaleString()})`;
+      p.textContent = `${localizedText} (${entry.timestamp})`;
       this.diaryContainer.appendChild(p);
     }
   });
   console.log("📖 Diary updated.");
 }
+
 
   
   startMirrorQuest() {

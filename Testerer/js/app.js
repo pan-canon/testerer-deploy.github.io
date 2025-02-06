@@ -219,8 +219,8 @@ answerCallBtn.addEventListener("click", async () => {
 
     // 1) Ждём 5 секунд, например
 setTimeout(async () => {
-  await this.questManager.activateMirrorQuest();
-  this.toggleCameraView();
+  await this.toggleCameraView();
+  this.questManager.activateMirrorQuest();
 }, 5000);
 
 });
@@ -396,7 +396,7 @@ importProfile() {
 }
 
 async compareCurrentFrame() {
-  console.log("▶️ Вызов compareCurrentFrame()");
+  console.log("▶️ Начало compareCurrentFrame()");
   if (!this.selfieData) {
     console.warn("❌ Нет сохранённого селфи!");
     return false;
@@ -406,13 +406,11 @@ async compareCurrentFrame() {
     return false;
   }
   
-  // Настройка временной канвы для захвата текущего кадра
   this.tempCanvas.width = this.cameraManager.videoElement.videoWidth || 640;
   this.tempCanvas.height = this.cameraManager.videoElement.videoHeight || 480;
   this.tempCtx.drawImage(this.cameraManager.videoElement, 0, 0, this.tempCanvas.width, this.tempCanvas.height);
   
   const currentData = this.convertToGrayscale(this.tempCanvas);
-  
   let matchPixel = this.pixelWiseComparison(this.selfieData, currentData);
   let matchHistogram = this.histogramComparison(this.selfieData, currentData);
   
@@ -433,6 +431,7 @@ async compareCurrentFrame() {
     return false;
   }
 }
+
 
 convertToGrayscale = function(canvas) {
   const ctx = canvas.getContext("2d");

@@ -1,6 +1,5 @@
 import { LanguageManager } from './languageManager.js';
 import { CameraManager } from './cameraManager.js';
-import { FaceRecognitionManager } from './faceRecognitionManager.js';
 import { ProfileManager } from './profileManager.js';
 import { DatabaseManager } from './databaseManager.js';
 import { EventManager } from './eventManager.js';
@@ -37,8 +36,7 @@ export class App {
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
-    this.faceRecognitionManager = new FaceRecognitionManager();
-
+    
     this.bindEvents();
     this.init();
   }
@@ -264,89 +262,70 @@ showMirrorTask() {
 
 
 // 🔹 Переключение между камерой и дневником
+// app.js (фрагмент)
+
 async toggleCameraView() {
-    const diary = document.getElementById("diary");
-    const cameraContainer = document.getElementById("camera-container");
-    const videoElement = document.getElementById("camera-view");
-    const toggleCameraBtn = document.getElementById("toggle-camera");
-    const toggleDiaryBtn = document.getElementById("toggle-diary");
+  // Предположим, что у вас есть элементы:
+  // #diary (дневник), #camera-container (камера), #camera-view (video)
+  const diary = document.getElementById("diary");
+  const cameraContainer = document.getElementById("camera-container");
+  const videoElement = document.getElementById("camera-view");
+  const toggleCameraBtn = document.getElementById("toggle-camera");
+  const toggleDiaryBtn = document.getElementById("toggle-diary");
 
-    // 🔹 Кнопки, которые должны скрываться в режиме камеры
-    const buttonsToHide = [
-        document.getElementById("reset-data"),
-        document.getElementById("export-profile"),
-        document.getElementById("import-profile-container")
-    ];
+  // Показываем/скрываем дневник и камеру
+  if (cameraContainer.style.display === "none") {
+    // Открываем камеру
+    diary.style.display = "none";
+    cameraContainer.style.display = "block";
+    toggleCameraBtn.style.display = "none";
+    toggleDiaryBtn.style.display = "inline-block";
 
-    if (!videoElement) {
-        console.error("🚨 Ошибка: элемент video не найден!");
-        return;
+    // Запускаем камеру (cameraManager)
+    this.cameraManager.videoElement = videoElement;
+    await this.cameraManager.start();
+
+    // Теперь берём профиль, если есть
+    const profile = this.profileManager.getProfile();
+    if (!profile || !profile.selfie) {
+      console.warn("⚠️ Селфи нет — пропускаем распознавание");
+      return;
     }
 
-    if (cameraContainer.style.display === "none") {
-        console.log("📸 Переключаемся на камеру...");
-
-        diary.style.display = "none"; // Скрываем блог
-        cameraContainer.style.display = "flex"; // Показываем камеру
-
-        // Переключаем кнопки
-        toggleCameraBtn.style.display = "none";  // Скрываем кнопку "Камера"
-        toggleDiaryBtn.style.display = "inline-block";  // Показываем кнопку "Блог"
-
-        // 🔹 Скрываем ненужные кнопки
-        buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
-
-        this.cameraManager.videoElement = videoElement;
-
-
-const profile = this.profileManager.getProfile();
-if (!profile || !profile.selfie) {
-    console.error("❌ Ошибка: Селфи не найдено!");
-    return;
-}
-
-// Загружаем селфи
-const selfieEmbedding = await this.faceRecognitionManager.getFaceEmbedding(profile.selfie);
-
-if (!selfieEmbedding) {
-    console.error("⚠️ Невозможно загрузить селфи!");
-    return;
-}
-
-// Запускаем камеру
-this.cameraManager.videoElement = videoElement;
-this.cameraManager.start();
-
-// Проверяем совпадение лица после 3 секунд
-setTimeout(async () => {
-    const isMatch = await this.faceRecognitionManager.compareFaces(videoElement, selfieEmbedding);
-    
-    if (isMatch) {
-        this.showVerificationModal("match");
-    } else {
-        this.showVerificationModal("no-match");
+    // Если селфи есть — пробуем распознать
+    // 1) Инициализируем FaceRecognitionManager (один раз)
+    if (!this.faceRecManager) {
+      this.faceRecManager = new FaceRecognitionManager();
     }
-}, 3000);
 
-
-
-        this.cameraManager.start();
-    } else {
-        console.log("📓 Возвращаемся в блог...");
-
-        diary.style.display = "block"; // Показываем блог
-        cameraContainer.style.display = "none"; // Скрываем камеру
-
-        // Переключаем кнопки
-        toggleCameraBtn.style.display = "inline-block"; // Показываем кнопку "Камера"
-        toggleDiaryBtn.style.display = "none"; // Скрываем кнопку "Блог"
-
-        // 🔹 Показываем скрытые кнопки обратно
-        buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
-
-        this.cameraManager.stop();
+    // 2) Грузим embedding из селфи
+    const selfieEmbedding = await this.faceRecManager.loadSelfieEmbedding(profile.selfie);
+    if (!selfieEmbedding) {
+      console.error("⚠️ Лицо в селфи не найдено, распознавать не будем");
+      return;
     }
+
+    // 3) Спустя 3 секунды проверяем совпадение
+    setTimeout(async () => {
+      const isMatch = await this.faceRecManager.compareFaces(videoElement, selfieEmbedding);
+      if (isMatch) {
+        this.faceRecManager.showVerificationModal("match");
+      } else {
+        this.faceRecManager.showVerificationModal("no-match");
+      }
+    }, 3000);
+
+  } else {
+    // Возвращаемся в дневник
+    diary.style.display = "block";
+    cameraContainer.style.display = "none";
+    toggleCameraBtn.style.display = "inline-block";
+    toggleDiaryBtn.style.display = "none";
+
+    this.cameraManager.stop();
+  }
 }
+
   
   showMainScreen() {
     this.registrationScreen.style.display = 'none';

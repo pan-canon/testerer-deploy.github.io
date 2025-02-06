@@ -6,21 +6,6 @@
   <title>Game Registration</title>
   <!-- Подключаем стиль Pico.css и дополнительные стили -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-<style>
-  .modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
-    text-align: center;
-  }
-</style>
 </head>
 
 <body>
@@ -95,17 +80,11 @@
   <!-- Новая кнопка экспорта профиля -->
   <button type="button" id="export-profile" data-i18n="export">Export Profile</button>
 </div>
-
-<div id="verification-modal" class="modal">
-  <div class="modal-content">
-    <h2 id="verification-status"></h2>
-    <button onclick="document.getElementById('verification-modal').style.display='none'">OK</button>
-  </div>
-</div>
   
   <!-- Скрипты -->
 <script src="libs/tf.min.js"></script>
 <script src="libs/face-landmarks-detection.min.js"></script>
+<script src="js/faceRecognitionManager.js"></script>
   <!-- Основной скрипт -->
   <script src="js/sql-wasm.js"></script>
   <script src="js/locales.js"></script>

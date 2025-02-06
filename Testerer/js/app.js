@@ -102,6 +102,7 @@ async init() {
     this.registrationScreen.style.display = 'none';
     this.selfieScreen.style.display = 'block';
     this.cameraManager.start();
+    this.completeBtn.disabled = true;
   }
   
 captureSelfie() {

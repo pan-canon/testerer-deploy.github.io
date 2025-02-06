@@ -101,7 +101,12 @@ completeApartment() {
     }
 
 saveApartmentPlan() {
-  if (!this.rooms.length) { // Если комнаты не выбраны, создаём дефолтный набор
+  if (!this.dbManager) {
+    console.error("⚠️ Database Manager is not initialized.");
+    return;  // Прерываем выполнение, если databaseManager не инициализирован
+  }
+
+  if (!this.rooms.length) {
     console.log("🏠 Используется дефолтный план квартиры.");
     this.rooms = [
       { floor: 1, x: 50, y: 50, width: 100, height: 100, type: "Кухня" },
@@ -109,6 +114,15 @@ saveApartmentPlan() {
       { floor: 1, x: 350, y: 50, width: 100, height: 100, type: "Спальня" }
     ];
   }
+  
+  const roomData = JSON.stringify(this.rooms); 
+  this.dbManager.saveApartmentPlan(this.currentFloor, roomData);
+
+  console.log("🏠 План этажа сохранён:", this.currentFloor);
+  window.app.showMainScreen(); // Переход на главный экран
+  setTimeout(() => window.app.startPhoneCall(), 5000); // Звонок через 5 секунд
+}
+
   
   const roomData = JSON.stringify(this.rooms); 
   this.databaseManager.saveApartmentPlan(this.currentFloor, roomData);

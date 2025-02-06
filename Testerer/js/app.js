@@ -181,43 +181,29 @@ this.selfieData = grayscaleData;
 }
 
   
-completeRegistration() {
-  // Получаем текущие выбранные этажи
-  const selectedFloors = this.apartmentManager.rooms.filter(room => room.floor === this.apartmentManager.currentFloor);
-
-  if (selectedFloors.length === 0) {
-    alert("Пожалуйста, выберите хотя бы один этаж.");
-    return;
+  completeRegistration() {
+    if (!this.selfiePreview.src || this.selfiePreview.src === "") {
+      alert("Please capture your selfie before completing registration.");
+      return;
+    }
+    const regDataStr = localStorage.getItem('regData');
+    if (!regDataStr) {
+      alert("Registration data missing.");
+      return;
+    }
+    const regData = JSON.parse(regDataStr);
+    const profile = {
+      name: regData.name,
+      gender: regData.gender,
+      language: regData.language,
+      selfie: this.selfiePreview.src
+    };
+    this.profileManager.saveProfile(profile);
+    this.cameraManager.stop();
+// Переход к созданию плана квартиры
+this.selfieScreen.style.display = 'none';
+document.getElementById('apartment-screen').style.display = 'block';
   }
-
-  // Если селфи не сделано
-  if (!this.selfiePreview.src || this.selfiePreview.src === "") {
-    alert("Please capture your selfie before completing registration.");
-    return;
-  }
-
-  const regDataStr = localStorage.getItem('regData');
-  if (!regDataStr) {
-    alert("Registration data missing.");
-    return;
-  }
-  const regData = JSON.parse(regDataStr);
-  const profile = {
-    name: regData.name,
-    gender: regData.gender,
-    language: regData.language,
-    selfie: this.selfiePreview.src
-  };
-
-  // Сохраняем профиль
-  this.profileManager.saveProfile(profile);
-  this.cameraManager.stop();
-
-  // Переход к созданию плана квартиры
-  this.selfieScreen.style.display = 'none';
-  document.getElementById('apartment-screen').style.display = 'block';
-}
-
 
   showApartmentScreen() {
       this.registrationScreen.style.display = 'none';

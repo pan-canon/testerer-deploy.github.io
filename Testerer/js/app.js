@@ -3,6 +3,7 @@ import { CameraManager } from './cameraManager.js';
 import { ProfileManager } from './profileManager.js';
 import { DatabaseManager } from './databaseManager.js';
 import { EventManager } from './eventManager.js';
+import { QuestManager } from './questManager.js';
 
 export class App {
   constructor() {
@@ -18,6 +19,7 @@ export class App {
     
     // Элементы экрана селфи
     this.selfieVideo = document.getElementById('selfie-video');
+    this.questManager = new QuestManager(this.eventManager, this);
     this.captureBtn = document.getElementById('capture-btn');
     this.selfiePreview = document.getElementById('selfie-preview');
     this.completeBtn = document.getElementById('complete-registration');
@@ -36,7 +38,11 @@ export class App {
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
-    
+
+// Технические поля для обработки изображений
+this.tempCanvas = document.createElement("canvas");
+this.tempCtx = this.tempCanvas.getContext("2d");
+
     this.bindEvents();
     this.init();
   }
@@ -135,17 +141,12 @@ captureSelfie() {
             throw new Error("Не удалось получить контекст рисования.");
         }
 
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const selfieData = canvas.toDataURL("image/png");
-
-        // Проверяем, получили ли данные изображения
-        if (!selfieData || selfieData.length < 100) {
-            throw new Error("Ошибка обработки изображения.");
-        }
-
-        this.selfiePreview.src = selfieData;
-        this.selfiePreview.style.display = 'block';
-        this.completeBtn.disabled = false;
+ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+const grayscaleData = this.convertToGrayscale(canvas);
+this.selfiePreview.src = grayscaleData;
+this.selfiePreview.style.display = 'block';
+this.completeBtn.disabled = false;
+this.selfieData = grayscaleData;
 
         console.log("✅ Снимок успешно сделан!");
     } catch (error) {
@@ -218,9 +219,10 @@ answerCallBtn.addEventListener("click", async () => {
 
     // 1) Ждём 5 секунд, например
 setTimeout(async () => {
-  await this.eventManager.addDiaryEntry("mirror_quest");
+  await this.questManager.activateMirrorQuest();
   this.toggleCameraView();
 }, 5000);
+
 });
 
     // При игнорировании
@@ -295,7 +297,8 @@ toggleCameraView() {
         buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
 
         this.cameraManager.videoElement = videoElement;
-        this.cameraManager.start();
+        await this.cameraManager.start();
+        this.questManager.checkMirrorQuestOnCamera();
     } else {
         console.log("📓 Возвращаемся в блог...");
 
@@ -391,4 +394,90 @@ importProfile() {
   };
   reader.readAsText(file);
 }
+
+async compareCurrentFrame() {
+  if (!this.selfieData) {
+    console.warn("❌ Нет сохранённого селфи!");
+    return false;
+  }
+  if (!this.cameraManager.videoElement || !this.cameraManager.videoElement.srcObject) {
+    console.warn("❌ Камера не активна!");
+    return false;
+  }
+  
+  // Настройка временной канвы для захвата текущего кадра
+  this.tempCanvas.width = this.cameraManager.videoElement.videoWidth || 640;
+  this.tempCanvas.height = this.cameraManager.videoElement.videoHeight || 480;
+  this.tempCtx.drawImage(this.cameraManager.videoElement, 0, 0, this.tempCanvas.width, this.tempCanvas.height);
+  
+  const currentData = this.convertToGrayscale(this.tempCanvas);
+  
+  let matchPixel = this.pixelWiseComparison(this.selfieData, currentData);
+  let matchHistogram = this.histogramComparison(this.selfieData, currentData);
+  
+  console.log(`🔎 Сравнение кадров: Pixel=${matchPixel.toFixed(2)}, Histogram=${matchHistogram.toFixed(2)}`);
+  
+  const currentLang = this.languageManager.getLanguage();
+  let whatWasItText = this.languageManager.locales[currentLang]["what_was_it"] || "What was it?";
+  
+  if (matchPixel > 0.6 && matchHistogram > 0.7) {
+    alert("✅ Вы перед зеркалом!");
+    await this.eventManager.addDiaryEntry(`${whatWasItText}\n[photo attached]\n${currentData}`);
+    if (!this.eventManager.isEventLogged("mirror_done")) {
+      await this.eventManager.addDiaryEntry("mirror_done");
+    }
+    return true;
+  } else {
+    alert("❌ Нет совпадения!");
+    return false;
+  }
+}
+
+App.prototype.convertToGrayscale = function(canvas) {
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const pixels = imageData.data;
+  for (let i = 0; i < pixels.length; i += 4) {
+    let avg = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+    pixels[i] = avg;
+    pixels[i + 1] = avg;
+    pixels[i + 2] = avg;
+  }
+  ctx.putImageData(imageData, 0, 0);
+  return canvas.toDataURL("image/png");
+};
+
+App.prototype.pixelWiseComparison = function(img1, img2) {
+  let image1 = atob(img1.split(',')[1]);
+  let image2 = atob(img2.split(',')[1]);
+  let matchCount = 0;
+  const length = Math.min(image1.length, image2.length);
+  for (let i = 0; i < length; i++) {
+    if (Math.abs(image1.charCodeAt(i) - image2.charCodeAt(i)) < 100) {
+      matchCount++;
+    }
+  }
+  return matchCount / length;
+};
+
+App.prototype.createHistogram = function(img) {
+  let hist = new Array(256).fill(0);
+  let imgData = atob(img.split(',')[1]);
+  for (let i = 0; i < imgData.length; i++) {
+    hist[imgData.charCodeAt(i)]++;
+  }
+  return hist;
+};
+
+App.prototype.histogramComparison = function(img1, img2) {
+  let hist1 = this.createHistogram(img1);
+  let hist2 = this.createHistogram(img2);
+  let diff = 0;
+  for (let i = 0; i < hist1.length; i++) {
+    diff += Math.abs(hist1[i] - hist2[i]);
+  }
+  const total1 = hist1.reduce((a, b) => a + b, 0);
+  return 1 - (diff / (total1 * 1.2));
+};
+
 }

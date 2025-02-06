@@ -68,6 +68,18 @@ bindEvents() {
     this.exportBtn.addEventListener('click', () => this.exportProfile());
     this.importBtn.addEventListener('click', () => this.importProfile());
 
+document.getElementById('next-floor-btn').addEventListener('click', () => {
+    this.apartmentManager.nextFloor();
+});
+
+document.getElementById('prev-floor-btn').addEventListener('click', () => {
+    this.apartmentManager.prevFloor();
+});
+
+document.getElementById('complete-apartment-btn').addEventListener('click', () => {
+    this.apartmentManager.completeApartment();
+});
+
     // 🔹 Переключение между камерой и дневником
     document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
     document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());

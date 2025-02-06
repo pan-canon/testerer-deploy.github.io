@@ -11,16 +11,30 @@ export class ApartmentPlanManager {
         this.init();
     }
 
+
 nextFloor() {
     this.currentFloor++;
     this.loadFromDB();
+    console.log(`🔼 Переключено на этаж ${this.currentFloor}`);
 }
 
 prevFloor() {
     if (this.currentFloor > 1) {
         this.currentFloor--;
         this.loadFromDB();
+        console.log(`🔽 Переключено на этаж ${this.currentFloor}`);
     }
+}
+
+completeApartment() {
+    this.saveApartmentPlan();
+    console.log("✅ План квартиры сохранён!");
+
+    // После завершения планировки переходим на главный экран
+    app.showMainScreen();
+
+    // Через 5 секунд запускаем звонок
+    setTimeout(() => app.startPhoneCall(), 5000);
 }
 
 

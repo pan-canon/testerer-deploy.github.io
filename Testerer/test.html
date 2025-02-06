@@ -58,25 +58,40 @@
         }
 
         async function loadModels() {
-            console.log("⏳ Загрузка моделей...");
-            await faceapi.nets.ssdMobilenetv1.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights");
-            await faceapi.nets.faceLandmark68Net.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights");
-            await faceapi.nets.faceRecognitionNet.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights");
-            console.log("✅ Модели загружены!");
+            try {
+                console.log("⏳ Загружаем модели...");
+                await Promise.all([
+                    faceapi.nets.ssdMobilenetv1.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights"),
+                    faceapi.nets.faceLandmark68Net.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights"),
+                    faceapi.nets.faceRecognitionNet.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights")
+                ]);
+                console.log("✅ Модели загружены!");
+            } catch (error) {
+                console.error("❌ Ошибка загрузки моделей:", error);
+            }
         }
 
         async function captureSelfie() {
-            console.log("📸 Сохранение селфи...");
-            const detections = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-            
-            if (!detections) {
-                console.log("❌ Лицо не найдено!");
+            console.log("📸 Попытка сделать селфи...");
+            if (!faceapi.nets.faceRecognitionNet.isLoaded) {
+                console.error("❌ Модели не загружены!");
                 return;
             }
-            
-            selfieDescriptor = detections.descriptor;
-            compareBtn.disabled = false;
-            console.log("✅ Селфи сохранено! Теперь можно сравнивать.");
+
+            try {
+                const detections = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+                
+                if (!detections) {
+                    console.log("❌ Лицо не найдено!");
+                    return;
+                }
+                
+                selfieDescriptor = detections.descriptor;
+                compareBtn.disabled = false;
+                console.log("✅ Селфи сохранено! Теперь можно сравнивать.");
+            } catch (error) {
+                console.error("❌ Ошибка при обработке изображения:", error);
+            }
         }
 
         async function compareFace() {
@@ -86,20 +101,20 @@
                 return;
             }
 
-            const detections = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-            if (!detections) {
-                console.log("❌ Лицо не найдено в камере!");
-                return;
-            }
+            try {
+                const detections = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+                if (!detections) {
+                    console.log("❌ Лицо не найдено в камере!");
+                    return;
+                }
 
-            const distance = faceapi.euclideanDistance(selfieDescriptor, detections.descriptor);
-            console.log("📏 Расстояние:", distance);
+                const distance = faceapi.euclideanDistance(selfieDescriptor, detections.descriptor);
+                console.log("📏 Расстояние:", distance);
 
-            modal.style.display = "block";
-            if (distance < 0.5) {
-                modalText.textContent = "✅ Вы перед зеркалом!";
-            } else {
-                modalText.textContent = "❌ Лица не совпадают!";
+                modal.style.display = "block";
+                modalText.textContent = distance < 0.5 ? "✅ Вы перед зеркалом!" : "❌ Лица не совпадают!";
+            } catch (error) {
+                console.error("❌ Ошибка при сравнении лиц:", error);
             }
         }
 

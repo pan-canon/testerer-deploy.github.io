@@ -3,125 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Face API Test</title>
-    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+    <title>Face Comparison Test</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-        video {
-            width: 300px;
-            border: 2px solid black;
-        }
-        #modal {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border: 2px solid black;
-        }
-    </style>
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+.container {
+    margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+video, canvas {
+    border: 1px solid black;
+    max-width: 100%;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+}
+</style>
 </head>
 <body>
+    <h1>Face Comparison Test</h1>
+    
+    <div class="container">
+        <video id="video" autoplay></video>
+        <button id="capture-btn">Take Selfie</button>
+        <canvas id="selfie-canvas"></canvas>
+        <button id="compare-btn" disabled>Compare</button>
+    </div>
 
-    <h1>Face API Test</h1>
-    <video id="video" autoplay></video>
-    <br>
-    <button id="captureBtn" disabled>📸 Capture Selfie</button>
-    <button id="compareBtn" disabled>🔍 Compare Face</button>
-
-    <div id="modal">
-        <p id="modalText"></p>
-        <button onclick="document.getElementById('modal').style.display = 'none'">Close</button>
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <p id="result-text">Processing...</p>
+            <button id="close-btn">Close</button>
+        </div>
     </div>
 
     <script>
-        let selfieDescriptor = null;
-        const video = document.getElementById('video');
-        const captureBtn = document.getElementById('captureBtn');
-        const compareBtn = document.getElementById('compareBtn');
-        const modal = document.getElementById('modal');
-        const modalText = document.getElementById('modalText');
+        let video = document.getElementById("video");
+let captureBtn = document.getElementById("capture-btn");
+let compareBtn = document.getElementById("compare-btn");
+let selfieCanvas = document.getElementById("selfie-canvas");
+let ctx = selfieCanvas.getContext("2d");
 
-        async function setupCamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
-                video.srcObject = stream;
-                console.log("✅ Камера успешно запущена!");
-            } catch (error) {
-                console.error("🚨 Ошибка при доступе к камере:", error);
-            }
+let modal = document.getElementById("modal");
+let resultText = document.getElementById("result-text");
+let closeBtn = document.getElementById("close-btn");
+
+let selfieData = null;
+
+// Запуск камеры
+navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+        video.srcObject = stream;
+    })
+    .catch(err => console.error("🚨 Ошибка доступа к камере:", err));
+
+captureBtn.addEventListener("click", () => {
+    selfieCanvas.width = video.videoWidth;
+    selfieCanvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, selfieCanvas.width, selfieCanvas.height);
+    selfieData = convertToGrayscale(selfieCanvas);
+    console.log("📸 Селфи сохранено!");
+    compareBtn.disabled = false;
+});
+
+compareBtn.addEventListener("click", () => {
+    let currentCanvas = document.createElement("canvas");
+    let currentCtx = currentCanvas.getContext("2d");
+    currentCanvas.width = video.videoWidth;
+    currentCanvas.height = video.videoHeight;
+    currentCtx.drawImage(video, 0, 0, currentCanvas.width, currentCanvas.height);
+    let currentData = convertToGrayscale(currentCanvas);
+
+    let matchPixel = pixelWiseComparison(selfieData, currentData);
+    let matchHistogram = histogramComparison(selfieData, currentData);
+
+    console.log(`🔍 Pixel Match: ${matchPixel.toFixed(2)}, Histogram Match: ${matchHistogram.toFixed(2)}`);
+
+    if (matchPixel > 0.6 && matchHistogram > 0.7) { // ⬅️ Ослаблены пороги
+        resultText.innerText = "✅ Вы перед зеркалом!";
+    } else {
+        resultText.innerText = "❌ Нет совпадения!";
+    }
+
+    modal.style.display = "flex";
+});
+
+closeBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+});
+
+// 🔹 Конвертация в оттенки серого
+function convertToGrayscale(canvas) {
+    let ctx = canvas.getContext("2d");
+    let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    let pixels = imageData.data;
+
+    for (let i = 0; i < pixels.length; i += 4) {
+        let avg = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+        pixels[i] = avg;
+        pixels[i + 1] = avg;
+        pixels[i + 2] = avg;
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    return canvas.toDataURL("image/png"); // ⬅️ Сохраняем изменённое изображение
+}
+
+// 🔹 Улучшенное Pixel-wise Comparison
+function pixelWiseComparison(img1, img2) {
+    let image1 = atob(img1.split(',')[1]);
+    let image2 = atob(img2.split(',')[1]);
+
+    let matchCount = 0;
+    for (let i = 0; i < image1.length; i++) {
+        if (Math.abs(image1.charCodeAt(i) - image2.charCodeAt(i)) < 100) { // ⬅️ Разница увеличена
+            matchCount++;
         }
+    }
 
-        async function loadModels() {
-            try {
-                console.log("⏳ Загружаем модели...");
-                await faceapi.nets.ssdMobilenetv1.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights");
-                await faceapi.nets.faceLandmark68Net.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights");
-                await faceapi.nets.faceRecognitionNet.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights");
-                console.log("✅ Модели загружены!");
-                captureBtn.disabled = false; // Разблокируем кнопку
-            } catch (error) {
-                console.error("❌ Ошибка загрузки моделей:", error);
-            }
-        }
+    return matchCount / image1.length;
+}
 
-        async function captureSelfie() {
-            console.log("📸 Попытка сделать селфи...");
-            if (!faceapi.nets.faceRecognitionNet.isLoaded) {
-                console.error("❌ Модели не загружены!");
-                return;
-            }
+// 🔹 Улучшенное Histogram Comparison
+function histogramComparison(img1, img2) {
+    let hist1 = createHistogram(img1);
+    let hist2 = createHistogram(img2);
+    let diff = 0;
 
-            try {
-                const detections = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-                
-                if (!detections) {
-                    console.log("❌ Лицо не найдено! Попробуйте подойти ближе.");
-                    return;
-                }
-                
-                selfieDescriptor = detections.descriptor;
-                compareBtn.disabled = false;
-                console.log("✅ Селфи сохранено! Теперь можно сравнивать.");
-            } catch (error) {
-                console.error("❌ Ошибка при обработке изображения:", error);
-            }
-        }
+    for (let i = 0; i < hist1.length; i++) {
+        diff += Math.abs(hist1[i] - hist2[i]);
+    }
 
-        async function compareFace() {
-            console.log("🔍 Сравнение лиц...");
-            if (!selfieDescriptor) {
-                console.log("❌ Нет сохранённого селфи!");
-                return;
-            }
+    return 1 - (diff / (hist1.reduce((a, b) => a + b, 0) * 1.2)); // ⬅️ Разрешаем до 20% расхождений
+}
 
-            try {
-                const detections = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-                if (!detections) {
-                    console.log("❌ Лицо не найдено в камере!");
-                    return;
-                }
+// 🔹 Гистограмма изображения
+function createHistogram(img) {
+    let hist = new Array(256).fill(0);
+    let imgData = atob(img.split(',')[1]);
 
-                const distance = faceapi.euclideanDistance(selfieDescriptor, detections.descriptor);
-                console.log("📏 Расстояние:", distance);
+    for (let i = 0; i < imgData.length; i++) {
+        hist[imgData.charCodeAt(i)]++;
+    }
 
-                modal.style.display = "block";
-                modalText.textContent = distance < 0.5 ? "✅ Вы перед зеркалом!" : "❌ Лица не совпадают!";
-            } catch (error) {
-                console.error("❌ Ошибка при сравнении лиц:", error);
-            }
-        }
+    return hist;
+}
 
-        captureBtn.addEventListener("click", captureSelfie);
-        compareBtn.addEventListener("click", compareFace);
-
-        loadModels().then(setupCamera);
-    </script>
-
+</script>
 </body>
 </html>

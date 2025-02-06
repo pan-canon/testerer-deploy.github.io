@@ -217,15 +217,10 @@ answerCallBtn.addEventListener("click", async () => {
     this.triggerMirrorEffect();
 
     // 1) Ждём 5 секунд, например
-    setTimeout(() => {
-        // 2) Добавляем запись + показываем камеру
-        if (!this.eventManager.isEventLogged("mirror_quest")) {
-            this.eventManager.addDiaryEntry("mirror_quest");
-        }
-
-        // Сразу переключаемся на камеру
-        this.toggleCameraView();
-    }, 3000);
+setTimeout(async () => {
+  await this.eventManager.addDiaryEntry("mirror_quest");
+  this.toggleCameraView();
+}, 3000);
 });
 
     // При игнорировании

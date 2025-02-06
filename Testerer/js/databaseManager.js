@@ -1,14 +1,12 @@
 export class DatabaseManager {
-  
   constructor() {
     this.db = null;
-    console.log("Вызвали constructor DatabaseManager!");
     this.initDatabasePromise = this.initDatabase();
   }
 
   async initDatabase() {
     const SQL = await initSqlJs({
-      locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
+      locateFile: file => `js/${file}`
     });
     // Проверяем, сохранена ли база в localStorage
     const savedDb = localStorage.getItem("diaryDB");

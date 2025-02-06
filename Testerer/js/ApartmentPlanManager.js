@@ -123,15 +123,6 @@ saveApartmentPlan() {
   setTimeout(() => window.app.startPhoneCall(), 5000); // Звонок через 5 секунд
 }
 
-  
-  const roomData = JSON.stringify(this.rooms); 
-  this.databaseManager.saveApartmentPlan(this.currentFloor, roomData);
-
-  console.log("🏠 План этажа сохранён:", this.currentFloor);
-  window.app.showMainScreen(); // Переход на главный экран
-  setTimeout(() => window.app.startPhoneCall(), 5000); // Звонок через 5 секунд
-}
-
 
 
 }

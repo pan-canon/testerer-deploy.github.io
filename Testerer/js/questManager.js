@@ -1,33 +1,31 @@
 export class QuestManager {
+  /**
+   * @param {EventManager} eventManager – менеджер событий (для работы с дневником)
+   * @param {App} appInstance – ссылка на основной объект App (для вызова compareCurrentFrame())
+   */
   constructor(eventManager, appInstance) {
     this.eventManager = eventManager;
-    this.app = appInstance; // нужно для app.compareCurrentFrame()
+    this.app = appInstance;
   }
 
-  /**
-   * Активируем mirror_quest, если ещё нет.
-   */
+  // ЗАМЕНЯЕМ весь метод activateMirrorQuest() на следующий:
   async activateMirrorQuest() {
     if (!this.eventManager.isEventLogged("mirror_quest")) {
-      console.log("🔔 Активируем mirror_quest...");
+      console.log("🔔 Активируем задание mirror_quest...");
       await this.eventManager.addDiaryEntry("mirror_quest");
     }
   }
 
-  /**
-   * Проверяем, если mirror_quest есть, но нет mirror_done:
-   * Вызываем compareCurrentFrame() -> при успехе "mirror_done", запись в дневник
-   */
+  // ЗАМЕНЯЕМ или ДОБАВЛЯЕМ метод checkMirrorQuestOnCamera():
   async checkMirrorQuestOnCamera() {
     const hasQuest = this.eventManager.isEventLogged("mirror_quest");
     const doneQuest = this.eventManager.isEventLogged("mirror_done");
     if (hasQuest && !doneQuest) {
-      console.log("🪞 Mirror quest активно. Запускаем пиксельное сравнение...");
-
+      console.log("🪞 Mirror quest активно. Запускаем проверку...");
+      // Ждём 3 секунды, чтобы камера «устоялась»
       setTimeout(async () => {
-        const success = await this.app.compareCurrentFrame(); 
+        const success = await this.app.compareCurrentFrame();
         if (success) {
-          // Если успех, логируем mirror_done
           if (!this.eventManager.isEventLogged("mirror_done")) {
             await this.eventManager.addDiaryEntry("mirror_done");
           }

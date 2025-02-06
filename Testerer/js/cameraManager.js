@@ -4,21 +4,27 @@ export class CameraManager {
     this.stream = null;
   }
 
-  async start() {
+async start() {
     try {
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      const constraints = {
-        video: { facingMode: isMobile ? "environment" : "user" }
-      };
-      console.log(`🎥 Запуск камеры: ${constraints.video.facingMode}`);
-      this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-      if (this.videoElement) {
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const constraints = {
+            video: { facingMode: isMobile ? "environment" : "user" }
+        };
+
+        console.log(`🎥 Запуск камеры: ${constraints.video.facingMode}`);
+        this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+        if (!this.videoElement) {
+            console.error("🚨 Ошибка: videoElement не найден!");
+            return;
+        }
+
         this.videoElement.srcObject = this.stream;
-      }
     } catch (error) {
-      console.error("❌ Ошибка при доступе к камере:", error);
+        console.error("❌ Ошибка при доступе к камере:", error);
     }
-  }
+}
+
 
   stop() {
     if (this.stream) {

@@ -1,4 +1,4 @@
-window.locales = {
+const locales = {
   "en": {
     "welcome": "Welcome!",
     "enter_name": "Enter your name:",
@@ -23,7 +23,7 @@ window.locales = {
     "open_diary": "Open Diary",
     "mirror_quest": "They are asking me to come to the mirror...",
     "ignored_call": "I didn't answer, I don't know who it was.",
-    "what_was_it": "What was it?"
+    "what_was_it": "Что это было?"
   },
   "ru": {
     "welcome": "Добро пожаловать!",
@@ -75,6 +75,6 @@ window.locales = {
     "open_diary": "Відкрити щоденник",
     "mirror_quest": "Вони просять підійти мене до дзеркала.",
     "ignored_call": "Я не відповів(ла), я не знаю, хто це.",
-    "what_was_it": "Що це було?"
+    "what_was_it": "Что это было?"
   }
 };

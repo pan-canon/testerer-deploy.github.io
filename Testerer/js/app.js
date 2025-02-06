@@ -248,7 +248,7 @@ triggerMirrorEffect() {
         document.body.style.background = "";
     }, 1000);
 
-    const staticNoise = new Audio('audio/static_noise.mp3');
+    const staticNoise = new Audio('audio/phone_ringtone.mp3');
     staticNoise.play();
     setTimeout(() => staticNoise.pause(), 3000);
 }

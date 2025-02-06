@@ -147,7 +147,7 @@ this.selfiePreview.src = grayscaleData;
 this.selfiePreview.style.display = 'block';
 this.completeBtn.disabled = false;
 this.selfieData = grayscaleData;
-
+ 
         console.log("✅ Снимок успешно сделан!");
     } catch (error) {
         console.error("❌ Ошибка при создании снимка:", error);

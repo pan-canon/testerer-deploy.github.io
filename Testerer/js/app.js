@@ -60,19 +60,24 @@ bindEvents() {
 
   
 async init() {
+  // Сначала ждём инициализации БД
   await this.databaseManager.initDatabasePromise;
 
+  // Прямой вызов метода databaseManager, чтобы получить записи
+  const entries = this.databaseManager.getDiaryEntries();
+  console.log("Проверяем дневник после инициализации:", entries);
+
+  // Если массив не пустой, значит в БД уже есть хотя бы одна запись
+  if (entries.length > 0) {
+    // Показываем кнопку
+    const cameraBtn = document.getElementById("toggle-camera");
+    cameraBtn.style.display = "inline-block";
+  }
+
+  // Далее — логика профиля, как раньше
   if (this.profileManager.isProfileSaved()) {
     this.showMainScreen();
     this.eventManager.updateDiaryDisplay();
-
-    // ✨ Проверяем, есть ли события (mirror_quest или ignored_call) в дневнике
-    if (this.eventManager.isEventLogged("mirror_quest") || 
-        this.eventManager.isEventLogged("ignored_call")) {
-      const cameraBtn = document.getElementById("toggle-camera");
-      cameraBtn.style.display = "inline-block";
-    }
-
   } else {
     this.showRegistrationScreen();
   }

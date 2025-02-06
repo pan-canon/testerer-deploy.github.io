@@ -1,4 +1,5 @@
 export class DatabaseManager {
+  console.log("databaseManager.js загружен!")
   constructor() {
     this.db = null;
     this.initDatabasePromise = this.initDatabase();

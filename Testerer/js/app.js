@@ -1,7 +1,6 @@
 import { LanguageManager } from './languageManager.js';
 import { CameraManager } from './cameraManager.js';
 import { ProfileManager } from './profileManager.js';
-import { ApartmentPlanManager } from "./apartmentPlanManager.js";
 import { DatabaseManager } from './databaseManager.js';
 import { EventManager } from './eventManager.js';
 import { QuestManager } from './questManager.js';
@@ -40,15 +39,6 @@ export class App {
     this.databaseManager = new DatabaseManager();
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
 this.questManager = new QuestManager(this.eventManager, this);
-this.apartmentPlanManager = new ApartmentPlanManager("apartment-canvas");
-
-document.getElementById("add-floor-btn").addEventListener("click", () => this.apartmentPlanManager.addFloor());
-document.getElementById("remove-floor-btn").addEventListener("click", () => this.apartmentPlanManager.removeFloor());
-document.getElementById("finish-plan-btn").addEventListener("click", () => {
-    this.apartmentPlanManager.savePlan();
-    this.showMainScreen();
-});
-
 // Технические поля для обработки изображений
 this.tempCanvas = document.createElement("canvas");
 this.tempCtx = this.tempCanvas.getContext("2d");

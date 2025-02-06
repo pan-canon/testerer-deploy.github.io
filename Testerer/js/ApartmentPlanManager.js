@@ -30,7 +30,7 @@ export class ApartmentPlanManager {
         this.ctx.fillRect(x - 20, y - 20, 40, 40);
         this.floors[this.currentFloor][`${x}-${y}`] = true;
     }
- 
+
     savePlan() {
         localStorage.setItem("apartmentPlan", JSON.stringify(this.floors));
     }

@@ -1,15 +1,22 @@
 export class ApartmentPlanManager {
-    constructor(canvasId, dbManager) {
-        this.canvas = document.getElementById(canvasId);
-        this.ctx = this.canvas.getContext("2d");
-        this.dbManager = dbManager;
-        this.rooms = [];
-        this.currentFloor = 1;
-        this.drawing = false;
-        this.startX = 0;
-        this.startY = 0;
-        this.init();
+constructor(canvasId, dbManager) {
+    this.canvas = document.getElementById(canvasId);
+    this.ctx = this.canvas.getContext("2d");
+    this.dbManager = dbManager;
+
+    if (!this.dbManager) {
+        console.error("⚠️ DatabaseManager is not initialized!");
+        return; // Прерываем выполнение, если база данных не инициализирована
     }
+
+    this.rooms = [];
+    this.currentFloor = 1;
+    this.drawing = false;
+    this.startX = 0;
+    this.startY = 0;
+    this.init();
+}
+
 
 
 nextFloor() {
@@ -94,19 +101,23 @@ completeApartment() {
     }
 
 saveApartmentPlan() {
-  if (!this.databaseManager) {
-    console.error("⚠️ Database Manager is not initialized.");
-    return;
+  if (!this.rooms.length) { // Если комнаты не выбраны, создаём дефолтный набор
+    console.log("🏠 Используется дефолтный план квартиры.");
+    this.rooms = [
+      { floor: 1, x: 50, y: 50, width: 100, height: 100, type: "Кухня" },
+      { floor: 1, x: 200, y: 50, width: 100, height: 100, type: "Ванная" },
+      { floor: 1, x: 350, y: 50, width: 100, height: 100, type: "Спальня" }
+    ];
   }
-  const roomData = JSON.stringify(this.rooms); // исправлено на this.rooms
+  
+  const roomData = JSON.stringify(this.rooms); 
   this.databaseManager.saveApartmentPlan(this.currentFloor, roomData);
 
   console.log("🏠 План этажа сохранён:", this.currentFloor);
-
-  // После сохранения плана квартиры, переходим на главный экран
-  window.app.showMainScreen();
-  setTimeout(() => window.app.startPhoneCall(), 5000);
+  window.app.showMainScreen(); // Переход на главный экран
+  setTimeout(() => window.app.startPhoneCall(), 5000); // Звонок через 5 секунд
 }
+
 
 
 }

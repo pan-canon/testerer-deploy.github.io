@@ -437,6 +437,7 @@ async compareCurrentFrame() {
 
 
 
+
 // ДОБАВЛЯЕМ ПОСЛЕ captureSelfie()
 
 /**

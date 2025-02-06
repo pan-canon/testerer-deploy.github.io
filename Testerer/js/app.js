@@ -297,7 +297,7 @@ toggleCameraView() {
         buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
 
         this.cameraManager.videoElement = videoElement;
-        await this.cameraManager.start();
+        this.cameraManager.start();
         this.questManager.checkMirrorQuestOnCamera();
     } else {
         console.log("📓 Возвращаемся в блог...");

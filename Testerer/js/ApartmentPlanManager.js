@@ -15,7 +15,7 @@ nextFloor() {
     this.currentFloor++;
     this.loadFromDB();
 }
-
+ 
 prevFloor() {
     if (this.currentFloor > 1) {
         this.currentFloor--;

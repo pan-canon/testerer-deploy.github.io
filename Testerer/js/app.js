@@ -179,7 +179,25 @@ captureSelfie() {
     // Звонок через 5 секунд после завершения регистрации
     setTimeout(() => this.startPhoneCall(), 5000);
   }
-  
+
+async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventKey) {
+  // Останавливаем звук звонка
+  ringtone.pause();
+
+  // Убираем кнопки ответа/игнора
+  answerCallBtn.remove();
+  ignoreCallBtn.remove();
+
+  // Если записи в дневнике ещё нет — создаём
+  if (!this.eventManager.isEventLogged(eventKey)) {
+    await this.eventManager.addDiaryEntry(eventKey);
+  }
+
+  // Делаем кнопку камеры видимой сразу
+  const cameraBtn = document.getElementById("toggle-camera");
+  cameraBtn.style.display = "inline-block";
+}
+
 startPhoneCall() {
     const ringtone = new Audio('audio/phone_ringtone.mp3');
     ringtone.play();
@@ -190,36 +208,36 @@ startPhoneCall() {
     answerCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["answer"];
     ignoreCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["ignore"];
 
-    // При ответе на звонок
+    // При ответе
     answerCallBtn.addEventListener("click", async () => {
-        ringtone.pause();
-        answerCallBtn.remove();
-        ignoreCallBtn.remove();
+        // 1) Останавливаем звонок
+        // 2) Убираем кнопки
+        // 3) (Опционально) Mirror-эффект и пауза
+        this.triggerMirrorEffect();
 
-        this.triggerMirrorEffect(); // Эффект помех
-
-setTimeout(() => {
-    if (!this.eventManager.isEventLogged("mirror_quest")) {
-        this.eventManager.addDiaryEntry("mirror_quest");
-    }
-    this.showMirrorTask(); // Оставляем как есть
-
-    // Вместо this.showCameraButton(), делаем:
-    const cameraBtn = document.getElementById("toggle-camera");
-    cameraBtn.style.display = "inline-block"; // или "block"
-
-}, 3000);
+        // Допустим, у нас есть задержка 3 секунды на визуальные «помехи»
+        setTimeout(async () => {
+            // Показываем задание у зеркала
+            this.showMirrorTask();
+            // И сохраняем событие + показываем камеру
+            await this.endCall(
+              ringtone,
+              answerCallBtn,
+              ignoreCallBtn,
+              "mirror_quest"
+            );
+        }, 3000);
     });
 
-    // Игнорирование звонка
+    // При игнорировании
     ignoreCallBtn.addEventListener("click", async () => {
-        ringtone.pause();
-        if (!this.eventManager.isEventLogged("ignored_call")) {
-            await this.eventManager.addDiaryEntry("ignored_call");
-        }
-        answerCallBtn.remove();
-        ignoreCallBtn.remove();
-        
+        // Просто сразу считаем, что событие "ignored_call"
+        await this.endCall(
+          ringtone,
+          answerCallBtn,
+          ignoreCallBtn,
+          "ignored_call"
+        );
     });
 
     this.mainScreen.appendChild(answerCallBtn);

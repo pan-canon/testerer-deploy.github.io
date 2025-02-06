@@ -31,7 +31,6 @@ export class DatabaseManager {
         floor_number INTEGER,
         room_data TEXT
     );
-`);
       `);
     }
     console.log("📖 Database initialized!");

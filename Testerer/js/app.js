@@ -3,7 +3,6 @@ import { CameraManager } from './cameraManager.js';
 import { ProfileManager } from './profileManager.js';
 import { DatabaseManager } from './databaseManager.js';
 import { EventManager } from './eventManager.js';
-import { QuestManager } from './questManager.js';
 
 export class App {
   constructor() {
@@ -34,14 +33,10 @@ export class App {
     // Менеджеры
     this.languageManager = new LanguageManager('language-selector');
     this.cameraManager = new CameraManager('selfie-video');
-    this.questManager = new QuestManager(this.eventManager, this);
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
-
-this.tempCanvas = document.createElement("canvas");
-this.tempCtx = this.tempCanvas.getContext("2d");
-
+    
     this.bindEvents();
     this.init();
   }
@@ -223,10 +218,10 @@ answerCallBtn.addEventListener("click", async () => {
 
     // 1) Ждём 5 секунд, например
 setTimeout(async () => {
-  await this.questManager.activateMirrorQuest();
+  await this.eventManager.addDiaryEntry("mirror_quest");
   this.toggleCameraView();
 }, 5000);
-
+});
 
     // При игнорировании
     ignoreCallBtn.addEventListener("click", async () => {
@@ -300,8 +295,7 @@ toggleCameraView() {
         buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
 
         this.cameraManager.videoElement = videoElement;
-        await this.cameraManager.start();
-        this.questManager.checkMirrorQuestOnCamera();
+        this.cameraManager.start();
     } else {
         console.log("📓 Возвращаемся в блог...");
 
@@ -397,98 +391,4 @@ importProfile() {
   };
   reader.readAsText(file);
 }
-
-
-
-async captureSelfie() {
-  console.log("📸 Попытка сделать снимок...");
-
-  if (!this.cameraManager.videoElement || !this.cameraManager.videoElement.srcObject) {
-    console.error("❌ Камера не активна!");
-    alert("Ошибка: Камера не включена.");
-    return;
-  }
-  
-  const video = this.cameraManager.videoElement;
-  if (video.readyState < 2) {
-    console.warn("⏳ Камера ещё не готова...");
-    alert("Подождите, пока камера загрузится.");
-    return;
-  }
-  
-  try {
-    // Настраиваем временную канву для захвата кадра
-    this.tempCanvas.width = video.videoWidth || 640;
-    this.tempCanvas.height = video.videoHeight || 480;
-    this.tempCtx.drawImage(video, 0, 0, this.tempCanvas.width, this.tempCanvas.height);
-    
-    // Получаем изображение в оттенках серого
-    const grayscaleData = this.convertToGrayscale(this.tempCanvas);
-    
-    // Сохраняем полученное изображение в поле this.selfieData для дальнейшего сравнения
-    this.selfieData = grayscaleData;
-    
-    // Отображаем полученное селфи в предварительном просмотре
-    this.selfiePreview.src = grayscaleData;
-    this.selfiePreview.style.display = 'block';
-    this.completeBtn.disabled = false;
-    
-    console.log("✅ Снимок успешно сделан (grayscale)!");
-  } catch (error) {
-    console.error("❌ Ошибка при создании снимка:", error);
-    alert("Ошибка при создании снимка! Попробуйте снова.");
-  }
-}
-
-
-
-// Методы для обработки изображений (grayscale и сравнение)
-App.prototype.convertToGrayscale = function(canvas) {
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const pixels = imageData.data;
-  for (let i = 0; i < pixels.length; i += 4) {
-    let avg = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
-    pixels[i] = avg;
-    pixels[i + 1] = avg;
-    pixels[i + 2] = avg;
-  }
-  ctx.putImageData(imageData, 0, 0);
-  return canvas.toDataURL("image/png");
-};
-
-App.prototype.pixelWiseComparison = function(img1, img2) {
-  let image1 = atob(img1.split(',')[1]);
-  let image2 = atob(img2.split(',')[1]);
-  let matchCount = 0;
-  const length = Math.min(image1.length, image2.length);
-  for (let i = 0; i < length; i++) {
-    if (Math.abs(image1.charCodeAt(i) - image2.charCodeAt(i)) < 100) {
-      matchCount++;
-    }
-  }
-  return matchCount / length;
-};
-
-App.prototype.createHistogram = function(img) {
-  let hist = new Array(256).fill(0);
-  let imgData = atob(img.split(',')[1]);
-  for (let i = 0; i < imgData.length; i++) {
-    hist[imgData.charCodeAt(i)]++;
-  }
-  return hist;
-};
-
-App.prototype.histogramComparison = function(img1, img2) {
-  let hist1 = this.createHistogram(img1);
-  let hist2 = this.createHistogram(img2);
-  let diff = 0;
-  for (let i = 0; i < hist1.length; i++) {
-    diff += Math.abs(hist1[i] - hist2[i]);
-  }
-  const total1 = hist1.reduce((a, b) => a + b, 0);
-  return 1 - (diff / (total1 * 1.2));
-};
-
-
 }

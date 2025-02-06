@@ -3,53 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Face Comparison Test</title>
+    <title>Table Comparison</title>
     <style>
-        body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-}
-
-.container {
-    margin: 20px auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-video, canvas {
-    border: 1px solid black;
-    max-width: 100%;
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content {
-    background: white;
-    padding: 20px;
-    border-radius: 5px;
-}
-</style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        canvas { border: 1px solid black; margin: 10px; }
+        .container { display: flex; justify-content: center; gap: 20px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 5px; }
+    </style>
 </head>
 <body>
-    <h1>Face Comparison Test</h1>
+    <h1>Table Similarity Test</h1>
     
     <div class="container">
-        <video id="video" autoplay></video>
-        <button id="capture-btn">Take Selfie</button>
-        <canvas id="selfie-canvas"></canvas>
-        <button id="compare-btn" disabled>Compare</button>
+        <canvas id="canvas1" width="300" height="300"></canvas>
+        <canvas id="canvas2" width="300" height="300"></canvas>
     </div>
+
+    <input type="file" id="upload1" accept="image/*">
+    <input type="file" id="upload2" accept="image/*">
+    <button id="compare-btn" disabled>Compare</button>
 
     <div id="modal" class="modal">
         <div class="modal-content">
@@ -59,117 +32,85 @@ video, canvas {
     </div>
 
     <script>
-        let video = document.getElementById("video");
-let captureBtn = document.getElementById("capture-btn");
-let compareBtn = document.getElementById("compare-btn");
-let selfieCanvas = document.getElementById("selfie-canvas");
-let ctx = selfieCanvas.getContext("2d");
+        let canvas1 = document.getElementById("canvas1");
+        let canvas2 = document.getElementById("canvas2");
+        let ctx1 = canvas1.getContext("2d");
+        let ctx2 = canvas2.getContext("2d");
+        let upload1 = document.getElementById("upload1");
+        let upload2 = document.getElementById("upload2");
+        let compareBtn = document.getElementById("compare-btn");
 
-let modal = document.getElementById("modal");
-let resultText = document.getElementById("result-text");
-let closeBtn = document.getElementById("close-btn");
+        let modal = document.getElementById("modal");
+        let resultText = document.getElementById("result-text");
+        let closeBtn = document.getElementById("close-btn");
 
-let selfieData = null;
+        let img1Data = null;
+        let img2Data = null;
 
-// Запуск камеры
-navigator.mediaDevices.getUserMedia({ video: true })
-    .then(stream => {
-        video.srcObject = stream;
-    })
-    .catch(err => console.error("🚨 Ошибка доступа к камере:", err));
-
-captureBtn.addEventListener("click", () => {
-    selfieCanvas.width = video.videoWidth;
-    selfieCanvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0, selfieCanvas.width, selfieCanvas.height);
-    selfieData = convertToGrayscale(selfieCanvas);
-    console.log("📸 Селфи сохранено!");
-    compareBtn.disabled = false;
-});
-
-compareBtn.addEventListener("click", () => {
-    let currentCanvas = document.createElement("canvas");
-    let currentCtx = currentCanvas.getContext("2d");
-    currentCanvas.width = video.videoWidth;
-    currentCanvas.height = video.videoHeight;
-    currentCtx.drawImage(video, 0, 0, currentCanvas.width, currentCanvas.height);
-    let currentData = convertToGrayscale(currentCanvas);
-
-    let matchPixel = pixelWiseComparison(selfieData, currentData);
-    let matchHistogram = histogramComparison(selfieData, currentData);
-
-    console.log(`🔍 Pixel Match: ${matchPixel.toFixed(2)}, Histogram Match: ${matchHistogram.toFixed(2)}`);
-
-    if (matchPixel > 0.6 && matchHistogram > 0.7) { // ⬅️ Ослаблены пороги
-        resultText.innerText = "✅ Вы перед зеркалом!";
-    } else {
-        resultText.innerText = "❌ Нет совпадения!";
-    }
-
-    modal.style.display = "flex";
-});
-
-closeBtn.addEventListener("click", () => {
-    modal.style.display = "none";
-});
-
-// 🔹 Конвертация в оттенки серого
-function convertToGrayscale(canvas) {
-    let ctx = canvas.getContext("2d");
-    let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    let pixels = imageData.data;
-
-    for (let i = 0; i < pixels.length; i += 4) {
-        let avg = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
-        pixels[i] = avg;
-        pixels[i + 1] = avg;
-        pixels[i + 2] = avg;
-    }
-
-    ctx.putImageData(imageData, 0, 0);
-    return canvas.toDataURL("image/png"); // ⬅️ Сохраняем изменённое изображение
-}
-
-// 🔹 Улучшенное Pixel-wise Comparison
-function pixelWiseComparison(img1, img2) {
-    let image1 = atob(img1.split(',')[1]);
-    let image2 = atob(img2.split(',')[1]);
-
-    let matchCount = 0;
-    for (let i = 0; i < image1.length; i++) {
-        if (Math.abs(image1.charCodeAt(i) - image2.charCodeAt(i)) < 100) { // ⬅️ Разница увеличена
-            matchCount++;
+        function loadImage(input, ctx, callback) {
+            let file = input.files[0];
+            if (!file) return;
+            let img = new Image();
+            img.onload = function () {
+                ctx.clearRect(0, 0, canvas1.width, canvas1.height);
+                ctx.drawImage(img, 0, 0, 300, 300);
+                applyGrayscale(ctx);
+                callback(ctx.getImageData(0, 0, 300, 300));
+            };
+            img.src = URL.createObjectURL(file);
         }
-    }
 
-    return matchCount / image1.length;
-}
+        function applyGrayscale(ctx) {
+            let imgData = ctx.getImageData(0, 0, 300, 300);
+            let pixels = imgData.data;
+            for (let i = 0; i < pixels.length; i += 4) {
+                let avg = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+                pixels[i] = pixels[i + 1] = pixels[i + 2] = avg;
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
 
-// 🔹 Улучшенное Histogram Comparison
-function histogramComparison(img1, img2) {
-    let hist1 = createHistogram(img1);
-    let hist2 = createHistogram(img2);
-    let diff = 0;
+        function pixelWiseComparison(data1, data2) {
+            let pixels1 = data1.data;
+            let pixels2 = data2.data;
+            let matchCount = 0;
+            for (let i = 0; i < pixels1.length; i += 4) {
+                if (Math.abs(pixels1[i] - pixels2[i]) < 50) { // Допустимое различие
+                    matchCount++;
+                }
+            }
+            return matchCount / (pixels1.length / 4);
+        }
 
-    for (let i = 0; i < hist1.length; i++) {
-        diff += Math.abs(hist1[i] - hist2[i]);
-    }
+        function compareImages() {
+            let matchPixel = pixelWiseComparison(img1Data, img2Data);
+            console.log(`🔍 Pixel Match: ${matchPixel.toFixed(2)}`);
 
-    return 1 - (diff / (hist1.reduce((a, b) => a + b, 0) * 1.2)); // ⬅️ Разрешаем до 20% расхождений
-}
+            if (matchPixel > 0.6) {
+                resultText.innerText = "✅ Оба объекта похожи (Стол найден)";
+            } else {
+                resultText.innerText = "❌ Объекты слишком разные!";
+            }
 
-// 🔹 Гистограмма изображения
-function createHistogram(img) {
-    let hist = new Array(256).fill(0);
-    let imgData = atob(img.split(',')[1]);
+            modal.style.display = "flex";
+        }
 
-    for (let i = 0; i < imgData.length; i++) {
-        hist[imgData.charCodeAt(i)]++;
-    }
+        upload1.addEventListener("change", () => {
+            loadImage(upload1, ctx1, (data) => {
+                img1Data = data;
+                if (img2Data) compareBtn.disabled = false;
+            });
+        });
 
-    return hist;
-}
+        upload2.addEventListener("change", () => {
+            loadImage(upload2, ctx2, (data) => {
+                img2Data = data;
+                if (img1Data) compareBtn.disabled = false;
+            });
+        });
 
-</script>
+        compareBtn.addEventListener("click", compareImages);
+        closeBtn.addEventListener("click", () => modal.style.display = "none");
+    </script>
 </body>
 </html>

@@ -9,6 +9,9 @@ export class ProfileManager {
   
   saveProfile(profile) {
     localStorage.setItem('profile', JSON.stringify(profile));
+  if (localStorage.getItem("apartmentPlan")) {
+    profile.apartmentPlan = JSON.parse(localStorage.getItem("apartmentPlan"));
+}
   }
   
 resetProfile() {

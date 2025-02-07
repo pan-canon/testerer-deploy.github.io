@@ -1,5 +1,5 @@
 import { LanguageManager } from './languageManager.js';
-import { cameraSectionManager } from './cameraSectionManager .js';
+import { cameraSectionManager } from './cameraSectionManager.js';
 import { ProfileManager } from './profileManager.js';
 import { ApartmentPlanManager } from './ApartmentPlanManager.js';
 import { DatabaseManager } from './databaseManager.js';

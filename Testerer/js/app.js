@@ -284,6 +284,7 @@ answerCallBtn.addEventListener("click", async () => {
     }, 5000);
 });
 
+
 // При игнорировании
 ignoreCallBtn.addEventListener("click", async () => {
     // Устанавливаем флаг, что звонок обработан
@@ -341,8 +342,6 @@ async toggleCameraView() {
       }
     });
     console.log("Видео готово:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
-
-    this.questManager.checkMirrorQuestOnCamera();
   } else {
     console.log("📓 Возвращаемся в блог...");
     diary.style.display = "block";

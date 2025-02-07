@@ -1,5 +1,5 @@
 // GameEventManager.js
-import { WelcomeEvent } from './events/WelcomeEvent.js';
+import { WelcomeEvent } from './events/welcomeEvent.js';
 
 export class GameEventManager {
   /**

@@ -1,5 +1,5 @@
 // WelcomeEvent.js
-import { BaseEvent } from './events/BaseEvent.js';
+import { BaseEvent } from './events/baseEvent.js';
 
 export class WelcomeEvent extends BaseEvent {
   /**

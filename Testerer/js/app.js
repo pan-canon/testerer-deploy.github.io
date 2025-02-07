@@ -1,5 +1,6 @@
 import { LanguageManager } from './languageManager.js';
 import { cameraSectionManager } from './cameraSectionManager.js';
+import { ImageUtils } from './utils/imageUtils.js';
 import { ProfileManager } from './profileManager.js';
 import { ApartmentPlanManager } from './ApartmentPlanManager.js';
 import { DatabaseManager } from './databaseManager.js';
@@ -155,54 +156,55 @@ goToSelfieScreen() {
 }
 
 
-  
 captureSelfie() {
-    console.log("📸 Попытка сделать снимок...");
+  console.log("📸 Попытка сделать снимок...");
 
-    if (!this.cameraSectionManager.videoElement || !this.cameraSectionManager.videoElement.srcObject) {
-        console.error("❌ Камера не активна!");
-        alert("Ошибка: Камера не включена.");
-        return;
+  if (!this.cameraSectionManager.videoElement || !this.cameraSectionManager.videoElement.srcObject) {
+    console.error("❌ Камера не активна!");
+    alert("Ошибка: Камера не включена.");
+    return;
+  }
+
+  const video = this.cameraSectionManager.videoElement;
+
+  // Проверяем, готово ли видео
+  if (video.readyState < 2) {
+    console.warn("⏳ Камера ещё не готова...");
+    alert("Подождите, пока камера загрузится.");
+    return;
+  }
+
+  try {
+    // Создаём скрытый <canvas> для захвата кадра
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      throw new Error("Не удалось получить контекст рисования.");
     }
 
-    const video = this.cameraSectionManager.videoElement;
+    // Рисуем кадр с видео на канвасе
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Используем статический метод для преобразования в градации серого
+    const grayscaleData = ImageUtils.convertToGrayscale(canvas);
+    this.selfiePreview.src = grayscaleData;
+    this.selfiePreview.style.display = 'block';
+    this.completeBtn.disabled = false;
 
-    // Проверяем, готово ли видео
-    if (video.readyState < 2) {
-        console.warn("⏳ Камера ещё не готова...");
-        alert("Подождите, пока камера загрузится.");
-        return;
-    }
-
-    try {
-        // Создаём скрытый `<canvas>`, чтобы захватить кадр
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 480;
-        const ctx = canvas.getContext('2d');
-
-        // Проверяем, есть ли контекст рисования
-        if (!ctx) {
-            throw new Error("Не удалось получить контекст рисования.");
-        }
-
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const grayscaleData = this.convertToGrayscale(canvas);
-        this.selfiePreview.src = grayscaleData;
-        this.selfiePreview.style.display = 'block';
-        this.completeBtn.disabled = false;
-
-        // Сохраняем полученное селфи для сравнения
-        this.selfieData = grayscaleData;
- 
-        console.log("✅ Снимок успешно сделан!");
-    } catch (error) {
-        console.error("❌ Ошибка при создании снимка:", error);
-        alert("Ошибка при создании снимка! Попробуйте снова.");
-    }
+    // Сохраняем полученное селфи для последующего сравнения
+    this.selfieData = grayscaleData;
+    
+    console.log("✅ Снимок успешно сделан!");
+  } catch (error) {
+    console.error("❌ Ошибка при создании снимка:", error);
+    alert("Ошибка при создании снимка! Попробуйте снова.");
+  }
 }
 
-  
+
 completeRegistration() {
   if (!this.selfiePreview.src || this.selfiePreview.src === "") {
     alert("Please capture your selfie before completing registration.");
@@ -478,16 +480,18 @@ importProfile() {
 
 async compareCurrentFrame() {
   console.log("▶️ Начало compareCurrentFrame()");
+  
   if (!this.selfieData) {
     console.warn("❌ Нет сохранённого селфи!");
     return false;
   }
+  
   if (!this.cameraSectionManager.videoElement || !this.cameraSectionManager.videoElement.srcObject) {
     console.warn("❌ Камера не активна!");
     return false;
   }
   
-  // Настройка временной канвы для захвата текущего кадра
+  // Настройка канвы для захвата текущего кадра
   this.tempCanvas.width = this.cameraSectionManager.videoElement.videoWidth || 640;
   this.tempCanvas.height = this.cameraSectionManager.videoElement.videoHeight || 480;
   this.tempCtx.drawImage(
@@ -498,26 +502,18 @@ async compareCurrentFrame() {
     this.tempCanvas.height
   );
   
-  // Получаем обработанное изображение текущего кадра (градации серого)
-  const currentData = this.convertToGrayscale(this.tempCanvas);
+  // Преобразуем изображение в ЧБ через утилиту
+  const currentData = ImageUtils.convertToGrayscale(this.tempCanvas);
   
-  // Выполняем сравнения
-  let matchPixel = this.pixelWiseComparison(this.selfieData, currentData);
-  let matchHistogram = this.histogramComparison(this.selfieData, currentData);
+  // Получаем коэффициенты сравнения через статические методы
+  const matchPixel = ImageUtils.pixelWiseComparison(this.selfieData, currentData);
+  const matchHistogram = ImageUtils.histogramComparison(this.selfieData, currentData);
   
-  console.log(
-    `🔎 Сравнение кадров: Pixel=${matchPixel.toFixed(2)}, Histogram=${matchHistogram.toFixed(2)}`
-  );
+  console.log(`🔎 Сравнение кадров: Pixel=${matchPixel.toFixed(2)}, Histogram=${matchHistogram.toFixed(2)}`);
   
-  // Получаем локализованный текст для ключа "what_was_it"
-  const currentLang = this.languageManager.getLanguage();
-  const whatWasItText =
-    this.languageManager.locales[currentLang]["what_was_it"] || "What was it?";
-  
+  // Если удовлетворяет условию – возвращаем true, иначе false
   if (matchPixel > 0.6 && matchHistogram > 0.7) {
     alert("✅ Вы перед зеркалом!");
-    // Записываем в дневник запись, включающую ключ и изображение
-    await this.eventManager.addDiaryEntry(whatWasItText, currentData);
     return true;
   } else {
     alert("❌ Нет совпадения!");
@@ -526,77 +522,5 @@ async compareCurrentFrame() {
 }
 
 
-
-
-
-
-// ДОБАВЛЯЕМ ПОСЛЕ captureSelfie()
-
-/**
- * Конвертация canvas в градации серого, возвращает dataURL
- */
-convertToGrayscale(canvas) {
-    const ctx = canvas.getContext("2d");
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const pixels = imageData.data;
-
-    // Проходим по каждому пикселю (RGBA), усредняем
-    for (let i = 0; i < pixels.length; i += 4) {
-        let avg = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
-        pixels[i] = avg;
-        pixels[i + 1] = avg;
-        pixels[i + 2] = avg;
-    }
-    ctx.putImageData(imageData, 0, 0);
-
-    return canvas.toDataURL("image/png");
-}
-
-/**
- * Пиксельная корреляция (сравниваем бинарные байты двух base64-картинок)
- */
-pixelWiseComparison(img1, img2) {
-    let image1 = atob(img1.split(',')[1]);
-    let image2 = atob(img2.split(',')[1]);
-
-    let matchCount = 0;
-    // Перебираем все байты
-    for (let i = 0; i < image1.length && i < image2.length; i++) {
-        if (Math.abs(image1.charCodeAt(i) - image2.charCodeAt(i)) < 100) {
-            matchCount++;
-        }
-    }
-    return matchCount / Math.min(image1.length, image2.length);
-}
-
-/**
- * Гистограммная корреляция (сравниваем распределение яркостей)
- */
-histogramComparison(img1, img2) {
-    let hist1 = this.createHistogram(img1);
-    let hist2 = this.createHistogram(img2);
-
-    let diff = 0;
-    for (let i = 0; i < hist1.length; i++) {
-        diff += Math.abs(hist1[i] - hist2[i]);
-    }
-
-    // Числитель: сумма отклонений, знаменатель: суммарное число пикселей * некий коэффициент
-    let totalPixels1 = hist1.reduce((a, b) => a + b, 0);
-    return 1 - (diff / (totalPixels1 * 1.2));
-}
-
-/**
- * Создаём гистограмму (256 уровней) из base64
- */
-createHistogram(img) {
-    let hist = new Array(256).fill(0);
-    let imgData = atob(img.split(',')[1]);
-
-    for (let i = 0; i < imgData.length; i++) {
-        hist[imgData.charCodeAt(i)]++;
-    }
-    return hist;
-}
 
 }

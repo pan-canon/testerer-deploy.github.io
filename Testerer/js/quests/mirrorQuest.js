@@ -1,9 +1,10 @@
+// mirrorQuest.js
 import { BaseQuest } from './baseQuest.js';
 
 export class MirrorQuest extends BaseQuest {
   /**
    * @param {EventManager} eventManager
-   * @param {App} appInstance – ссылка на основной объект App для вызова compareCurrentFrame()
+   * @param {App} appInstance – для вызова compareCurrentFrame()
    */
   constructor(eventManager, appInstance) {
     super(eventManager);
@@ -14,7 +15,7 @@ export class MirrorQuest extends BaseQuest {
 
   /**
    * Переопределяем метод проверки статуса квеста.
-   * Запускаем проверку (например, сравнение селфи с текущим кадром) с задержкой.
+   * Запускаем сравнение селфи с текущим кадром с задержкой.
    */
   async checkStatus() {
     console.log("🪞 Mirror quest активно. Запускаем проверку...");
@@ -26,5 +27,20 @@ export class MirrorQuest extends BaseQuest {
         resolve(success);
       }, 3000);
     });
+  }
+
+  /**
+   * Переопределяем finish, чтобы запись о завершении добавлялась только один раз.
+   */
+  async finish() {
+    const success = await this.checkStatus();
+    if (success) {
+      if (!this.eventManager.isEventLogged(this.doneKey)) {
+        await this.eventManager.addDiaryEntry(this.doneKey);
+      }
+      alert("✅ Задание «подойти к зеркалу» выполнено!");
+    } else {
+      alert("❌ Нет совпадения! Попробуйте ещё раз!");
+    }
   }
 }

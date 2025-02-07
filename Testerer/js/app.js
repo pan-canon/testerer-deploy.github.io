@@ -270,20 +270,27 @@ setupProfileModal() {
 }
 
 openProfileModal() {
+  console.log("Открываю мини-профиль");
+  // Скрываем все основные экраны (если они видны)
+  this.registrationScreen.style.display = 'none';
+  this.selfieScreen.style.display = 'none';
+  this.mainScreen.style.display = 'block'; // главного экрана, где находится аватар
+  // Если нужно — можно дополнительно скрыть экран регистрации плана:
+  document.getElementById('apartment-plan-screen').style.display = 'none';
+
   const profile = this.profileManager.getProfile();
   if (!profile) return;
   this.editNameInput.value = profile.name;
   this.profileModalPhoto.src = profile.selfie;
 
-  // Если менеджер плана квартиры не создан, инициализируйте его с использованием мини-таблицы
   if (!this.apartmentPlanManager) {
     this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-mini-table', this.databaseManager);
   } else {
-    // Перерисовываем мини-версию плана
     this.apartmentPlanManager.renderRoomsMini(this.apartmentPlanMiniTable);
   }
   this.profileModal.style.display = "flex";
 }
+
 
 closeProfileModal() {
   this.profileModal.style.display = "none";

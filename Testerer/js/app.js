@@ -505,7 +505,7 @@ async compareCurrentFrame() {
   
   // Преобразуем изображение в ЧБ через утилиту
   const currentData = ImageUtils.convertToGrayscale(this.tempCanvas);
-  
+this.lastMirrorPhoto = currentData;
   // Получаем коэффициенты сравнения через статические методы
   const matchPixel = ImageUtils.pixelWiseComparison(this.selfieData, currentData);
   const matchHistogram = ImageUtils.histogramComparison(this.selfieData, currentData);

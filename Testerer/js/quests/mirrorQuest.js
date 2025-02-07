@@ -37,7 +37,8 @@ export class MirrorQuest extends BaseQuest {
       if (!this.eventManager.isEventLogged(this.doneKey)) {
         await this.eventManager.addDiaryEntry(this.doneKey);
         // Если требуется, можно добавить еще запись, например:
-        // await this.eventManager.addDiaryEntry("what_was_it", <photoData>);
+        await this.eventManager.addDiaryEntry("what_was_it", this.app.lastMirrorPhoto);
+
       }
       alert("✅ Задание «подойти к зеркалу» выполнено!");
     } else {

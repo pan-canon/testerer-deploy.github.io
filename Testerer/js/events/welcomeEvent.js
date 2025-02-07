@@ -1,6 +1,6 @@
 // WelcomeEvent.js
 import { BaseEvent } from './baseEvent.js';
-import { VisualEffectsManager } from './utils/visualEffectsManager.js';
+import { VisualEffectsManager } from '../utils/visualEffectsManager.js';
 
 export class WelcomeEvent extends BaseEvent {
   /**

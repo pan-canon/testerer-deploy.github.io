@@ -3,24 +3,30 @@ import { BaseEvent } from './baseEvent.js';
 
 export class WelcomeEvent extends BaseEvent {
   /**
-   * @param {EventManager} eventManager – менеджер для работы с дневником
-   * @param {App} appInstance – ссылка на основной объект приложения
+   * @param {EventManager} eventManager – менеджер дневника
+   * @param {App} appInstance – ссылка на приложение
    * @param {LanguageManager} languageManager – для локализации
    */
   constructor(eventManager, appInstance, languageManager) {
     super(eventManager);
     this.app = appInstance;
     this.languageManager = languageManager;
-    this.key = "welcome"; // новый ключ события
+    this.key = "welcome"; // ключ события (используется для внутренней логики, можно оставить)
   }
 
   /**
-   * При активации события логируем его и запускаем звонок через CallManager.
+   * При активации события запускается звонок через CallManager.
+   * Обработчик нажатия кнопки «Ответить» задаётся здесь.
    */
-async activate() {
-  // Не логируем запись сразу – дождёмся ответа на звонок.
-  console.log("Активируем событие 'welcome': инициируем звонок");
-  this.app.callManager.startCall("welcome");
-}
-
+  async activate() {
+    // Не логируем запись сразу – запись появится только при ответе на звонок.
+    console.log("Активируем событие 'welcome': инициируем звонок");
+    this.app.callManager.startCall("welcome", {
+      onAnswer: async () => {
+        // Логируем запись с текстом "mirror_quest"
+        const mirrorQuestText = this.languageManager.locales[this.languageManager.getLanguage()]["mirror_quest"];
+        await this.eventManager.addDiaryEntry(mirrorQuestText);
+      }
+    });
+  }
 }

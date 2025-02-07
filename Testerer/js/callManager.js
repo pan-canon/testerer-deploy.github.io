@@ -2,7 +2,7 @@
 export class CallManager {
   /**
    * @param {EventManager} eventManager – менеджер дневника
-   * @param {App} appInstance – ссылка на основной объект приложения
+   * @param {App} appInstance – ссылка на основное приложение
    * @param {LanguageManager} languageManager – для локализации
    */
   constructor(eventManager, appInstance, languageManager) {
@@ -14,9 +14,9 @@ export class CallManager {
   /**
    * Запускает звонок указанного типа.
    * @param {string} callType – тип звонка (например, "welcome")
+   * @param {object} options – дополнительные параметры, например, onAnswer callback
    */
-  startCall(callType) {
-    // В зависимости от callType можно настроить звонок. Здесь для примера обрабатываем "welcome".
+  startCall(callType, options = {}) {
     console.log(`Запуск звонка типа "${callType}"`);
     const ringtone = new Audio('audio/phone_ringtone.mp3');
     ringtone.play();
@@ -24,47 +24,48 @@ export class CallManager {
     const answerCallBtn = document.createElement("button");
     const ignoreCallBtn = document.createElement("button");
 
-    // Получаем локализованные надписи для кнопок
+    // Локализуем надписи для кнопок
     answerCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["answer"];
     ignoreCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["ignore"];
 
-answerCallBtn.addEventListener("click", async () => {
-  ringtone.pause();
-  answerCallBtn.remove();
-  ignoreCallBtn.remove();
+    answerCallBtn.addEventListener("click", async () => {
+      ringtone.pause();
+      answerCallBtn.remove();
+      ignoreCallBtn.remove();
 
-  // Фиксируем, что звонок обработан, активируем флаг для квеста
-  localStorage.setItem("callHandled", "true");
-  localStorage.setItem("mirrorQuestActive", "true");
+      // Фиксируем, что звонок обработан и устанавливаем флаги для квеста
+      localStorage.setItem("callHandled", "true");
+      localStorage.setItem("mirrorQuestActive", "true");
 
-  // Вместо "answered_call" логируем событие "mirror_quest"
-  const mirrorQuestText = this.languageManager.locales[this.languageManager.getLanguage()]["mirror_quest"];
-  await this.eventManager.addDiaryEntry(mirrorQuestText);
+      // Если задан колбэк, вызываем его – он определяет, какую запись добавить в дневник.
+      if (options.onAnswer) {
+        await options.onAnswer();
+      } else {
+        const answeredText = this.languageManager.locales[this.languageManager.getLanguage()]["answered_call"];
+        await this.eventManager.addDiaryEntry(answeredText);
+      }
 
-  // Делаем кнопку камеры видимой и добавляем ей класс свечения
-  const cameraBtn = document.getElementById("toggle-camera");
-  cameraBtn.style.display = "inline-block";
-  cameraBtn.classList.add("glowing");
-});
+      // Делаем кнопку камеры видимой и добавляем ей класс свечения
+      const cameraBtn = document.getElementById("toggle-camera");
+      cameraBtn.style.display = "inline-block";
+      cameraBtn.classList.add("glowing");
+    });
 
-
-    // Обработка нажатия кнопки "Игнорировать"
     ignoreCallBtn.addEventListener("click", async () => {
       localStorage.setItem("callHandled", "true");
       const ignoredText = this.languageManager.locales[this.languageManager.getLanguage()]["ignored_call"];
       await this.endCall(ringtone, answerCallBtn, ignoreCallBtn, ignoredText);
     });
 
-    // Добавляем кнопки на главный экран
     this.app.mainScreen.appendChild(answerCallBtn);
     this.app.mainScreen.appendChild(ignoreCallBtn);
   }
 
   /**
-   * Завершает звонок и добавляет запись в дневник, если необходимо.
-   * @param {Audio} ringtone – объект рингтона
-   * @param {HTMLElement} answerCallBtn – кнопка ответа
-   * @param {HTMLElement} ignoreCallBtn – кнопка игнорирования
+   * Завершает звонок и добавляет запись в дневник (если требуется)
+   * @param {Audio} ringtone – объект звукового сигнала
+   * @param {HTMLElement} answerCallBtn – кнопка ответа на звонок
+   * @param {HTMLElement} ignoreCallBtn – кнопка игнорирования звонка
    * @param {string} eventText – локализованный текст для записи в дневник
    */
   async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventText) {

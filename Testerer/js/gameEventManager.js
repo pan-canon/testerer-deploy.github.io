@@ -1,9 +1,9 @@
 // GameEventManager.js
-import { WelcomeEvent } from './events/welcomeEvent.js';
+import { WelcomeEvent } from './WelcomeEvent.js';
 
 export class GameEventManager {
   /**
-   * @param {EventManager} eventManager – менеджер для дневника
+   * @param {EventManager} eventManager – менеджер дневника
    * @param {App} appInstance – ссылка на приложение
    * @param {LanguageManager} languageManager – для локализации
    */
@@ -11,7 +11,6 @@ export class GameEventManager {
     this.eventManager = eventManager;
     this.app = appInstance;
     this.languageManager = languageManager;
-    // Регистрируем доступные события
     this.events = [
       new WelcomeEvent(this.eventManager, this.app, this.languageManager)
       // В будущем можно добавить другие события

@@ -1,7 +1,7 @@
 import { LanguageManager } from './languageManager.js';
 import { CameraManager } from './cameraManager.js';
 import { ProfileManager } from './profileManager.js';
-import { QuestManager } from './ApartmentPlanManager.js';
+import { ApartmentPlanManager } from './ApartmentPlanManager.js';
 import { DatabaseManager } from './databaseManager.js';
 import { EventManager } from './eventManager.js';
 import { QuestManager } from './questManager.js';

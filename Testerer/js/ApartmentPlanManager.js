@@ -123,7 +123,7 @@ export class ApartmentPlanManager {
       this.rooms = rooms;
       this.renderRooms();
     });
-  } 
+  }
   
   nextFloor() {
     this.currentFloor++;

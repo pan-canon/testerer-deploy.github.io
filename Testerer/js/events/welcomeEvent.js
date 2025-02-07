@@ -11,7 +11,7 @@ export class WelcomeEvent extends BaseEvent {
     super(eventManager);
     this.app = appInstance;
     this.languageManager = languageManager;
-    this.key = "welcome"; // новый ключ события
+    this.key = "mirror_quest"; // новый ключ события
   }
 
   /**

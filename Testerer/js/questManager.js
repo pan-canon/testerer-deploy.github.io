@@ -1,42 +1,46 @@
+import { MirrorQuest } from './quests/mirrorQuest.js';
+
 export class QuestManager {
   /**
    * @param {EventManager} eventManager – менеджер событий (для работы с дневником)
-   * @param {App} appInstance – ссылка на основной объект App (для вызова compareCurrentFrame())
+   * @param {App} appInstance – ссылка на основной объект App
    */
   constructor(eventManager, appInstance) {
     this.eventManager = eventManager;
     this.app = appInstance;
+    // Регистрируем доступные квесты
+    this.quests = [
+      new MirrorQuest(this.eventManager, this.app)
+      // В будущем сюда можно добавить новые квесты
+    ];
   }
 
-  // ЗАМЕНЯЕМ метод activateMirrorQuest() на:
-  async activateMirrorQuest() {
-    if (!this.eventManager.isEventLogged("mirror_quest")) {
-      console.log("🔔 Активируем mirror_quest...");
-      await this.eventManager.addDiaryEntry("mirror_quest");
+  /**
+   * Активирует квест по его ключу
+   * @param {string} key
+   */
+  async activateQuest(key) {
+    const quest = this.quests.find(q => q.key === key);
+    if (quest) {
+      await quest.activate();
     }
   }
 
-  // ДОБАВЛЯЕМ метод checkMirrorQuestOnCamera():
+  /**
+   * Проверяет и завершает квест по ключу
+   * @param {string} key
+   */
+  async checkQuest(key) {
+    const quest = this.quests.find(q => q.key === key);
+    if (quest) {
+      await quest.finish();
+    }
+  }
+
+  /**
+   * Удобный метод для проверки зеркального квеста
+   */
   async checkMirrorQuestOnCamera() {
-    const hasQuest = this.eventManager.isEventLogged("mirror_quest");
-    const doneQuest = this.eventManager.isEventLogged("mirror_done");
-    if (hasQuest && !doneQuest) {
-      console.log("🪞 Mirror quest активно. Запускаем проверку...");
-      setTimeout(async () => {
-        console.log("⏱ Запуск compareCurrentFrame() через 3 сек...");
-        const success = await this.app.compareCurrentFrame();
-        console.log("⏱ Результат compareCurrentFrame():", success);
-        if (success) {
-          if (!this.eventManager.isEventLogged("mirror_done")) {
-            await this.eventManager.addDiaryEntry("mirror_done");
-          }
-          alert("✅ Задание «подойти к зеркалу» выполнено!");
-        } else {
-          alert("❌ Нет совпадения. Попробуйте ещё раз!");
-        }
-      }, 3000);
-    } else {
-      console.log("🪞 Проверка зеркального задания не требуется (либо выполнена).");
-    }
+    await this.checkQuest("mirror_quest");
   }
 }

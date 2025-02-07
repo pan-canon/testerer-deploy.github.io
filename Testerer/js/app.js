@@ -38,7 +38,7 @@ export class App {
     this.cameraSectionManager = new cameraSectionManager();
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
-    this.eventManager = new EventManager(this.databaseManager, this.languageManager);
+this.eventManager = new EventManager(this.databaseManager, this.languageManager);
 this.questManager = new QuestManager(this.eventManager, this);
 // Технические поля для обработки изображений
 this.tempCanvas = document.createElement("canvas");

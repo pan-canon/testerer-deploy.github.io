@@ -59,9 +59,10 @@ export class MirrorQuest extends BaseQuest {
     const success = await this.checkStatus();
     if (success) {
       // Добавляем запись о завершении, прикрепляя фото (если нужно)
-      if (!this.eventManager.isEventLogged(this.doneKey)) {
-        await this.eventManager.addDiaryEntry("what_was_it", this.app.lastMirrorPhoto);
-      }
+if (!this.eventManager.isEventLogged(this.doneKey)) {
+  await this.eventManager.addDiaryEntry(this.doneKey, this.app.lastMirrorPhoto);
+}
+
       // Показ задания, например, после завершения квеста
       this.showMirrorTask();
       alert("✅ Задание «подойти к зеркалу» выполнено!");

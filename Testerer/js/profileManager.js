@@ -12,11 +12,20 @@ export class ProfileManager {
   }
   
 resetProfile() {
+  // Удаляем ключи, связанные с профилем и регистрацией
   localStorage.removeItem('profile');
   localStorage.removeItem('regData');
   localStorage.removeItem('diaryDB'); // Очищаем базу дневника!
+  // Если у вас используются дополнительные ключи (например, для флагов регистрации или звонка), удалите их тоже:
+  localStorage.removeItem("registrationCompleted");
+  localStorage.removeItem("callHandled");
+  
+  // Альтернативно можно вызвать localStorage.clear(), если хотите полностью очистить хранилище:
+  // localStorage.clear();
+  
   window.location.reload();
 }
+
 
   
   saveRegistrationData(data) {

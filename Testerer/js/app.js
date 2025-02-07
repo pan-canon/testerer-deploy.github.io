@@ -229,23 +229,6 @@ this.selfieData = grayscaleData;
     setTimeout(() => this.startPhoneCall(), 5000);
   }
 
-async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventKey) {
-  // Останавливаем звук звонка
-  ringtone.pause();
-
-  // Убираем кнопки ответа/игнора
-  answerCallBtn.remove();
-  ignoreCallBtn.remove();
-
-  // Если записи в дневнике ещё нет — создаём
-  if (!this.eventManager.isEventLogged(eventKey)) {
-    await this.eventManager.addDiaryEntry(eventKey);
-  }
-
-  // Делаем кнопку камеры видимой сразу
-  const cameraBtn = document.getElementById("toggle-camera");
-  cameraBtn.style.display = "inline-block";
-}
 
 
 setupProfileModal() {
@@ -295,18 +278,56 @@ saveProfileChanges() {
 }
 
 retakeSelfie() {
-  this.closeProfileModal();
-  // Перенаправляем пользователя к шагу съемки селфи.
-  // Например, можно выполнить:
-  this.showRegistrationScreen();
-  this.goToSelfieScreen();
+  // Оставляем профильное модальное окно открытым, а поверх него открываем оверлей для селфи.
+  this.openSelfieCaptureOverlay();
 }
 
-editApartmentPlan() {
-  this.closeProfileModal();
-  // Показываем экран редактирования плана квартиры
-  document.getElementById('apartment-plan-screen').style.display = 'block';
+openSelfieCaptureOverlay() {
+  // Реализуйте открытие оверлея для селфи.
+  // Например, показать скрытый <div id="selfie-capture-overlay"> с камерой и кнопкой захвата.
+  document.getElementById('selfie-capture-overlay').style.display = 'block';
+  // После успешного захвата, сохраните новое селфи, обновите профиль и вызовите:
+  // this.closeSelfieCaptureOverlay();
+  // this.openProfileModal();
 }
+
+
+editApartmentPlan() {
+  // Открываем редактор плана квартиры как модальное окно (оверлей)
+  this.openApartmentPlanEditorOverlay();
+}
+
+openApartmentPlanEditorOverlay() {
+  // Показать скрытый <div id="apartment-plan-editor-overlay">, где пользователь может редактировать план.
+  document.getElementById('apartment-plan-editor-overlay').style.display = 'block';
+  // По завершении редактирования (например, при клике на "Сохранить план") 
+  // сохранить изменения и вызвать:
+  // this.closeApartmentPlanEditorOverlay();
+  // this.openProfileModal();
+}
+
+
+
+async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventKey) {
+  // Останавливаем звук звонка
+  ringtone.pause();
+
+  // Убираем кнопки ответа/игнора
+  answerCallBtn.remove();
+  ignoreCallBtn.remove();
+
+  // Если записи в дневнике ещё нет — создаём
+  if (!this.eventManager.isEventLogged(eventKey)) {
+    await this.eventManager.addDiaryEntry(eventKey);
+  }
+
+  // Делаем кнопку камеры видимой сразу
+  const cameraBtn = document.getElementById("toggle-camera");
+  cameraBtn.style.display = "inline-block";
+}
+
+
+
 
 
 

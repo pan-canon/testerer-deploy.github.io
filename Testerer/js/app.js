@@ -5,6 +5,8 @@ import { ProfileManager } from './profileManager.js';
 import { ApartmentPlanManager } from './ApartmentPlanManager.js';
 import { DatabaseManager } from './databaseManager.js';
 import { EventManager } from './eventManager.js';
+this.callManager = new CallManager(this.eventManager, this, this.languageManager);
+import { CallManager } from './callManager.js';
 import { QuestManager } from './questManager.js';
 
 export class App {
@@ -103,7 +105,7 @@ async init() {
       localStorage.getItem("registrationCompleted") === "true" &&
       localStorage.getItem("callHandled") !== "true"
     ) {
-      this.startPhoneCall();
+      this.callManager.startPhoneCall();
     }
     
     // Если регистрация завершена, звонок обработан и квест активен,
@@ -250,76 +252,6 @@ completeRegistration() {
 }
 
 
-
-async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventKey) {
-  // Останавливаем звук звонка
-  ringtone.pause();
-
-  // Убираем кнопки ответа/игнора
-  answerCallBtn.remove();
-  ignoreCallBtn.remove();
-
-  // Если записи в дневнике ещё нет — создаём
-  if (!this.eventManager.isEventLogged(eventKey)) {
-    await this.eventManager.addDiaryEntry(eventKey);
-  }
-
-  // Делаем кнопку камеры видимой сразу
-  const cameraBtn = document.getElementById("toggle-camera");
-  cameraBtn.style.display = "inline-block";
-}
-
-startPhoneCall() {
-    const ringtone = new Audio('audio/phone_ringtone.mp3');
-    ringtone.play();
-
-    const answerCallBtn = document.createElement("button");
-    const ignoreCallBtn = document.createElement("button");
-
-    answerCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["answer"];
-    ignoreCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["ignore"];
-
-// При ответе
-answerCallBtn.addEventListener("click", async () => {
-  ringtone.pause();
-  answerCallBtn.remove();
-  ignoreCallBtn.remove();
-
-  // Фиксируем, что звонок обработан и активируем флаг для квеста
-  localStorage.setItem("callHandled", "true");
-  localStorage.setItem("mirrorQuestActive", "true");
-
-  // Добавляем запись в блог о том, что звонок отвечен
-  await this.eventManager.addDiaryEntry("answered_call");
-
-  // Делаем кнопку камеры видимой и добавляем класс свечения
-  const cameraBtn = document.getElementById("toggle-camera");
-  cameraBtn.style.display = "inline-block";
-  cameraBtn.classList.add("glowing");
-
-  // В этом варианте больше не запускаем квест автоматически,
-  // а ждем нажатия на кнопку камеры пользователем.
-});
-
-
-// При игнорировании
-ignoreCallBtn.addEventListener("click", async () => {
-    // Устанавливаем флаг, что звонок обработан
-    localStorage.setItem("callHandled", "true");
-
-    // Просто сразу считаем, что событие "ignored_call"
-    await this.endCall(
-      ringtone,
-      answerCallBtn,
-      ignoreCallBtn,
-      "ignored_call"
-    );
-});
-
-
-    this.mainScreen.appendChild(answerCallBtn);
-    this.mainScreen.appendChild(ignoreCallBtn);
-}
 
 // 🔹 Эффект затемнения + помехи
 triggerMirrorEffect() {

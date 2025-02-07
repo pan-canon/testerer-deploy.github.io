@@ -34,9 +34,8 @@ export class CallManager {
       localStorage.setItem("callHandled", "true");
       localStorage.setItem("mirrorQuestActive", "true");
 
-      // Получаем локализованный текст для записи в дневник
-      const answeredText = this.languageManager.locales[this.languageManager.getLanguage()]["answered_call"];
-      await this.eventManager.addDiaryEntry(answeredText);
+      // Добавляем запись в дневник, что звонок принят
+      await this.eventManager.addDiaryEntry("answered_call");
 
       // Делаем кнопку камеры видимой и добавляем ей класс свечения
       const cameraBtn = document.getElementById("toggle-camera");
@@ -47,8 +46,7 @@ export class CallManager {
     // Обработка нажатия кнопки "Игнорировать"
     ignoreCallBtn.addEventListener("click", async () => {
       localStorage.setItem("callHandled", "true");
-      const ignoredText = this.languageManager.locales[this.languageManager.getLanguage()]["ignored_call"];
-      await this.endCall(ringtone, answerCallBtn, ignoreCallBtn, ignoredText);
+      await this.endCall(ringtone, answerCallBtn, ignoreCallBtn, "ignored_call");
     });
 
     // Добавляем кнопки на главный экран приложения
@@ -61,15 +59,15 @@ export class CallManager {
    * @param {Audio} ringtone – объект звукового сигнала
    * @param {HTMLElement} answerCallBtn – кнопка ответа на звонок
    * @param {HTMLElement} ignoreCallBtn – кнопка игнорирования звонка
-   * @param {string} eventText – локализованный текст для записи в дневник
+   * @param {string} eventKey – ключ для записи в дневник
    */
-  async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventText) {
+  async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventKey) {
     ringtone.pause();
     answerCallBtn.remove();
     ignoreCallBtn.remove();
 
-    if (!this.eventManager.isEventLogged(eventText)) {
-      await this.eventManager.addDiaryEntry(eventText);
+    if (!this.eventManager.isEventLogged(eventKey)) {
+      await this.eventManager.addDiaryEntry(eventKey);
     }
     const cameraBtn = document.getElementById("toggle-camera");
     cameraBtn.style.display = "inline-block";

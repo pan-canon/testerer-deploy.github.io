@@ -269,27 +269,20 @@ answerCallBtn.addEventListener("click", async () => {
     answerCallBtn.remove();
     ignoreCallBtn.remove();
 
-    // Фиксируем, что звонок обработан
+    // Устанавливаем флаг, что звонок обработан
     localStorage.setItem("callHandled", "true");
 
-    // Запускаем эффект (если нужно)
+    // Получаем экземпляр зеркального квеста из QuestManager
     const mirrorQuest = this.questManager.quests.find(q => q.key === "mirror_quest");
     if (mirrorQuest) {
       mirrorQuest.triggerMirrorEffect();
     }
 
-    // Добавляем запись о запуске квеста (если её ещё нет)
-    if (!this.eventManager.isEventLogged("mirror_quest")) {
-      await this.eventManager.addDiaryEntry("mirror_quest");
-    }
-
-    // Анимируем кнопку "Открыть камеру", чтобы привлечь внимание юзера:
-    const toggleCameraBtn = document.getElementById("toggle-camera");
-    toggleCameraBtn.classList.add("highlight");
-
-    // Не открываем камеру автоматически – ждём, пока юзер нажмёт кнопку
+    setTimeout(async () => {
+      await this.questManager.activateQuest("mirror_quest");
+      this.toggleCameraView();
+    }, 5000);
 });
-
 
 
 // При игнорировании
@@ -326,46 +319,39 @@ async toggleCameraView() {
   ];
 
   // Если контейнер скрыт – показываем его
-if (cameraContainer.style.display === "none") {
-  console.log("📸 Переключаемся на камеру...");
-  diary.style.display = "none";
-  cameraContainer.style.display = "flex";
-  toggleCameraBtn.style.display = "none";
-  toggleDiaryBtn.style.display = "inline-block";
-  buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
+  if (cameraContainer.style.display === "none") {
+    console.log("📸 Переключаемся на камеру...");
+    diary.style.display = "none";
+    cameraContainer.style.display = "flex";
+    toggleCameraBtn.style.display = "none";
+    toggleDiaryBtn.style.display = "inline-block";
+    buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
 
-  // Прикрепляем видео к контейнеру камеры (без фильтра)
-  this.cameraSectionManager.attachTo('camera-container', {
-    width: "100%",
-    height: "100%"
-  });
-  await this.cameraSectionManager.startCamera();
+    // Прикрепляем видео к контейнеру камеры (без фильтра)
+    this.cameraSectionManager.attachTo('camera-container', {
+      width: "100%",
+      height: "100%"
+    });
+    await this.cameraSectionManager.startCamera();
 
-  await new Promise(resolve => {
-    if (this.cameraSectionManager.videoElement.readyState >= 2) {
-      resolve();
-    } else {
-      this.cameraSectionManager.videoElement.onloadedmetadata = () => resolve();
-    }
-  });
-  console.log("Видео готово:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
-
-  // Если кнопка "Открыть камеру" имеет класс highlight – значит, юзер был приглашён открыть камеру для квеста
-  if (toggleCameraBtn.classList.contains("highlight")) {
-    toggleCameraBtn.classList.remove("highlight");
-    // Запускаем зеркальный квест (выполнение compareCurrentFrame() и т.д.)
-    await this.questManager.activateQuest("mirror_quest");
+    await new Promise(resolve => {
+      if (this.cameraSectionManager.videoElement.readyState >= 2) {
+        resolve();
+      } else {
+        this.cameraSectionManager.videoElement.onloadedmetadata = () => resolve();
+      }
+    });
+    console.log("Видео готово:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
+  } else {
+    console.log("📓 Возвращаемся в блог...");
+    diary.style.display = "block";
+    cameraContainer.style.display = "none";
+    toggleCameraBtn.style.display = "inline-block";
+    toggleDiaryBtn.style.display = "none";
+    buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
+    this.cameraSectionManager.stopCamera();
   }
-} else {
-  console.log("📓 Возвращаемся в блог...");
-  diary.style.display = "block";
-  cameraContainer.style.display = "none";
-  toggleCameraBtn.style.display = "inline-block";
-  toggleDiaryBtn.style.display = "none";
-  buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
-  this.cameraSectionManager.stopCamera();
 }
-
 
 
 

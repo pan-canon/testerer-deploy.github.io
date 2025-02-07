@@ -248,9 +248,10 @@ completeRegistration() {
   this.cameraSectionManager.stopCamera();
   this.showMainScreen();
   
-  // Запускаем звонок через 5 секунд
-  setTimeout(() => this.startPhoneCall(), 5000);
+  // Запускаем звонок через 5 секунд через CallManager
+  setTimeout(() => this.callManager.startPhoneCall(), 5000);
 }
+
 
 
 

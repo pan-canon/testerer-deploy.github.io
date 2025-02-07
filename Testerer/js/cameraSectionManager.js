@@ -1,5 +1,4 @@
-// CameraSectionManager.js
-export class CameraSectionManager {
+export class cameraSectionManager {
   constructor(videoElementId) {
     this.videoElement = document.getElementById(videoElementId);
     this.stream = null;

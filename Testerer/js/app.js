@@ -129,7 +129,7 @@ goToApartmentPlanScreen() {
   document.getElementById('apartment-plan-screen').style.display = 'block';
   // Инициализируем менеджер плана квартиры (если ещё не создан)
   if (!this.apartmentPlanManager) {
-    this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-table', this.databaseManager);
+    this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', this.databaseManager);
   }
 }
 

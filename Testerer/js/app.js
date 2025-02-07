@@ -93,7 +93,9 @@ async init() {
     cameraBtn.style.display = "inline-block";
   }
   
-
+  if (this.profileManager.isProfileSaved()) {
+    this.showMainScreen();
+    this.eventManager.updateDiaryDisplay();
 
 if (this.profileManager.isProfileSaved() &&
     localStorage.getItem("callHandled") === "true" &&
@@ -371,7 +373,7 @@ if (cameraContainer.style.display === "none") {
   buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
   this.cameraSectionManager.stopCamera();
 }
-
+}
 
 
 

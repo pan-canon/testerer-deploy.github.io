@@ -22,7 +22,7 @@ const locales = {
     "open_camera": "Open Camera",
     "open_diary": "Open Diary",
     "mirror_quest": "They are asking me to come to the mirror...",
-    "ignored_call": "I didn't answer, I don't know who it was.",
+    "ignored_call": "I didn't answer, I don't know who it was. Hm.... Text. “З”. What would that mean...",
     "what_was_it": "Что это было?"
   },
   "ru": {
@@ -48,7 +48,7 @@ const locales = {
     "open_camera": "Открыть камеру",
     "open_diary": "Открыть дневник",
     "mirror_quest": "Они просят подойти меня к зеркалу.",
-    "ignored_call": "Я не ответил(а), я не знаю, кто это.",
+    "ignored_call": "Я не ответил(а), я не знаю, кто это. Хм.... Смс. \"З\". Что бы это значило...",
     "what_was_it": "Что это было?"
   },
   "uk": {
@@ -74,7 +74,7 @@ const locales = {
     "open_camera": "Відкрити камеру",
     "open_diary": "Відкрити щоденник",
     "mirror_quest": "Вони просять підійти мене до дзеркала.",
-    "ignored_call": "Я не відповів(ла), я не знаю, хто це.",
+    "ignored_call": "Я не відповів(ла), я не знаю, хто це. Хм.... Смс. «З». Що б це означало...",
     "what_was_it": "Что это было?"
   }
 };

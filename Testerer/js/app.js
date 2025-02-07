@@ -502,26 +502,24 @@ async compareCurrentFrame() {
     this.tempCanvas.height
   );
   
-  // Используем метод из ImageUtils для преобразования в градации серого
+  // Преобразуем изображение в градации серого с помощью утилиты
   const currentData = ImageUtils.convertToGrayscale(this.tempCanvas);
   
-  // Выполняем сравнения, используя статические методы
+  // Выполняем сравнения, используя статические методы из ImageUtils
   const matchPixel = ImageUtils.pixelWiseComparison(this.selfieData, currentData);
   const matchHistogram = ImageUtils.histogramComparison(this.selfieData, currentData);
   
   console.log(`🔎 Сравнение кадров: Pixel=${matchPixel.toFixed(2)}, Histogram=${matchHistogram.toFixed(2)}`);
   
-  const currentLang = this.languageManager.getLanguage();
-  const whatWasItText = this.languageManager.locales[currentLang]["what_was_it"] || "What was it?";
-  
+  // Если сравнения удовлетворяют условию, просто возвращаем true (без добавления записи в дневник)
   if (matchPixel > 0.6 && matchHistogram > 0.7) {
     alert("✅ Вы перед зеркалом!");
-    await this.eventManager.addDiaryEntry(whatWasItText, currentData);
     return true;
   } else {
     alert("❌ Нет совпадения!");
     return false;
   }
 }
+
 
 }

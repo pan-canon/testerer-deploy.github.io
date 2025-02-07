@@ -35,7 +35,7 @@ export class App {
     
     // Менеджеры
     this.languageManager = new LanguageManager('language-selector');
-    this.CameraSectionManager = new CameraSectionManager('selfie-video');
+    this.cameraSectionManager = new cameraSectionManager('selfie-video');
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);

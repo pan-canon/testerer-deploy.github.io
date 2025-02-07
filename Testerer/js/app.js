@@ -35,7 +35,7 @@ export class App {
     
     // Менеджеры
     this.languageManager = new LanguageManager('language-selector');
-    this.cameraSectionManager = new cameraSectionManager('selfie-video');
+    this.cameraSectionManager = new cameraSectionManager();
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
@@ -82,28 +82,29 @@ document.getElementById("next-floor-btn").addEventListener("click", () => {
 
   
 async init() {
-  // Сначала ждём инициализации БД
   await this.databaseManager.initDatabasePromise;
-
-  // Прямой вызов метода databaseManager, чтобы получить записи
   const entries = this.databaseManager.getDiaryEntries();
   console.log("Проверяем дневник после инициализации:", entries);
 
-  // Если массив не пустой, значит в БД уже есть хотя бы одна запись
   if (entries.length > 0) {
-    // Показываем кнопку
     const cameraBtn = document.getElementById("toggle-camera");
     cameraBtn.style.display = "inline-block";
   }
 
-  // Далее — логика профиля, как раньше
   if (this.profileManager.isProfileSaved()) {
     this.showMainScreen();
     this.eventManager.updateDiaryDisplay();
+    // Если регистрация завершена, но звонок еще не обработан, запускаем звонок
+    if (localStorage.getItem("registrationCompleted") === "true" &&
+        localStorage.getItem("callHandled") !== "true") {
+      // Запускаем звонок повторно
+      this.startPhoneCall();
+    }
   } else {
     this.showRegistrationScreen();
   }
 }
+
 
   
   validateRegistration() {
@@ -136,15 +137,17 @@ goToSelfieScreen() {
   document.getElementById('apartment-plan-screen').style.display = 'none';
   // Показываем экран селфи
   this.selfieScreen.style.display = 'block';
-  // Прикрепляем видео к контейнеру для селфи с нужными параметрами и, возможно, применяем фильтр для ЧБ
+  // Показываем контейнер камеры, если он используется для селфи
+  // Например, если вы хотите, чтобы селфи показывалось в отдельном контейнере:
   this.cameraSectionManager.attachTo('selfie-container', {
     width: "100%",
     maxWidth: "400px",
-    filter: "grayscale(100%)"  // если хотите сохранять ЧБ для сравнения
+    filter: "grayscale(100%)"  // применяем ЧБ фильтр для селфи
   });
   this.cameraSectionManager.startCamera();
   this.completeBtn.disabled = true;
 }
+
 
 /*  goToSelfieScreen() {
     const regData = {
@@ -206,30 +209,37 @@ this.selfieData = grayscaleData;
 }
 
   
-  completeRegistration() {
-    if (!this.selfiePreview.src || this.selfiePreview.src === "") {
-      alert("Please capture your selfie before completing registration.");
-      return;
-    }
-    const regDataStr = localStorage.getItem('regData');
-    if (!regDataStr) {
-      alert("Registration data missing.");
-      return;
-    }
-    const regData = JSON.parse(regDataStr);
-    const profile = {
-      name: regData.name,
-      gender: regData.gender,
-      language: regData.language,
-      selfie: this.selfiePreview.src
-    };
-    this.profileManager.saveProfile(profile);
-    this.cameraSectionManager.stopCamera();
-    this.showMainScreen();
-
-    // Звонок через 5 секунд после завершения регистрации
-    setTimeout(() => this.startPhoneCall(), 5000);
+completeRegistration() {
+  if (!this.selfiePreview.src || this.selfiePreview.src === "") {
+    alert("Please capture your selfie before completing registration.");
+    return;
   }
+  const regDataStr = localStorage.getItem('regData');
+  if (!regDataStr) {
+    alert("Registration data missing.");
+    return;
+  }
+  const regData = JSON.parse(regDataStr);
+  const profile = {
+    name: regData.name,
+    gender: regData.gender,
+    language: regData.language,
+    selfie: this.selfiePreview.src
+  };
+  this.profileManager.saveProfile(profile);
+  // Устанавливаем флаг завершения регистрации
+  localStorage.setItem("registrationCompleted", "true");
+  this.cameraSectionManager.stopCamera();
+  this.showMainScreen();
+
+  // Запускаем звонок через 5 секунд
+  setTimeout(() => {
+    // Если пользователь обновил страницу до начала звонка, то флаг registrationCompleted остается,
+    // а в init() мы сможем обработать ситуацию.
+    this.startPhoneCall();
+  }, 5000);
+}
+
 
 async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventKey) {
   // Останавливаем звук звонка
@@ -259,31 +269,37 @@ startPhoneCall() {
     answerCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["answer"];
     ignoreCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["ignore"];
 
-    // При ответе
+// При ответе
 answerCallBtn.addEventListener("click", async () => {
     ringtone.pause();
     answerCallBtn.remove();
     ignoreCallBtn.remove();
 
+    // Устанавливаем флаг, что звонок обработан
+    localStorage.setItem("callHandled", "true");
+
     this.triggerMirrorEffect();
 
-setTimeout(async () => {
-  await this.eventManager.addDiaryEntry("mirror_quest");
-  this.toggleCameraView();
-}, 5000);
+    setTimeout(async () => {
+      await this.eventManager.addDiaryEntry("mirror_quest");
+      this.toggleCameraView();
+    }, 5000);
 });
 
+// При игнорировании
+ignoreCallBtn.addEventListener("click", async () => {
+    // Устанавливаем флаг, что звонок обработан
+    localStorage.setItem("callHandled", "true");
 
-    // При игнорировании
-    ignoreCallBtn.addEventListener("click", async () => {
-        // Просто сразу считаем, что событие "ignored_call"
-        await this.endCall(
-          ringtone,
-          answerCallBtn,
-          ignoreCallBtn,
-          "ignored_call"
-        );
-    });
+    // Просто сразу считаем, что событие "ignored_call"
+    await this.endCall(
+      ringtone,
+      answerCallBtn,
+      ignoreCallBtn,
+      "ignored_call"
+    );
+});
+
 
     this.mainScreen.appendChild(answerCallBtn);
     this.mainScreen.appendChild(ignoreCallBtn);
@@ -319,9 +335,9 @@ async toggleCameraView() {
   const toggleCameraBtn = document.getElementById("toggle-camera");
   const toggleDiaryBtn = document.getElementById("toggle-diary");
   const buttonsToHide = [
-      document.getElementById("reset-data"),
-      document.getElementById("export-profile"),
-      document.getElementById("import-profile-container")
+    document.getElementById("reset-data"),
+    document.getElementById("export-profile"),
+    document.getElementById("import-profile-container")
   ];
 
   // Если контейнер скрыт – показываем его
@@ -333,15 +349,13 @@ async toggleCameraView() {
     toggleDiaryBtn.style.display = "inline-block";
     buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
 
-    // Прикрепляем видео к контейнеру камеры, без фильтра (или с иными параметрами)
+    // Прикрепляем видео к контейнеру камеры (без фильтра)
     this.cameraSectionManager.attachTo('camera-container', {
       width: "100%",
       height: "100%"
-      // Можно добавить другие стили для полноэкранного режима
     });
     await this.cameraSectionManager.startCamera();
 
-    // Дождитесь загрузки метаданных видео, если необходимо
     await new Promise(resolve => {
       if (this.cameraSectionManager.videoElement.readyState >= 2) {
         resolve();
@@ -362,6 +376,7 @@ async toggleCameraView() {
     this.cameraSectionManager.stopCamera();
   }
 }
+
 
 
   

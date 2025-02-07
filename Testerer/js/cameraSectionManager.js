@@ -1,14 +1,12 @@
-// CameraSectionManager.js
 export class cameraSectionManager {
   constructor() {
-    this.videoElement = null; // будет создаваться динамически
+    this.videoElement = null; // будет создан динамически
     this.stream = null;
   }
 
   /**
    * attachTo(containerId, options)
-   * Создает (если еще не создан) видеоэлемент, применяет заданные стили и вставляет его в контейнер.
-   * options может включать стили, например: { width: "100%", maxWidth: "400px", filter: "grayscale(100%)" }
+   * Создаёт (если ещё не создан) видеоэлемент, применяет заданные стили и вставляет его в контейнер.
    */
   attachTo(containerId, options = {}) {
     const container = document.getElementById(containerId);
@@ -21,10 +19,10 @@ export class cameraSectionManager {
       this.videoElement.autoplay = true;
       this.videoElement.playsInline = true;
     } else if (this.videoElement.parentNode) {
-      // Если видео уже было прикреплено к другому контейнеру, удаляем его
+      // Удаляем видео из предыдущего контейнера
       this.videoElement.parentNode.removeChild(this.videoElement);
     }
-    // Применяем опции как inline-стили
+    // Применяем опции (например, размеры, фильтр)
     for (const prop in options) {
       this.videoElement.style[prop] = options[prop];
     }

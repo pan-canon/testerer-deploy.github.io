@@ -39,17 +39,17 @@ export class App {
     this.cameraSectionManager = new cameraSectionManager();
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
-this.eventManager = new EventManager(this.databaseManager, this.languageManager);
-this.questManager = new QuestManager(this.eventManager, this);
-// Технические поля для обработки изображений
-this.tempCanvas = document.createElement("canvas");
-this.tempCtx = this.tempCanvas.getContext("2d");
+    this.eventManager = new EventManager(this.databaseManager, this.languageManager);
+    this.questManager = new QuestManager(this.eventManager, this);
+    // Технические поля для обработки изображений
+    this.tempCanvas = document.createElement("canvas");
+    this.tempCtx = this.tempCanvas.getContext("2d");
 
     this.bindEvents();
     this.init();
   }
   
-bindEvents() {
+  bindEvents() {
     // Валидация формы регистрации
     this.nameInput.addEventListener('input', () => this.validateRegistration());
     this.genderSelect.addEventListener('change', () => this.validateRegistration());
@@ -62,60 +62,57 @@ bindEvents() {
     this.exportBtn.addEventListener('click', () => this.exportProfile());
     this.importBtn.addEventListener('click', () => this.importProfile());
 
-document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
-document.getElementById("prev-floor-btn").addEventListener("click", () => {
-  if (this.apartmentPlanManager) {
-    this.apartmentPlanManager.prevFloor();
-  }
-});
-document.getElementById("next-floor-btn").addEventListener("click", () => {
-  if (this.apartmentPlanManager) {
-    this.apartmentPlanManager.nextFloor();
-  }
-});
+    document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
+    document.getElementById("prev-floor-btn").addEventListener("click", () => {
+      if (this.apartmentPlanManager) {
+        this.apartmentPlanManager.prevFloor();
+      }
+    });
+    document.getElementById("next-floor-btn").addEventListener("click", () => {
+      if (this.apartmentPlanManager) {
+        this.apartmentPlanManager.nextFloor();
+      }
+    });
 
     // 🔹 Переключение между камерой и дневником
     document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
     document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
-
-
-}
-
-  
-async init() {
-  await this.databaseManager.initDatabasePromise;
-  
-  const entries = this.databaseManager.getDiaryEntries();
-  console.log("Проверяем дневник после инициализации:", entries);
-  
-  if (entries.length > 0) {
-    const cameraBtn = document.getElementById("toggle-camera");
-    cameraBtn.style.display = "inline-block";
   }
   
-  if (this.profileManager.isProfileSaved()) {
-    this.showMainScreen();
-    this.eventManager.updateDiaryDisplay();
-
-if (this.profileManager.isProfileSaved() &&
-    localStorage.getItem("callHandled") === "true" &&
-    !this.eventManager.isEventLogged("mirror_done")) {
-    const toggleCameraBtn = document.getElementById("toggle-camera");
-    toggleCameraBtn.classList.add("highlight");
-}
+  async init() {
+    await this.databaseManager.initDatabasePromise;
     
-    // Если регистрация завершена, но звонок ещё не обработан, запускаем его
-    if (localStorage.getItem("registrationCompleted") === "true" &&
-        localStorage.getItem("callHandled") !== "true") {
-      this.startPhoneCall();
+    const entries = this.databaseManager.getDiaryEntries();
+    console.log("Проверяем дневник после инициализации:", entries);
+    
+    if (entries.length > 0) {
+      const cameraBtn = document.getElementById("toggle-camera");
+      cameraBtn.style.display = "inline-block";
     }
-  } else {
-    this.showRegistrationScreen();
+    
+    if (this.profileManager.isProfileSaved()) {
+      this.showMainScreen();
+      this.eventManager.updateDiaryDisplay();
+      
+      // Если профиль сохранён, звонок обработан, но квест не завершён,
+      // добавляем класс "highlight" к кнопке для активации квеста.
+      if (this.profileManager.isProfileSaved() &&
+          localStorage.getItem("callHandled") === "true" &&
+          !this.eventManager.isEventLogged("mirror_done")) {
+        const toggleCameraBtn = document.getElementById("toggle-camera");
+        toggleCameraBtn.classList.add("highlight");
+        console.log("📣 При перезагрузке: кнопка 'toggle-camera' получила класс highlight");
+      }
+      
+      // Если регистрация завершена, но звонок ещё не обработан, запускаем его
+      if (localStorage.getItem("registrationCompleted") === "true" &&
+          localStorage.getItem("callHandled") !== "true") {
+        this.startPhoneCall();
+      }
+    } else {
+      this.showRegistrationScreen();
+    }
   }
-}
-
-
-
   
   validateRegistration() {
     if (this.nameInput.value.trim() !== "" && this.genderSelect.value !== "") {
@@ -125,263 +122,224 @@ if (this.profileManager.isProfileSaved() &&
     }
   }
 
-goToApartmentPlanScreen() {
-  const regData = {
-    name: this.nameInput.value.trim(),
-    gender: this.genderSelect.value,
-    language: document.getElementById('language-selector').value
-  };
-  localStorage.setItem('regData', JSON.stringify(regData));
-  // Скрываем экран регистрации и показываем экран плана квартиры
-  this.registrationScreen.style.display = 'none';
-  document.getElementById('apartment-plan-screen').style.display = 'block';
-  // Инициализируем менеджер плана квартиры (если ещё не создан)
-  if (!this.apartmentPlanManager) {
-    this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', this.databaseManager);
-  }
-}
-
-
-goToSelfieScreen() {
-  // Скрываем экран плана квартиры
-  document.getElementById('apartment-plan-screen').style.display = 'none';
-  // Показываем экран селфи
-  this.selfieScreen.style.display = 'block';
-  
-  // Делаем контейнер для селфи видимым
-  const selfieContainer = document.getElementById('selfie-container');
-  selfieContainer.style.display = 'block';
-  
-  // Прикрепляем видео к контейнеру для селфи с нужными параметрами и применяем фильтр для ЧБ
-  this.cameraSectionManager.attachTo('selfie-container', {
-    width: "100%",
-    maxWidth: "400px",
-    filter: "grayscale(100%)"
-  });
-  this.cameraSectionManager.startCamera();
-  this.completeBtn.disabled = true;
-}
-
-
-captureSelfie() {
-  console.log("📸 Попытка сделать снимок...");
-
-  if (!this.cameraSectionManager.videoElement || !this.cameraSectionManager.videoElement.srcObject) {
-    console.error("❌ Камера не активна!");
-    alert("Ошибка: Камера не включена.");
-    return;
-  }
-
-  const video = this.cameraSectionManager.videoElement;
-
-  // Проверяем, готово ли видео
-  if (video.readyState < 2) {
-    console.warn("⏳ Камера ещё не готова...");
-    alert("Подождите, пока камера загрузится.");
-    return;
-  }
-
-  try {
-    // Создаём скрытый <canvas> для захвата кадра
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) {
-      throw new Error("Не удалось получить контекст рисования.");
+  goToApartmentPlanScreen() {
+    const regData = {
+      name: this.nameInput.value.trim(),
+      gender: this.genderSelect.value,
+      language: document.getElementById('language-selector').value
+    };
+    localStorage.setItem('regData', JSON.stringify(regData));
+    // Скрываем экран регистрации и показываем экран плана квартиры
+    this.registrationScreen.style.display = 'none';
+    document.getElementById('apartment-plan-screen').style.display = 'block';
+    // Инициализируем менеджер плана квартиры (если ещё не создан)
+    if (!this.apartmentPlanManager) {
+      this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', this.databaseManager);
     }
-
-    // Рисуем кадр с видео на канвасе
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // Используем статический метод для преобразования в градации серого
-    const grayscaleData = ImageUtils.convertToGrayscale(canvas);
-    this.selfiePreview.src = grayscaleData;
-    this.selfiePreview.style.display = 'block';
-    this.completeBtn.disabled = false;
-
-    // Сохраняем полученное селфи для последующего сравнения
-    this.selfieData = grayscaleData;
-    
-    console.log("✅ Снимок успешно сделан!");
-  } catch (error) {
-    console.error("❌ Ошибка при создании снимка:", error);
-    alert("Ошибка при создании снимка! Попробуйте снова.");
-  }
-}
-
-
-completeRegistration() {
-  if (!this.selfiePreview.src || this.selfiePreview.src === "") {
-    alert("Please capture your selfie before completing registration.");
-    return;
-  }
-  const regDataStr = localStorage.getItem('regData');
-  if (!regDataStr) {
-    alert("Registration data missing.");
-    return;
-  }
-  const regData = JSON.parse(regDataStr);
-  const profile = {
-    name: regData.name,
-    gender: regData.gender,
-    language: regData.language,
-    selfie: this.selfiePreview.src
-  };
-  this.profileManager.saveProfile(profile);
-  // Устанавливаем флаг завершения регистрации
-  localStorage.setItem("registrationCompleted", "true");
-  
-  this.cameraSectionManager.stopCamera();
-  this.showMainScreen();
-  
-  // Запускаем звонок через 5 секунд
-  setTimeout(() => this.startPhoneCall(), 5000);
-}
-
-
-
-async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventKey) {
-  // Останавливаем звук звонка
-  ringtone.pause();
-
-  // Убираем кнопки ответа/игнора
-  answerCallBtn.remove();
-  ignoreCallBtn.remove();
-
-  // Если записи в дневнике ещё нет — создаём
-  if (!this.eventManager.isEventLogged(eventKey)) {
-    await this.eventManager.addDiaryEntry(eventKey);
   }
 
-  // Делаем кнопку камеры видимой сразу
-  const cameraBtn = document.getElementById("toggle-camera");
-  cameraBtn.style.display = "inline-block";
-}
+  goToSelfieScreen() {
+    document.getElementById('apartment-plan-screen').style.display = 'none';
+    this.selfieScreen.style.display = 'block';
+    const selfieContainer = document.getElementById('selfie-container');
+    selfieContainer.style.display = 'block';
+    this.cameraSectionManager.attachTo('selfie-container', {
+      width: "100%",
+      maxWidth: "400px",
+      filter: "grayscale(100%)"
+    });
+    this.cameraSectionManager.startCamera();
+    this.completeBtn.disabled = true;
+  }
 
-startPhoneCall() {
-    const ringtone = new Audio('audio/phone_ringtone.mp3');
-    ringtone.play();
+  captureSelfie() {
+    console.log("📸 Попытка сделать снимок...");
+    if (!this.cameraSectionManager.videoElement || !this.cameraSectionManager.videoElement.srcObject) {
+      console.error("❌ Камера не активна!");
+      alert("Ошибка: Камера не включена.");
+      return;
+    }
+    const video = this.cameraSectionManager.videoElement;
+    if (video.readyState < 2) {
+      console.warn("⏳ Камера ещё не готова...");
+      alert("Подождите, пока камера загрузится.");
+      return;
+    }
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error("Не удалось получить контекст рисования.");
+      }
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const grayscaleData = ImageUtils.convertToGrayscale(canvas);
+      this.selfiePreview.src = grayscaleData;
+      this.selfiePreview.style.display = 'block';
+      this.completeBtn.disabled = false;
+      this.selfieData = grayscaleData;
+      console.log("✅ Снимок успешно сделан!");
+    } catch (error) {
+      console.error("❌ Ошибка при создании снимка:", error);
+      alert("Ошибка при создании снимка! Попробуйте снова.");
+    }
+  }
 
-    const answerCallBtn = document.createElement("button");
-    const ignoreCallBtn = document.createElement("button");
+  completeRegistration() {
+    if (!this.selfiePreview.src || this.selfiePreview.src === "") {
+      alert("Please capture your selfie before completing registration.");
+      return;
+    }
+    const regDataStr = localStorage.getItem('regData');
+    if (!regDataStr) {
+      alert("Registration data missing.");
+      return;
+    }
+    const regData = JSON.parse(regDataStr);
+    const profile = {
+      name: regData.name,
+      gender: regData.gender,
+      language: regData.language,
+      selfie: this.selfiePreview.src
+    };
+    this.profileManager.saveProfile(profile);
+    localStorage.setItem("registrationCompleted", "true");
+    this.cameraSectionManager.stopCamera();
+    this.showMainScreen();
+    setTimeout(() => this.startPhoneCall(), 5000);
+  }
 
-    answerCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["answer"];
-    ignoreCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["ignore"];
-
-    // При ответе
-answerCallBtn.addEventListener("click", async () => {
+  async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventKey) {
+    console.log("🔚 Завершаем звонок, eventKey:", eventKey);
     ringtone.pause();
     answerCallBtn.remove();
     ignoreCallBtn.remove();
-
-    // Фиксируем, что звонок обработан
-    localStorage.setItem("callHandled", "true");
-
-    // Если определён метод эффекта в MirrorQuest – запускаем его
-    const mirrorQuest = this.questManager.quests.find(q => q.key === "mirror_quest");
-    if (mirrorQuest && mirrorQuest.triggerMirrorEffect) {
-      mirrorQuest.triggerMirrorEffect();
+    if (!this.eventManager.isEventLogged(eventKey)) {
+      await this.eventManager.addDiaryEntry(eventKey);
     }
+    const cameraBtn = document.getElementById("toggle-camera");
+    cameraBtn.style.display = "inline-block";
+    console.log("Кнопка 'toggle-camera' стала видимой");
+  }
 
-    // Добавляем запись о запуске квеста, если её ещё нет
-    if (!this.eventManager.isEventLogged("mirror_quest")) {
-      await this.eventManager.addDiaryEntry("mirror_quest");
-    }
+  startPhoneCall() {
+    console.log("📞 Запускаем звонок...");
+    const ringtone = new Audio('audio/phone_ringtone.mp3');
+    ringtone.play();
+    const answerCallBtn = document.createElement("button");
+    const ignoreCallBtn = document.createElement("button");
+    answerCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["answer"];
+    ignoreCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["ignore"];
 
-    // Делаем кнопку "Открыть камеру" видимой и добавляем ей анимацию (CSS‑класс "highlight")
-    const toggleCameraBtn = document.getElementById("toggle-camera");
-    toggleCameraBtn.style.display = "inline-block";
-    toggleCameraBtn.classList.add("highlight");
+    answerCallBtn.addEventListener("click", async () => {
+      console.log("✅ Пользователь нажал 'Answer'");
+      ringtone.pause();
+      answerCallBtn.remove();
+      ignoreCallBtn.remove();
+      localStorage.setItem("callHandled", "true");
+      console.log("Флаг callHandled установлен в true");
 
-    // Никакого автоматического запуска activateQuest — ждем, пока юзер нажмёт на эту кнопку
-});
+      const mirrorQuest = this.questManager.quests.find(q => q.key === "mirror_quest");
+      if (mirrorQuest && mirrorQuest.triggerMirrorEffect) {
+        console.log("🚀 Запускаем triggerMirrorEffect из MirrorQuest");
+        mirrorQuest.triggerMirrorEffect();
+      }
+      if (!this.eventManager.isEventLogged("mirror_quest")) {
+        console.log("📝 Добавляем запись о запуске квеста 'mirror_quest'");
+        await this.eventManager.addDiaryEntry("mirror_quest");
+      }
+      const toggleCameraBtn = document.getElementById("toggle-camera");
+      toggleCameraBtn.style.display = "inline-block";
+      toggleCameraBtn.classList.add("highlight");
+      console.log("Кнопка 'toggle-camera' стала видимой и получила класс highlight");
+    });
 
-
-    // При игнорировании
     ignoreCallBtn.addEventListener("click", async () => {
-        localStorage.setItem("callHandled", "true");
-        await this.endCall(ringtone, answerCallBtn, ignoreCallBtn, "ignored_call");
+      console.log("❌ Пользователь нажал 'Ignore'");
+      localStorage.setItem("callHandled", "true");
+      await this.endCall(ringtone, answerCallBtn, ignoreCallBtn, "ignored_call");
     });
 
     this.mainScreen.appendChild(answerCallBtn);
     this.mainScreen.appendChild(ignoreCallBtn);
-}
+    console.log("Кнопки Answer/Ignore добавлены на экран");
+  }
 
+  async toggleCameraView() {
+    console.log("🔄 toggleCameraView вызван");
+    const diary = document.getElementById("diary");
+    const cameraContainer = document.getElementById("camera-container");
+    const toggleCameraBtn = document.getElementById("toggle-camera");
+    const toggleDiaryBtn = document.getElementById("toggle-diary");
+    const buttonsToHide = [
+      document.getElementById("reset-data"),
+      document.getElementById("export-profile"),
+      document.getElementById("import-profile-container")
+    ];
 
+    if (cameraContainer.style.display === "none") {
+      console.log("📸 Открываем камеру");
+      diary.style.display = "none";
+      cameraContainer.style.display = "flex";
+      toggleCameraBtn.style.display = "none";
+      toggleDiaryBtn.style.display = "inline-block";
+      buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
 
+      console.log("📹 Прикрепляем видео к контейнеру камеры");
+      this.cameraSectionManager.attachTo('camera-container', {
+        width: "100%",
+        height: "100%"
+      });
+      await this.cameraSectionManager.startCamera();
+      console.log("✅ Камера запущена");
 
-// 🔹 Переключение между камерой и дневником
-async toggleCameraView() {
-  const diary = document.getElementById("diary");
-  const cameraContainer = document.getElementById("camera-container");
-  const toggleCameraBtn = document.getElementById("toggle-camera");
-  const toggleDiaryBtn = document.getElementById("toggle-diary");
-  const buttonsToHide = [
-    document.getElementById("reset-data"),
-    document.getElementById("export-profile"),
-    document.getElementById("import-profile-container")
-  ];
+      await new Promise(resolve => {
+        if (this.cameraSectionManager.videoElement.readyState >= 2) {
+          console.log("🎬 Видео готово: readyState = " + this.cameraSectionManager.videoElement.readyState);
+          resolve();
+        } else {
+          this.cameraSectionManager.videoElement.onloadedmetadata = () => {
+            console.log("🎬 onloadedmetadata сработало");
+            resolve();
+          };
+        }
+      });
+      console.log("Видео разрешение: " + this.cameraSectionManager.videoElement.videoWidth + "x" + this.cameraSectionManager.videoElement.videoHeight);
 
-  if (cameraContainer.style.display === "none") {
-    console.log("📸 Переключаемся на камеру...");
-    diary.style.display = "none";
-    cameraContainer.style.display = "flex";
-    toggleCameraBtn.style.display = "none";
-    toggleDiaryBtn.style.display = "inline-block";
-    buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
-
-    // Прикрепляем видео к контейнеру камеры (без фильтра)
-    this.cameraSectionManager.attachTo('camera-container', {
-      width: "100%",
-      height: "100%"
-    });
-    await this.cameraSectionManager.startCamera();
-
-    await new Promise(resolve => {
-      if (this.cameraSectionManager.videoElement.readyState >= 2) {
-        resolve();
+      if (toggleCameraBtn.classList.contains("highlight")) {
+        console.log("🚀 Кнопка 'toggle-camera' содержит класс 'highlight'. Активируем квест только один раз.");
+        toggleCameraBtn.classList.remove("highlight");
+        await this.questManager.activateQuest("mirror_quest");
+        console.log("✅ Квест 'mirror_quest' активирован");
       } else {
-        this.cameraSectionManager.videoElement.onloadedmetadata = () => resolve();
+        console.log("Кнопка 'toggle-camera' не содержит 'highlight'. Квест не активируется.");
       }
-    });
-    console.log("Видео готово:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
-
-    // Если кнопка "Открыть камеру" всё ещё имеет класс highlight,
-    // значит квест активен и ждем запуска при открытии камеры.
-    if (toggleCameraBtn.classList.contains("highlight")) {
-      toggleCameraBtn.classList.remove("highlight");
-      await this.questManager.activateQuest("mirror_quest");
+    } else {
+      console.log("📓 Закрываем камеру, возвращаемся к дневнику");
+      diary.style.display = "block";
+      cameraContainer.style.display = "none";
+      toggleCameraBtn.style.display = "inline-block";
+      toggleDiaryBtn.style.display = "none";
+      buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
+      this.cameraSectionManager.stopCamera();
+      console.log("✅ Камера остановлена");
     }
-  } else {
-    console.log("📓 Возвращаемся в блог...");
-    diary.style.display = "block";
-    cameraContainer.style.display = "none";
-    toggleCameraBtn.style.display = "inline-block";
-    toggleDiaryBtn.style.display = "none";
-    buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
-    this.cameraSectionManager.stopCamera();
   }
-}
 
-
-
-  
-showMainScreen() {
-  this.registrationScreen.style.display = 'none';
-  this.selfieScreen.style.display = 'none';
-  this.mainScreen.style.display = 'block';
-  const profile = this.profileManager.getProfile();
-  if (profile) {
-    this.profileNameElem.textContent = profile.name;
-    this.profilePhotoElem.src = profile.selfie;
-    this.profilePhotoElem.style.display = 'block';
-    // Восстанавливаем сохранённое селфи для последующего сравнения
-    this.selfieData = profile.selfie;
+  showMainScreen() {
+    this.registrationScreen.style.display = 'none';
+    this.selfieScreen.style.display = 'none';
+    this.mainScreen.style.display = 'block';
+    const profile = this.profileManager.getProfile();
+    if (profile) {
+      this.profileNameElem.textContent = profile.name;
+      this.profilePhotoElem.src = profile.selfie;
+      this.profilePhotoElem.style.display = 'block';
+      this.selfieData = profile.selfie;
+      console.log("Профиль загружен, селфи восстановлено");
+    }
   }
-}
-
   
   showRegistrationScreen() {
     this.registrationScreen.style.display = 'block';
@@ -389,132 +347,104 @@ showMainScreen() {
     this.mainScreen.style.display = 'none';
   }
   
-exportProfile() {
-  const profileStr = this.profileManager.exportProfile();
-  if (!profileStr) {
-    alert("No profile found to export.");
-    return;
-  }
-  // Получаем данные дневника
-  const diaryEntries = this.databaseManager.getDiaryEntries();
-  // Если у вас реализована регистрация плана квартиры, получаем данные плана
-  const apartmentPlanData = this.apartmentPlanManager ? this.apartmentPlanManager.rooms : [];
-  
-  // Объединяем данные в один объект
-  const exportData = {
-    profile: JSON.parse(profileStr),
-    diary: diaryEntries,
-    apartment: apartmentPlanData
-  };
-
-  // Экспорт в JSON-файл
-  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'profile.json';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-  
-importProfile() {
-  if (this.importFileInput.files.length === 0) {
-    alert("Please select a profile file to import.");
-    return;
-  }
-  const file = this.importFileInput.files[0];
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const importedData = JSON.parse(e.target.result);
-      // Проверяем наличие основных данных профиля
-      if (!importedData.profile || !importedData.profile.name || !importedData.profile.gender ||
-          !importedData.profile.selfie || !importedData.profile.language) {
-        alert("Invalid profile file. Required profile fields are missing.");
-        return;
-      }
-      // Сохраняем профиль
-      this.profileManager.saveProfile(importedData.profile);
-      
-      // Импортируем записи дневника, если они есть
-      if (importedData.diary && Array.isArray(importedData.diary)) {
-        importedData.diary.forEach(entry => {
-          if (entry.entry && entry.timestamp) {
-            this.databaseManager.db.run(
-              "INSERT INTO diary (entry, timestamp) VALUES (?, ?)",
-              [entry.entry, entry.timestamp]
-            );
-          }
-        });
-        this.databaseManager.saveDatabase();
-      }
-      
-      // Импортируем данные плана квартиры, если они есть
-      if (importedData.apartment && Array.isArray(importedData.apartment)) {
-        // Если объект apartmentPlanManager уже создан, сохраняем данные и перерисовываем таблицу
-        if (this.apartmentPlanManager) {
-          this.apartmentPlanManager.rooms = importedData.apartment;
-          this.apartmentPlanManager.renderRooms();
-        }
-      }
-      
-      alert("Profile imported successfully. Reloading page.");
-      window.location.reload();
-    } catch (err) {
-      console.error(err);
-      alert("Error parsing the profile file.");
+  exportProfile() {
+    const profileStr = this.profileManager.exportProfile();
+    if (!profileStr) {
+      alert("No profile found to export.");
+      return;
     }
-  };
-  reader.readAsText(file);
-}
-
-
-async compareCurrentFrame() {
-  console.log("▶️ Начало compareCurrentFrame()");
-  
-  if (!this.selfieData) {
-    console.warn("❌ Нет сохранённого селфи!");
-    return false;
+    const diaryEntries = this.databaseManager.getDiaryEntries();
+    const apartmentPlanData = this.apartmentPlanManager ? this.apartmentPlanManager.rooms : [];
+    const exportData = {
+      profile: JSON.parse(profileStr),
+      diary: diaryEntries,
+      apartment: apartmentPlanData
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'profile.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    console.log("📤 Профиль экспортирован");
   }
   
-  if (!this.cameraSectionManager.videoElement || !this.cameraSectionManager.videoElement.srcObject) {
-    console.warn("❌ Камера не активна!");
-    return false;
+  importProfile() {
+    if (this.importFileInput.files.length === 0) {
+      alert("Please select a profile file to import.");
+      return;
+    }
+    const file = this.importFileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        if (!importedData.profile || !importedData.profile.name || !importedData.profile.gender ||
+            !importedData.profile.selfie || !importedData.profile.language) {
+          alert("Invalid profile file. Required profile fields are missing.");
+          return;
+        }
+        this.profileManager.saveProfile(importedData.profile);
+        if (importedData.diary && Array.isArray(importedData.diary)) {
+          importedData.diary.forEach(entry => {
+            if (entry.entry && entry.timestamp) {
+              this.databaseManager.db.run(
+                "INSERT INTO diary (entry, timestamp) VALUES (?, ?)",
+                [entry.entry, entry.timestamp]
+              );
+            }
+          });
+          this.databaseManager.saveDatabase();
+        }
+        if (importedData.apartment && Array.isArray(importedData.apartment)) {
+          if (this.apartmentPlanManager) {
+            this.apartmentPlanManager.rooms = importedData.apartment;
+            this.apartmentPlanManager.renderRooms();
+          }
+        }
+        alert("Profile imported successfully. Reloading page.");
+        window.location.reload();
+      } catch (err) {
+        console.error(err);
+        alert("Error parsing the profile file.");
+      }
+    };
+    reader.readAsText(file);
   }
   
-  // Настройка канвы для захвата текущего кадра
-  this.tempCanvas.width = this.cameraSectionManager.videoElement.videoWidth || 640;
-  this.tempCanvas.height = this.cameraSectionManager.videoElement.videoHeight || 480;
-  this.tempCtx.drawImage(
-    this.cameraSectionManager.videoElement,
-    0,
-    0,
-    this.tempCanvas.width,
-    this.tempCanvas.height
-  );
-  
-  // Преобразуем изображение в ЧБ через утилиту
-  const currentData = ImageUtils.convertToGrayscale(this.tempCanvas);
-  this.lastMirrorPhoto = currentData;
-  // Получаем коэффициенты сравнения через статические методы
-  const matchPixel = ImageUtils.pixelWiseComparison(this.selfieData, currentData);
-  const matchHistogram = ImageUtils.histogramComparison(this.selfieData, currentData);
-  
-  console.log(`🔎 Сравнение кадров: Pixel=${matchPixel.toFixed(2)}, Histogram=${matchHistogram.toFixed(2)}`);
-  
-  // Если удовлетворяет условию – возвращаем true, иначе false
-  if (matchPixel > 0.6 && matchHistogram > 0.7) {
-    alert("✅ Вы перед зеркалом!");
-    return true;
-  } else {
-    alert("❌ Нет совпадения!");
-    return false;
+  async compareCurrentFrame() {
+    console.log("▶️ Начало compareCurrentFrame()");
+    if (!this.selfieData) {
+      console.warn("❌ Нет сохранённого селфи!");
+      return false;
+    }
+    if (!this.cameraSectionManager.videoElement || !this.cameraSectionManager.videoElement.srcObject) {
+      console.warn("❌ Камера не активна!");
+      return false;
+    }
+    this.tempCanvas.width = this.cameraSectionManager.videoElement.videoWidth || 640;
+    this.tempCanvas.height = this.cameraSectionManager.videoElement.videoHeight || 480;
+    this.tempCtx.drawImage(
+      this.cameraSectionManager.videoElement,
+      0,
+      0,
+      this.tempCanvas.width,
+      this.tempCanvas.height
+    );
+    const currentData = ImageUtils.convertToGrayscale(this.tempCanvas);
+    this.lastMirrorPhoto = currentData;
+    const matchPixel = ImageUtils.pixelWiseComparison(this.selfieData, currentData);
+    const matchHistogram = ImageUtils.histogramComparison(this.selfieData, currentData);
+    console.log(`🔎 Сравнение кадров: Pixel=${matchPixel.toFixed(2)}, Histogram=${matchHistogram.toFixed(2)}`);
+    if (matchPixel > 0.6 && matchHistogram > 0.7) {
+      alert("✅ Вы перед зеркалом!");
+      return true;
+    } else {
+      alert("❌ Нет совпадения!");
+      return false;
+    }
   }
-}
-
-
-
 }

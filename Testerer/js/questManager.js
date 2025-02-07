@@ -40,7 +40,7 @@ export class QuestManager {
   /**
    * Удобный метод для проверки зеркального квеста
    */
-  async checkMirrorQuestOnCamera() {
-    await this.checkQuest("mirror_quest");
-  }
+async checkMirrorQuestOnCamera() {
+  await this.checkQuest("mirror_quest");
+}
 }

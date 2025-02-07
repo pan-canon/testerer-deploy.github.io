@@ -235,16 +235,20 @@ async toggleCameraView() {
     });
     await this.cameraSectionManager.startCamera();
 
-    await new Promise(resolve => {
-      if (this.cameraSectionManager.videoElement.readyState >= 2) {
-        resolve();
-      } else {
-        this.cameraSectionManager.videoElement.onloadedmetadata = () => resolve();
-      }
-    });
-    console.log("Видео готово:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
+await new Promise(resolve => {
+  if (this.cameraSectionManager.videoElement.readyState >= 2) {
+    resolve();
+  } else {
+    this.cameraSectionManager.videoElement.onloadedmetadata = () => resolve();
+  }
+});
+console.log("Видео готово:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
 
-    this.questManager.checkMirrorQuestOnCamera();
+// Запускаем зеркальный квест только если флаг активен (то есть, звонок был принят)
+if (localStorage.getItem("mirrorQuestActive") === "true") {
+  this.questManager.checkMirrorQuestOnCamera();
+}
+
   } else {
     console.log("📓 Возвращаемся в блог...");
     diary.style.display = "block";

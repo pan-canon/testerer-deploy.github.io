@@ -357,7 +357,8 @@ async toggleCameraView() {
     // Прикрепляем видео к контейнеру камеры (без фильтра)
     this.cameraSectionManager.attachTo('camera-container', {
       width: "100%",
-      height: "100%"
+      maxWidth: "400px",
+      filter: "grayscale(100%)"
     });
     await this.cameraSectionManager.startCamera();
 

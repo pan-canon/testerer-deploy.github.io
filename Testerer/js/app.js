@@ -278,33 +278,39 @@ saveProfileChanges() {
 }
 
 retakeSelfie() {
-  // Оставляем профильное модальное окно открытым, а поверх него открываем оверлей для селфи.
+  // Оставляем профильное модальное окно открытым или закрываем его, если нужно
+  // и открываем оверлей для селфи
   this.openSelfieCaptureOverlay();
 }
 
 openSelfieCaptureOverlay() {
-  // Реализуйте открытие оверлея для селфи.
-  // Например, показать скрытый <div id="selfie-capture-overlay"> с камерой и кнопкой захвата.
-  document.getElementById('selfie-capture-overlay').style.display = 'block';
-  // После успешного захвата, сохраните новое селфи, обновите профиль и вызовите:
-  // this.closeSelfieCaptureOverlay();
-  // this.openProfileModal();
+  const overlay = document.getElementById('selfie-capture-overlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    // Здесь можно инициализировать камеру или начать захват селфи, если требуется
+  } else {
+    console.error("Элемент с id 'selfie-capture-overlay' не найден.");
+  }
 }
+
 
 
 editApartmentPlan() {
-  // Открываем редактор плана квартиры как модальное окно (оверлей)
+  // Открываем оверлей редактора плана квартиры
   this.openApartmentPlanEditorOverlay();
 }
 
+
 openApartmentPlanEditorOverlay() {
-  // Показать скрытый <div id="apartment-plan-editor-overlay">, где пользователь может редактировать план.
-  document.getElementById('apartment-plan-editor-overlay').style.display = 'block';
-  // По завершении редактирования (например, при клике на "Сохранить план") 
-  // сохранить изменения и вызвать:
-  // this.closeApartmentPlanEditorOverlay();
-  // this.openProfileModal();
+  const overlay = document.getElementById('apartment-plan-editor-overlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    // Если необходимо, инициализируйте редактор плана (например, загрузите таблицу и данные)
+  } else {
+    console.error("Элемент с id 'apartment-plan-editor-overlay' не найден.");
+  }
 }
+
 
 
 

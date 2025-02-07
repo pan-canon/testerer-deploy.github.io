@@ -1,32 +1,32 @@
 export class ApartmentPlanManager {
-constructor(containerId, dbManager) {
-  this.container = document.getElementById(containerId);
-  this.dbManager = dbManager;
-  this.rooms = []; // массив объектов: {floor, startRow, startCol, endRow, endCol, type}
-  this.currentFloor = 1;
-  this.isSelecting = false;
-  this.startCell = null;
-  this.endCell = null;
-  this.gridRows = 10;
-  this.gridCols = 10;
-  this.createTable();  // создаём таблицу динамически
-  this.attachEvents();
-}
-
-
-createTable() {
-  this.table = document.createElement('table');
-  this.table.style.borderCollapse = "collapse";
-  this.table.style.width = "500px";
-  this.table.style.height = "500px";
-  this.container.innerHTML = "";  // очищаем контейнер
-  this.container.appendChild(this.table);
-  this.initTable();  // заполняем таблицу ячейками
-}
-
+  constructor(containerId, dbManager) {
+    this.container = document.getElementById(containerId);
+    this.dbManager = dbManager;
+    this.rooms = []; // массив объектов: {floor, startRow, startCol, endRow, endCol, type}
+    this.currentFloor = 1;
+    this.isSelecting = false;
+    this.startCell = null;
+    this.endCell = null;
+    this.gridRows = 10;
+    this.gridCols = 10;
+    this.createTable();
+    this.attachEvents();
+  }
+  
+  createTable() {
+    // Создаем таблицу динамически и вставляем её в контейнер
+    this.table = document.createElement('table');
+    this.table.style.borderCollapse = "collapse";
+    this.table.style.width = "500px";
+    this.table.style.height = "500px";
+    // Очистить контейнер и добавить созданную таблицу
+    this.container.innerHTML = "";
+    this.container.appendChild(this.table);
+    this.initTable();
+  }
   
   initTable() {
-    // Генерируем таблицу с заданным количеством строк и колонок
+    // Заполняем таблицу ячейками (10 строк, 10 столбцов)
     this.table.innerHTML = "";
     for (let r = 0; r < this.gridRows; r++) {
       const row = document.createElement("tr");

@@ -5,28 +5,23 @@ import { ProfileManager } from './profileManager.js';
 import { ApartmentPlanManager } from './ApartmentPlanManager.js';
 import { DatabaseManager } from './databaseManager.js';
 import { EventManager } from './eventManager.js';
-import { CallManager } from './callManager.js';
+import { CallManager } from './CallManager.js';
 import { QuestManager } from './questManager.js';
+import { GameEventManager } from './GameEventManager.js';
 
 export class App {
   constructor() {
-    // DOM-элементы экранов
+    // DOM-элементы экранов и формы
     this.registrationScreen = document.getElementById('registration-screen');
     this.selfieScreen = document.getElementById('selfie-screen');
     this.mainScreen = document.getElementById('main-screen');
-    
-    // Элементы формы регистрации
     this.nameInput = document.getElementById('player-name');
     this.genderSelect = document.getElementById('player-gender');
     this.nextStepBtn = document.getElementById('next-step-btn');
-    
-    // Элементы экрана селфи
     this.selfieVideo = document.getElementById('selfie-video');
     this.captureBtn = document.getElementById('capture-btn');
     this.selfiePreview = document.getElementById('selfie-preview');
     this.completeBtn = document.getElementById('complete-registration');
-    
-    // Элементы главного экрана
     this.profileNameElem = document.getElementById('profile-name');
     this.profilePhotoElem = document.getElementById('profile-photo');
     this.resetBtn = document.getElementById('reset-data');
@@ -39,10 +34,11 @@ export class App {
     this.cameraSectionManager = new cameraSectionManager();
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
-    // Сначала создаём eventManager, затем передаём его в CallManager и QuestManager
+    // Сначала создаём eventManager, затем CallManager, QuestManager и GameEventManager
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
     this.callManager = new CallManager(this.eventManager, this, this.languageManager);
     this.questManager = new QuestManager(this.eventManager, this);
+    this.gameEventManager = new GameEventManager(this.eventManager, this, this.languageManager);
 
     // Технические поля для обработки изображений
     this.tempCanvas = document.createElement("canvas");
@@ -52,205 +48,163 @@ export class App {
     this.init();
   }
   
-bindEvents() {
-    // Валидация формы регистрации
+  bindEvents() {
+    // Привязка событий формы и переключения экранов
     this.nameInput.addEventListener('input', () => this.validateRegistration());
     this.genderSelect.addEventListener('change', () => this.validateRegistration());
-
     this.nextStepBtn.addEventListener('click', () => this.goToApartmentPlanScreen());
-
     this.captureBtn.addEventListener('click', () => this.captureSelfie());
     this.completeBtn.addEventListener('click', () => this.completeRegistration());
     this.resetBtn.addEventListener('click', () => this.profileManager.resetProfile());
     this.exportBtn.addEventListener('click', () => this.exportProfile());
     this.importBtn.addEventListener('click', () => this.importProfile());
-
-document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
-document.getElementById("prev-floor-btn").addEventListener("click", () => {
-  if (this.apartmentPlanManager) {
-    this.apartmentPlanManager.prevFloor();
-  }
-});
-document.getElementById("next-floor-btn").addEventListener("click", () => {
-  if (this.apartmentPlanManager) {
-    this.apartmentPlanManager.nextFloor();
-  }
-});
-
-    // 🔹 Переключение между камерой и дневником
+    document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
+    document.getElementById("prev-floor-btn").addEventListener("click", () => {
+      if (this.apartmentPlanManager) {
+        this.apartmentPlanManager.prevFloor();
+      }
+    });
+    document.getElementById("next-floor-btn").addEventListener("click", () => {
+      if (this.apartmentPlanManager) {
+        this.apartmentPlanManager.nextFloor();
+      }
+    });
     document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
     document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
-
-
-}
-
-  
-async init() {
-  await this.databaseManager.initDatabasePromise;
-  
-  const entries = this.databaseManager.getDiaryEntries();
-  console.log("Проверяем дневник после инициализации:", entries);
-  
-  // Если в дневнике есть записи, делаем кнопку камеры видимой
-  if (entries.length > 0) {
-    const cameraBtn = document.getElementById("toggle-camera");
-    cameraBtn.style.display = "inline-block";
   }
   
-  if (this.profileManager.isProfileSaved()) {
-    this.showMainScreen();
-    this.eventManager.updateDiaryDisplay();
+  async init() {
+    await this.databaseManager.initDatabasePromise;
     
-    // Если регистрация завершена, но звонок ещё не обработан, запускаем его
-    if (
-      localStorage.getItem("registrationCompleted") === "true" &&
-      localStorage.getItem("callHandled") !== "true"
-    ) {
-      this.callManager.startPhoneCall();
-    }
+    const entries = this.databaseManager.getDiaryEntries();
+    console.log("Проверяем дневник после инициализации:", entries);
     
-    // Если регистрация завершена, звонок обработан и квест активен,
-    // делаем кнопку камеры видимой и добавляем класс свечения
-    if (
-      localStorage.getItem("registrationCompleted") === "true" &&
-      localStorage.getItem("callHandled") === "true" &&
-      localStorage.getItem("mirrorQuestActive") === "true"
-    ) {
+    if (entries.length > 0) {
       const cameraBtn = document.getElementById("toggle-camera");
       cameraBtn.style.display = "inline-block";
-      cameraBtn.classList.add("glowing");
     }
-  } else {
-    this.showRegistrationScreen();
+    
+    if (this.profileManager.isProfileSaved()) {
+      this.showMainScreen();
+      this.eventManager.updateDiaryDisplay();
+      
+      // Если регистрация завершена, но звонок ещё не обработан, активируем событие "welcome"
+      if (
+        localStorage.getItem("registrationCompleted") === "true" &&
+        localStorage.getItem("callHandled") !== "true"
+      ) {
+        setTimeout(() => {
+          this.gameEventManager.activateEvent("welcome");
+        }, 5000);
+      }
+      
+      if (
+        localStorage.getItem("registrationCompleted") === "true" &&
+        localStorage.getItem("callHandled") === "true" &&
+        localStorage.getItem("mirrorQuestActive") === "true"
+      ) {
+        const cameraBtn = document.getElementById("toggle-camera");
+        cameraBtn.style.display = "inline-block";
+        cameraBtn.classList.add("glowing");
+      }
+    } else {
+      this.showRegistrationScreen();
+    }
   }
-}
-
-
-
-
   
   validateRegistration() {
-    if (this.nameInput.value.trim() !== "" && this.genderSelect.value !== "") {
-      this.nextStepBtn.disabled = false;
-    } else {
-      this.nextStepBtn.disabled = true;
+    this.nextStepBtn.disabled = !(this.nameInput.value.trim() !== "" && this.genderSelect.value !== "");
+  }
+
+  goToApartmentPlanScreen() {
+    const regData = {
+      name: this.nameInput.value.trim(),
+      gender: this.genderSelect.value,
+      language: document.getElementById('language-selector').value
+    };
+    localStorage.setItem('regData', JSON.stringify(regData));
+    this.registrationScreen.style.display = 'none';
+    document.getElementById('apartment-plan-screen').style.display = 'block';
+    if (!this.apartmentPlanManager) {
+      this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', this.databaseManager);
     }
   }
-
-goToApartmentPlanScreen() {
-  const regData = {
-    name: this.nameInput.value.trim(),
-    gender: this.genderSelect.value,
-    language: document.getElementById('language-selector').value
-  };
-  localStorage.setItem('regData', JSON.stringify(regData));
-  // Скрываем экран регистрации и показываем экран плана квартиры
-  this.registrationScreen.style.display = 'none';
-  document.getElementById('apartment-plan-screen').style.display = 'block';
-  // Инициализируем менеджер плана квартиры (если ещё не создан)
-  if (!this.apartmentPlanManager) {
-    this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', this.databaseManager);
-  }
-}
-
-
-goToSelfieScreen() {
-  // Скрываем экран плана квартиры
-  document.getElementById('apartment-plan-screen').style.display = 'none';
-  // Показываем экран селфи
-  this.selfieScreen.style.display = 'block';
   
-  // Делаем контейнер для селфи видимым
-  const selfieContainer = document.getElementById('selfie-container');
-  selfieContainer.style.display = 'block';
+  goToSelfieScreen() {
+    document.getElementById('apartment-plan-screen').style.display = 'none';
+    this.selfieScreen.style.display = 'block';
+    const selfieContainer = document.getElementById('selfie-container');
+    selfieContainer.style.display = 'block';
+    this.cameraSectionManager.attachTo('selfie-container', {
+      width: "100%",
+      maxWidth: "400px",
+      filter: "grayscale(100%)"
+    });
+    this.cameraSectionManager.startCamera();
+    this.completeBtn.disabled = true;
+  }
   
-  // Прикрепляем видео к контейнеру для селфи с нужными параметрами и применяем фильтр для ЧБ
-  this.cameraSectionManager.attachTo('selfie-container', {
-    width: "100%",
-    maxWidth: "400px",
-    filter: "grayscale(100%)"
-  });
-  this.cameraSectionManager.startCamera();
-  this.completeBtn.disabled = true;
-}
-
-
-captureSelfie() {
-  console.log("📸 Попытка сделать снимок...");
-
-  if (!this.cameraSectionManager.videoElement || !this.cameraSectionManager.videoElement.srcObject) {
-    console.error("❌ Камера не активна!");
-    alert("Ошибка: Камера не включена.");
-    return;
-  }
-
-  const video = this.cameraSectionManager.videoElement;
-
-  // Проверяем, готово ли видео
-  if (video.readyState < 2) {
-    console.warn("⏳ Камера ещё не готова...");
-    alert("Подождите, пока камера загрузится.");
-    return;
-  }
-
-  try {
-    // Создаём скрытый <canvas> для захвата кадра
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) {
-      throw new Error("Не удалось получить контекст рисования.");
+  captureSelfie() {
+    console.log("📸 Попытка сделать снимок...");
+    if (!this.cameraSectionManager.videoElement || !this.cameraSectionManager.videoElement.srcObject) {
+      console.error("❌ Камера не активна!");
+      alert("Ошибка: Камера не включена.");
+      return;
     }
-
-    // Рисуем кадр с видео на канвасе
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // Используем статический метод для преобразования в градации серого
-    const grayscaleData = ImageUtils.convertToGrayscale(canvas);
-    this.selfiePreview.src = grayscaleData;
-    this.selfiePreview.style.display = 'block';
-    this.completeBtn.disabled = false;
-
-    // Сохраняем полученное селфи для последующего сравнения
-    this.selfieData = grayscaleData;
-    
-    console.log("✅ Снимок успешно сделан!");
-  } catch (error) {
-    console.error("❌ Ошибка при создании снимка:", error);
-    alert("Ошибка при создании снимка! Попробуйте снова.");
+    const video = this.cameraSectionManager.videoElement;
+    if (video.readyState < 2) {
+      console.warn("⏳ Камера ещё не готова...");
+      alert("Подождите, пока камера загрузится.");
+      return;
+    }
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error("Не удалось получить контекст рисования.");
+      }
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const grayscaleData = ImageUtils.convertToGrayscale(canvas);
+      this.selfiePreview.src = grayscaleData;
+      this.selfiePreview.style.display = 'block';
+      this.completeBtn.disabled = false;
+      this.selfieData = grayscaleData;
+      console.log("✅ Снимок успешно сделан!");
+    } catch (error) {
+      console.error("❌ Ошибка при создании снимка:", error);
+      alert("Ошибка при создании снимка! Попробуйте снова.");
+    }
   }
-}
-
-
-completeRegistration() {
-  if (!this.selfiePreview.src || this.selfiePreview.src === "") {
-    alert("Please capture your selfie before completing registration.");
-    return;
-  }
-  const regDataStr = localStorage.getItem('regData');
-  if (!regDataStr) {
-    alert("Registration data missing.");
-    return;
-  }
-  const regData = JSON.parse(regDataStr);
-  const profile = {
-    name: regData.name,
-    gender: regData.gender,
-    language: regData.language,
-    selfie: this.selfiePreview.src
-  };
-  this.profileManager.saveProfile(profile);
-  // Устанавливаем флаг завершения регистрации
-  localStorage.setItem("registrationCompleted", "true");
   
-  this.cameraSectionManager.stopCamera();
-  this.showMainScreen();
-  
-  // Запускаем звонок через 5 секунд через CallManager
-  setTimeout(() => this.callManager.startPhoneCall(), 5000);
-}
+  completeRegistration() {
+    if (!this.selfiePreview.src || this.selfiePreview.src === "") {
+      alert("Please capture your selfie before completing registration.");
+      return;
+    }
+    const regDataStr = localStorage.getItem('regData');
+    if (!regDataStr) {
+      alert("Registration data missing.");
+      return;
+    }
+    const regData = JSON.parse(regDataStr);
+    const profile = {
+      name: regData.name,
+      gender: regData.gender,
+      language: regData.language,
+      selfie: this.selfiePreview.src
+    };
+    this.profileManager.saveProfile(profile);
+    localStorage.setItem("registrationCompleted", "true");
+    this.cameraSectionManager.stopCamera();
+    this.showMainScreen();
+    
+    // Вместо прямого запуска звонка, активируем событие "welcome"
+    setTimeout(() => {
+      this.gameEventManager.activateEvent("welcome");
+    }, 5000);
+  }
 
 
 

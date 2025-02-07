@@ -1,8 +1,9 @@
+// CallManager.js
 export class CallManager {
   /**
-   * @param {EventManager} eventManager – менеджер событий (для работы с дневником)
-   * @param {App} appInstance – ссылка на основной объект App
-   * @param {LanguageManager} languageManager – менеджер языка для локализации
+   * @param {EventManager} eventManager – менеджер дневника
+   * @param {App} appInstance – ссылка на основной объект приложения
+   * @param {LanguageManager} languageManager – для локализации
    */
   constructor(eventManager, appInstance, languageManager) {
     this.eventManager = eventManager;
@@ -11,16 +12,19 @@ export class CallManager {
   }
 
   /**
-   * Запускает процесс звонка
+   * Запускает звонок указанного типа.
+   * @param {string} callType – тип звонка (например, "welcome")
    */
-  startPhoneCall() {
+  startCall(callType) {
+    // В зависимости от callType можно настроить звонок. Здесь для примера обрабатываем "welcome".
+    console.log(`Запуск звонка типа "${callType}"`);
     const ringtone = new Audio('audio/phone_ringtone.mp3');
     ringtone.play();
 
     const answerCallBtn = document.createElement("button");
     const ignoreCallBtn = document.createElement("button");
 
-    // Получаем локализованные тексты для кнопок
+    // Получаем локализованные надписи для кнопок
     answerCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["answer"];
     ignoreCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["ignore"];
 
@@ -30,14 +34,15 @@ export class CallManager {
       answerCallBtn.remove();
       ignoreCallBtn.remove();
 
-      // Фиксируем, что звонок обработан, активируем флаг для квеста
+      // Фиксируем, что звонок обработан, устанавливаем флаги для квеста
       localStorage.setItem("callHandled", "true");
       localStorage.setItem("mirrorQuestActive", "true");
 
-      // Добавляем запись в дневник, что звонок принят
-      await this.eventManager.addDiaryEntry("answered_call");
+      // Получаем локализованный текст для записи в дневник
+      const answeredText = this.languageManager.locales[this.languageManager.getLanguage()]["answered_call"];
+      await this.eventManager.addDiaryEntry(answeredText);
 
-      // Делаем кнопку камеры видимой и добавляем ей класс свечения
+      // Делаем кнопку камеры видимой и добавляем ей эффект свечения
       const cameraBtn = document.getElementById("toggle-camera");
       cameraBtn.style.display = "inline-block";
       cameraBtn.classList.add("glowing");
@@ -46,28 +51,29 @@ export class CallManager {
     // Обработка нажатия кнопки "Игнорировать"
     ignoreCallBtn.addEventListener("click", async () => {
       localStorage.setItem("callHandled", "true");
-      await this.endCall(ringtone, answerCallBtn, ignoreCallBtn, "ignored_call");
+      const ignoredText = this.languageManager.locales[this.languageManager.getLanguage()]["ignored_call"];
+      await this.endCall(ringtone, answerCallBtn, ignoreCallBtn, ignoredText);
     });
 
-    // Добавляем кнопки на главный экран приложения
+    // Добавляем кнопки на главный экран
     this.app.mainScreen.appendChild(answerCallBtn);
     this.app.mainScreen.appendChild(ignoreCallBtn);
   }
 
   /**
-   * Завершает звонок и добавляет запись в дневник (если требуется)
-   * @param {Audio} ringtone – объект звукового сигнала
-   * @param {HTMLElement} answerCallBtn – кнопка ответа на звонок
-   * @param {HTMLElement} ignoreCallBtn – кнопка игнорирования звонка
-   * @param {string} eventKey – ключ для записи в дневник
+   * Завершает звонок и добавляет запись в дневник, если необходимо.
+   * @param {Audio} ringtone – объект рингтона
+   * @param {HTMLElement} answerCallBtn – кнопка ответа
+   * @param {HTMLElement} ignoreCallBtn – кнопка игнорирования
+   * @param {string} eventText – локализованный текст для записи в дневник
    */
-  async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventKey) {
+  async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventText) {
     ringtone.pause();
     answerCallBtn.remove();
     ignoreCallBtn.remove();
 
-    if (!this.eventManager.isEventLogged(eventKey)) {
-      await this.eventManager.addDiaryEntry(eventKey);
+    if (!this.eventManager.isEventLogged(eventText)) {
+      await this.eventManager.addDiaryEntry(eventText);
     }
     const cameraBtn = document.getElementById("toggle-camera");
     cameraBtn.style.display = "inline-block";

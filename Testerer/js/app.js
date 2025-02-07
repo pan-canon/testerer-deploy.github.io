@@ -254,7 +254,6 @@ completeRegistration() {
 
 
 
-
 // 🔹 Эффект затемнения + помехи
 triggerMirrorEffect() {
     document.body.style.transition = "background 1s";

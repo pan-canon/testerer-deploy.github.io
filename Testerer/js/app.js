@@ -93,9 +93,7 @@ async init() {
     cameraBtn.style.display = "inline-block";
   }
   
-  if (this.profileManager.isProfileSaved()) {
-    this.showMainScreen();
-    this.eventManager.updateDiaryDisplay();
+
 
 if (this.profileManager.isProfileSaved() &&
     localStorage.getItem("callHandled") === "true" &&

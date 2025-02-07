@@ -11,15 +11,16 @@ export class WelcomeEvent extends BaseEvent {
     super(eventManager);
     this.app = appInstance;
     this.languageManager = languageManager;
-    this.key = "mirror_quest"; // новый ключ события
+    this.key = "welcome"; // новый ключ события
   }
 
   /**
    * При активации события логируем его и запускаем звонок через CallManager.
    */
-  async activate() {
-    await super.activate();
-    console.log("Запускаем событие 'welcome': инициируем звонок");
-    this.app.callManager.startCall("welcome");
-  }
+async activate() {
+  // Не логируем запись сразу – дождёмся ответа на звонок.
+  console.log("Активируем событие 'welcome': инициируем звонок");
+  this.app.callManager.startCall("welcome");
+}
+
 }

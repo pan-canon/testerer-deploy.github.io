@@ -28,25 +28,25 @@ export class CallManager {
     answerCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["answer"];
     ignoreCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["ignore"];
 
-    // Обработка нажатия кнопки "Ответить"
-    answerCallBtn.addEventListener("click", async () => {
-      ringtone.pause();
-      answerCallBtn.remove();
-      ignoreCallBtn.remove();
+answerCallBtn.addEventListener("click", async () => {
+  ringtone.pause();
+  answerCallBtn.remove();
+  ignoreCallBtn.remove();
 
-      // Фиксируем, что звонок обработан, устанавливаем флаги для квеста
-      localStorage.setItem("callHandled", "true");
-      localStorage.setItem("mirrorQuestActive", "true");
+  // Фиксируем, что звонок обработан, активируем флаг для квеста
+  localStorage.setItem("callHandled", "true");
+  localStorage.setItem("mirrorQuestActive", "true");
 
-      // Получаем локализованный текст для записи в дневник
-      const answeredText = this.languageManager.locales[this.languageManager.getLanguage()]["answered_call"];
-      await this.eventManager.addDiaryEntry(answeredText);
+  // Вместо "answered_call" логируем событие "mirror_quest"
+  const mirrorQuestText = this.languageManager.locales[this.languageManager.getLanguage()]["mirror_quest"];
+  await this.eventManager.addDiaryEntry(mirrorQuestText);
 
-      // Делаем кнопку камеры видимой и добавляем ей эффект свечения
-      const cameraBtn = document.getElementById("toggle-camera");
-      cameraBtn.style.display = "inline-block";
-      cameraBtn.classList.add("glowing");
-    });
+  // Делаем кнопку камеры видимой и добавляем ей класс свечения
+  const cameraBtn = document.getElementById("toggle-camera");
+  cameraBtn.style.display = "inline-block";
+  cameraBtn.classList.add("glowing");
+});
+
 
     // Обработка нажатия кнопки "Игнорировать"
     ignoreCallBtn.addEventListener("click", async () => {

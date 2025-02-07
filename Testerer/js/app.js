@@ -136,9 +136,16 @@ goToSelfieScreen() {
   document.getElementById('apartment-plan-screen').style.display = 'none';
   // Показываем экран селфи
   this.selfieScreen.style.display = 'block';
+  // Прикрепляем видео к контейнеру для селфи с нужными параметрами и, возможно, применяем фильтр для ЧБ
+  this.cameraSectionManager.attachTo('selfie-container', {
+    width: "100%",
+    maxWidth: "400px",
+    filter: "grayscale(100%)"  // если хотите сохранять ЧБ для сравнения
+  });
   this.cameraSectionManager.startCamera();
   this.completeBtn.disabled = true;
 }
+
 /*  goToSelfieScreen() {
     const regData = {
       name: this.nameInput.value.trim(),
@@ -307,55 +314,55 @@ showMirrorTask() {
 
 // 🔹 Переключение между камерой и дневником
 async toggleCameraView() {
-    const diary = document.getElementById("diary");
-    const cameraContainer = document.getElementById("camera-container");
-    const videoElement = document.getElementById("camera-view");
-    const toggleCameraBtn = document.getElementById("toggle-camera");
-    const toggleDiaryBtn = document.getElementById("toggle-diary");
-    const buttonsToHide = [
-        document.getElementById("reset-data"),
-        document.getElementById("export-profile"),
-        document.getElementById("import-profile-container")
-    ];
+  const diary = document.getElementById("diary");
+  const cameraContainer = document.getElementById("camera-container");
+  const toggleCameraBtn = document.getElementById("toggle-camera");
+  const toggleDiaryBtn = document.getElementById("toggle-diary");
+  const buttonsToHide = [
+      document.getElementById("reset-data"),
+      document.getElementById("export-profile"),
+      document.getElementById("import-profile-container")
+  ];
 
-    if (!videoElement) {
-        console.error("🚨 Ошибка: элемент video не найден!");
-        return;
-    }
+  // Если контейнер скрыт – показываем его
+  if (cameraContainer.style.display === "none") {
+    console.log("📸 Переключаемся на камеру...");
+    diary.style.display = "none";
+    cameraContainer.style.display = "flex";
+    toggleCameraBtn.style.display = "none";
+    toggleDiaryBtn.style.display = "inline-block";
+    buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
 
-    if (cameraContainer.style.display === "none") {
-        console.log("📸 Переключаемся на камеру...");
-        diary.style.display = "none";
-        cameraContainer.style.display = "flex";
-        toggleCameraBtn.style.display = "none";
-        toggleDiaryBtn.style.display = "inline-block";
-        buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
+    // Прикрепляем видео к контейнеру камеры, без фильтра (или с иными параметрами)
+    this.cameraSectionManager.attachTo('camera-container', {
+      width: "100%",
+      height: "100%"
+      // Можно добавить другие стили для полноэкранного режима
+    });
+    await this.cameraSectionManager.startCamera();
 
-        this.cameraSectionManager.videoElement = videoElement;
-        await this.cameraSectionManager.startCamera();
+    // Дождитесь загрузки метаданных видео, если необходимо
+    await new Promise(resolve => {
+      if (this.cameraSectionManager.videoElement.readyState >= 2) {
+        resolve();
+      } else {
+        this.cameraSectionManager.videoElement.onloadedmetadata = () => resolve();
+      }
+    });
+    console.log("Видео готово:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
 
-        // Дождаться, пока видео загрузит метаданные
-        await new Promise(resolve => {
-          if (videoElement.readyState >= 2) {
-            resolve();
-          } else {
-            videoElement.onloadedmetadata = () => resolve();
-          }
-        });
-        console.log("Видео готово:", videoElement.videoWidth, videoElement.videoHeight);
-
-        // Запускаем проверку квеста
-        this.questManager.checkMirrorQuestOnCamera();
-    } else {
-        console.log("📓 Возвращаемся в блог...");
-        diary.style.display = "block";
-        cameraContainer.style.display = "none";
-        toggleCameraBtn.style.display = "inline-block";
-        toggleDiaryBtn.style.display = "none";
-        buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
-        this.cameraSectionManager.stopCamera();
-    }
+    this.questManager.checkMirrorQuestOnCamera();
+  } else {
+    console.log("📓 Возвращаемся в блог...");
+    diary.style.display = "block";
+    cameraContainer.style.display = "none";
+    toggleCameraBtn.style.display = "inline-block";
+    toggleDiaryBtn.style.display = "none";
+    buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
+    this.cameraSectionManager.stopCamera();
+  }
 }
+
 
   
   showMainScreen() {

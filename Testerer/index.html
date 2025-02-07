@@ -60,7 +60,8 @@
   <!-- Экран создания селфи (Шаг 3) -->
   <div id="selfie-screen" style="display: none;">
     <h1 data-i18n="take_selfie">Take a Selfie</h1>
-    <video id="selfie-video" autoplay playsinline style="width: 100%; max-width: 400px;"></video>
+<div id="selfie-container" style="display: none; width: 100%; max-width: 400px;"></div>
+
     <br>
     <button type="button" id="capture-btn" data-i18n="capture">Capture</button>
     <br>
@@ -80,7 +81,6 @@
 
   <!-- Блок с камерой -->
   <div id="camera-container" style="display: none;">
-    <video id="camera-view" autoplay playsinline></video>
   </div>
 
   <!-- Кнопки управления -->
@@ -94,6 +94,16 @@
   <!-- Новая кнопка экспорта профиля -->
   <button type="button" id="export-profile" data-i18n="export">Export Profile</button>
 </div>
+
+<!-- Единый контейнер для камеры (используется во всех режимах) -->
+<div id="camera-container" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000;">
+  <!-- Видеоэлемент будет создан динамически -->
+  <!-- Здесь можно добавить отдельный контейнер для оверлеев (элементы управления) -->
+  <div id="camera-controls-overlay" style="position: absolute; top: 0; width: 100%; z-index: 1010;">
+    <!-- Элементы управления будут добавляться динамически -->
+  </div>
+</div>
+
   
   <!-- Скрипты -->
   <!-- Основной скрипт -->

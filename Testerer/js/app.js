@@ -385,17 +385,20 @@ async toggleCameraView() {
 
 
   
-  showMainScreen() {
-    this.registrationScreen.style.display = 'none';
-    this.selfieScreen.style.display = 'none';
-    this.mainScreen.style.display = 'block';
-    const profile = this.profileManager.getProfile();
-    if (profile) {
-      this.profileNameElem.textContent = profile.name;
-      this.profilePhotoElem.src = profile.selfie;
-      this.profilePhotoElem.style.display = 'block';
-    }
+showMainScreen() {
+  this.registrationScreen.style.display = 'none';
+  this.selfieScreen.style.display = 'none';
+  this.mainScreen.style.display = 'block';
+  const profile = this.profileManager.getProfile();
+  if (profile) {
+    this.profileNameElem.textContent = profile.name;
+    this.profilePhotoElem.src = profile.selfie;
+    this.profilePhotoElem.style.display = 'block';
+    // Восстанавливаем сохранённое селфи для последующего сравнения
+    this.selfieData = profile.selfie;
   }
+}
+
   
   showRegistrationScreen() {
     this.registrationScreen.style.display = 'block';

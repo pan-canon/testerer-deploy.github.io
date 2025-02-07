@@ -274,10 +274,11 @@ answerCallBtn.addEventListener("click", async () => {
 
     this.triggerMirrorEffect();
 
-    setTimeout(async () => {
-      await this.eventManager.addDiaryEntry("mirror_quest");
-      this.toggleCameraView();
-    }, 5000);
+setTimeout(async () => {
+  await this.questManager.activateQuest("mirror_quest");
+  this.toggleCameraView();
+}, 5000);
+
 });
 
 // При игнорировании

@@ -2,8 +2,6 @@ import { LanguageManager } from './languageManager.js';
 import { CameraManager } from './cameraManager.js';
 import { ProfileManager } from './profileManager.js';
 import { DatabaseManager } from './databaseManager.js';
-await this.databaseManager.initDatabasePromise;
-import { ApartmentPlanManager } from './ApartmentPlanManager.js';
 import { EventManager } from './eventManager.js';
 import { QuestManager } from './questManager.js';
 
@@ -41,19 +39,11 @@ export class App {
     this.databaseManager = new DatabaseManager();
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
 this.questManager = new QuestManager(this.eventManager, this);
-this.apartmentManager = new ApartmentPlanManager('apartment-canvas', this.databaseManager);
 // Технические поля для обработки изображений
 this.tempCanvas = document.createElement("canvas");
 this.tempCtx = this.tempCanvas.getContext("2d");
 
     this.bindEvents();
-document.getElementById('next-floor-btn').addEventListener('click', () => {
-    this.apartmentManager.nextFloor();
-});
-
-document.getElementById('prev-floor-btn').addEventListener('click', () => {
-    this.apartmentManager.prevFloor();
-});
     this.init();
   }
   
@@ -69,24 +59,10 @@ bindEvents() {
     this.exportBtn.addEventListener('click', () => this.exportProfile());
     this.importBtn.addEventListener('click', () => this.importProfile());
 
-document.getElementById('next-floor-btn').addEventListener('click', () => {
-    this.apartmentManager.nextFloor();
-});
-
-document.getElementById('prev-floor-btn').addEventListener('click', () => {
-    this.apartmentManager.prevFloor();
-});
-
-document.getElementById('complete-apartment-btn').addEventListener('click', () => {
-    this.apartmentManager.completeApartment();
-});
-
     // 🔹 Переключение между камерой и дневником
     document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
     document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
 }
-
-
 
   
 async init() {
@@ -201,16 +177,10 @@ this.selfieData = grayscaleData;
     };
     this.profileManager.saveProfile(profile);
     this.cameraManager.stop();
-// Переход к созданию плана квартиры
-this.selfieScreen.style.display = 'none';
-document.getElementById('apartment-screen').style.display = 'block';
-  }
+    this.showMainScreen();
 
-  showApartmentScreen() {
-      this.registrationScreen.style.display = 'none';
-      this.selfieScreen.style.display = 'none';
-      this.mainScreen.style.display = 'none';
-      document.getElementById('apartment-screen').style.display = 'block';
+    // Звонок через 5 секунд после завершения регистрации
+    setTimeout(() => this.startPhoneCall(), 5000);
   }
 
 async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventKey) {
@@ -548,7 +518,5 @@ createHistogram(img) {
     }
     return hist;
 }
-
-
 
 }

@@ -271,26 +271,27 @@ startPhoneCall() {
     ignoreCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["ignore"];
 
     // При ответе
-    answerCallBtn.addEventListener("click", async () => {
-        ringtone.pause();
-        answerCallBtn.remove();
-        ignoreCallBtn.remove();
+answerCallBtn.addEventListener("click", async () => {
+    ringtone.pause();
+    answerCallBtn.remove();
+    ignoreCallBtn.remove();
 
-        // Фиксируем, что звонок обработан
-        localStorage.setItem("callHandled", "true");
+    // Фиксируем, что звонок обработан
+    localStorage.setItem("callHandled", "true");
 
-        // Опционально: запускаем эффект через MirrorQuest (логика эффекта теперь внутри MirrorQuest)
-        const mirrorQuest = this.questManager.quests.find(q => q.key === "mirror_quest");
-        if (mirrorQuest && mirrorQuest.triggerMirrorEffect) {
-          mirrorQuest.triggerMirrorEffect();
-        }
+    // Опционально: запускаем эффект через MirrorQuest (логика эффекта теперь внутри MirrorQuest)
+    const mirrorQuest = this.questManager.quests.find(q => q.key === "mirror_quest");
+    if (mirrorQuest && mirrorQuest.triggerMirrorEffect) {
+      mirrorQuest.triggerMirrorEffect();
+    }
 
-        // Вместо автоматического запуска квеста — анимируем кнопку "Открыть камеру"
-        const toggleCameraBtn = document.getElementById("toggle-camera");
-        toggleCameraBtn.classList.add("highlight");
+    // Вместо автоматического запуска квеста — анимируем кнопку "Открыть камеру"
+    const toggleCameraBtn = document.getElementById("toggle-camera");
+    toggleCameraBtn.classList.add("highlight");
 
-        // (Никакого вызова activateQuest здесь — ждем нажатия кнопки пользователем)
-    });
+    // (Никакого вызова activateQuest здесь — ждем нажатия кнопки пользователем)
+});
+
 
     // При игнорировании
     ignoreCallBtn.addEventListener("click", async () => {

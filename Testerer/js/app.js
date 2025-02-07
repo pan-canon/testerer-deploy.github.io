@@ -298,6 +298,24 @@ saveProfileChangesMini() {
   this.closeProfileModal();
 }
 
+openSelfieEditing() {
+  this.closeProfileModal();
+  // Показываем экран селфи, который уже реализован
+  this.goToSelfieScreen();
+  // Можно, если нужно, после завершения селфи (в completeRegistration) снова открыть мини-профиль,
+  // например, вызовом this.openProfileModal() в конце completeRegistration().
+}
+
+editApartmentPlan() {
+  this.closeProfileModal();
+  // Показываем экран редактирования плана квартиры, который у вас уже реализован (Шаг 2)
+  document.getElementById('apartment-plan-screen').style.display = 'block';
+  // Если необходимо, можно пересоздать или обновить экземпляр ApartmentPlanManager
+  if (!this.apartmentPlanManager) {
+    this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-table', this.databaseManager);
+  }
+}
+
 
 
 

@@ -96,6 +96,13 @@ async init() {
   if (this.profileManager.isProfileSaved()) {
     this.showMainScreen();
     this.eventManager.updateDiaryDisplay();
+
+if (this.profileManager.isProfileSaved() &&
+    localStorage.getItem("callHandled") === "true" &&
+    !this.eventManager.isEventLogged("mirror_done")) {
+    const toggleCameraBtn = document.getElementById("toggle-camera");
+    toggleCameraBtn.classList.add("highlight");
+}
     
     // Если регистрация завершена, но звонок ещё не обработан, запускаем его
     if (localStorage.getItem("registrationCompleted") === "true" &&
@@ -263,46 +270,38 @@ startPhoneCall() {
     answerCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["answer"];
     ignoreCallBtn.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["ignore"];
 
-// При ответе
-answerCallBtn.addEventListener("click", async () => {
-    ringtone.pause();
-    answerCallBtn.remove();
-    ignoreCallBtn.remove();
+    // При ответе
+    answerCallBtn.addEventListener("click", async () => {
+        ringtone.pause();
+        answerCallBtn.remove();
+        ignoreCallBtn.remove();
 
-    // Устанавливаем флаг, что звонок обработан
-    localStorage.setItem("callHandled", "true");
+        // Фиксируем, что звонок обработан
+        localStorage.setItem("callHandled", "true");
 
-    // Получаем экземпляр зеркального квеста и запускаем его эффекты, теперь внутри MirrorQuest
-    const mirrorQuest = this.questManager.quests.find(q => q.key === "mirror_quest");
-    if (mirrorQuest && mirrorQuest.triggerMirrorEffect) {
-      mirrorQuest.triggerMirrorEffect();
-    }
+        // Опционально: запускаем эффект через MirrorQuest (логика эффекта теперь внутри MirrorQuest)
+        const mirrorQuest = this.questManager.quests.find(q => q.key === "mirror_quest");
+        if (mirrorQuest && mirrorQuest.triggerMirrorEffect) {
+          mirrorQuest.triggerMirrorEffect();
+        }
 
-    setTimeout(async () => {
-      await this.questManager.activateQuest("mirror_quest");
-      this.toggleCameraView();
-    }, 5000);
-});
+        // Вместо автоматического запуска квеста — анимируем кнопку "Открыть камеру"
+        const toggleCameraBtn = document.getElementById("toggle-camera");
+        toggleCameraBtn.classList.add("highlight");
 
+        // (Никакого вызова activateQuest здесь — ждем нажатия кнопки пользователем)
+    });
 
-// При игнорировании
-ignoreCallBtn.addEventListener("click", async () => {
-    // Устанавливаем флаг, что звонок обработан
-    localStorage.setItem("callHandled", "true");
-
-    // Просто сразу считаем, что событие "ignored_call"
-    await this.endCall(
-      ringtone,
-      answerCallBtn,
-      ignoreCallBtn,
-      "ignored_call"
-    );
-});
-
+    // При игнорировании
+    ignoreCallBtn.addEventListener("click", async () => {
+        localStorage.setItem("callHandled", "true");
+        await this.endCall(ringtone, answerCallBtn, ignoreCallBtn, "ignored_call");
+    });
 
     this.mainScreen.appendChild(answerCallBtn);
     this.mainScreen.appendChild(ignoreCallBtn);
 }
+
 
 
 
@@ -318,7 +317,6 @@ async toggleCameraView() {
     document.getElementById("import-profile-container")
   ];
 
-  // Если контейнер скрыт – показываем его
   if (cameraContainer.style.display === "none") {
     console.log("📸 Переключаемся на камеру...");
     diary.style.display = "none";
@@ -343,7 +341,12 @@ async toggleCameraView() {
     });
     console.log("Видео готово:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
 
-    this.questManager.checkMirrorQuestOnCamera();
+    // Если кнопка "Открыть камеру" всё ещё имеет класс highlight,
+    // значит квест активен и ждем запуска при открытии камеры.
+    if (toggleCameraBtn.classList.contains("highlight")) {
+      toggleCameraBtn.classList.remove("highlight");
+      await this.questManager.activateQuest("mirror_quest");
+    }
   } else {
     console.log("📓 Возвращаемся в блог...");
     diary.style.display = "block";

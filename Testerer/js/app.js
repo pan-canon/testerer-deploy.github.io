@@ -88,6 +88,7 @@ async init() {
   const entries = this.databaseManager.getDiaryEntries();
   console.log("Проверяем дневник после инициализации:", entries);
   
+  // Если в дневнике есть записи, делаем кнопку камеры видимой
   if (entries.length > 0) {
     const cameraBtn = document.getElementById("toggle-camera");
     cameraBtn.style.display = "inline-block";
@@ -98,14 +99,29 @@ async init() {
     this.eventManager.updateDiaryDisplay();
     
     // Если регистрация завершена, но звонок ещё не обработан, запускаем его
-    if (localStorage.getItem("registrationCompleted") === "true" &&
-        localStorage.getItem("callHandled") !== "true") {
+    if (
+      localStorage.getItem("registrationCompleted") === "true" &&
+      localStorage.getItem("callHandled") !== "true"
+    ) {
       this.startPhoneCall();
+    }
+    
+    // Если регистрация завершена, звонок обработан и квест активен,
+    // делаем кнопку камеры видимой и добавляем класс свечения
+    if (
+      localStorage.getItem("registrationCompleted") === "true" &&
+      localStorage.getItem("callHandled") === "true" &&
+      localStorage.getItem("mirrorQuestActive") === "true"
+    ) {
+      const cameraBtn = document.getElementById("toggle-camera");
+      cameraBtn.style.display = "inline-block";
+      cameraBtn.classList.add("glowing");
     }
   } else {
     this.showRegistrationScreen();
   }
 }
+
 
 
 
@@ -265,21 +281,26 @@ startPhoneCall() {
 
 // При ответе
 answerCallBtn.addEventListener("click", async () => {
-    ringtone.pause();
-    answerCallBtn.remove();
-    ignoreCallBtn.remove();
+  ringtone.pause();
+  answerCallBtn.remove();
+  ignoreCallBtn.remove();
 
-    // Устанавливаем флаг, что звонок обработан
-    localStorage.setItem("callHandled", "true");
+  // Фиксируем, что звонок обработан и активируем флаг для квеста
+  localStorage.setItem("callHandled", "true");
+  localStorage.setItem("mirrorQuestActive", "true");
 
-    this.triggerMirrorEffect();
+  // Добавляем запись в блог о том, что звонок отвечен
+  await this.eventManager.addDiaryEntry("answered_call");
 
-setTimeout(async () => {
-  await this.questManager.activateQuest("mirror_quest");
-  this.toggleCameraView();
-}, 5000);
+  // Делаем кнопку камеры видимой и добавляем класс свечения
+  const cameraBtn = document.getElementById("toggle-camera");
+  cameraBtn.style.display = "inline-block";
+  cameraBtn.classList.add("glowing");
 
+  // В этом варианте больше не запускаем квест автоматически,
+  // а ждем нажатия на кнопку камеры пользователем.
 });
+
 
 // При игнорировании
 ignoreCallBtn.addEventListener("click", async () => {

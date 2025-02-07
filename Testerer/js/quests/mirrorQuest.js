@@ -24,24 +24,29 @@ export class MirrorQuest extends BaseQuest {
     });
   }
 
-  async finish() {
-    // Если квест уже завершён – ничего не делаем
-    if (this.eventManager.isEventLogged(this.doneKey)) {
-      console.log(`Quest "${this.key}" уже выполнен, повторная проверка не требуется.`);
-      return;
-    }
-
-    const success = await this.checkStatus();
-    if (success) {
-      // Добавляем запись о завершении (и, при необходимости, можно добавить дополнительный пост)
-      if (!this.eventManager.isEventLogged(this.doneKey)) {
-        await this.eventManager.addDiaryEntry(this.doneKey);
-        // Если требуется, можно добавить еще запись, например:
-        await this.eventManager.addDiaryEntry("what_was_it", this.app.lastMirrorPhoto);
-      }
-      alert("✅ Задание «подойти к зеркалу» выполнено!");
-    } else {
-      alert("❌ Нет совпадения! Попробуйте ещё раз!");
-    }
+async finish() {
+  // Если квест уже завершён – ничего не делаем
+  if (this.eventManager.isEventLogged(this.doneKey)) {
+    console.log(`Quest "${this.key}" уже выполнен, повторная проверка не требуется.`);
+    return;
   }
+
+  const success = await this.checkStatus();
+  if (success) {
+    // Если квест ещё не завершён – добавляем записи в блог
+    if (!this.eventManager.isEventLogged(this.doneKey)) {
+      await this.eventManager.addDiaryEntry(this.doneKey);
+      await this.eventManager.addDiaryEntry("what_was_it", this.app.lastMirrorPhoto);
+    }
+    // Убираем класс свечения с кнопки камеры и сбрасываем флаг квеста
+    const cameraBtn = document.getElementById("toggle-camera");
+    cameraBtn.classList.remove("glowing");
+    localStorage.removeItem("mirrorQuestActive");
+    
+    alert("✅ Задание «подойти к зеркалу» выполнено!");
+  } else {
+    alert("❌ Нет совпадения! Попробуйте ещё раз!");
+  }
+}
+
 }

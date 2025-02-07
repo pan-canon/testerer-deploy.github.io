@@ -1,4 +1,5 @@
-export function convertToGrayscale(canvas) {
+export class ImageUtils {
+static convertToGrayscale(canvas) {
     const ctx = canvas.getContext("2d");
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const pixels = imageData.data;
@@ -18,7 +19,7 @@ export function convertToGrayscale(canvas) {
 /**
  * Пиксельная корреляция (сравниваем бинарные байты двух base64-картинок)
  */
-export function pixelWiseComparison(img1, img2) {
+static pixelWiseComparison(img1, img2) {
     let image1 = atob(img1.split(',')[1]);
     let image2 = atob(img2.split(',')[1]);
 
@@ -35,7 +36,7 @@ export function pixelWiseComparison(img1, img2) {
 /**
  * Гистограммная корреляция (сравниваем распределение яркостей)
  */
-export function histogramComparison(img1, img2) {
+static histogramComparison(img1, img2) {
     let hist1 = this.createHistogram(img1);
     let hist2 = this.createHistogram(img2);
 
@@ -52,7 +53,7 @@ export function histogramComparison(img1, img2) {
 /**
  * Создаём гистограмму (256 уровней) из base64
  */
-export function createHistogram(img) {
+static createHistogram(img) {
     let hist = new Array(256).fill(0);
     let imgData = atob(img.split(',')[1]);
 
@@ -60,4 +61,5 @@ export function createHistogram(img) {
         hist[imgData.charCodeAt(i)]++;
     }
     return hist;
+}
 }

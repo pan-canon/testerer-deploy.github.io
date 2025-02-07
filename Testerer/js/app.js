@@ -96,14 +96,6 @@ async init() {
   if (this.profileManager.isProfileSaved()) {
     this.showMainScreen();
     this.eventManager.updateDiaryDisplay();
-
-if (this.profileManager.isProfileSaved() &&
-    localStorage.getItem("callHandled") === "true" &&
-    !this.eventManager.isEventLogged("mirror_done")) {
-    const toggleCameraBtn = document.getElementById("toggle-camera");
-    toggleCameraBtn.classList.add("highlight");
-}
-
     
     // Если регистрация завершена, но звонок ещё не обработан, запускаем его
     if (localStorage.getItem("registrationCompleted") === "true" &&

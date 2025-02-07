@@ -332,7 +332,7 @@ async toggleCameraView() {
         buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
 
         this.cameraSectionManager.videoElement = videoElement;
-        await this.cameraSectionManager.start();
+        await this.cameraSectionManager.startCamera();
 
         // Дождаться, пока видео загрузит метаданные
         await new Promise(resolve => {
@@ -353,7 +353,7 @@ async toggleCameraView() {
         toggleCameraBtn.style.display = "inline-block";
         toggleDiaryBtn.style.display = "none";
         buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
-        this.cameraSectionManager.stop();
+        this.cameraSectionManager.stopCamera();
     }
 }
 

@@ -22,7 +22,6 @@ export class App {
     
     // Элементы экрана селфи
     this.selfieVideo = document.getElementById('selfie-video');
-    this.questManager = new QuestManager(this.eventManager, this);
     this.captureBtn = document.getElementById('capture-btn');
     this.selfiePreview = document.getElementById('selfie-preview');
     this.completeBtn = document.getElementById('complete-registration');
@@ -40,12 +39,14 @@ export class App {
     this.cameraSectionManager = new cameraSectionManager();
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
-this.callManager = new CallManager(this.eventManager, this, this.languageManager);
-this.eventManager = new EventManager(this.databaseManager, this.languageManager);
-this.questManager = new QuestManager(this.eventManager, this);
-// Технические поля для обработки изображений
-this.tempCanvas = document.createElement("canvas");
-this.tempCtx = this.tempCanvas.getContext("2d");
+    // Сначала создаём eventManager, затем передаём его в CallManager и QuestManager
+    this.eventManager = new EventManager(this.databaseManager, this.languageManager);
+    this.callManager = new CallManager(this.eventManager, this, this.languageManager);
+    this.questManager = new QuestManager(this.eventManager, this);
+
+    // Технические поля для обработки изображений
+    this.tempCanvas = document.createElement("canvas");
+    this.tempCtx = this.tempCanvas.getContext("2d");
 
     this.bindEvents();
     this.init();

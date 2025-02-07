@@ -83,27 +83,29 @@ document.getElementById("next-floor-btn").addEventListener("click", () => {
   
 async init() {
   await this.databaseManager.initDatabasePromise;
+  
   const entries = this.databaseManager.getDiaryEntries();
   console.log("Проверяем дневник после инициализации:", entries);
-
+  
   if (entries.length > 0) {
     const cameraBtn = document.getElementById("toggle-camera");
     cameraBtn.style.display = "inline-block";
   }
-
+  
   if (this.profileManager.isProfileSaved()) {
     this.showMainScreen();
     this.eventManager.updateDiaryDisplay();
-    // Если регистрация завершена, но звонок еще не обработан, запускаем звонок
+    
+    // Если регистрация завершена, но звонок ещё не обработан, запускаем его
     if (localStorage.getItem("registrationCompleted") === "true" &&
         localStorage.getItem("callHandled") !== "true") {
-      // Запускаем звонок повторно
       this.startPhoneCall();
     }
   } else {
     this.showRegistrationScreen();
   }
 }
+
 
 
   
@@ -137,16 +139,21 @@ goToSelfieScreen() {
   document.getElementById('apartment-plan-screen').style.display = 'none';
   // Показываем экран селфи
   this.selfieScreen.style.display = 'block';
-  // Показываем контейнер камеры, если он используется для селфи
-  // Например, если вы хотите, чтобы селфи показывалось в отдельном контейнере:
+  
+  // Делаем контейнер для селфи видимым
+  const selfieContainer = document.getElementById('selfie-container');
+  selfieContainer.style.display = 'block';
+  
+  // Прикрепляем видео к контейнеру для селфи с нужными параметрами и применяем фильтр для ЧБ
   this.cameraSectionManager.attachTo('selfie-container', {
     width: "100%",
     maxWidth: "400px",
-    filter: "grayscale(100%)"  // применяем ЧБ фильтр для селфи
+    filter: "grayscale(100%)"
   });
   this.cameraSectionManager.startCamera();
   this.completeBtn.disabled = true;
 }
+
 
 
 /*  goToSelfieScreen() {
@@ -229,16 +236,14 @@ completeRegistration() {
   this.profileManager.saveProfile(profile);
   // Устанавливаем флаг завершения регистрации
   localStorage.setItem("registrationCompleted", "true");
+  
   this.cameraSectionManager.stopCamera();
   this.showMainScreen();
-
+  
   // Запускаем звонок через 5 секунд
-  setTimeout(() => {
-    // Если пользователь обновил страницу до начала звонка, то флаг registrationCompleted остается,
-    // а в init() мы сможем обработать ситуацию.
-    this.startPhoneCall();
-  }, 5000);
+  setTimeout(() => this.startPhoneCall(), 5000);
 }
+
 
 
 async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventKey) {

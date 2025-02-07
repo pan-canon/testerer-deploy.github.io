@@ -32,11 +32,6 @@ export class App {
     this.exportBtn = document.getElementById('export-profile');
     this.importFileInput = document.getElementById('import-file');
     this.importBtn = document.getElementById('import-profile-btn');
-
-  this.profilePhotoElem = document.getElementById('profile-photo'); // если ещё не получен
-this.profileNameElem = document.getElementById('profile-name');   // если ещё не получен
-this.setupProfileModal();
-
     
     // Менеджеры
     this.languageManager = new LanguageManager('language-selector');
@@ -44,7 +39,7 @@ this.setupProfileModal();
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
-    this.questManager = new QuestManager(this.eventManager, this);
+this.questManager = new QuestManager(this.eventManager, this);
 // Технические поля для обработки изображений
 this.tempCanvas = document.createElement("canvas");
 this.tempCtx = this.tempCanvas.getContext("2d");
@@ -85,6 +80,7 @@ document.getElementById("next-floor-btn").addEventListener("click", () => {
 
 }
 
+  
 async init() {
   // Сначала ждём инициализации БД
   await this.databaseManager.initDatabasePromise;
@@ -108,7 +104,6 @@ async init() {
     this.showRegistrationScreen();
   }
 }
-
 
   
   validateRegistration() {
@@ -230,24 +225,43 @@ this.selfieData = grayscaleData;
   }
 
 
-
 setupProfileModal() {
+  // Находим элементы мини-профиля по новым id
   this.profileModal = document.getElementById("profile-modal");
   this.editNameInput = document.getElementById("edit-name");
   this.profileModalPhoto = document.getElementById("profile-modal-photo");
-  this.editSelfieBtn = document.getElementById("edit-selfie-btn");
-  this.editApartmentBtn = document.getElementById("edit-apartment-btn");
-  this.saveProfileBtn = document.getElementById("save-profile-btn");
-  this.closeProfileBtn = document.getElementById("close-profile-btn");
+  this.updateSelfieBtn = document.getElementById("update-selfie-btn");
+  this.prevFloorMiniBtn = document.getElementById("prev-floor-mini-btn");
+  this.nextFloorMiniBtn = document.getElementById("next-floor-mini-btn");
+  this.saveProfileMiniBtn = document.getElementById("save-profile-mini-btn");
+  this.closeProfileModalBtn = document.getElementById("close-profile-modal-btn");
+  this.apartmentPlanMiniTable = document.getElementById("apartment-plan-mini-table");
 
-  // Открываем модальное окно по клику на аватар
+  // Открываем мини-профиль по клику на аватар (элемент profile-photo на главном экране)
   this.profilePhotoElem.addEventListener("click", () => this.openProfileModal());
 
-  // Обработчики для кнопок модального окна
-  this.editSelfieBtn.addEventListener("click", () => this.retakeSelfie());
-  this.editApartmentBtn.addEventListener("click", () => this.editApartmentPlan());
-  this.saveProfileBtn.addEventListener("click", () => this.saveProfileChanges());
-  this.closeProfileBtn.addEventListener("click", () => this.closeProfileModal());
+  // Обработчик для обновления селфи – будем загружать код на лету
+  this.updateSelfieBtn.addEventListener("click", () => this.openSelfieEditing());
+
+  // Обработчики для переключения этажей в мини-версии плана квартиры
+  this.prevFloorMiniBtn.addEventListener("click", () => {
+    if (this.apartmentPlanManager) {
+      this.apartmentPlanManager.prevFloor();
+      this.apartmentPlanManager.renderRoomsMini(this.apartmentPlanMiniTable);
+    }
+  });
+  this.nextFloorMiniBtn.addEventListener("click", () => {
+    if (this.apartmentPlanManager) {
+      this.apartmentPlanManager.nextFloor();
+      this.apartmentPlanManager.renderRoomsMini(this.apartmentPlanMiniTable);
+    }
+  });
+
+  // Обработчик для сохранения изменений в имени
+  this.saveProfileMiniBtn.addEventListener("click", () => this.saveProfileChangesMini());
+
+  // Обработчик для закрытия мини-профиля
+  this.closeProfileModalBtn.addEventListener("click", () => this.closeProfileModal());
 }
 
 openProfileModal() {
@@ -255,6 +269,14 @@ openProfileModal() {
   if (!profile) return;
   this.editNameInput.value = profile.name;
   this.profileModalPhoto.src = profile.selfie;
+
+  // Если менеджер плана квартиры не создан, инициализируйте его с использованием мини-таблицы
+  if (!this.apartmentPlanManager) {
+    this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-mini-table', this.databaseManager);
+  } else {
+    // Перерисовываем мини-версию плана
+    this.apartmentPlanManager.renderRoomsMini(this.apartmentPlanMiniTable);
+  }
   this.profileModal.style.display = "flex";
 }
 
@@ -262,73 +284,19 @@ closeProfileModal() {
   this.profileModal.style.display = "none";
 }
 
-saveProfileChanges() {
+saveProfileChangesMini() {
   const newName = this.editNameInput.value.trim();
   if (!newName) {
     alert("Введите корректное имя!");
     return;
   }
-  // Обновляем профиль
   const profile = this.profileManager.getProfile();
   profile.name = newName;
   this.profileManager.saveProfile(profile);
-  this.profileNameElem.textContent = newName;
+  this.profileNameElem.textContent = newName; // обновляем отображение на главном экране
   alert("✅ Данные профиля обновлены!");
   this.closeProfileModal();
 }
-
-retakeSelfie() {
-  // Оставляем профильное модальное окно открытым или закрываем его, если нужно
-  // и открываем оверлей для селфи
-  this.openSelfieCaptureOverlay();
-}
-
-openSelfieCaptureOverlay() {
-  const overlay = document.getElementById('selfie-capture-overlay');
-  if (overlay) {
-    overlay.style.display = 'flex';
-    // Здесь можно инициализировать камеру или начать захват селфи, если требуется
-  } else {
-    console.error("Элемент с id 'selfie-capture-overlay' не найден.");
-  }
-}
-
-
-
-editApartmentPlan() {
-  // Открываем оверлей редактора плана квартиры
-  this.openApartmentPlanEditorOverlay();
-}
-
-
-openApartmentPlanEditorOverlay() {
-  const overlay = document.getElementById('apartment-plan-editor-overlay');
-  if (overlay) {
-    overlay.style.display = 'flex';
-    // Если необходимо, инициализируйте редактор плана (например, загрузите таблицу и данные)
-  } else {
-    console.error("Элемент с id 'apartment-plan-editor-overlay' не найден.");
-  }
-}
-
-closeSelfieCaptureOverlay() {
-  const overlay = document.getElementById('selfie-capture-overlay');
-  if (overlay) {
-    overlay.style.display = 'none';
-    // При необходимости, обновите данные профиля или верните пользователя в модалку профиля:
-    this.openProfileModal();
-  }
-}
-
-closeApartmentPlanEditorOverlay() {
-  const overlay = document.getElementById('apartment-plan-editor-overlay');
-  if (overlay) {
-    overlay.style.display = 'none';
-    // Обновите данные плана квартиры и верните пользователя в модальное окно профиля:
-    this.openProfileModal();
-  }
-}
-
 
 
 
@@ -350,11 +318,6 @@ async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventKey) {
   const cameraBtn = document.getElementById("toggle-camera");
   cameraBtn.style.display = "inline-block";
 }
-
-
-
-
-
 
 startPhoneCall() {
     const ringtone = new Audio('audio/phone_ringtone.mp3');

@@ -136,4 +136,33 @@ export class ApartmentPlanManager {
       this.loadFromDB();
     }
   }
+
+renderRoomsMini(targetTable) {
+  // Очистка targetTable
+  targetTable.innerHTML = "";
+  for (let r = 0; r < this.gridRows; r++) {
+    const row = document.createElement("tr");
+    for (let c = 0; c < this.gridCols; c++) {
+      const cell = document.createElement("td");
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+      cell.style.width = "30px";  // уменьшенные размеры для мини-версии
+      cell.style.height = "30px";
+      cell.style.border = "1px solid #ccc";
+      cell.style.textAlign = "center";
+      cell.style.verticalAlign = "middle";
+      // Окрашиваем ячейки, если они входят в область помещения
+      this.rooms.forEach(room => {
+        if (room.floor === this.currentFloor &&
+            r >= room.startRow && r <= room.endRow &&
+            c >= room.startCol && c <= room.endCol) {
+          cell.style.backgroundColor = "rgba(0, 150, 255, 0.5)";
+        }
+      });
+      row.appendChild(cell);
+    }
+    targetTable.appendChild(row);
+  }
+}
+
 }

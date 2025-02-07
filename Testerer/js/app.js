@@ -311,6 +311,25 @@ openApartmentPlanEditorOverlay() {
   }
 }
 
+closeSelfieCaptureOverlay() {
+  const overlay = document.getElementById('selfie-capture-overlay');
+  if (overlay) {
+    overlay.style.display = 'none';
+    // При необходимости, обновите данные профиля или верните пользователя в модалку профиля:
+    this.openProfileModal();
+  }
+}
+
+closeApartmentPlanEditorOverlay() {
+  const overlay = document.getElementById('apartment-plan-editor-overlay');
+  if (overlay) {
+    overlay.style.display = 'none';
+    // Обновите данные плана квартиры и верните пользователя в модальное окно профиля:
+    this.openProfileModal();
+  }
+}
+
+
 
 
 

@@ -279,17 +279,23 @@ answerCallBtn.addEventListener("click", async () => {
     // Фиксируем, что звонок обработан
     localStorage.setItem("callHandled", "true");
 
-    // Опционально: запускаем эффект через MirrorQuest (логика эффекта теперь внутри MirrorQuest)
+    // Если определён метод эффекта в MirrorQuest – запускаем его
     const mirrorQuest = this.questManager.quests.find(q => q.key === "mirror_quest");
     if (mirrorQuest && mirrorQuest.triggerMirrorEffect) {
       mirrorQuest.triggerMirrorEffect();
     }
 
-    // Вместо автоматического запуска квеста — анимируем кнопку "Открыть камеру"
+    // Добавляем запись о запуске квеста, если её ещё нет
+    if (!this.eventManager.isEventLogged("mirror_quest")) {
+      await this.eventManager.addDiaryEntry("mirror_quest");
+    }
+
+    // Делаем кнопку "Открыть камеру" видимой и добавляем ей анимацию (CSS‑класс "highlight")
     const toggleCameraBtn = document.getElementById("toggle-camera");
+    toggleCameraBtn.style.display = "inline-block";
     toggleCameraBtn.classList.add("highlight");
 
-    // (Никакого вызова activateQuest здесь — ждем нажатия кнопки пользователем)
+    // Никакого автоматического запуска activateQuest — ждем, пока юзер нажмёт на эту кнопку
 });
 
 

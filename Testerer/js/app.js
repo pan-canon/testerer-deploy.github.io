@@ -5,7 +5,6 @@ import { ProfileManager } from './profileManager.js';
 import { ApartmentPlanManager } from './ApartmentPlanManager.js';
 import { DatabaseManager } from './databaseManager.js';
 import { EventManager } from './eventManager.js';
-this.callManager = new CallManager(this.eventManager, this, this.languageManager);
 import { CallManager } from './callManager.js';
 import { QuestManager } from './questManager.js';
 
@@ -41,6 +40,7 @@ export class App {
     this.cameraSectionManager = new cameraSectionManager();
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
+this.callManager = new CallManager(this.eventManager, this, this.languageManager);
 this.eventManager = new EventManager(this.databaseManager, this.languageManager);
 this.questManager = new QuestManager(this.eventManager, this);
 // Технические поля для обработки изображений

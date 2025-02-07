@@ -2,6 +2,7 @@ import { LanguageManager } from './languageManager.js';
 import { CameraManager } from './cameraManager.js';
 import { ProfileManager } from './profileManager.js';
 import { DatabaseManager } from './databaseManager.js';
+await this.databaseManager.initDatabasePromise;
 import { ApartmentPlanManager } from './ApartmentPlanManager.js';
 import { EventManager } from './eventManager.js';
 import { QuestManager } from './questManager.js';

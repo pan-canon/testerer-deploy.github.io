@@ -121,13 +121,14 @@ saveApartmentPlan() {
     ];
   }
 
-  const roomData = JSON.stringify(this.rooms); 
-  this.dbManager.saveApartmentPlan(this.currentFloor, roomData);
+  // Вместо вызова несуществующего метода saveApartmentPlan вызываем addApartmentRoom:
+  this.dbManager.addApartmentRoom(this.rooms);
 
   console.log("🏠 План этажа сохранён:", this.currentFloor);
   window.app.showMainScreen(); // Переход на главный экран
   setTimeout(() => window.app.startPhoneCall(), 5000); // Звонок через 5 секунд
 }
+
 
 
 

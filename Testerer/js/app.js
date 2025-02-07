@@ -221,14 +221,6 @@ triggerMirrorEffect() {
     setTimeout(() => staticNoise.pause(), 3000);
 }
 
-// 🔹 Новое задание "Подойти к зеркалу"
-showMirrorTask() {
-    const mirrorTask = document.createElement("p");
-    mirrorTask.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["go_to_mirror"];
-    mirrorTask.id = "mirror-task";
-    document.getElementById("diary").appendChild(mirrorTask);
-}
-
 
 
 // 🔹 Переключение между камерой и дневником

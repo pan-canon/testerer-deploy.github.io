@@ -1,5 +1,6 @@
 // WelcomeEvent.js
 import { BaseEvent } from './baseEvent.js';
+import { VisualEffectsManager } from './utils/visualEffectsManager.js';
 
 export class WelcomeEvent extends BaseEvent {
   /**
@@ -26,6 +27,9 @@ export class WelcomeEvent extends BaseEvent {
         // Логируем запись с текстом "mirror_quest"
         const mirrorQuestText = this.languageManager.locales[this.languageManager.getLanguage()]["mirror_quest"];
         await this.eventManager.addDiaryEntry(mirrorQuestText);
+        // Вызовем визуальный эффект через VisualEffectsManager
+        const effectsManager = new VisualEffectsManager();
+        effectsManager.triggerMirrorEffect();
       }
     });
   }

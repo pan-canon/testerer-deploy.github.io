@@ -207,22 +207,6 @@ if (
   }
 
 
-
-// 🔹 Эффект затемнения + помехи
-triggerMirrorEffect() {
-    document.body.style.transition = "background 1s";
-    document.body.style.background = "black";
-    setTimeout(() => {
-        document.body.style.background = "";
-    }, 1000);
-
-    const staticNoise = new Audio('audio/phone_ringtone.mp3');
-    staticNoise.play();
-    setTimeout(() => staticNoise.pause(), 3000);
-}
-
-
-
 // 🔹 Переключение между камерой и дневником
 async toggleCameraView() {
   const diary = document.getElementById("diary");
@@ -272,9 +256,7 @@ async toggleCameraView() {
   }
 }
 
-
-
-  
+ 
 showMainScreen() {
   this.registrationScreen.style.display = 'none';
   this.selfieScreen.style.display = 'none';
@@ -289,13 +271,14 @@ showMainScreen() {
   }
 }
 
-  
+
   showRegistrationScreen() {
     this.registrationScreen.style.display = 'block';
     this.selfieScreen.style.display = 'none';
     this.mainScreen.style.display = 'none';
   }
-  
+
+
 exportProfile() {
   const profileStr = this.profileManager.exportProfile();
   if (!profileStr) {

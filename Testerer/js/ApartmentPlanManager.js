@@ -1,17 +1,29 @@
 export class ApartmentPlanManager {
-  constructor(tableId, dbManager) {
-    this.table = document.getElementById(tableId);
-    this.dbManager = dbManager;
-    this.rooms = []; // массив объектов: {floor, startRow, startCol, endRow, endCol, type}
-    this.currentFloor = 1;
-    this.isSelecting = false;
-    this.startCell = null;
-    this.endCell = null;
-    this.gridRows = 10;
-    this.gridCols = 10;
-    this.initTable();
-    this.attachEvents();
-  }
+constructor(containerId, dbManager) {
+  this.container = document.getElementById(containerId);
+  this.dbManager = dbManager;
+  this.rooms = []; // массив объектов: {floor, startRow, startCol, endRow, endCol, type}
+  this.currentFloor = 1;
+  this.isSelecting = false;
+  this.startCell = null;
+  this.endCell = null;
+  this.gridRows = 10;
+  this.gridCols = 10;
+  this.createTable();  // создаём таблицу динамически
+  this.attachEvents();
+}
+
+
+createTable() {
+  this.table = document.createElement('table');
+  this.table.style.borderCollapse = "collapse";
+  this.table.style.width = "500px";
+  this.table.style.height = "500px";
+  this.container.innerHTML = "";  // очищаем контейнер
+  this.container.appendChild(this.table);
+  this.initTable();  // заполняем таблицу ячейками
+}
+
   
   initTable() {
     // Генерируем таблицу с заданным количеством строк и колонок
@@ -34,12 +46,44 @@ export class ApartmentPlanManager {
     }
   }
   
-  attachEvents() {
-    // Обрабатываем выбор ячеек – нажали, перемещение мыши и отпускание
-    this.table.addEventListener("mousedown", (e) => this.startSelection(e));
-    this.table.addEventListener("mouseover", (e) => this.updateSelection(e));
-    document.addEventListener("mouseup", (e) => this.finishSelection(e));
+
+attachEvents() {
+  // Для мыши
+  this.table.addEventListener("mousedown", (e) => this.startSelection(e));
+  this.table.addEventListener("mousemove", (e) => this.updateSelection(e));
+  document.addEventListener("mouseup", (e) => this.finishSelection(e));
+
+  // Для касаний (touch events)
+  this.table.addEventListener("touchstart", (e) => this.handleTouchStart(e));
+  this.table.addEventListener("touchmove", (e) => this.handleTouchMove(e));
+  this.table.addEventListener("touchend", (e) => this.handleTouchEnd(e));
+}
+
+
+handleTouchStart(e) {
+  e.preventDefault();  // чтобы предотвратить нежелательный скроллинг
+  const touch = e.touches[0];
+  const target = document.elementFromPoint(touch.clientX, touch.clientY);
+  if (target && target.tagName === "TD") {
+    this.startSelection({ clientX: touch.clientX, clientY: touch.clientY, target });
   }
+}
+
+handleTouchMove(e) {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const target = document.elementFromPoint(touch.clientX, touch.clientY);
+  if (target && target.tagName === "TD") {
+    this.updateSelection({ clientX: touch.clientX, clientY: touch.clientY, target });
+  }
+}
+
+handleTouchEnd(e) {
+  e.preventDefault();
+  this.finishSelection(e);
+}
+
+
   
   startSelection(e) {
     if (e.target.tagName === "TD") {
@@ -61,24 +105,30 @@ export class ApartmentPlanManager {
     }
   }
   
-  finishSelection(e) {
-    if (this.isSelecting) {
-      this.isSelecting = false;
-      // Запрашиваем тип помещения
-      const roomType = prompt("Введите тип помещения (спальня, кухня и т.д.):", "Неизвестное") || "Неизвестное";
-      const room = {
-        floor: this.currentFloor,
-        startRow: Math.min(this.startCell.row, this.endCell.row),
-        startCol: Math.min(this.startCell.col, this.endCell.col),
-        endRow: Math.max(this.startCell.row, this.endCell.row),
-        endCol: Math.max(this.startCell.col, this.endCell.col),
-        type: roomType
-      };
-      this.rooms.push(room);
-      this.saveToDB();
-      this.renderRooms();
+finishSelection(e) {
+  if (this.isSelecting) {
+    this.isSelecting = false;
+    // Если не было выделено ни одной ячейки, используем дефолтное помещение
+    if (!this.startCell || !this.endCell) {
+      // Можно, например, задать дефолтное помещение, охватывающее весь план:
+      this.startCell = { row: 0, col: 0 };
+      this.endCell = { row: this.gridRows - 1, col: this.gridCols - 1 };
     }
+    const roomType = prompt("Введите тип помещения (спальня, кухня и т.д.):", "Неизвестное") || "Неизвестное";
+    const room = {
+      floor: this.currentFloor,
+      startRow: Math.min(this.startCell.row, this.endCell.row),
+      startCol: Math.min(this.startCell.col, this.endCell.col),
+      endRow: Math.max(this.startCell.row, this.endCell.row),
+      endCol: Math.max(this.startCell.col, this.endCell.col),
+      type: roomType
+    };
+    this.rooms.push(room);
+    this.saveToDB();
+    this.renderRooms();
   }
+}
+
   
   highlightSelection() {
     // Сбросить подсветку всех ячеек

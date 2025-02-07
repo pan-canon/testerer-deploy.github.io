@@ -1,5 +1,5 @@
 import { LanguageManager } from './languageManager.js';
-import { CameraManager } from './cameraManager.js';
+import { cameraSectionManager } from './cameraSectionManager .js';
 import { ProfileManager } from './profileManager.js';
 import { ApartmentPlanManager } from './ApartmentPlanManager.js';
 import { DatabaseManager } from './databaseManager.js';
@@ -32,13 +32,10 @@ export class App {
     this.exportBtn = document.getElementById('export-profile');
     this.importFileInput = document.getElementById('import-file');
     this.importBtn = document.getElementById('import-profile-btn');
-
-      this.profileNameElem = document.getElementById('profile-name');
-    this.profilePhotoElem = document.getElementById('profile-photo');
     
     // Менеджеры
     this.languageManager = new LanguageManager('language-selector');
-    this.cameraManager = new CameraManager('selfie-video');
+    this.CameraSectionManager = new CameraSectionManager('selfie-video');
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
@@ -46,8 +43,6 @@ this.questManager = new QuestManager(this.eventManager, this);
 // Технические поля для обработки изображений
 this.tempCanvas = document.createElement("canvas");
 this.tempCtx = this.tempCanvas.getContext("2d");
-
-this.setupProfileModal();
 
     this.bindEvents();
     this.init();
@@ -141,7 +136,7 @@ goToSelfieScreen() {
   document.getElementById('apartment-plan-screen').style.display = 'none';
   // Показываем экран селфи
   this.selfieScreen.style.display = 'block';
-  this.cameraManager.start();
+  this.cameraSectionManager.startCamera();
   this.completeBtn.disabled = true;
 }
 /*  goToSelfieScreen() {
@@ -160,13 +155,13 @@ goToSelfieScreen() {
 captureSelfie() {
     console.log("📸 Попытка сделать снимок...");
 
-    if (!this.cameraManager.videoElement || !this.cameraManager.videoElement.srcObject) {
+    if (!this.cameraSectionManager.videoElement || !this.cameraSectionManager.videoElement.srcObject) {
         console.error("❌ Камера не активна!");
         alert("Ошибка: Камера не включена.");
         return;
     }
 
-    const video = this.cameraManager.videoElement;
+    const video = this.cameraSectionManager.videoElement;
 
     // Проверяем, готово ли видео
     if (video.readyState < 2) {
@@ -222,114 +217,12 @@ this.selfieData = grayscaleData;
       selfie: this.selfiePreview.src
     };
     this.profileManager.saveProfile(profile);
-    this.cameraManager.stop();
+    this.cameraSectionManager.stopCamera();
     this.showMainScreen();
 
     // Звонок через 5 секунд после завершения регистрации
     setTimeout(() => this.startPhoneCall(), 5000);
   }
-
-
-setupProfileModal() {
-  // Находим элементы мини-профиля по новым id
-  this.profileModal = document.getElementById("profile-modal");
-  this.editNameInput = document.getElementById("edit-name");
-  this.profileModalPhoto = document.getElementById("profile-modal-photo");
-  this.updateSelfieBtn = document.getElementById("update-selfie-btn");
-  this.prevFloorMiniBtn = document.getElementById("prev-floor-mini-btn");
-  this.nextFloorMiniBtn = document.getElementById("next-floor-mini-btn");
-  this.saveProfileMiniBtn = document.getElementById("save-profile-mini-btn");
-  this.closeProfileModalBtn = document.getElementById("close-profile-modal-btn");
-  this.apartmentPlanMiniTable = document.getElementById("apartment-plan-mini-table");
-
-  // Открываем мини-профиль по клику на аватар (элемент profile-photo на главном экране)
-  this.profilePhotoElem.addEventListener("click", () => this.openProfileModal());
-
-  // Обработчик для обновления селфи – будем загружать код на лету
-  this.updateSelfieBtn.addEventListener("click", () => this.openSelfieEditing());
-
-  // Обработчики для переключения этажей в мини-версии плана квартиры
-  this.prevFloorMiniBtn.addEventListener("click", () => {
-    if (this.apartmentPlanManager) {
-      this.apartmentPlanManager.prevFloor();
-      this.apartmentPlanManager.renderRoomsMini(this.apartmentPlanMiniTable);
-    }
-  });
-  this.nextFloorMiniBtn.addEventListener("click", () => {
-    if (this.apartmentPlanManager) {
-      this.apartmentPlanManager.nextFloor();
-      this.apartmentPlanManager.renderRoomsMini(this.apartmentPlanMiniTable);
-    }
-  });
-
-  // Обработчик для сохранения изменений в имени
-  this.saveProfileMiniBtn.addEventListener("click", () => this.saveProfileChangesMini());
-
-  // Обработчик для закрытия мини-профиля
-  this.closeProfileModalBtn.addEventListener("click", () => this.closeProfileModal());
-}
-
-openProfileModal() {
-  console.log("Открываю мини-профиль");
-  // Скрываем все основные экраны (если они видны)
-  this.registrationScreen.style.display = 'none';
-  this.selfieScreen.style.display = 'none';
-  this.mainScreen.style.display = 'block'; // главного экрана, где находится аватар
-  // Если нужно — можно дополнительно скрыть экран регистрации плана:
-  document.getElementById('apartment-plan-screen').style.display = 'none';
-
-  const profile = this.profileManager.getProfile();
-  if (!profile) return;
-  this.editNameInput.value = profile.name;
-  this.profileModalPhoto.src = profile.selfie;
-
-  if (!this.apartmentPlanManager) {
-    this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-mini-table', this.databaseManager);
-  } else {
-    this.apartmentPlanManager.renderRoomsMini(this.apartmentPlanMiniTable);
-  }
-  this.profileModal.style.display = "flex";
-}
-
-
-closeProfileModal() {
-  this.profileModal.style.display = "none";
-}
-
-saveProfileChangesMini() {
-  const newName = this.editNameInput.value.trim();
-  if (!newName) {
-    alert("Введите корректное имя!");
-    return;
-  }
-  const profile = this.profileManager.getProfile();
-  profile.name = newName;
-  this.profileManager.saveProfile(profile);
-  this.profileNameElem.textContent = newName; // обновляем отображение на главном экране
-  alert("✅ Данные профиля обновлены!");
-  this.closeProfileModal();
-}
-
-openSelfieEditing() {
-  this.closeProfileModal();
-  // Показываем экран селфи, который уже реализован
-  this.goToSelfieScreen();
-  // Можно, если нужно, после завершения селфи (в completeRegistration) снова открыть мини-профиль,
-  // например, вызовом this.openProfileModal() в конце completeRegistration().
-}
-
-editApartmentPlan() {
-  this.closeProfileModal();
-  // Показываем экран редактирования плана квартиры, который у вас уже реализован (Шаг 2)
-  document.getElementById('apartment-plan-screen').style.display = 'block';
-  // Если необходимо, можно пересоздать или обновить экземпляр ApartmentPlanManager
-  if (!this.apartmentPlanManager) {
-    this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-table', this.databaseManager);
-  }
-}
-
-
-
 
 async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventKey) {
   // Останавливаем звук звонка
@@ -438,8 +331,8 @@ async toggleCameraView() {
         toggleDiaryBtn.style.display = "inline-block";
         buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
 
-        this.cameraManager.videoElement = videoElement;
-        await this.cameraManager.start();
+        this.cameraSectionManager.videoElement = videoElement;
+        await this.cameraSectionManager.start();
 
         // Дождаться, пока видео загрузит метаданные
         await new Promise(resolve => {
@@ -460,7 +353,7 @@ async toggleCameraView() {
         toggleCameraBtn.style.display = "inline-block";
         toggleDiaryBtn.style.display = "none";
         buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
-        this.cameraManager.stop();
+        this.cameraSectionManager.stop();
     }
 }
 
@@ -572,16 +465,16 @@ async compareCurrentFrame() {
     console.warn("❌ Нет сохранённого селфи!");
     return false;
   }
-  if (!this.cameraManager.videoElement || !this.cameraManager.videoElement.srcObject) {
+  if (!this.cameraSectionManager.videoElement || !this.cameraSectionManager.videoElement.srcObject) {
     console.warn("❌ Камера не активна!");
     return false;
   }
   
   // Настройка временной канвы для захвата текущего кадра
-  this.tempCanvas.width = this.cameraManager.videoElement.videoWidth || 640;
-  this.tempCanvas.height = this.cameraManager.videoElement.videoHeight || 480;
+  this.tempCanvas.width = this.cameraSectionManager.videoElement.videoWidth || 640;
+  this.tempCanvas.height = this.cameraSectionManager.videoElement.videoHeight || 480;
   this.tempCtx.drawImage(
-    this.cameraManager.videoElement,
+    this.cameraSectionManager.videoElement,
     0,
     0,
     this.tempCanvas.width,

@@ -32,6 +32,11 @@ export class App {
     this.exportBtn = document.getElementById('export-profile');
     this.importFileInput = document.getElementById('import-file');
     this.importBtn = document.getElementById('import-profile-btn');
+
+  this.profilePhotoElem = document.getElementById('profile-photo'); // если ещё не получен
+this.profileNameElem = document.getElementById('profile-name');   // если ещё не получен
+this.setupProfileModal();
+
     
     // Менеджеры
     this.languageManager = new LanguageManager('language-selector');
@@ -39,7 +44,7 @@ export class App {
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
-this.questManager = new QuestManager(this.eventManager, this);
+    this.questManager = new QuestManager(this.eventManager, this);
 // Технические поля для обработки изображений
 this.tempCanvas = document.createElement("canvas");
 this.tempCtx = this.tempCanvas.getContext("2d");
@@ -80,7 +85,6 @@ document.getElementById("next-floor-btn").addEventListener("click", () => {
 
 }
 
-  
 async init() {
   // Сначала ждём инициализации БД
   await this.databaseManager.initDatabasePromise;
@@ -104,6 +108,7 @@ async init() {
     this.showRegistrationScreen();
   }
 }
+
 
   
   validateRegistration() {
@@ -241,6 +246,69 @@ async endCall(ringtone, answerCallBtn, ignoreCallBtn, eventKey) {
   const cameraBtn = document.getElementById("toggle-camera");
   cameraBtn.style.display = "inline-block";
 }
+
+
+setupProfileModal() {
+  this.profileModal = document.getElementById("profile-modal");
+  this.editNameInput = document.getElementById("edit-name");
+  this.profileModalPhoto = document.getElementById("profile-modal-photo");
+  this.editSelfieBtn = document.getElementById("edit-selfie-btn");
+  this.editApartmentBtn = document.getElementById("edit-apartment-btn");
+  this.saveProfileBtn = document.getElementById("save-profile-btn");
+  this.closeProfileBtn = document.getElementById("close-profile-btn");
+
+  // Открываем модальное окно по клику на аватар
+  this.profilePhotoElem.addEventListener("click", () => this.openProfileModal());
+
+  // Обработчики для кнопок модального окна
+  this.editSelfieBtn.addEventListener("click", () => this.retakeSelfie());
+  this.editApartmentBtn.addEventListener("click", () => this.editApartmentPlan());
+  this.saveProfileBtn.addEventListener("click", () => this.saveProfileChanges());
+  this.closeProfileBtn.addEventListener("click", () => this.closeProfileModal());
+}
+
+openProfileModal() {
+  const profile = this.profileManager.getProfile();
+  if (!profile) return;
+  this.editNameInput.value = profile.name;
+  this.profileModalPhoto.src = profile.selfie;
+  this.profileModal.style.display = "flex";
+}
+
+closeProfileModal() {
+  this.profileModal.style.display = "none";
+}
+
+saveProfileChanges() {
+  const newName = this.editNameInput.value.trim();
+  if (!newName) {
+    alert("Введите корректное имя!");
+    return;
+  }
+  // Обновляем профиль
+  const profile = this.profileManager.getProfile();
+  profile.name = newName;
+  this.profileManager.saveProfile(profile);
+  this.profileNameElem.textContent = newName;
+  alert("✅ Данные профиля обновлены!");
+  this.closeProfileModal();
+}
+
+retakeSelfie() {
+  this.closeProfileModal();
+  // Перенаправляем пользователя к шагу съемки селфи.
+  // Например, можно выполнить:
+  this.showRegistrationScreen();
+  this.goToSelfieScreen();
+}
+
+editApartmentPlan() {
+  this.closeProfileModal();
+  // Показываем экран редактирования плана квартиры
+  document.getElementById('apartment-plan-screen').style.display = 'block';
+}
+
+
 
 startPhoneCall() {
     const ringtone = new Audio('audio/phone_ringtone.mp3');

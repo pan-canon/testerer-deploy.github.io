@@ -6,6 +6,27 @@
   <title>Game Registration</title>
   <!-- Подключаем стиль Pico.css и дополнительные стили -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+<style>
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    text-align: center;
+  }
+  .modal-content button {
+    margin-top: 10px;
+  }
+</style>
+
 </head>
 
 <body>
@@ -94,6 +115,28 @@
   <!-- Новая кнопка экспорта профиля -->
   <button type="button" id="export-profile" data-i18n="export">Export Profile</button>
 </div>
+
+<!-- Модальное окно профиля -->
+<div id="profile-modal" class="modal">
+  <div class="modal-content">
+    <h2>Профиль</h2>
+    
+    <label for="edit-name">Имя:</label>
+    <input type="text" id="edit-name">
+    
+    <label>Селфи:</label>
+    <img id="profile-modal-photo" src="" alt="Profile Photo" style="max-width: 100px; border-radius: 50%;">
+    <button id="edit-selfie-btn">Сделать новое селфи</button>
+
+    <label>План квартиры:</label>
+    <button id="edit-apartment-btn">Редактировать план</button>
+
+    <br><br>
+    <button id="save-profile-btn">Сохранить</button>
+    <button id="close-profile-btn">Закрыть</button>
+  </div>
+</div>
+
   
   <!-- Скрипты -->
   <!-- Основной скрипт -->

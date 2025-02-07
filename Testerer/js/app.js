@@ -52,16 +52,31 @@ bindEvents() {
     this.nameInput.addEventListener('input', () => this.validateRegistration());
     this.genderSelect.addEventListener('change', () => this.validateRegistration());
 
-    this.nextStepBtn.addEventListener('click', () => this.goToSelfieScreen());
+    this.nextStepBtn.addEventListener('click', () => this.goToApartmentPlanScreen());
+
     this.captureBtn.addEventListener('click', () => this.captureSelfie());
     this.completeBtn.addEventListener('click', () => this.completeRegistration());
     this.resetBtn.addEventListener('click', () => this.profileManager.resetProfile());
     this.exportBtn.addEventListener('click', () => this.exportProfile());
     this.importBtn.addEventListener('click', () => this.importProfile());
 
+document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
+document.getElementById("prev-floor-btn").addEventListener("click", () => {
+  if (this.apartmentPlanManager) {
+    this.apartmentPlanManager.prevFloor();
+  }
+});
+document.getElementById("next-floor-btn").addEventListener("click", () => {
+  if (this.apartmentPlanManager) {
+    this.apartmentPlanManager.nextFloor();
+  }
+});
+
     // 🔹 Переключение между камерой и дневником
     document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
     document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
+
+
 }
 
   
@@ -97,8 +112,33 @@ async init() {
       this.nextStepBtn.disabled = true;
     }
   }
-  
-  goToSelfieScreen() {
+
+goToApartmentPlanScreen() {
+  const regData = {
+    name: this.nameInput.value.trim(),
+    gender: this.genderSelect.value,
+    language: document.getElementById('language-selector').value
+  };
+  localStorage.setItem('regData', JSON.stringify(regData));
+  // Скрываем экран регистрации и показываем экран плана квартиры
+  this.registrationScreen.style.display = 'none';
+  document.getElementById('apartment-plan-screen').style.display = 'block';
+  // Инициализируем менеджер плана квартиры (если ещё не создан)
+  if (!this.apartmentPlanManager) {
+    this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-table', this.databaseManager);
+  }
+}
+
+
+goToSelfieScreen() {
+  // Скрываем экран плана квартиры
+  document.getElementById('apartment-plan-screen').style.display = 'none';
+  // Показываем экран селфи
+  this.selfieScreen.style.display = 'block';
+  this.cameraManager.start();
+  this.completeBtn.disabled = true;
+}
+/*  goToSelfieScreen() {
     const regData = {
       name: this.nameInput.value.trim(),
       gender: this.genderSelect.value,
@@ -109,7 +149,7 @@ async init() {
     this.selfieScreen.style.display = 'block';
     this.cameraManager.start();
     this.completeBtn.disabled = true;
-  }
+  }*/
   
 captureSelfie() {
     console.log("📸 Попытка сделать снимок...");
@@ -341,12 +381,20 @@ exportProfile() {
     alert("No profile found to export.");
     return;
   }
+  // Получаем данные дневника
   const diaryEntries = this.databaseManager.getDiaryEntries();
+  // Если у вас реализована регистрация плана квартиры, получаем данные плана
+  const apartmentPlanData = this.apartmentPlanManager ? this.apartmentPlanManager.rooms : [];
+  
+  // Объединяем данные в один объект
   const exportData = {
     profile: JSON.parse(profileStr),
-    diary: diaryEntries
+    diary: diaryEntries,
+    apartment: apartmentPlanData
   };
-  const blob = new Blob([JSON.stringify(exportData)], { type: 'application/json' });
+
+  // Экспорт в JSON-файл
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -356,6 +404,7 @@ exportProfile() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
   
 importProfile() {
   if (this.importFileInput.files.length === 0) {
@@ -367,7 +416,7 @@ importProfile() {
   reader.onload = (e) => {
     try {
       const importedData = JSON.parse(e.target.result);
-      // Проверяем основные поля профиля
+      // Проверяем наличие основных данных профиля
       if (!importedData.profile || !importedData.profile.name || !importedData.profile.gender ||
           !importedData.profile.selfie || !importedData.profile.language) {
         alert("Invalid profile file. Required profile fields are missing.");
@@ -375,7 +424,8 @@ importProfile() {
       }
       // Сохраняем профиль
       this.profileManager.saveProfile(importedData.profile);
-      // Если в файле есть дневниковые записи, импортируем их
+      
+      // Импортируем записи дневника, если они есть
       if (importedData.diary && Array.isArray(importedData.diary)) {
         importedData.diary.forEach(entry => {
           if (entry.entry && entry.timestamp) {
@@ -387,14 +437,26 @@ importProfile() {
         });
         this.databaseManager.saveDatabase();
       }
+      
+      // Импортируем данные плана квартиры, если они есть
+      if (importedData.apartment && Array.isArray(importedData.apartment)) {
+        // Если объект apartmentPlanManager уже создан, сохраняем данные и перерисовываем таблицу
+        if (this.apartmentPlanManager) {
+          this.apartmentPlanManager.rooms = importedData.apartment;
+          this.apartmentPlanManager.renderRooms();
+        }
+      }
+      
       alert("Profile imported successfully. Reloading page.");
       window.location.reload();
     } catch (err) {
+      console.error(err);
       alert("Error parsing the profile file.");
     }
   };
   reader.readAsText(file);
 }
+
 
 async compareCurrentFrame() {
   console.log("▶️ Начало compareCurrentFrame()");

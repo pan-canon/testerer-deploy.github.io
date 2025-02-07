@@ -21,12 +21,18 @@ export class DatabaseManager {
     } else {
       this.db = new SQL.Database();
       this.db.run(`
-        CREATE TABLE IF NOT EXISTS diary (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          entry TEXT,
-          timestamp TEXT
-        );
-      `);
+  CREATE TABLE IF NOT EXISTS diary (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry TEXT,
+    timestamp TEXT
+  );
+  CREATE TABLE IF NOT EXISTS apartment_plan (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    floor_number INTEGER,
+    room_data TEXT
+  );
+`);
+
     }
     console.log("📖 Database initialized!");
   }
@@ -66,4 +72,24 @@ export class DatabaseManager {
     }
     return [];
   }
+
+addApartmentRooms(floor, rooms) {
+  const roomsJSON = JSON.stringify(rooms);
+  this.db.run("INSERT INTO apartment_plan (floor_number, room_data) VALUES (?, ?)", [floor, roomsJSON]);
+  this.saveDatabase();
+}
+
+getApartmentPlan(floor, callback) {
+  const stmt = this.db.prepare("SELECT room_data FROM apartment_plan WHERE floor_number = ?");
+  stmt.bind([floor]);
+  if (stmt.step()) {
+    const row = stmt.get();
+    const rooms = JSON.parse(row[0]);
+    callback(rooms);
+  } else {
+    callback([]);
+  }
+  stmt.free();
+}
+
 }

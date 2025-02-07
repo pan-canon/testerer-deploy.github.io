@@ -42,8 +42,22 @@
     <button type="button" id="import-profile-btn" data-i18n="import">Import</button>
   </div>
 </div>
-  
-  <!-- Экран создания селфи (Шаг 2) -->
+
+<!-- Новый экран регистрации плана квартиры (Шаг 2) -->
+<div id="apartment-plan-screen" style="display: none;">
+  <h2>План квартиры</h2>
+  <div id="apartment-plan-container">
+    <!-- Таблица с клетками для регистрации помещений -->
+    <table id="apartment-plan-table" border="1" style="border-collapse: collapse; width: 500px; height: 500px;"></table>
+  </div>
+  <div>
+    <button type="button" id="prev-floor-btn">Предыдущий этаж</button>
+    <button type="button" id="next-floor-btn">Следующий этаж</button>
+  </div>
+  <button type="button" id="apartment-plan-next-btn">Далее</button>
+</div>
+
+  <!-- Экран создания селфи (Шаг 3) -->
   <div id="selfie-screen" style="display: none;">
     <h1 data-i18n="take_selfie">Take a Selfie</h1>
     <video id="selfie-video" autoplay playsinline style="width: 100%; max-width: 400px;"></video>

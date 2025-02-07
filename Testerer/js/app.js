@@ -272,14 +272,18 @@ answerCallBtn.addEventListener("click", async () => {
     // Устанавливаем флаг, что звонок обработан
     localStorage.setItem("callHandled", "true");
 
-    this.triggerMirrorEffect();
+    // Получаем экземпляр зеркального квеста и запускаем его эффекты, теперь внутри MirrorQuest
+    const mirrorQuest = this.questManager.quests.find(q => q.key === "mirror_quest");
+    if (mirrorQuest && mirrorQuest.triggerMirrorEffect) {
+      mirrorQuest.triggerMirrorEffect();
+    }
 
-setTimeout(async () => {
-  await this.questManager.activateQuest("mirror_quest");
-  this.toggleCameraView();
-}, 5000);
-
+    setTimeout(async () => {
+      await this.questManager.activateQuest("mirror_quest");
+      this.toggleCameraView();
+    }, 5000);
 });
+
 
 // При игнорировании
 ignoreCallBtn.addEventListener("click", async () => {
@@ -298,27 +302,6 @@ ignoreCallBtn.addEventListener("click", async () => {
 
     this.mainScreen.appendChild(answerCallBtn);
     this.mainScreen.appendChild(ignoreCallBtn);
-}
-
-// 🔹 Эффект затемнения + помехи
-triggerMirrorEffect() {
-    document.body.style.transition = "background 1s";
-    document.body.style.background = "black";
-    setTimeout(() => {
-        document.body.style.background = "";
-    }, 1000);
-
-    const staticNoise = new Audio('audio/phone_ringtone.mp3');
-    staticNoise.play();
-    setTimeout(() => staticNoise.pause(), 3000);
-}
-
-// 🔹 Новое задание "Подойти к зеркалу"
-showMirrorTask() {
-    const mirrorTask = document.createElement("p");
-    mirrorTask.textContent = this.languageManager.locales[this.languageManager.getLanguage()]["go_to_mirror"];
-    mirrorTask.id = "mirror-task";
-    document.getElementById("diary").appendChild(mirrorTask);
 }
 
 

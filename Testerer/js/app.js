@@ -235,19 +235,19 @@ async toggleCameraView() {
     });
     await this.cameraSectionManager.startCamera();
 
-await new Promise(resolve => {
-  if (this.cameraSectionManager.videoElement.readyState >= 2) {
-    resolve();
-  } else {
-    this.cameraSectionManager.videoElement.onloadedmetadata = () => resolve();
-  }
-});
-console.log("Видео готово:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
+    await new Promise(resolve => {
+      if (this.cameraSectionManager.videoElement.readyState >= 2) {
+        resolve();
+      } else {
+        this.cameraSectionManager.videoElement.onloadedmetadata = () => resolve();
+      }
+    });
+    console.log("Видео готово:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
 
-// Запускаем зеркальный квест только если флаг активен (то есть, звонок был принят)
-if (localStorage.getItem("mirrorQuestActive") === "true") {
-  this.questManager.checkMirrorQuestOnCamera();
-}
+    // Запускаем зеркальный квест только если флаг активен (то есть, звонок был принят)
+    if (localStorage.getItem("mirrorQuestActive") === "true") {
+      this.questManager.checkMirrorQuestOnCamera();
+    }
 
   } else {
     console.log("📓 Возвращаемся в блог...");
@@ -284,86 +284,18 @@ showMainScreen() {
 
 
 exportProfile() {
-  const profileStr = this.profileManager.exportProfile();
-  if (!profileStr) {
-    alert("No profile found to export.");
-    return;
-  }
-  // Получаем данные дневника
-  const diaryEntries = this.databaseManager.getDiaryEntries();
-  // Если у вас реализована регистрация плана квартиры, получаем данные плана
-  const apartmentPlanData = this.apartmentPlanManager ? this.apartmentPlanManager.rooms : [];
-  
-  // Объединяем данные в один объект
-  const exportData = {
-    profile: JSON.parse(profileStr),
-    diary: diaryEntries,
-    apartment: apartmentPlanData
-  };
-
-  // Экспорт в JSON-файл
-  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'profile.json';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  this.profileManager.exportProfileData(this.databaseManager, this.apartmentPlanManager);
 }
 
-  
 importProfile() {
   if (this.importFileInput.files.length === 0) {
     alert("Please select a profile file to import.");
     return;
   }
   const file = this.importFileInput.files[0];
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const importedData = JSON.parse(e.target.result);
-      // Проверяем наличие основных данных профиля
-      if (!importedData.profile || !importedData.profile.name || !importedData.profile.gender ||
-          !importedData.profile.selfie || !importedData.profile.language) {
-        alert("Invalid profile file. Required profile fields are missing.");
-        return;
-      }
-      // Сохраняем профиль
-      this.profileManager.saveProfile(importedData.profile);
-      
-      // Импортируем записи дневника, если они есть
-      if (importedData.diary && Array.isArray(importedData.diary)) {
-        importedData.diary.forEach(entry => {
-          if (entry.entry && entry.timestamp) {
-            this.databaseManager.db.run(
-              "INSERT INTO diary (entry, timestamp) VALUES (?, ?)",
-              [entry.entry, entry.timestamp]
-            );
-          }
-        });
-        this.databaseManager.saveDatabase();
-      }
-      
-      // Импортируем данные плана квартиры, если они есть
-      if (importedData.apartment && Array.isArray(importedData.apartment)) {
-        // Если объект apartmentPlanManager уже создан, сохраняем данные и перерисовываем таблицу
-        if (this.apartmentPlanManager) {
-          this.apartmentPlanManager.rooms = importedData.apartment;
-          this.apartmentPlanManager.renderRooms();
-        }
-      }
-      
-      alert("Profile imported successfully. Reloading page.");
-      window.location.reload();
-    } catch (err) {
-      console.error(err);
-      alert("Error parsing the profile file.");
-    }
-  };
-  reader.readAsText(file);
+  this.profileManager.importProfileData(file, this.databaseManager, this.apartmentPlanManager);
 }
+
 
 
 async compareCurrentFrame() {

@@ -5,9 +5,9 @@ import { ProfileManager } from './profileManager.js';
 import { ApartmentPlanManager } from './ApartmentPlanManager.js';
 import { DatabaseManager } from './databaseManager.js';
 import { EventManager } from './eventManager.js';
-import { CallManager } from './CallManager.js';
+import { CallManager } from './callManager.js';
 import { QuestManager } from './questManager.js';
-import { GameEventManager } from './GameEventManager.js';
+import { GameEventManager } from './gameEventManager.js';
 
 export class App {
   constructor() {

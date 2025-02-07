@@ -41,6 +41,7 @@ export class App {
     this.databaseManager = new DatabaseManager();
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
     this.questManager = new QuestManager(this.eventManager, this);
+    
     // Технические поля для обработки изображений
     this.tempCanvas = document.createElement("canvas");
     this.tempCtx = this.tempCanvas.getContext("2d");
@@ -50,12 +51,10 @@ export class App {
   }
   
   bindEvents() {
-    // Валидация формы регистрации
     this.nameInput.addEventListener('input', () => this.validateRegistration());
     this.genderSelect.addEventListener('change', () => this.validateRegistration());
 
     this.nextStepBtn.addEventListener('click', () => this.goToApartmentPlanScreen());
-
     this.captureBtn.addEventListener('click', () => this.captureSelfie());
     this.completeBtn.addEventListener('click', () => this.completeRegistration());
     this.resetBtn.addEventListener('click', () => this.profileManager.resetProfile());
@@ -64,26 +63,21 @@ export class App {
 
     document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
     document.getElementById("prev-floor-btn").addEventListener("click", () => {
-      if (this.apartmentPlanManager) {
-        this.apartmentPlanManager.prevFloor();
-      }
+      if (this.apartmentPlanManager) { this.apartmentPlanManager.prevFloor(); }
     });
     document.getElementById("next-floor-btn").addEventListener("click", () => {
-      if (this.apartmentPlanManager) {
-        this.apartmentPlanManager.nextFloor();
-      }
+      if (this.apartmentPlanManager) { this.apartmentPlanManager.nextFloor(); }
     });
 
-    // 🔹 Переключение между камерой и дневником
+    // Переключение между камерой и дневником
     document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
     document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
   }
   
   async init() {
     await this.databaseManager.initDatabasePromise;
-    
     const entries = this.databaseManager.getDiaryEntries();
-    console.log("Проверяем дневник после инициализации:", entries);
+    console.log("📖 Проверяем дневник после инициализации:", entries);
     
     if (entries.length > 0) {
       const cameraBtn = document.getElementById("toggle-camera");
@@ -94,19 +88,17 @@ export class App {
       this.showMainScreen();
       this.eventManager.updateDiaryDisplay();
       
-      // Если профиль сохранён, звонок обработан, но квест не завершён,
-      // добавляем класс "highlight" к кнопке для активации квеста.
-      if (this.profileManager.isProfileSaved() &&
-          localStorage.getItem("callHandled") === "true" &&
-          !this.eventManager.isEventLogged("mirror_done")) {
+      // Если профиль сохранён, звонок обработан, но квест не завершён – помечаем кнопку для активации квеста
+      if (localStorage.getItem("callHandled") === "true" && !this.eventManager.isEventLogged("mirror_done")) {
         const toggleCameraBtn = document.getElementById("toggle-camera");
         toggleCameraBtn.classList.add("highlight");
         console.log("📣 При перезагрузке: кнопка 'toggle-camera' получила класс highlight");
       }
       
-      // Если регистрация завершена, но звонок ещё не обработан, запускаем его
+      // Если регистрация завершена, но звонок ещё не обработан – запускаем звонок
       if (localStorage.getItem("registrationCompleted") === "true" &&
           localStorage.getItem("callHandled") !== "true") {
+        console.log("📞 Звонок ещё не обработан – запускаем startPhoneCall");
         this.startPhoneCall();
       }
     } else {
@@ -115,11 +107,7 @@ export class App {
   }
   
   validateRegistration() {
-    if (this.nameInput.value.trim() !== "" && this.genderSelect.value !== "") {
-      this.nextStepBtn.disabled = false;
-    } else {
-      this.nextStepBtn.disabled = true;
-    }
+    this.nextStepBtn.disabled = !(this.nameInput.value.trim() && this.genderSelect.value);
   }
 
   goToApartmentPlanScreen() {
@@ -129,10 +117,8 @@ export class App {
       language: document.getElementById('language-selector').value
     };
     localStorage.setItem('regData', JSON.stringify(regData));
-    // Скрываем экран регистрации и показываем экран плана квартиры
     this.registrationScreen.style.display = 'none';
     document.getElementById('apartment-plan-screen').style.display = 'block';
-    // Инициализируем менеджер плана квартиры (если ещё не создан)
     if (!this.apartmentPlanManager) {
       this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', this.databaseManager);
     }
@@ -170,9 +156,7 @@ export class App {
       canvas.width = video.videoWidth || 640;
       canvas.height = video.videoHeight || 480;
       const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        throw new Error("Не удалось получить контекст рисования.");
-      }
+      if (!ctx) { throw new Error("Не удалось получить контекст рисования."); }
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const grayscaleData = ImageUtils.convertToGrayscale(canvas);
       this.selfiePreview.src = grayscaleData;
@@ -187,15 +171,12 @@ export class App {
   }
 
   completeRegistration() {
-    if (!this.selfiePreview.src || this.selfiePreview.src === "") {
+    if (!this.selfiePreview.src) {
       alert("Please capture your selfie before completing registration.");
       return;
     }
     const regDataStr = localStorage.getItem('regData');
-    if (!regDataStr) {
-      alert("Registration data missing.");
-      return;
-    }
+    if (!regDataStr) { alert("Registration data missing."); return; }
     const regData = JSON.parse(regDataStr);
     const profile = {
       name: regData.name,
@@ -207,6 +188,7 @@ export class App {
     localStorage.setItem("registrationCompleted", "true");
     this.cameraSectionManager.stopCamera();
     this.showMainScreen();
+    console.log("👤 Профиль загружен, селфи восстановлено");
     setTimeout(() => this.startPhoneCall(), 5000);
   }
 
@@ -217,6 +199,7 @@ export class App {
     ignoreCallBtn.remove();
     if (!this.eventManager.isEventLogged(eventKey)) {
       await this.eventManager.addDiaryEntry(eventKey);
+      console.log("📝 Запись для", eventKey, "добавлена в дневник");
     }
     const cameraBtn = document.getElementById("toggle-camera");
     cameraBtn.style.display = "inline-block";
@@ -296,7 +279,7 @@ export class App {
 
       await new Promise(resolve => {
         if (this.cameraSectionManager.videoElement.readyState >= 2) {
-          console.log("🎬 Видео готово: readyState = " + this.cameraSectionManager.videoElement.readyState);
+          console.log("🎬 Видео готово: readyState =", this.cameraSectionManager.videoElement.readyState);
           resolve();
         } else {
           this.cameraSectionManager.videoElement.onloadedmetadata = () => {
@@ -305,7 +288,7 @@ export class App {
           };
         }
       });
-      console.log("Видео разрешение: " + this.cameraSectionManager.videoElement.videoWidth + "x" + this.cameraSectionManager.videoElement.videoHeight);
+      console.log("Видео разрешение:", this.cameraSectionManager.videoElement.videoWidth, "x", this.cameraSectionManager.videoElement.videoHeight);
 
       if (toggleCameraBtn.classList.contains("highlight")) {
         console.log("🚀 Кнопка 'toggle-camera' содержит класс 'highlight'. Активируем квест только один раз.");
@@ -337,7 +320,7 @@ export class App {
       this.profilePhotoElem.src = profile.selfie;
       this.profilePhotoElem.style.display = 'block';
       this.selfieData = profile.selfie;
-      console.log("Профиль загружен, селфи восстановлено");
+      console.log("👤 Профиль загружен, селфи восстановлено");
     }
   }
   

@@ -88,6 +88,7 @@ export class ApartmentPlanManager {
     this.gridCols = 10;
     this.createTable();
     this.attachEvents();
+    this.loadFromDB();
   }
   
   createTable() {

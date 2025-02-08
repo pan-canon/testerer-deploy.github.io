@@ -29,7 +29,6 @@ export class App {
     this.exportBtn = document.getElementById('export-profile');
     this.importFileInput = document.getElementById('import-file');
     this.importBtn = document.getElementById('import-profile-btn');
-    this.showProfileModal = new ShowProfileModal(this);
     
     // Менеджеры
     this.languageManager = new LanguageManager('language-selector');
@@ -41,7 +40,7 @@ this.eventManager = new EventManager(this.databaseManager, this.languageManager)
 this.callManager = new CallManager(this.eventManager, this, this.languageManager);
 this.questManager = new QuestManager(this.eventManager, this);
 this.gameEventManager = new GameEventManager(this.eventManager, this, this.languageManager);
-
+this.showProfileModal = new ShowProfileModal(this);
     // Технические поля для обработки изображений
     this.tempCanvas = document.createElement("canvas");
     this.tempCtx = this.tempCanvas.getContext("2d");

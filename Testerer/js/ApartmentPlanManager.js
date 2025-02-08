@@ -88,7 +88,9 @@ export class ApartmentPlanManager {
     this.gridCols = 10;
     this.createTable();
     this.attachEvents();
-    this.loadFromDB();
+this.dbManager.initDatabasePromise.then(() => {
+  this.loadFromDB();
+});
   }
   
   createTable() {
@@ -271,11 +273,14 @@ loadFromDB() {
   this.dbManager.getApartmentPlan(this.currentFloor, (rooms) => {
     if (!rooms || rooms.length === 0) {
       console.log(`Локации для этажа ${this.currentFloor} не созданы, выбран дефолт.`);
+    } else {
+      console.log(`Найденные локации для этажа ${this.currentFloor}: `, rooms);
     }
     this.rooms = rooms;
     this.renderRooms();
   });
 }
+
 
   
   nextFloor() {

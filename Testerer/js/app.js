@@ -9,7 +9,7 @@ import { EventManager } from './eventManager.js';
 import { CallManager } from './callManager.js';
 import { QuestManager } from './questManager.js';
 import { GameEventManager } from './gameEventManager.js';
-import { GhostManager } from './GhostManager.js';
+import { GhostManager } from './ghostManager.js';
 
 export class App {
   constructor() {

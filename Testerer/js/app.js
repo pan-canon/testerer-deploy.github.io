@@ -4,6 +4,7 @@ import { ImageUtils } from './utils/imageUtils.js';
 import { ProfileManager } from './profileManager.js';
 import { ApartmentPlanManager } from './ApartmentPlanManager.js';
 import { DatabaseManager } from './databaseManager.js';
+import { ProfileManager } from './showProfileModal.js';
 import { EventManager } from './eventManager.js';
 import { CallManager } from './callManager.js';
 import { QuestManager } from './questManager.js';
@@ -58,6 +59,7 @@ this.gameEventManager = new GameEventManager(this.eventManager, this, this.langu
     this.resetBtn.addEventListener('click', () => this.profileManager.resetProfile());
     this.exportBtn.addEventListener('click', () => this.exportProfile());
     this.importBtn.addEventListener('click', () => this.importProfile());
+    this.profilePhotoElem.addEventListener("click", () => this.showProfileModal());
     document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
     document.getElementById("prev-floor-btn").addEventListener("click", () => {
       if (this.apartmentPlanManager) {

@@ -43,4 +43,14 @@ export class QuestManager {
   async checkMirrorQuestOnCamera() {
     await this.checkQuest("mirror_quest");
   }
+
+  /**
+   * Запускает проверку зеркального квеста, если он активен (например, после включения камеры)
+   */
+  async triggerMirrorQuestIfActive() {
+    if (localStorage.getItem("mirrorQuestActive") === "true") {
+      console.log("🪞 Активируем проверку зеркального квеста...");
+      await this.checkMirrorQuestOnCamera();
+    }
+  }
 }

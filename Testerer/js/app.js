@@ -221,7 +221,6 @@ async toggleCameraView() {
     document.getElementById("import-profile-container")
   ];
 
-  // Если контейнер скрыт – показываем его
   if (cameraContainer.style.display === "none") {
     console.log("📸 Переключаемся на камеру...");
     diary.style.display = "none";
@@ -230,7 +229,7 @@ async toggleCameraView() {
     toggleDiaryBtn.style.display = "inline-block";
     buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
 
-    // Прикрепляем видео к контейнеру камеры (без фильтра)
+    // Прикрепляем видео к контейнеру камеры
     this.cameraSectionManager.attachTo('camera-container', {
       width: "100%",
       height: "100%"
@@ -246,11 +245,7 @@ async toggleCameraView() {
     });
     console.log("Видео готово:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
 
-    // Запускаем зеркальный квест только если флаг активен (то есть, звонок был принят)
-    if (localStorage.getItem("mirrorQuestActive") === "true") {
-      this.questManager.checkMirrorQuestOnCamera();
-    }
-
+    // Здесь нет вызова триггера квестов, поскольку событие навешивается внутри квеста.
   } else {
     console.log("📓 Возвращаемся в блог...");
     diary.style.display = "block";
@@ -261,6 +256,7 @@ async toggleCameraView() {
     this.cameraSectionManager.stopCamera();
   }
 }
+
 
  
 showMainScreen() {

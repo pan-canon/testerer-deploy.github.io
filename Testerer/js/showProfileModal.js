@@ -143,6 +143,50 @@ export class ShowProfileModal {
     note.textContent = "Переехать и начать с чистого листа - это иногда помогает избавиться от привидений, но не всегда.";
     note.style.fontStyle = "italic";
     modal.appendChild(note);
+
+    // Блок отображения наград (призраков)
+    const rewardsContainer = document.createElement("div");
+    rewardsContainer.id = "ghost-rewards-container";
+    rewardsContainer.style.display = "flex";
+    rewardsContainer.style.flexWrap = "wrap";
+    rewardsContainer.style.justifyContent = "center";
+    rewardsContainer.style.marginTop = "20px";
+    
+    // Получаем прогресс призрака из ProfileManager
+    // Ожидается, что ghostProgress имеет формат { ghostId: число, phenomenonIndex: число }
+    const ghostProgress = this.app.profileManager.getGhostProgress();
+    const totalGhosts = 13;
+    
+    for (let i = 1; i <= totalGhosts; i++) {
+      const ghostIcon = document.createElement("div");
+      ghostIcon.className = "ghost-icon";
+      ghostIcon.style.width = "60px";
+      ghostIcon.style.height = "60px";
+      ghostIcon.style.borderRadius = "50%";
+      ghostIcon.style.border = "2px solid #ccc";
+      ghostIcon.style.margin = "5px";
+      ghostIcon.style.display = "flex";
+      ghostIcon.style.justifyContent = "center";
+      ghostIcon.style.alignItems = "center";
+      ghostIcon.style.fontSize = "12px";
+      ghostIcon.style.fontWeight = "bold";
+      ghostIcon.style.position = "relative";
+      
+      if (ghostProgress && ghostProgress.ghostId === i) {
+         // Активный призрак: отображаем сегментированный прогресс (простой вариант)
+         ghostIcon.textContent = `${ghostProgress.phenomenonIndex}/6`;
+         ghostIcon.style.borderColor = "#4caf50"; // зелёная рамка для активного
+      } else {
+         // Заблокированный призрак: выводим название и применяем эффект "grayscale"
+         ghostIcon.textContent = `Призрак ${i}`;
+         ghostIcon.style.filter = "grayscale(100%)";
+      }
+      
+      rewardsContainer.appendChild(ghostIcon);
+    }
+    
+    modal.appendChild(rewardsContainer);
+
     
     // Кнопки "Отмена" и "Сохранить"
     const btnContainer = document.createElement("div");

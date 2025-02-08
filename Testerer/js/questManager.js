@@ -1,3 +1,5 @@
+import { MirrorQuest } from './quests/mirrorQuest.js';
+
 export class QuestManager {
   /**
    * @param {EventManager} eventManager – менеджер событий (для работы с дневником)
@@ -9,7 +11,7 @@ export class QuestManager {
     // Регистрируем доступные квесты
     this.quests = [
       new MirrorQuest(this.eventManager, this.app)
-      // В будущем можно добавить другие квесты
+      // В будущем сюда можно добавить новые квесты
     ];
   }
 
@@ -36,13 +38,9 @@ export class QuestManager {
   }
 
   /**
-   * Новый метод для обработки активации камеры.
-   * Он делегирует запуск проверки конкретному квесту (например, зеркальному).
+   * Удобный метод для проверки зеркального квеста
    */
-  handleCameraActivated() {
-    const mirrorQuest = this.quests.find(q => q.key === "mirror_quest");
-    if (mirrorQuest) {
-      mirrorQuest.activateOnCamera();
-    }
+  async checkMirrorQuestOnCamera() {
+    await this.checkQuest("mirror_quest");
   }
 }

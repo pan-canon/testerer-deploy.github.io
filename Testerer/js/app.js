@@ -246,10 +246,11 @@ async toggleCameraView() {
     });
     console.log("Видео готово:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
 
-    // Вместо прямого вызова запуска зеркального квеста
-    // вызываем метод менеджера квестов, который инкапсулирует эту логику:
-    console.log("toggleCameraView: вызываем handleCameraActivated");
-    this.questManager.handleCameraActivated();
+    // Запускаем зеркальный квест только если флаг активен (то есть, звонок был принят)
+    if (localStorage.getItem("mirrorQuestActive") === "true") {
+      this.questManager.checkMirrorQuestOnCamera();
+    }
+
   } else {
     console.log("📓 Возвращаемся в блог...");
     diary.style.display = "block";
@@ -260,7 +261,6 @@ async toggleCameraView() {
     this.cameraSectionManager.stopCamera();
   }
 }
-
 
  
 showMainScreen() {

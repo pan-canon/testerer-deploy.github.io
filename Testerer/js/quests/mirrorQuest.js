@@ -24,39 +24,29 @@ export class MirrorQuest extends BaseQuest {
     });
   }
 
-  async finish() {
-    // Если квест уже завершён – ничего не делаем
-    if (this.eventManager.isEventLogged(this.doneKey)) {
-      console.log(`Quest "${this.key}" уже выполнен, повторная проверка не требуется.`);
-      return;
-    }
-
-    const success = await this.checkStatus();
-    if (success) {
-      if (!this.eventManager.isEventLogged(this.doneKey)) {
-        await this.eventManager.addDiaryEntry(this.doneKey);
-        await this.eventManager.addDiaryEntry("what_was_it", this.app.lastMirrorPhoto);
-      }
-      const cameraBtn = document.getElementById("toggle-camera");
-      if (cameraBtn) cameraBtn.classList.remove("glowing");
-      localStorage.removeItem("mirrorQuestActive");
-      
-      alert("✅ Задание «подойти к зеркалу» выполнено!");
-    } else {
-      alert("❌ Нет совпадения! Попробуйте ещё раз!");
-    }
+async finish() {
+  // Если квест уже завершён – ничего не делаем
+  if (this.eventManager.isEventLogged(this.doneKey)) {
+    console.log(`Quest "${this.key}" уже выполнен, повторная проверка не требуется.`);
+    return;
   }
 
-  /**
-   * Новый метод для активации квеста при запуске камеры.
-   * Он внутри проверяет флаг mirrorQuestActive и, если он установлен, запускает проверку.
-   */
-  async activateOnCamera() {
-    if (localStorage.getItem("mirrorQuestActive") === "true") {
-      console.log("MirrorQuest: флаг mirrorQuestActive установлен – запускаем квест.");
-      await this.finish();
-    } else {
-      console.log("MirrorQuest: флаг mirrorQuestActive не установлен, квест не запускается.");
+  const success = await this.checkStatus();
+  if (success) {
+    // Если квест ещё не завершён – добавляем записи в блог
+    if (!this.eventManager.isEventLogged(this.doneKey)) {
+      await this.eventManager.addDiaryEntry(this.doneKey);
+      await this.eventManager.addDiaryEntry("what_was_it", this.app.lastMirrorPhoto);
     }
+    // Убираем класс свечения с кнопки камеры и сбрасываем флаг квеста
+    const cameraBtn = document.getElementById("toggle-camera");
+    cameraBtn.classList.remove("glowing");
+    localStorage.removeItem("mirrorQuestActive");
+    
+    alert("✅ Задание «подойти к зеркалу» выполнено!");
+  } else {
+    alert("❌ Нет совпадения! Попробуйте ещё раз!");
   }
+}
+
 }

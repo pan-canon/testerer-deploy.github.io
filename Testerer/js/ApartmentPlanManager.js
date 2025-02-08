@@ -58,9 +58,7 @@ function showLocationTypeModal(onConfirm, onCancel) {
     console.log("Нажата кнопка Подтвердить");
     const selectedType = selectElem.value;
     if (onConfirm) onConfirm(selectedType);
-    if (document.body.contains(modalOverlay)) {
-      document.body.removeChild(modalOverlay);
-    }
+    modalOverlay.remove();
   });
   btnContainer.appendChild(confirmBtn);
   
@@ -69,9 +67,7 @@ function showLocationTypeModal(onConfirm, onCancel) {
   cancelBtn.addEventListener("click", () => {
     console.log("Нажата кнопка Отмена");
     if (onCancel) onCancel();
-    if (document.body.contains(modalOverlay)) {
-      document.body.removeChild(modalOverlay);
-    }
+    modalOverlay.remove();
   });
   btnContainer.appendChild(cancelBtn);
   
@@ -79,7 +75,6 @@ function showLocationTypeModal(onConfirm, onCancel) {
   modalOverlay.appendChild(modal);
   document.body.appendChild(modalOverlay);
 }
-
 
 export class ApartmentPlanManager {
   constructor(containerId, dbManager) {
@@ -196,8 +191,10 @@ export class ApartmentPlanManager {
       // Вызываем модальное окно для выбора типа помещения
       showLocationTypeModal(
         (selectedType) => {
-          // Сохраняем выбранный тип в ProfileManager
-          this.app.profileManager.saveLocationType(selectedType);
+          // Сохраняем выбранный тип в ProfileManager, если this.app.profileManager существует
+          if (this.app && this.app.profileManager) {
+            this.app.profileManager.saveLocationType(selectedType);
+          }
           const room = {
             floor: this.currentFloor,
             startRow: Math.min(this.startCell.row, this.endCell.row),
@@ -212,7 +209,9 @@ export class ApartmentPlanManager {
         },
         () => {
           // При отмене устанавливаем значение по умолчанию "Другое"
-          this.app.profileManager.saveLocationType("Другое");
+          if (this.app && this.app.profileManager) {
+            this.app.profileManager.saveLocationType("Другое");
+          }
           const room = {
             floor: this.currentFloor,
             startRow: Math.min(this.startCell.row, this.endCell.row),

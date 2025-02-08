@@ -4,44 +4,38 @@ export class DatabaseManager {
     this.initDatabasePromise = this.initDatabase();
   }
 
-async initDatabase() {
-  const SQL = await initSqlJs({
-    locateFile: file => `js/${file}`
-  });
-  const savedDb = localStorage.getItem("diaryDB");
-  if (savedDb) {
-    const byteStr = atob(savedDb);
-    const bytes = new Uint8Array(byteStr.length);
-    for (let i = 0; i < byteStr.length; i++) {
-      bytes[i] = byteStr.charCodeAt(i);
-    }
-    this.db = new SQL.Database(bytes);
-    // Обновляем схему: добавляем таблицу, если её нет
-    this.db.run(`
-      CREATE TABLE IF NOT EXISTS apartment_plan (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        floor_number INTEGER,
-        room_data TEXT
-      );
-    `);
-  } else {
-    this.db = new SQL.Database();
-    this.db.run(`
-      CREATE TABLE IF NOT EXISTS diary (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        entry TEXT,
-        timestamp TEXT
-      );
-      CREATE TABLE IF NOT EXISTS apartment_plan (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        floor_number INTEGER,
-        room_data TEXT
-      );
-    `);
-  }
-  console.log("📖 Database initialized!");
-}
+  async initDatabase() {
+    const SQL = await initSqlJs({
+      locateFile: file => `js/${file}`
+    });
+    // Проверяем, сохранена ли база в localStorage
+    const savedDb = localStorage.getItem("diaryDB");
+    if (savedDb) {
+      // Декодируем base64 в Uint8Array
+      const byteStr = atob(savedDb);
+      const bytes = new Uint8Array(byteStr.length);
+      for (let i = 0; i < byteStr.length; i++) {
+        bytes[i] = byteStr.charCodeAt(i);
+      }
+      this.db = new SQL.Database(bytes);
+    } else {
+      this.db = new SQL.Database();
+      this.db.run(`
+  CREATE TABLE IF NOT EXISTS diary (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry TEXT,
+    timestamp TEXT
+  );
+  CREATE TABLE IF NOT EXISTS apartment_plan (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    floor_number INTEGER,
+    room_data TEXT
+  );
+`);
 
+    }
+    console.log("📖 Database initialized!");
+  }
 
   saveDatabase() {
     if (!this.db) return;
@@ -81,18 +75,12 @@ async initDatabase() {
 
 addApartmentRooms(floor, rooms) {
   const roomsJSON = JSON.stringify(rooms);
-  // Проверяем, существует ли запись для этого этажа
-  const result = this.db.exec("SELECT COUNT(*) FROM apartment_plan WHERE floor_number = " + floor);
-  if (result.length > 0 && result[0].values[0][0] > 0) {
-    // Если запись существует, обновляем её
-    this.db.run("UPDATE apartment_plan SET room_data = ? WHERE floor_number = ?", [roomsJSON, floor]);
-  } else {
-    // Если записи нет, вставляем новую
-    this.db.run("INSERT INTO apartment_plan (floor_number, room_data) VALUES (?, ?)", [floor, roomsJSON]);
-  }
+  // Удаляем существующие записи для этого этажа
+  this.db.run("DELETE FROM apartment_plan WHERE floor_number = ?", [floor]);
+  // Вставляем новую запись, содержащую массив комнат для данного этажа
+  this.db.run("INSERT INTO apartment_plan (floor_number, room_data) VALUES (?, ?)", [floor, roomsJSON]);
   this.saveDatabase();
 }
-
 
 
 getApartmentPlan(floor, callback) {

@@ -100,17 +100,11 @@ export class ShowProfileModal {
     planContainer.style.border = "1px solid #ccc";
     planContainer.style.padding = "10px";
     planContainer.style.marginBottom = "15px";
-if (this.app.apartmentPlanManager) {
-  // Принудительно загружаем данные зон
-  this.app.apartmentPlanManager.loadFromDB();
-  // Даем небольшую задержку, чтобы данные успели загрузиться
-  setTimeout(() => {
-    if (this.app.apartmentPlanManager.rooms.length > 0) {
+    if (this.app.apartmentPlanManager && this.app.apartmentPlanManager.rooms.length > 0) {
       // Клонируем таблицу плана
       const planClone = this.app.apartmentPlanManager.table.cloneNode(true);
-      planContainer.innerHTML = "";
       planContainer.appendChild(planClone);
-      // Если этажей больше одного, добавляем кнопки переключения этажей
+      // Добавляем кнопки переключения этажей только если этажей больше одного
       const floors = this.app.apartmentPlanManager.rooms.map(room => room.floor);
       const uniqueFloors = [...new Set(floors)];
       if (uniqueFloors.length > 1) {
@@ -142,11 +136,6 @@ if (this.app.apartmentPlanManager) {
     } else {
       planContainer.textContent = "План квартиры отсутствует.";
     }
-  }, 100); // задержка 100 мс (можно увеличить, если данные не успевают загрузиться)
-} else {
-  planContainer.textContent = "План квартиры отсутствует.";
-}
-
     modal.appendChild(planContainer);
     
     // Нестандартная надпись (без возможности редактирования)

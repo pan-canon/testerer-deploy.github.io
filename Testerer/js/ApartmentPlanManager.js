@@ -88,9 +88,7 @@ export class ApartmentPlanManager {
     this.gridCols = 10;
     this.createTable();
     this.attachEvents();
-  this.dbManager.initDatabasePromise.then(() => {
     this.loadFromDB();
-  });
   }
   
   createTable() {

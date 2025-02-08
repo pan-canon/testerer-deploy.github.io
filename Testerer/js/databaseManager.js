@@ -75,9 +75,13 @@ export class DatabaseManager {
 
 addApartmentRooms(floor, rooms) {
   const roomsJSON = JSON.stringify(rooms);
+  // Удаляем существующие записи для этого этажа
+  this.db.run("DELETE FROM apartment_plan WHERE floor_number = ?", [floor]);
+  // Вставляем новую запись, содержащую массив комнат для данного этажа
   this.db.run("INSERT INTO apartment_plan (floor_number, room_data) VALUES (?, ?)", [floor, roomsJSON]);
   this.saveDatabase();
 }
+
 
 getApartmentPlan(floor, callback) {
   const stmt = this.db.prepare("SELECT room_data FROM apartment_plan WHERE floor_number = ?");

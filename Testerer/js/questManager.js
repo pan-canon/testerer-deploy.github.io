@@ -9,7 +9,7 @@ export class QuestManager {
     // Регистрируем доступные квесты
     this.quests = [
       new MirrorQuest(this.eventManager, this.app)
-      // Можно добавить другие квесты
+      // В будущем можно добавить другие квесты
     ];
   }
 
@@ -36,19 +36,13 @@ export class QuestManager {
   }
 
   /**
-   * Удобный метод для проверки зеркального квеста
-   */
-  async checkMirrorQuestOnCamera() {
-    await this.checkQuest("mirror_quest");
-  }
-  
-  /**
-   * Новый метод, вызываемый, когда активируется камера.
-   * Он проверяет, если флаг зеркального квеста установлен, то запускает проверку.
+   * Новый метод для обработки активации камеры.
+   * Он делегирует запуск проверки конкретному квесту (например, зеркальному).
    */
   handleCameraActivated() {
-    if (localStorage.getItem("mirrorQuestActive") === "true") {
-      this.checkMirrorQuestOnCamera();
+    const mirrorQuest = this.quests.find(q => q.key === "mirror_quest");
+    if (mirrorQuest) {
+      mirrorQuest.activateOnCamera();
     }
   }
 }

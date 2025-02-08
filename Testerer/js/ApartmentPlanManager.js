@@ -1,3 +1,79 @@
+// Функция для показа модального окна выбора типа помещения
+function showLocationTypeModal(onConfirm, onCancel) {
+  const modalOverlay = document.createElement("div");
+  modalOverlay.id = "location-type-modal-overlay";
+  Object.assign(modalOverlay.style, {
+    position: "fixed",
+    top: "0",
+    left: "0",
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0,0,0,0.5)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: "3000"
+  });
+  
+  const modal = document.createElement("div");
+  modal.id = "location-type-modal";
+  Object.assign(modal.style, {
+    backgroundColor: "#fff",
+    padding: "20px",
+    borderRadius: "8px",
+    maxWidth: "400px",
+    width: "90%",
+    textAlign: "center"
+  });
+  
+  const title = document.createElement("h3");
+  title.textContent = "Выберите тип помещения";
+  modal.appendChild(title);
+  
+  const selectElem = document.createElement("select");
+  const locationTypes = [
+    "Кухня", "Спальня", "Гостиная", "Ванная", "Коридор", "Другое",
+    "Подъезд", "Кабинет", "Библиотека", "Детская", "Кладовая", "Гараж"
+  ];
+  locationTypes.forEach(type => {
+    const option = document.createElement("option");
+    option.value = type;
+    option.textContent = type;
+    selectElem.appendChild(option);
+  });
+  // По умолчанию выбран "Другое"
+  selectElem.value = "Другое";
+  selectElem.style.marginBottom = "15px";
+  selectElem.style.display = "block";
+  selectElem.style.width = "100%";
+  modal.appendChild(selectElem);
+  
+  const btnContainer = document.createElement("div");
+  btnContainer.style.marginTop = "15px";
+  
+  const confirmBtn = document.createElement("button");
+  confirmBtn.textContent = "Подтвердить";
+  confirmBtn.style.marginRight = "10px";
+  confirmBtn.addEventListener("click", () => {
+    const selectedType = selectElem.value;
+    if (onConfirm) onConfirm(selectedType);
+    document.body.removeChild(modalOverlay);
+  });
+  btnContainer.appendChild(confirmBtn);
+  
+  const cancelBtn = document.createElement("button");
+  cancelBtn.textContent = "Отмена";
+  cancelBtn.addEventListener("click", () => {
+    if (onCancel) onCancel();
+    document.body.removeChild(modalOverlay);
+  });
+  btnContainer.appendChild(cancelBtn);
+  
+  modal.appendChild(btnContainer);
+  modalOverlay.appendChild(modal);
+  document.body.appendChild(modalOverlay);
+}
+
 export class ApartmentPlanManager {
   constructor(containerId, dbManager) {
     this.container = document.getElementById(containerId);
@@ -46,44 +122,40 @@ export class ApartmentPlanManager {
     }
   }
   
+  attachEvents() {
+    // Для мыши
+    this.table.addEventListener("mousedown", (e) => this.startSelection(e));
+    this.table.addEventListener("mousemove", (e) => this.updateSelection(e));
+    document.addEventListener("mouseup", (e) => this.finishSelection(e));
 
-attachEvents() {
-  // Для мыши
-  this.table.addEventListener("mousedown", (e) => this.startSelection(e));
-  this.table.addEventListener("mousemove", (e) => this.updateSelection(e));
-  document.addEventListener("mouseup", (e) => this.finishSelection(e));
-
-  // Для касаний (touch events)
-  this.table.addEventListener("touchstart", (e) => this.handleTouchStart(e));
-  this.table.addEventListener("touchmove", (e) => this.handleTouchMove(e));
-  this.table.addEventListener("touchend", (e) => this.handleTouchEnd(e));
-}
-
-
-handleTouchStart(e) {
-  e.preventDefault();  // чтобы предотвратить нежелательный скроллинг
-  const touch = e.touches[0];
-  const target = document.elementFromPoint(touch.clientX, touch.clientY);
-  if (target && target.tagName === "TD") {
-    this.startSelection({ clientX: touch.clientX, clientY: touch.clientY, target });
+    // Для касаний (touch events)
+    this.table.addEventListener("touchstart", (e) => this.handleTouchStart(e));
+    this.table.addEventListener("touchmove", (e) => this.handleTouchMove(e));
+    this.table.addEventListener("touchend", (e) => this.handleTouchEnd(e));
   }
-}
 
-handleTouchMove(e) {
-  e.preventDefault();
-  const touch = e.touches[0];
-  const target = document.elementFromPoint(touch.clientX, touch.clientY);
-  if (target && target.tagName === "TD") {
-    this.updateSelection({ clientX: touch.clientX, clientY: touch.clientY, target });
+  handleTouchStart(e) {
+    e.preventDefault();  // чтобы предотвратить нежелательный скроллинг
+    const touch = e.touches[0];
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (target && target.tagName === "TD") {
+      this.startSelection({ clientX: touch.clientX, clientY: touch.clientY, target });
+    }
   }
-}
 
-handleTouchEnd(e) {
-  e.preventDefault();
-  this.finishSelection(e);
-}
+  handleTouchMove(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (target && target.tagName === "TD") {
+      this.updateSelection({ clientX: touch.clientX, clientY: touch.clientY, target });
+    }
+  }
 
-
+  handleTouchEnd(e) {
+    e.preventDefault();
+    this.finishSelection(e);
+  }
   
   startSelection(e) {
     if (e.target.tagName === "TD") {
@@ -105,56 +177,53 @@ handleTouchEnd(e) {
     }
   }
   
-finishSelection(e) {
-  if (this.isSelecting) {
-    this.isSelecting = false;
-    // Если не было выделено ни одной ячейки, используем дефолтное помещение
-    if (!this.startCell || !this.endCell) {
-      // Можно, например, задать дефолтное помещение, охватывающее весь план:
-      this.startCell = { row: 0, col: 0 };
-      this.endCell = { row: this.gridRows - 1, col: this.gridCols - 1 };
+  finishSelection(e) {
+    if (this.isSelecting) {
+      this.isSelecting = false;
+      // Если не было выделено ни одной ячейки, задаем дефолтное помещение на весь план
+      if (!this.startCell || !this.endCell) {
+        this.startCell = { row: 0, col: 0 };
+        this.endCell = { row: this.gridRows - 1, col: this.gridCols - 1 };
+      }
+      
+      // Вызываем модальное окно для выбора типа помещения
+      showLocationTypeModal(
+        (selectedType) => {
+          // Сохраняем выбранный тип в ProfileManager
+          this.app.profileManager.saveLocationType(selectedType);
+          const room = {
+            floor: this.currentFloor,
+            startRow: Math.min(this.startCell.row, this.endCell.row),
+            startCol: Math.min(this.startCell.col, this.endCell.col),
+            endRow: Math.max(this.startCell.row, this.endCell.row),
+            endCol: Math.max(this.startCell.col, this.endCell.col),
+            type: selectedType
+          };
+          this.rooms.push(room);
+          this.saveToDB();
+          this.renderRooms();
+        },
+        () => {
+          // При отмене устанавливаем значение по умолчанию "Другое"
+          this.app.profileManager.saveLocationType("Другое");
+          const room = {
+            floor: this.currentFloor,
+            startRow: Math.min(this.startCell.row, this.endCell.row),
+            startCol: Math.min(this.startCell.col, this.endCell.col),
+            endRow: Math.max(this.startCell.row, this.endCell.row),
+            endCol: Math.max(this.startCell.col, this.endCell.col),
+            type: "Другое"
+          };
+          this.rooms.push(room);
+          this.saveToDB();
+          this.renderRooms();
+        }
+      );
     }
-// Стандартный набор типов помещений:
-const locationTypes = [
-  "Кухня", "Спальня", "Гостиная", "Ванная", "Коридор", "Другое",
-  "Подъезд", "Кабинет", "Библиотека", "Детская", "Кладовая", "Гараж"
-];
-
-// Создаем выпадающий список
-const selectElem = document.createElement("select");
-locationTypes.forEach(type => {
-  const option = document.createElement("option");
-  option.value = type;
-  option.textContent = type;
-  selectElem.appendChild(option);
-});
-selectElem.style.marginBottom = "15px";
-selectElem.style.display = "block";
-selectElem.style.width = "100%";
-
-// Добавляем на страницу перед сохранением (например, вставляем в контейнер)
-document.body.appendChild(selectElem);
-
-// Используем значение из select вместо prompt
-const roomType = selectElem.value;
-
-    const room = {
-      floor: this.currentFloor,
-      startRow: Math.min(this.startCell.row, this.endCell.row),
-      startCol: Math.min(this.startCell.col, this.endCell.col),
-      endRow: Math.max(this.startCell.row, this.endCell.row),
-      endCol: Math.max(this.startCell.col, this.endCell.col),
-      type: roomType
-    };
-    this.rooms.push(room);
-    this.saveToDB();
-    this.renderRooms();
   }
-}
-
   
   highlightSelection() {
-    // Сбросить подсветку всех ячеек
+    // Сброс подсветки всех ячеек
     Array.from(this.table.getElementsByTagName("td")).forEach(cell => {
       cell.style.backgroundColor = "";
     });
@@ -172,7 +241,7 @@ const roomType = selectElem.value;
   }
   
   renderRooms() {
-    // Пересоздаём таблицу и отмечаем сохранённые помещения для текущего этажа
+    // Пересоздаем таблицу и отмечаем сохраненные помещения для текущего этажа
     this.initTable();
     this.rooms.forEach(room => {
       if (room.floor === this.currentFloor) {

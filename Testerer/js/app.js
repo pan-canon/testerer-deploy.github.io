@@ -4,7 +4,7 @@ import { ImageUtils } from './utils/imageUtils.js';
 import { ProfileManager } from './profileManager.js';
 import { ApartmentPlanManager } from './ApartmentPlanManager.js';
 import { DatabaseManager } from './databaseManager.js';
-import { ProfileManager } from './showProfileModal.js';
+import { ShowProfileModal } from './showProfileModal.js';
 import { EventManager } from './eventManager.js';
 import { CallManager } from './callManager.js';
 import { QuestManager } from './questManager.js';

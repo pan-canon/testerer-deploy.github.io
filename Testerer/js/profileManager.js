@@ -19,6 +19,8 @@ export class ProfileManager {
     localStorage.removeItem("callHandled");
     // Сброс прогресса по призракам
     localStorage.removeItem("ghostProgress");
+    // Сброс типа локации
+    localStorage.removeItem("locationType");
     window.location.reload();
   }
   
@@ -103,5 +105,14 @@ export class ProfileManager {
   
   resetGhostProgress() {
     localStorage.removeItem('ghostProgress');
+  }
+
+  // Новые методы для работы с типом локации
+  saveLocationType(locationType) {
+    localStorage.setItem('locationType', locationType);
+  }
+  
+  getLocationType() {
+    return localStorage.getItem('locationType');
   }
 }

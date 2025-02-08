@@ -114,7 +114,30 @@ finishSelection(e) {
       this.startCell = { row: 0, col: 0 };
       this.endCell = { row: this.gridRows - 1, col: this.gridCols - 1 };
     }
-    const roomType = prompt("Введите тип помещения (спальня, кухня и т.д.):", "Неизвестное") || "Неизвестное";
+// Стандартный набор типов помещений:
+const locationTypes = [
+  "Кухня", "Спальня", "Гостиная", "Ванная", "Коридор", "Другое",
+  "Подъезд", "Кабинет", "Библиотека", "Детская", "Кладовая", "Гараж"
+];
+
+// Создаем выпадающий список
+const selectElem = document.createElement("select");
+locationTypes.forEach(type => {
+  const option = document.createElement("option");
+  option.value = type;
+  option.textContent = type;
+  selectElem.appendChild(option);
+});
+selectElem.style.marginBottom = "15px";
+selectElem.style.display = "block";
+selectElem.style.width = "100%";
+
+// Добавляем на страницу перед сохранением (например, вставляем в контейнер)
+document.body.appendChild(selectElem);
+
+// Используем значение из select вместо prompt
+const roomType = selectElem.value;
+
     const room = {
       floor: this.currentFloor,
       startRow: Math.min(this.startCell.row, this.endCell.row),

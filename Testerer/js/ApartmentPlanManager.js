@@ -55,17 +55,23 @@ function showLocationTypeModal(onConfirm, onCancel) {
   confirmBtn.textContent = "Подтвердить";
   confirmBtn.style.marginRight = "10px";
   confirmBtn.addEventListener("click", () => {
+    console.log("Нажата кнопка Подтвердить");
     const selectedType = selectElem.value;
     if (onConfirm) onConfirm(selectedType);
-    document.body.removeChild(modalOverlay);
+    if (document.body.contains(modalOverlay)) {
+      document.body.removeChild(modalOverlay);
+    }
   });
   btnContainer.appendChild(confirmBtn);
   
   const cancelBtn = document.createElement("button");
   cancelBtn.textContent = "Отмена";
   cancelBtn.addEventListener("click", () => {
+    console.log("Нажата кнопка Отмена");
     if (onCancel) onCancel();
-    document.body.removeChild(modalOverlay);
+    if (document.body.contains(modalOverlay)) {
+      document.body.removeChild(modalOverlay);
+    }
   });
   btnContainer.appendChild(cancelBtn);
   
@@ -73,6 +79,7 @@ function showLocationTypeModal(onConfirm, onCancel) {
   modalOverlay.appendChild(modal);
   document.body.appendChild(modalOverlay);
 }
+
 
 export class ApartmentPlanManager {
   constructor(containerId, dbManager) {

@@ -1,4 +1,4 @@
-export class showProfileModal() {
+export class ShowProfileModal() {
   // Получаем текущий профиль
   const profile = this.profileManager.getProfile();
   if (!profile) {

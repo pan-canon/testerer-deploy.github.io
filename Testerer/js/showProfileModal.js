@@ -31,7 +31,7 @@ export class ShowProfileModal {
       overflowY: "auto"
     });
     
-    // Контейнер модального окна с максимальной высотой и прокруткой
+    // Контейнер модального окна
     const modal = document.createElement("div");
     modal.id = "profile-modal";
     Object.assign(modal.style, {
@@ -65,20 +65,22 @@ export class ShowProfileModal {
     });
     avatarContainer.appendChild(avatarImg);
     
-    // Кнопка для редактирования селфи – открывает отдельное окно
+    // Кнопка обновления селфи
     const updateSelfieBtn = document.createElement("button");
     updateSelfieBtn.textContent = "Обновить селфи";
     updateSelfieBtn.style.marginTop = "10px";
     updateSelfieBtn.addEventListener("click", () => {
-      // Запускаем окно редактирования селфи поверх текущего.
-      // Например, создадим новый оверлей для селфи. При этом используем существующий метод goToSelfieScreen().
-      this.showSelfieEditModal();
+      // Запускаем отдельное модальное окно для редактирования селфи
+      this.showSelfieEditModal((newSelfieSrc) => {
+        // Колбэк после успешного захвата селфи: обновляем аватар в мини-профиле
+        avatarImg.src = newSelfieSrc;
+      });
     });
     avatarContainer.appendChild(updateSelfieBtn);
     
     modal.appendChild(avatarContainer);
     
-    // Поле для редактирования логина
+    // Поле редактирования логина
     const loginLabel = document.createElement("label");
     loginLabel.textContent = "Логин:";
     loginLabel.style.display = "block";
@@ -92,19 +94,17 @@ export class ShowProfileModal {
     loginInput.style.marginBottom = "15px";
     modal.appendChild(loginInput);
     
-    // Блок отображения плана квартиры
+    // Блок отображения плана квартиры (если план существует)
     const planContainer = document.createElement("div");
     planContainer.id = "profile-plan-container";
     planContainer.style.border = "1px solid #ccc";
     planContainer.style.padding = "10px";
     planContainer.style.marginBottom = "15px";
-    // Если план квартиры существует и задан хотя бы один этаж
     if (this.app.apartmentPlanManager && this.app.apartmentPlanManager.rooms.length > 0) {
-      // Отображаем снимок (клон таблицы)
+      // Клонируем таблицу плана
       const planClone = this.app.apartmentPlanManager.table.cloneNode(true);
       planContainer.appendChild(planClone);
-      
-      // Если в плане есть информация о нескольких этажах, отрисовываем кнопки переключения
+      // Добавляем кнопки переключения этажей только если этажей больше одного
       const floors = this.app.apartmentPlanManager.rooms.map(room => room.floor);
       const uniqueFloors = [...new Set(floors)];
       if (uniqueFloors.length > 1) {
@@ -116,7 +116,6 @@ export class ShowProfileModal {
         prevFloorBtn.textContent = "Предыдущий этаж";
         prevFloorBtn.addEventListener("click", () => {
           this.app.apartmentPlanManager.prevFloor();
-          // Обновляем отображение плана в модальном окне
           planContainer.innerHTML = "";
           const newPlan = this.app.apartmentPlanManager.table.cloneNode(true);
           planContainer.appendChild(newPlan);
@@ -139,13 +138,13 @@ export class ShowProfileModal {
     }
     modal.appendChild(planContainer);
     
-    // Нестандартная надпись, не редактируемая
+    // Нестандартная надпись (без возможности редактирования)
     const note = document.createElement("p");
     note.textContent = "Переехать и начать с чистого листа - это иногда помогает избавиться от привидений, но не всегда.";
     note.style.fontStyle = "italic";
     modal.appendChild(note);
     
-    // Кнопки сохранения и отмены
+    // Кнопки "Отмена" и "Сохранить"
     const btnContainer = document.createElement("div");
     btnContainer.style.textAlign = "right";
     btnContainer.style.marginTop = "20px";
@@ -161,13 +160,11 @@ export class ShowProfileModal {
     const saveBtn = document.createElement("button");
     saveBtn.textContent = "Сохранить изменения";
     saveBtn.addEventListener("click", () => {
-      // Обновляем профиль
       const updatedProfile = Object.assign({}, profile, {
         name: loginInput.value,
         selfie: avatarImg.src
       });
       this.app.profileManager.saveProfile(updatedProfile);
-      // Обновляем данные на главном экране
       this.app.profileNameElem.textContent = updatedProfile.name;
       this.app.profilePhotoElem.src = updatedProfile.selfie;
       document.body.removeChild(modalOverlay);
@@ -180,9 +177,8 @@ export class ShowProfileModal {
     document.body.appendChild(modalOverlay);
   }
 
-  // Метод для запуска отдельного окна редактирования селфи
-  showSelfieEditModal() {
-    // Создаем отдельный оверлей для селфи-редактирования
+  // Метод, открывающий отдельное модальное окно для редактирования селфи
+  showSelfieEditModal(onSelfieCaptured) {
     const selfieOverlay = document.createElement("div");
     selfieOverlay.id = "selfie-edit-overlay";
     Object.assign(selfieOverlay.style, {
@@ -195,7 +191,8 @@ export class ShowProfileModal {
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      zIndex: "2100"
+      zIndex: "2100",
+      overflowY: "auto"
     });
     
     const selfieModal = document.createElement("div");
@@ -215,24 +212,61 @@ export class ShowProfileModal {
     title.textContent = "Редактирование селфи";
     selfieModal.appendChild(title);
     
-    // Здесь можно встроить существующую логику для селфи, например, вызвать метод goToSelfieScreen()
-    const info = document.createElement("p");
-    info.textContent = "Нажмите 'Начать', чтобы обновить селфи.";
-    selfieModal.appendChild(info);
+    // Контейнер для видео
+    const videoContainer = document.createElement("div");
+    videoContainer.id = "selfie-video-container";
+    videoContainer.style.width = "100%";
+    videoContainer.style.maxWidth = "400px";
+    videoContainer.style.margin = "10px auto";
+    selfieModal.appendChild(videoContainer);
     
-    const startBtn = document.createElement("button");
-    startBtn.textContent = "Начать";
-    startBtn.addEventListener("click", () => {
-      // Закрываем окно редактирования селфи и переходим к экрану селфи
-      document.body.removeChild(selfieOverlay);
-      this.app.goToSelfieScreen();
+    // Прикрепляем видео к контейнеру с нужными опциями (например, с фильтром)
+    this.app.cameraSectionManager.attachTo("selfie-video-container", {
+      width: "100%",
+      maxWidth: "400px",
+      filter: "grayscale(100%)"
     });
-    selfieModal.appendChild(startBtn);
     
+    // Запускаем камеру
+    this.app.cameraSectionManager.startCamera();
+    
+    // Кнопка захвата селфи
+    const captureBtn = document.createElement("button");
+    captureBtn.textContent = "Сделать селфи";
+    captureBtn.style.display = "block";
+    captureBtn.style.margin = "10px auto";
+    captureBtn.addEventListener("click", () => {
+      // Захватываем текущий кадр
+      if (!this.app.cameraSectionManager.videoElement ||
+          !this.app.cameraSectionManager.videoElement.srcObject) {
+        alert("Камера не включена.");
+        return;
+      }
+      const video = this.app.cameraSectionManager.videoElement;
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Преобразуем изображение в ЧБ (если требуется)
+      const selfieData = window.ImageUtils ? window.ImageUtils.convertToGrayscale(canvas) : canvas.toDataURL();
+      // Останавливаем камеру
+      this.app.cameraSectionManager.stopCamera();
+      // Закрываем окно редактирования селфи
+      document.body.removeChild(selfieOverlay);
+      // Вызываем колбэк для обновления аватара в мини-профиле
+      if (onSelfieCaptured) onSelfieCaptured(selfieData);
+    });
+    selfieModal.appendChild(captureBtn);
+    
+    // Кнопка отмены редактирования селфи
     const cancelBtn = document.createElement("button");
     cancelBtn.textContent = "Отмена";
-    cancelBtn.style.marginLeft = "10px";
+    cancelBtn.style.display = "block";
+    cancelBtn.style.margin = "10px auto";
     cancelBtn.addEventListener("click", () => {
+      // Останавливаем камеру и закрываем окно
+      this.app.cameraSectionManager.stopCamera();
       document.body.removeChild(selfieOverlay);
     });
     selfieModal.appendChild(cancelBtn);

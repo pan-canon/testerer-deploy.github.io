@@ -29,6 +29,7 @@ export class App {
     this.exportBtn = document.getElementById('export-profile');
     this.importFileInput = document.getElementById('import-file');
     this.importBtn = document.getElementById('import-profile-btn');
+    this.showProfileModal = new ShowProfileModal(this);
     
     // Менеджеры
     this.languageManager = new LanguageManager('language-selector');
@@ -59,7 +60,7 @@ this.gameEventManager = new GameEventManager(this.eventManager, this, this.langu
     this.resetBtn.addEventListener('click', () => this.profileManager.resetProfile());
     this.exportBtn.addEventListener('click', () => this.exportProfile());
     this.importBtn.addEventListener('click', () => this.importProfile());
-    this.profilePhotoElem.addEventListener("click", () => this.showProfileModal());
+    this.profilePhotoElem.addEventListener("click", () => this.showProfileModal.show());
     document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
     document.getElementById("prev-floor-btn").addEventListener("click", () => {
       if (this.apartmentPlanManager) {

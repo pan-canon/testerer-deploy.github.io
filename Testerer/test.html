@@ -1,116 +1,112 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Table Comparison</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        canvas { border: 1px solid black; margin: 10px; }
-        .container { display: flex; justify-content: center; gap: 20px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 20px; border-radius: 5px; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Хоор-игра</title>
+  <!-- Подключение шрифтов из Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Nosifer&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: #111;
+      color: #eee;
+    }
+    header {
+      text-align: center;
+      padding: 40px 20px;
+      background: #000;
+    }
+    header h1 {
+      font-family: 'Creepster', cursive;
+      font-size: 64px;
+      margin: 0;
+    }
+    header p {
+      margin-top: 10px;
+      font-size: 18px;
+    }
+    .hero {
+      position: relative;
+      background: url('https://source.unsplash.com/1600x900/?haunted,forest') no-repeat center center/cover;
+      height: 100vh;
+    }
+    .hero-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 0 20px;
+    }
+    .hero-overlay h2 {
+      font-family: 'Creepster', cursive;
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+    .hero-overlay p {
+      font-size: 20px;
+      max-width: 600px;
+    }
+    .features {
+      padding: 50px 20px;
+      background: #222;
+    }
+    .feature {
+      margin-bottom: 40px;
+    }
+    .feature h3 {
+      font-family: 'Nosifer', cursive;
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+    .feature p {
+      font-size: 18px;
+    }
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #000;
+      font-size: 14px;
+    }
+    /* Небольшая анимация при наведении на блок преимуществ */
+    .feature:hover {
+      transform: scale(1.02);
+      transition: transform 0.3s ease;
+    }
+  </style>
 </head>
 <body>
-    <h1>Table Similarity Test</h1>
-    
-    <div class="container">
-        <canvas id="canvas1" width="300" height="300"></canvas>
-        <canvas id="canvas2" width="300" height="300"></canvas>
+  <header>
+    <h1>Хоор-игра</h1>
+    <p>От поклонника фазмбафобии – Phasmophobia и другие хоррор-игры</p>
+  </header>
+  <section class="hero">
+    <div class="hero-overlay">
+      <h2>Безопасная игра, вдохновленная Ведьмой из Блэр</h2>
+      <p>В реальности всегда доступ к камере – погружение, которое не оставит вас равнодушными!</p>
     </div>
-
-    <input type="file" id="upload1" accept="image/*">
-    <input type="file" id="upload2" accept="image/*">
-    <button id="compare-btn" disabled>Compare</button>
-
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <p id="result-text">Processing...</p>
-            <button id="close-btn">Close</button>
-        </div>
+  </section>
+  <section class="features">
+    <div class="feature">
+      <h3>Работает оффлайн и в браузере</h3>
+      <p>Сервис-воркеры обеспечивают стабильную работу без подключения к интернету.</p>
     </div>
-
-    <script>
-        let canvas1 = document.getElementById("canvas1");
-        let canvas2 = document.getElementById("canvas2");
-        let ctx1 = canvas1.getContext("2d");
-        let ctx2 = canvas2.getContext("2d");
-        let upload1 = document.getElementById("upload1");
-        let upload2 = document.getElementById("upload2");
-        let compareBtn = document.getElementById("compare-btn");
-
-        let modal = document.getElementById("modal");
-        let resultText = document.getElementById("result-text");
-        let closeBtn = document.getElementById("close-btn");
-
-        let img1Data = null;
-        let img2Data = null;
-
-        function loadImage(input, ctx, callback) {
-            let file = input.files[0];
-            if (!file) return;
-            let img = new Image();
-            img.onload = function () {
-                ctx.clearRect(0, 0, canvas1.width, canvas1.height);
-                ctx.drawImage(img, 0, 0, 300, 300);
-                applyGrayscale(ctx);
-                callback(ctx.getImageData(0, 0, 300, 300));
-            };
-            img.src = URL.createObjectURL(file);
-        }
-
-        function applyGrayscale(ctx) {
-            let imgData = ctx.getImageData(0, 0, 300, 300);
-            let pixels = imgData.data;
-            for (let i = 0; i < pixels.length; i += 4) {
-                let avg = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
-                pixels[i] = pixels[i + 1] = pixels[i + 2] = avg;
-            }
-            ctx.putImageData(imgData, 0, 0);
-        }
-
-        function pixelWiseComparison(data1, data2) {
-            let pixels1 = data1.data;
-            let pixels2 = data2.data;
-            let matchCount = 0;
-            for (let i = 0; i < pixels1.length; i += 4) {
-                if (Math.abs(pixels1[i] - pixels2[i]) < 50) { // Допустимое различие
-                    matchCount++;
-                }
-            }
-            return matchCount / (pixels1.length / 4);
-        }
-
-        function compareImages() {
-            let matchPixel = pixelWiseComparison(img1Data, img2Data);
-            console.log(`🔍 Pixel Match: ${matchPixel.toFixed(2)}`);
-
-            if (matchPixel > 0.6) {
-                resultText.innerText = "✅ Оба объекта похожи (Стол найден)";
-            } else {
-                resultText.innerText = "❌ Объекты слишком разные!";
-            }
-
-            modal.style.display = "flex";
-        }
-
-        upload1.addEventListener("change", () => {
-            loadImage(upload1, ctx1, (data) => {
-                img1Data = data;
-                if (img2Data) compareBtn.disabled = false;
-            });
-        });
-
-        upload2.addEventListener("change", () => {
-            loadImage(upload2, ctx2, (data) => {
-                img2Data = data;
-                if (img1Data) compareBtn.disabled = false;
-            });
-        });
-
-        compareBtn.addEventListener("click", compareImages);
-        closeBtn.addEventListener("click", () => modal.style.display = "none");
-    </script>
+    <div class="feature">
+      <h3>Пассивный режим</h3>
+      <p>Лень играть? Просто игнорируйте привидений – они сами всё сделают!</p>
+    </div>
+    <div class="feature">
+      <h3>Забота о ваших данных</h3>
+      <p>Все данные хранятся локально – мы не запрашиваем доступ к вашим фотографиям. Новые фичи уже в пути!</p>
+    </div>
+  </section>
+  <footer>
+    <p>Следите за обновлениями и оставайтесь на связи!</p>
+  </footer>
 </body>
 </html>

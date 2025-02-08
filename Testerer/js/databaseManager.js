@@ -4,38 +4,44 @@ export class DatabaseManager {
     this.initDatabasePromise = this.initDatabase();
   }
 
-  async initDatabase() {
-    const SQL = await initSqlJs({
-      locateFile: file => `js/${file}`
-    });
-    // Проверяем, сохранена ли база в localStorage
-    const savedDb = localStorage.getItem("diaryDB");
-    if (savedDb) {
-      // Декодируем base64 в Uint8Array
-      const byteStr = atob(savedDb);
-      const bytes = new Uint8Array(byteStr.length);
-      for (let i = 0; i < byteStr.length; i++) {
-        bytes[i] = byteStr.charCodeAt(i);
-      }
-      this.db = new SQL.Database(bytes);
-    } else {
-      this.db = new SQL.Database();
-      this.db.run(`
-  CREATE TABLE IF NOT EXISTS diary (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    entry TEXT,
-    timestamp TEXT
-  );
-  CREATE TABLE IF NOT EXISTS apartment_plan (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    floor_number INTEGER,
-    room_data TEXT
-  );
-`);
-
+async initDatabase() {
+  const SQL = await initSqlJs({
+    locateFile: file => `js/${file}`
+  });
+  const savedDb = localStorage.getItem("diaryDB");
+  if (savedDb) {
+    const byteStr = atob(savedDb);
+    const bytes = new Uint8Array(byteStr.length);
+    for (let i = 0; i < byteStr.length; i++) {
+      bytes[i] = byteStr.charCodeAt(i);
     }
-    console.log("📖 Database initialized!");
+    this.db = new SQL.Database(bytes);
+    // Обновляем схему: добавляем таблицу, если её нет
+    this.db.run(`
+      CREATE TABLE IF NOT EXISTS apartment_plan (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        floor_number INTEGER,
+        room_data TEXT
+      );
+    `);
+  } else {
+    this.db = new SQL.Database();
+    this.db.run(`
+      CREATE TABLE IF NOT EXISTS diary (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entry TEXT,
+        timestamp TEXT
+      );
+      CREATE TABLE IF NOT EXISTS apartment_plan (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        floor_number INTEGER,
+        room_data TEXT
+      );
+    `);
   }
+  console.log("📖 Database initialized!");
+}
+
 
   saveDatabase() {
     if (!this.db) return;

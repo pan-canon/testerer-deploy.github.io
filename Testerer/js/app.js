@@ -257,7 +257,6 @@ async toggleCameraView() {
   }
 }
 
-
  
 showMainScreen() {
   this.registrationScreen.style.display = 'none';

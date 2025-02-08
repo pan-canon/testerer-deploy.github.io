@@ -42,7 +42,7 @@ this.callManager = new CallManager(this.eventManager, this, this.languageManager
 this.questManager = new QuestManager(this.eventManager, this);
 this.gameEventManager = new GameEventManager(this.eventManager, this, this.languageManager);
 this.showProfileModal = new ShowProfileModal(this);
-this.ghostManager = new GhostManager(this.eventManager, this.profileManager);
+this.ghostManager = new GhostManager(this.eventManager, this.profileManager, this);
     // Технические поля для обработки изображений
     this.tempCanvas = document.createElement("canvas");
     this.tempCtx = this.tempCanvas.getContext("2d");

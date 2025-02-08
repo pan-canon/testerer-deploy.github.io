@@ -1,4 +1,3 @@
-// Функция для показа модального окна выбора типа помещения
 function showLocationTypeModal(onConfirm, onCancel) {
   const modalOverlay = document.createElement("div");
   modalOverlay.id = "location-type-modal-overlay";

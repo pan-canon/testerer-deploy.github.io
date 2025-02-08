@@ -2,10 +2,12 @@ export class GhostManager {
   /**
    * @param {EventManager} eventManager – менеджер для работы с дневником
    * @param {ProfileManager} profileManager – менеджер профиля (расширенный для работы с призраками)
+   * @param {App} app – ссылка на приложение (для доступа к дополнительным данным, если необходимо)
    */
-  constructor(eventManager, profileManager) {
+  constructor(eventManager, profileManager, app) {
     this.eventManager = eventManager;
     this.profileManager = profileManager;
+    this.app = app; // теперь ссылка на приложение сохраняется
     // Генерируем 13 призраков с названиями и набором допустимых явлений.
     // Для простоты все призраки имеют 6 явлений.
     this.ghosts = [
@@ -38,72 +40,65 @@ export class GhostManager {
    * остальные выбираются случайно из набора разрешённых для данного призрака.
    * После 6-го явления генерируется финальное событие.
    */
-async triggerNextPhenomenon() {
-  const ghost = this.getCurrentGhost();
-  if (!ghost) return;
-  if (this.currentPhenomenonIndex < ghost.phenomenaCount) {
-    let phenomenonType;
-    
-    // Получаем текущую локацию из профиля (если выбрана)
-    const currentLocation = this.app.profileManager.getLocationType();
-    
-    if (this.currentGhostId === 1 && this.currentPhenomenonIndex === 0) {
-      // Для первого явления дефолтного призрака 1 фиксирован звонок (зеркальный квест)
-      phenomenonType = "call";
-    } else if (currentLocation) {
-      // Определяем разрешенные типы для данной локации.
-      // Здесь можно сразу задать соответствие, без заглушек:
-      const locationAllowedPhenomena = {
-        "Кухня": ["call", "randomCall"],
-        "Спальня": ["call", "randomCall"],
-        "Гостиная": ["call", "randomCall"],
-        "Ванная": ["call", "randomCall"],
-        "Коридор": ["call", "randomCall"],
-        "Другое": ["call", "randomCall"],
-        "Подъезд": ["call", "randomCall"],
-        "Кабинет": ["call", "randomCall"],
-        "Библиотека": ["call", "randomCall"],
-        "Детская": ["call", "randomCall"],
-        "Кладовая": ["call", "randomCall"],
-        "Гараж": ["call", "randomCall"]
-      };
-      // Получаем список явлений, разрешенных для текущей локации
-      const locationPhenomena = locationAllowedPhenomena[currentLocation] || [];
+  async triggerNextPhenomenon() {
+    const ghost = this.getCurrentGhost();
+    if (!ghost) return;
+    if (this.currentPhenomenonIndex < ghost.phenomenaCount) {
+      let phenomenonType;
       
-      // Находим пересечение с разрешенными для призрака
-      const intersection = ghost.allowedPhenomena.filter(p => locationPhenomena.includes(p));
+      // Получаем текущую локацию из профиля (если выбрана)
+      const currentLocation = this.profileManager.getLocationType();
       
-      if (intersection.length > 0) {
-        phenomenonType = intersection[Math.floor(Math.random() * intersection.length)];
+      if (this.currentGhostId === 1 && this.currentPhenomenonIndex === 0) {
+         // Для первого явления дефолтного призрака 1 фиксирован звонок (зеркальный квест)
+         phenomenonType = "call";
+      } else if (currentLocation) {
+         // Определяем разрешенные типы для данной локации.
+         const locationAllowedPhenomena = {
+           "Кухня": ["call", "randomCall"],
+           "Спальня": ["call", "randomCall"],
+           "Гостиная": ["call", "randomCall"],
+           "Ванная": ["call", "randomCall"],
+           "Коридор": ["call", "randomCall"],
+           "Другое": ["call", "randomCall"],
+           "Подъезд": ["call", "randomCall"],
+           "Кабинет": ["call", "randomCall"],
+           "Библиотека": ["call", "randomCall"],
+           "Детская": ["call", "randomCall"],
+           "Кладовая": ["call", "randomCall"],
+           "Гараж": ["call", "randomCall"]
+         };
+         const locationPhenomena = locationAllowedPhenomena[currentLocation] || [];
+         const intersection = ghost.allowedPhenomena.filter(p => locationPhenomena.includes(p));
+         if (intersection.length > 0) {
+           phenomenonType = intersection[Math.floor(Math.random() * intersection.length)];
+         } else {
+           phenomenonType = ghost.allowedPhenomena[Math.floor(Math.random() * ghost.allowedPhenomena.length)];
+         }
       } else {
-        // Если пересечение пустое, используем стандартный набор призрака
-        phenomenonType = ghost.allowedPhenomena[Math.floor(Math.random() * ghost.allowedPhenomena.length)];
+         // Если локация не выбрана, выбираем случайно из allowedPhenomena призрака
+         phenomenonType = ghost.allowedPhenomena[Math.floor(Math.random() * ghost.allowedPhenomena.length)];
       }
-    } else {
-      // Если локация не выбрана, выбираем случайно из allowedPhenomena призрака
-      phenomenonType = ghost.allowedPhenomena[Math.floor(Math.random() * ghost.allowedPhenomena.length)];
-    }
-    
-    // Формируем запись для дневника
-    const phenomenonEntry = `${ghost.name}: явление ${this.currentPhenomenonIndex + 1} (${phenomenonType})`;
-    await this.eventManager.addDiaryEntry(phenomenonEntry);
-    console.log(`Триггер явления для ${ghost.name}: ${phenomenonEntry}`);
-    
-    this.currentPhenomenonIndex++;
-    this.profileManager.saveGhostProgress({
-      ghostId: this.currentGhostId,
-      phenomenonIndex: this.currentPhenomenonIndex
-    });
-    
-    if (this.currentPhenomenonIndex === ghost.phenomenaCount) {
-      const finalEntry = `${ghost.name}: финальное явление – персонаж убит!`;
-      await this.eventManager.addDiaryEntry(finalEntry);
-      console.log(finalEntry);
-      // Здесь можно добавить дальнейшую логику (например, спасение персонажа)
+      
+      // Формируем запись для дневника
+      const phenomenonEntry = `${ghost.name}: явление ${this.currentPhenomenonIndex + 1} (${phenomenonType})`;
+      await this.eventManager.addDiaryEntry(phenomenonEntry);
+      console.log(`Триггер явления для ${ghost.name}: ${phenomenonEntry}`);
+      
+      this.currentPhenomenonIndex++;
+      this.profileManager.saveGhostProgress({
+        ghostId: this.currentGhostId,
+        phenomenonIndex: this.currentPhenomenonIndex
+      });
+      
+      if (this.currentPhenomenonIndex === ghost.phenomenaCount) {
+        const finalEntry = `${ghost.name}: финальное явление – персонаж убит!`;
+        await this.eventManager.addDiaryEntry(finalEntry);
+        console.log(finalEntry);
+        // Здесь можно добавить дальнейшую логику (например, спасение персонажа)
+      }
     }
   }
-}
-
 
   /**
    * Сбрасывает цепочку явлений (например, при перезапуске квеста или нового призрака).

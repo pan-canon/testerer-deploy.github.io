@@ -17,6 +17,8 @@ export class ProfileManager {
     localStorage.removeItem('diaryDB');
     localStorage.removeItem("registrationCompleted");
     localStorage.removeItem("callHandled");
+    // Сброс прогресса по призракам
+    localStorage.removeItem("ghostProgress");
     window.location.reload();
   }
   
@@ -27,19 +29,15 @@ export class ProfileManager {
       alert("No profile found to export.");
       return;
     }
-    // Получаем данные дневника
     const diaryEntries = databaseManager.getDiaryEntries();
-    // Если имеется план квартиры, получаем данные плана
     const apartmentPlanData = apartmentPlanManager ? apartmentPlanManager.rooms : [];
     
-    // Объединяем данные в один объект
     const exportData = {
       profile: JSON.parse(profileStr),
       diary: diaryEntries,
       apartment: apartmentPlanData
     };
 
-    // Экспорт в JSON-файл
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -57,16 +55,13 @@ export class ProfileManager {
     reader.onload = (e) => {
       try {
         const importedData = JSON.parse(e.target.result);
-        // Проверяем наличие основных данных профиля
         if (!importedData.profile || !importedData.profile.name || !importedData.profile.gender ||
             !importedData.profile.selfie || !importedData.profile.language) {
           alert("Invalid profile file. Required profile fields are missing.");
           return;
         }
-        // Сохраняем профиль
         this.saveProfile(importedData.profile);
         
-        // Импортируем записи дневника, если они есть
         if (importedData.diary && Array.isArray(importedData.diary)) {
           importedData.diary.forEach(entry => {
             if (entry.entry && entry.timestamp) {
@@ -79,7 +74,6 @@ export class ProfileManager {
           databaseManager.saveDatabase();
         }
         
-        // Импортируем данные плана квартиры, если они есть
         if (importedData.apartment && Array.isArray(importedData.apartment)) {
           if (apartmentPlanManager) {
             apartmentPlanManager.rooms = importedData.apartment;
@@ -95,5 +89,19 @@ export class ProfileManager {
       }
     };
     reader.readAsText(file);
+  }
+  
+  // Методы для работы с прогрессом по призракам
+  saveGhostProgress(progress) {
+    localStorage.setItem('ghostProgress', JSON.stringify(progress));
+  }
+  
+  getGhostProgress() {
+    const progress = localStorage.getItem('ghostProgress');
+    return progress ? JSON.parse(progress) : null;
+  }
+  
+  resetGhostProgress() {
+    localStorage.removeItem('ghostProgress');
   }
 }

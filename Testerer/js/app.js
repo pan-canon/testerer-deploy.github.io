@@ -9,6 +9,7 @@ import { EventManager } from './eventManager.js';
 import { CallManager } from './callManager.js';
 import { QuestManager } from './questManager.js';
 import { GameEventManager } from './gameEventManager.js';
+import { GhostManager } from './GhostManager.js';
 
 export class App {
   constructor() {
@@ -41,6 +42,7 @@ this.callManager = new CallManager(this.eventManager, this, this.languageManager
 this.questManager = new QuestManager(this.eventManager, this);
 this.gameEventManager = new GameEventManager(this.eventManager, this, this.languageManager);
 this.showProfileModal = new ShowProfileModal(this);
+this.ghostManager = new GhostManager(this.eventManager, this.profileManager);
     // Технические поля для обработки изображений
     this.tempCanvas = document.createElement("canvas");
     this.tempCtx = this.tempCanvas.getContext("2d");

@@ -1,4 +1,6 @@
 import { BaseQuest } from './baseQuest.js';
+// Предположим, что GhostManager импортируется в основном модуле или создаётся в App
+// и доступен через this.app.ghostManager
 
 export class MirrorQuest extends BaseQuest {
   /**
@@ -16,11 +18,9 @@ export class MirrorQuest extends BaseQuest {
   }
 
   registerEvents() {
-    // Пример: навешиваем обработчик на глобальную кнопку запуска камеры
     const cameraBtn = document.getElementById("toggle-camera");
     if (cameraBtn) {
       cameraBtn.addEventListener("click", async () => {
-        // Если флаг активен – запускаем проверку квеста
         if (localStorage.getItem("mirrorQuestActive") === "true") {
           console.log("🪞 Запущена проверка зеркального квеста через событие кнопки");
           await this.finish();
@@ -42,7 +42,6 @@ export class MirrorQuest extends BaseQuest {
   }
 
   async finish() {
-    // Если квест уже выполнен – ничего не делаем
     if (this.eventManager.isEventLogged(this.doneKey)) {
       console.log(`Quest "${this.key}" уже выполнен, повторная проверка не требуется.`);
       return;
@@ -54,14 +53,18 @@ export class MirrorQuest extends BaseQuest {
         await this.eventManager.addDiaryEntry(this.doneKey);
         await this.eventManager.addDiaryEntry("what_was_it", this.app.lastMirrorPhoto);
       }
-      // Убираем класс свечения с кнопки камеры и сбрасываем флаг квеста
       const cameraBtn = document.getElementById("toggle-camera");
       if (cameraBtn) {
         cameraBtn.classList.remove("glowing");
       }
       localStorage.removeItem("mirrorQuestActive");
-
       alert("✅ Задание «подойти к зеркалу» выполнено!");
+
+      // После успешного завершения зеркального квеста запускаем цепочку призрака 1
+      // Предполагается, что в App уже создан экземпляр ghostManager
+      if (this.app.ghostManager) {
+        this.app.ghostManager.triggerNextPhenomenon();
+      }
     } else {
       alert("❌ Нет совпадения! Попробуйте ещё раз!");
     }

@@ -1,81 +1,4 @@
-function showLocationTypeModal(onConfirm, onCancel) {
-  const modalOverlay = document.createElement("div");
-  modalOverlay.id = "location-type-modal-overlay";
-  Object.assign(modalOverlay.style, {
-    position: "fixed",
-    top: "0",
-    left: "0",
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(0,0,0,0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: "3000"
-  });
-
-  const modal = document.createElement("div");
-  modal.id = "location-type-modal";
-  Object.assign(modal.style, {
-    backgroundColor: "#fff",
-    padding: "20px",
-    borderRadius: "8px",
-    maxWidth: "400px",
-    width: "90%",
-    textAlign: "center"
-  });
-
-  const title = document.createElement("h3");
-  title.textContent = "Выберите тип помещения";
-  modal.appendChild(title);
-
-  const selectElem = document.createElement("select");
-  const locationTypes = [
-    "Кухня", "Спальня", "Гостиная", "Ванная", "Коридор", "Другое",
-    "Подъезд", "Кабинет", "Библиотека", "Детская", "Кладовая", "Гараж"
-  ];
-  locationTypes.forEach(type => {
-    const option = document.createElement("option");
-    option.value = type;
-    option.textContent = type;
-    selectElem.appendChild(option);
-  });
-  // По умолчанию выбран "Другое"
-  selectElem.value = "Другое";
-  selectElem.style.marginBottom = "15px";
-  selectElem.style.display = "block";
-  selectElem.style.width = "100%";
-  modal.appendChild(selectElem);
-
-  const btnContainer = document.createElement("div");
-  btnContainer.style.marginTop = "15px";
-
-  const confirmBtn = document.createElement("button");
-  confirmBtn.textContent = "Подтвердить";
-  confirmBtn.style.marginRight = "10px";
-  confirmBtn.addEventListener("click", () => {
-    console.log("Нажата кнопка Подтвердить");
-    const selectedType = selectElem.value;
-    if (onConfirm) onConfirm(selectedType);
-    modalOverlay.remove();  // Закрытие модального окна после подтверждения
-  });
-  btnContainer.appendChild(confirmBtn);
-
-  const cancelBtn = document.createElement("button");
-  cancelBtn.textContent = "Отмена";
-  cancelBtn.addEventListener("click", () => {
-    console.log("Нажата кнопка Отмена");
-    if (onCancel) onCancel();
-    modalOverlay.remove();  // Закрытие модального окна после отмены
-  });
-  btnContainer.appendChild(cancelBtn);
-
-  modal.appendChild(btnContainer);
-  modalOverlay.appendChild(modal);
-  document.body.appendChild(modalOverlay);
-}
-
-class ApartmentPlanManager {
+export class ApartmentPlanManager {
   constructor(containerId, dbManager) {
     this.container = document.getElementById(containerId);
     this.dbManager = dbManager;
@@ -127,135 +50,245 @@ class ApartmentPlanManager {
   }
 
   attachEvents() {
-    this.table.addEventListener('click', (e) => {
-      if (e.target.tagName === 'TD') {
-        const cell = e.target;
-        const row = parseInt(cell.dataset.row);
-        const col = parseInt(cell.dataset.col);
+    // Для мыши
+    this.table.addEventListener("mousedown", (e) => this.startSelection(e));
+    this.table.addEventListener("mousemove", (e) => this.updateSelection(e));
+    document.addEventListener("mouseup", (e) => this.finishSelection(e));
 
-        if (!this.isSelecting) {
-          // Начать выбор ячейки
-          this.startCell = { row, col };
-          this.isSelecting = true;
-        } else {
-          // Завершить выбор
-          this.endCell = { row, col };
-          this.isSelecting = false;
-          this.showLocationTypeModal();
+    // Для касаний (touch events)
+    this.table.addEventListener("touchstart", (e) => this.handleTouchStart(e));
+    this.table.addEventListener("touchmove", (e) => this.handleTouchMove(e));
+    this.table.addEventListener("touchend", (e) => this.handleTouchEnd(e));
+  }
+
+  handleTouchStart(e) {
+    e.preventDefault();  // чтобы предотвратить нежелательный скроллинг
+    const touch = e.touches[0];
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (target && target.tagName === "TD") {
+      this.startSelection({ clientX: touch.clientX, clientY: touch.clientY, target });
+    }
+  }
+
+  handleTouchMove(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (target && target.tagName === "TD") {
+      this.updateSelection({ clientX: touch.clientX, clientY: touch.clientY, target });
+    }
+  }
+
+  handleTouchEnd(e) {
+    e.preventDefault();
+    this.finishSelection(e);
+  }
+
+  startSelection(e) {
+    if (e.target.tagName === "TD") {
+      this.isSelecting = true;
+      const row = parseInt(e.target.dataset.row);
+      const col = parseInt(e.target.dataset.col);
+      this.startCell = { row, col };
+      this.endCell = { row, col };
+      this.highlightSelection();
+    }
+  }
+
+  updateSelection(e) {
+    if (this.isSelecting && e.target.tagName === "TD") {
+      const row = parseInt(e.target.dataset.row);
+      const col = parseInt(e.target.dataset.col);
+      this.endCell = { row, col };
+      this.highlightSelection();
+    }
+  }
+
+  finishSelection(e) {
+    if (this.isSelecting) {
+      this.isSelecting = false;
+      // Если не было выделено ни одной ячейки, задаем дефолтное помещение на весь план
+      if (!this.startCell || !this.endCell) {
+        this.startCell = { row: 0, col: 0 };
+        this.endCell = { row: this.gridRows - 1, col: this.gridCols - 1 };
+      }
+      
+      // Вызываем модальное окно для выбора типа помещения
+      this.showLocationTypeModal(
+        (selectedType) => {
+          if (this.app && this.app.profileManager) {
+            this.app.profileManager.saveLocationType(selectedType);
+          }
+          const room = {
+            floor: this.currentFloor,
+            startRow: Math.min(this.startCell.row, this.endCell.row),
+            startCol: Math.min(this.startCell.col, this.endCell.col),
+            endRow: Math.max(this.startCell.row, this.endCell.row),
+            endCol: Math.max(this.startCell.col, this.endCell.col),
+            type: selectedType
+          };
+          this.rooms.push(room);
+          this.saveToDB();
+          this.renderRooms();
+        },
+        () => {
+          // При отмене устанавливаем значение по умолчанию "Другое"
+          console.log("Локация не выбрана, выбран тип по умолчанию: 'Другое'.");
+          if (this.app && this.app.profileManager) {
+            this.app.profileManager.saveLocationType("Другое");
+          }
+          const room = {
+            floor: this.currentFloor,
+            startRow: Math.min(this.startCell.row, this.endCell.row),
+            startCol: Math.min(this.startCell.col, this.endCell.col),
+            endRow: Math.max(this.startCell.row, this.endCell.row),
+            endCol: Math.max(this.startCell.col, this.endCell.col),
+            type: "Другое"
+          };
+          this.rooms.push(room);
+          this.saveToDB();
+          this.renderRooms();
+        }
+      );
+    }
+  }
+
+  highlightSelection() {
+    // Сброс подсветки всех ячеек
+    Array.from(this.table.getElementsByTagName("td")).forEach(cell => {
+      cell.style.backgroundColor = "";
+    });
+    if (!this.startCell || !this.endCell) return;
+    const startRow = Math.min(this.startCell.row, this.endCell.row);
+    const endRow = Math.max(this.startCell.row, this.endCell.row);
+    const startCol = Math.min(this.startCell.col, this.endCell.col);
+    const endCol = Math.max(this.startCell.col, this.endCell.col);
+    for (let r = startRow; r <= endRow; r++) {
+      for (let c = startCol; c <= endCol; c++) {
+        const cell = this.table.querySelector(`td[data-row='${r}'][data-col='${c}']`);
+        if (cell) cell.style.backgroundColor = "rgba(255, 0, 0, 0.3)";
+      }
+    }
+  }
+
+  renderRooms() {
+    // Пересоздаем таблицу и отмечаем сохраненные помещения для текущего этажа
+    this.initTable();
+    this.rooms.forEach(room => {
+      if (room.floor === this.currentFloor) {
+        for (let r = room.startRow; r <= room.endRow; r++) {
+          for (let c = room.startCol; c <= room.endCol; c++) {
+            const cell = this.table.querySelector(`td[data-row='${r}'][data-col='${c}']`);
+            if (cell) cell.style.backgroundColor = "rgba(0, 150, 255, 0.5)";
+          }
         }
       }
     });
   }
 
-  showLocationTypeModal() {
-    showLocationTypeModal((selectedType) => {
-      // Сохраняем выбранное помещение
-      this.rooms.push({
-        floor: this.currentFloor,
-        startRow: this.startCell.row,
-        startCol: this.startCell.col,
-        endRow: this.endCell.row,
-        endCol: this.endCell.col,
-        type: selectedType
-      });
-      console.log("Добавлено новое помещение:", this.rooms);
-    }, () => {
-      // Отмена выбора
-      this.isSelecting = false;
-      console.log("Выбор отменен");
-    });
+  saveToDB() {
+    const currentRooms = this.rooms.filter(room => room.floor === this.currentFloor);
+    this.dbManager.addApartmentRooms(this.currentFloor, currentRooms);
   }
 
   loadFromDB() {
-    // Загрузка данных из базы данных, если они есть
-    this.dbManager.getFloors().then(floors => {
-      if (floors && floors.length) {
-        floors.forEach(floor => {
-          this.rooms = [...this.rooms, ...floor.rooms];
-        });
-        console.log("Данные загружены из базы данных", this.rooms);
-        this.renderRooms();  // Отобразим загруженные комнаты
+    this.dbManager.getApartmentPlan(this.currentFloor, (rooms) => {
+      if (!rooms || rooms.length === 0) {
+        console.log(`Локации для этажа ${this.currentFloor} не созданы, выбран дефолт.`);
       } else {
-        console.log("Нет данных для загрузки");
+        console.log(`Найденные локации для этажа ${this.currentFloor}: `, rooms);
       }
-    }).catch(error => {
-      console.error("Ошибка при загрузке данных из базы данных:", error);
+      this.rooms = rooms;
+      this.renderRooms();
     });
   }
 
-  saveToDB() {
-    // Сохраняем данные в базу данных
-    this.dbManager.saveRooms(this.rooms).then(() => {
-      console.log("Данные сохранены в базе данных");
-    }).catch(error => {
-      console.error("Ошибка при сохранении данных в базе данных:", error);
+  nextFloor() {
+    this.currentFloor++;
+    this.loadFromDB();
+  }
+
+  prevFloor() {
+    if (this.currentFloor > 1) {
+      this.currentFloor--;
+      this.loadFromDB();
+    }
+  }
+
+  showLocationTypeModal(onConfirm, onCancel) {
+    const modalOverlay = document.createElement("div");
+    modalOverlay.id = "location-type-modal-overlay";
+    Object.assign(modalOverlay.style, {
+      position: "fixed",
+      top: "0",
+      left: "0",
+      width: "100%",
+      height: "100%",
+      backgroundColor: "rgba(0,0,0,0.5)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: "3000"
     });
-  }
-
-  renderRooms() {
-    // Визуализируем комнаты в таблице
-    this.rooms.forEach(room => {
-      const startCell = this.table.rows[room.startRow].cells[room.startCol];
-      const endCell = this.table.rows[room.endRow].cells[room.endCol];
-
-      // Здесь добавьте нужный стиль для выделения комнат
-      startCell.style.backgroundColor = "#ddd";
-      endCell.style.backgroundColor = "#ddd";
-
-      const roomLabel = document.createElement("span");
-      roomLabel.textContent = room.type;
-      roomLabel.style.position = "absolute";
-      startCell.appendChild(roomLabel);
+    
+    const modal = document.createElement("div");
+    modal.id = "location-type-modal";
+    Object.assign(modal.style, {
+      backgroundColor: "#fff",
+      padding: "20px",
+      borderRadius: "8px",
+      maxWidth: "400px",
+      width: "90%",
+      textAlign: "center"
     });
-  }
-}
-
-// Пример класса dbManager для работы с базой данных
-class DBManager {
-  constructor() {
-    this.db = null;
-    this.initDatabase();
-  }
-
-  async initDatabase() {
-    // Инициализация базы данных (например, IndexedDB)
-    const request = indexedDB.open("apartmentPlanDB", 1);
-    request.onupgradeneeded = event => {
-      this.db = event.target.result;
-      if (!this.db.objectStoreNames.contains("floors")) {
-        this.db.createObjectStore("floors", { keyPath: "id", autoIncrement: true });
-      }
-    };
-
-    request.onsuccess = event => {
-      this.db = event.target.result;
-      console.log("База данных инициализирована");
-    };
-
-    request.onerror = event => {
-      console.error("Ошибка при инициализации базы данных", event);
-    };
-  }
-
-  async getFloors() {
-    return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction(["floors"], "readonly");
-      const store = transaction.objectStore("floors");
-      const request = store.getAll();
-
-      request.onsuccess = event => resolve(event.target.result);
-      request.onerror = event => reject("Ошибка при загрузке данных");
+    
+    const title = document.createElement("h3");
+    title.textContent = "Выберите тип помещения";
+    modal.appendChild(title);
+    
+    const selectElem = document.createElement("select");
+    const locationTypes = [
+      "Кухня", "Спальня", "Гостиная", "Ванная", "Коридор", "Другое",
+      "Подъезд", "Кабинет", "Библиотека", "Детская", "Кладовая", "Гараж"
+    ];
+    locationTypes.forEach(type => {
+      const option = document.createElement("option");
+      option.value = type;
+      option.textContent = type;
+      selectElem.appendChild(option);
     });
-  }
-
-  async saveRooms(rooms) {
-    return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction(["floors"], "readwrite");
-      const store = transaction.objectStore("floors");
-      const request = store.put({ id: 1, rooms }); // Используем id = 1 для простоты
-
-      request.onsuccess = event => resolve();
-      request.onerror = event => reject("Ошибка при сохранении данных");
+    // По умолчанию выбран "Другое"
+    selectElem.value = "Другое";
+    selectElem.style.marginBottom = "15px";
+    selectElem.style.display = "block";
+    selectElem.style.width = "100%";
+    modal.appendChild(selectElem);
+    
+    const btnContainer = document.createElement("div");
+    btnContainer.style.marginTop = "15px";
+    
+    const confirmBtn = document.createElement("button");
+    confirmBtn.textContent = "Подтвердить";
+    confirmBtn.style.marginRight = "10px";
+    confirmBtn.addEventListener("click", () => {
+      console.log("Нажата кнопка Подтвердить");
+      const selectedType = selectElem.value;
+      if (onConfirm) onConfirm(selectedType);
+      modalOverlay.remove();
     });
+    btnContainer.appendChild(confirmBtn);
+    
+    const cancelBtn = document.createElement("button");
+    cancelBtn.textContent = "Отмена";
+    cancelBtn.addEventListener("click", () => {
+      console.log("Нажата кнопка Отмена");
+      if (onCancel) onCancel();
+      modalOverlay.remove();
+    });
+    btnContainer.appendChild(cancelBtn);
+    
+    modal.appendChild(btnContainer);
+    modalOverlay.appendChild(modal);
+    document.body.appendChild(modalOverlay);
   }
 }

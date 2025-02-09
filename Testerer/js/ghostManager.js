@@ -45,52 +45,52 @@ export class GhostManager {
     if (!ghost) return;
     if (this.currentPhenomenonIndex < ghost.phenomenaCount) {
       let phenomenonType;
-      
+
       // Получаем текущую локацию из профиля (если выбрана)
       const currentLocation = this.profileManager.getLocationType();
-      
+
       if (this.currentGhostId === 1 && this.currentPhenomenonIndex === 0) {
-         // Для первого явления дефолтного призрака 1 фиксирован звонок (зеркальный квест)
-         phenomenonType = "call";
+        // Для первого явления дефолтного призрака 1 фиксирован звонок (зеркальный квест)
+        phenomenonType = "call";
       } else if (currentLocation) {
-         // Определяем разрешенные типы для данной локации.
-         const locationAllowedPhenomena = {
-           "Кухня": ["call", "randomCall"],
-           "Спальня": ["call", "randomCall"],
-           "Гостиная": ["call", "randomCall"],
-           "Ванная": ["call", "randomCall"],
-           "Коридор": ["call", "randomCall"],
-           "Другое": ["call", "randomCall"],
-           "Подъезд": ["call", "randomCall"],
-           "Кабинет": ["call", "randomCall"],
-           "Библиотека": ["call", "randomCall"],
-           "Детская": ["call", "randomCall"],
-           "Кладовая": ["call", "randomCall"],
-           "Гараж": ["call", "randomCall"]
-         };
-         const locationPhenomena = locationAllowedPhenomena[currentLocation] || [];
-         const intersection = ghost.allowedPhenomena.filter(p => locationPhenomena.includes(p));
-         if (intersection.length > 0) {
-           phenomenonType = intersection[Math.floor(Math.random() * intersection.length)];
-         } else {
-           phenomenonType = ghost.allowedPhenomena[Math.floor(Math.random() * ghost.allowedPhenomena.length)];
-         }
+        // Определяем разрешенные типы для данной локации.
+        const locationAllowedPhenomena = {
+          "Кухня": ["call", "randomCall"],
+          "Спальня": ["call", "randomCall"],
+          "Гостиная": ["call", "randomCall"],
+          "Ванная": ["call", "randomCall"],
+          "Коридор": ["call", "randomCall"],
+          "Другое": ["call", "randomCall"],
+          "Подъезд": ["call", "randomCall"],
+          "Кабинет": ["call", "randomCall"],
+          "Библиотека": ["call", "randomCall"],
+          "Детская": ["call", "randomCall"],
+          "Кладовая": ["call", "randomCall"],
+          "Гараж": ["call", "randomCall"]
+        };
+        const locationPhenomena = locationAllowedPhenomena[currentLocation] || [];
+        const intersection = ghost.allowedPhenomena.filter(p => locationPhenomena.includes(p));
+        if (intersection.length > 0) {
+          phenomenonType = intersection[Math.floor(Math.random() * intersection.length)];
+        } else {
+          phenomenonType = ghost.allowedPhenomena[Math.floor(Math.random() * ghost.allowedPhenomena.length)];
+        }
       } else {
-         // Если локация не выбрана, выбираем случайно из allowedPhenomena призрака
-         phenomenonType = ghost.allowedPhenomena[Math.floor(Math.random() * ghost.allowedPhenomena.length)];
+        // Если локация не выбрана, выбираем случайно из allowedPhenomena призрака
+        phenomenonType = ghost.allowedPhenomena[Math.floor(Math.random() * ghost.allowedPhenomena.length)];
       }
-      
+
       // Формируем запись для дневника
       const phenomenonEntry = `${ghost.name}: явление ${this.currentPhenomenonIndex + 1} (${phenomenonType})`;
       await this.eventManager.addDiaryEntry(phenomenonEntry);
       console.log(`Триггер явления для ${ghost.name}: ${phenomenonEntry}`);
-      
+
       this.currentPhenomenonIndex++;
       this.profileManager.saveGhostProgress({
         ghostId: this.currentGhostId,
         phenomenonIndex: this.currentPhenomenonIndex
       });
-      
+
       if (this.currentPhenomenonIndex === ghost.phenomenaCount) {
         const finalEntry = `${ghost.name}: финальное явление – персонаж убит!`;
         await this.eventManager.addDiaryEntry(finalEntry);

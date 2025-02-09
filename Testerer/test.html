@@ -1,112 +1,92 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Хоор-игра</title>
-  <!-- Подключение шрифтов из Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Nosifer&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Roboto', sans-serif;
-      background: #111;
-      color: #eee;
-    }
-    header {
-      text-align: center;
-      padding: 40px 20px;
-      background: #000;
-    }
-    header h1 {
-      font-family: 'Creepster', cursive;
-      font-size: 64px;
-      margin: 0;
-    }
-    header p {
-      margin-top: 10px;
-      font-size: 18px;
-    }
-    .hero {
-      position: relative;
-      background: url('https://source.unsplash.com/1600x900/?haunted,forest') no-repeat center center/cover;
-      height: 100vh;
-    }
-    .hero-overlay {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.6);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 0 20px;
-    }
-    .hero-overlay h2 {
-      font-family: 'Creepster', cursive;
-      font-size: 48px;
-      margin-bottom: 20px;
-    }
-    .hero-overlay p {
-      font-size: 20px;
-      max-width: 600px;
-    }
-    .features {
-      padding: 50px 20px;
-      background: #222;
-    }
-    .feature {
-      margin-bottom: 40px;
-    }
-    .feature h3 {
-      font-family: 'Nosifer', cursive;
-      font-size: 36px;
-      margin-bottom: 10px;
-    }
-    .feature p {
-      font-size: 18px;
-    }
-    footer {
-      text-align: center;
-      padding: 20px;
-      background: #000;
-      font-size: 14px;
-    }
-    /* Небольшая анимация при наведении на блок преимуществ */
-    .feature:hover {
-      transform: scale(1.02);
-      transition: transform 0.3s ease;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Face-api.js Example</title>
+  <!-- Подключаем face-api.js из локальной папки -->
+  <script src="js/libs/face-api.js"></script>
 </head>
 <body>
-  <header>
-    <h1>Хоор-игра</h1>
-    <p>От поклонника фазмбафобии – Phasmophobia и другие хоррор-игры</p>
-  </header>
-  <section class="hero">
-    <div class="hero-overlay">
-      <h2>Безопасная игра, вдохновленная Ведьмой из Блэр</h2>
-      <p>В реальности всегда доступ к камере – погружение, которое не оставит вас равнодушными!</p>
-    </div>
-  </section>
-  <section class="features">
-    <div class="feature">
-      <h3>Работает оффлайн и в браузере</h3>
-      <p>Сервис-воркеры обеспечивают стабильную работу без подключения к интернету.</p>
-    </div>
-    <div class="feature">
-      <h3>Пассивный режим</h3>
-      <p>Лень играть? Просто игнорируйте привидений – они сами всё сделают!</p>
-    </div>
-    <div class="feature">
-      <h3>Забота о ваших данных</h3>
-      <p>Все данные хранятся локально – мы не запрашиваем доступ к вашим фотографиям. Новые фичи уже в пути!</p>
-    </div>
-  </section>
-  <footer>
-    <p>Следите за обновлениями и оставайтесь на связи!</p>
-  </footer>
+  <h1>Face-api.js Example</h1>
+  <button id="capture">Capture Selfie</button>
+  <button id="compare">Compare with Camera</button>
+  <video id="video" width="640" height="480" autoplay></video>
+  <canvas id="canvas" style="display: none;"></canvas>
+
+  <script>
+    let videoElement = document.getElementById("video");
+    let captureButton = document.getElementById("capture");
+    let compareButton = document.getElementById("compare");
+    let selfieImage = null; // Для хранения селфи
+
+    // Инициализация камеры
+    async function setupCamera() {
+      console.log("Setting up camera...");
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      videoElement.srcObject = stream;
+      await new Promise(resolve => videoElement.onplaying = resolve);
+      console.log("Camera ready");
+    }
+
+    // Загружаем модели
+    async function loadModels() {
+      console.log("Loading models...");
+      await Promise.all([
+        faceapi.nets.ssdMobilenetv1.loadFromUri('/models'),
+        faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
+        faceapi.nets.faceRecognitionNet.loadFromUri('/models')
+      ]);
+      console.log("Models loaded");
+    }
+
+    // Загружаем камеру и модели
+    async function init() {
+      await setupCamera();
+      await loadModels();
+    }
+
+    // Селфи: захват кадра с камеры и сохранение в формате base64
+    captureButton.addEventListener("click", async () => {
+      console.log("Capturing selfie...");
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+      selfieImage = canvas.toDataURL();
+      console.log("Selfie captured:", selfieImage);
+    });
+
+    // Сравнение селфи с текущим кадром
+    compareButton.addEventListener("click", async () => {
+      if (!selfieImage) {
+        console.log("No selfie captured to compare with.");
+        return;
+      }
+
+      console.log("Comparing selfie with live camera feed...");
+      const faceMatcher = new faceapi.FaceMatcher(await detectFace(selfieImage));
+      const liveFace = await detectFace(videoElement);
+
+      const distance = faceMatcher.computeBestMatch(liveFace[0].descriptor);
+      console.log("Face similarity:", distance.toString());
+      if (distance.distance < 0.6) {
+        console.log("Faces match!");
+      } else {
+        console.log("Faces do not match.");
+      }
+    });
+
+    // Функция для обнаружения лица
+    async function detectFace(imageData) {
+      const img = await faceapi.bufferToImage(imageData);
+      const detections = await faceapi.detectAllFaces(img)
+        .withFaceLandmarks()
+        .withFaceDescriptors();
+      return detections;
+    }
+
+    // Запускаем инициализацию
+    init();
+  </script>
 </body>
 </html>

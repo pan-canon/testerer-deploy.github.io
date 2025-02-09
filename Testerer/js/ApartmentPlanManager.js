@@ -280,16 +280,12 @@ confirmBtn.addEventListener("click", () => {
   const selectedType = selectElem.value;
   if (onConfirm) onConfirm(selectedType);
   console.log("Удаляем модальное окно");
+
+  // Добавляем небольшую задержку перед удалением окна
   setTimeout(() => {
-    if (modalOverlay) {
-      modalOverlay.remove();
-    } else {
-      console.error("Модальное окно не найдено для удаления");
-    }
-  }, 200);
+    modalOverlay.remove(); // Удаление модального окна
+  }, 50);
 });
-
-
 
     btnContainer.appendChild(confirmBtn);
     

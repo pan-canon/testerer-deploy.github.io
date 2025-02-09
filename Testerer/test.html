@@ -55,6 +55,7 @@
 // Селфи: захват кадра с камеры и сохранение в формате base64
 // Селфи: захват кадра с камеры и сохранение в формате base64
 // Селфи: захват кадра с камеры и сохранение в формате base64
+// Селфи: захват кадра с камеры и сохранение в формате base64
 captureButton.addEventListener("click", async () => {
   console.log("Capturing selfie...");
   const canvas = document.createElement('canvas');
@@ -81,11 +82,58 @@ captureButton.addEventListener("click", async () => {
 
   if (detections.length > 0) {
     selfieDescriptor = detections[0].descriptor;
-    console.log("Selfie descriptor captured");
+    console.log("Selfie descriptor captured:", selfieDescriptor);
   } else {
     console.log("No face detected in selfie");
   }
 });
+
+// Функция для обнаружения лица и получения дескрипторов
+async function detectFace(imageData) {
+  console.log("Detecting face on image...");
+  const detections = await faceapi.detectAllFaces(imageData)
+    .withFaceLandmarks()
+    .withFaceDescriptors();
+  
+  console.log("Detection results:", detections);
+  
+  if (detections && detections.length > 0) {
+    return detections;
+  } else {
+    console.log("No faces detected in this image.");
+    return [];
+  }
+}
+
+// Сравнение селфи с текущим кадром
+compareButton.addEventListener("click", async () => {
+  if (!selfieDescriptor) {
+    console.log("No selfie captured to compare with.");
+    return;
+  }
+
+  console.log("Comparing selfie with live camera feed...");
+
+  const liveDetections = await detectFace(videoElement);
+  console.log("Live face detections:", liveDetections);
+
+  if (liveDetections.length > 0) {
+    const liveDescriptor = liveDetections[0].descriptor;
+
+    // Сравниваем дескрипторы
+    const distance = faceapi.euclideanDistance(selfieDescriptor, liveDescriptor);
+    console.log("Face similarity:", distance);
+
+    if (distance < 0.6) {
+      console.log("Faces match!");
+    } else {
+      console.log("Faces do not match.");
+    }
+  } else {
+    console.log("No face detected in the live camera feed.");
+  }
+});
+
 
 // Функция для обнаружения лица и получения дескрипторов
 async function detectFace(imageData) {

@@ -1,4 +1,4 @@
-// WelcomeEvent.js
+// /js/events/welcomeEvent.js
 import { BaseEvent } from './baseEvent.js';
 import { VisualEffectsManager } from '../utils/visualEffectsManager.js';
 
@@ -12,7 +12,7 @@ export class WelcomeEvent extends BaseEvent {
     super(eventManager);
     this.app = appInstance;
     this.languageManager = languageManager;
-    this.key = "welcome"; // ключ события (используется для внутренней логики, можно оставить)
+    this.key = "welcome"; // ключ события
   }
 
   /**
@@ -26,7 +26,7 @@ export class WelcomeEvent extends BaseEvent {
       onAnswer: async () => {
         // Логируем запись с текстом "mirror_quest"
         const mirrorQuestText = this.languageManager.locales[this.languageManager.getLanguage()]["mirror_quest"];
-        await this.eventManager.addDiaryEntry(mirrorQuestText);
+        await this.addDiaryEntry(mirrorQuestText);
         // Вызовем визуальный эффект через VisualEffectsManager
         const effectsManager = new VisualEffectsManager();
         effectsManager.triggerMirrorEffect();

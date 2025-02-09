@@ -1,4 +1,4 @@
-// GameEventManager.js
+// /js/gameEventManager.js
 import { WelcomeEvent } from './events/welcomeEvent.js';
 
 export class GameEventManager {
@@ -15,6 +15,7 @@ export class GameEventManager {
       new WelcomeEvent(this.eventManager, this.app, this.languageManager)
       // В будущем можно добавить другие события
     ];
+    this.currentEventIndex = 0;
   }
 
   /**
@@ -25,8 +26,23 @@ export class GameEventManager {
     const event = this.events.find(e => e.key === key);
     if (event) {
       await event.activate();
+      this.currentEventIndex++;
+      if (this.currentEventIndex < this.events.length) {
+        // Автоматически активируем следующее событие
+        await this.activateNextEvent();
+      }
     } else {
       console.warn(`Событие с ключом "${key}" не найдено.`);
+    }
+  }
+
+  /**
+   * Активирует следующее событие в списке.
+   */
+  async activateNextEvent() {
+    const nextEvent = this.events[this.currentEventIndex];
+    if (nextEvent) {
+      await nextEvent.activate();
     }
   }
 }

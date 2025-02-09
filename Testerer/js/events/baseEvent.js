@@ -1,49 +1,28 @@
-// BaseEvent.js
+// /js/events/baseEvent.js
 export class BaseEvent {
-  constructor(eventManager, appInstance, languageManager) {
+  /**
+   * @param {EventManager} eventManager – менеджер для работы с дневником
+   */
+  constructor(eventManager) {
     this.eventManager = eventManager;
-    this.app = appInstance;
-    this.languageManager = languageManager;
-    this.stages = [];   // Этапы события
-    this.finalText = ""; // Финальный текст
-    this.currentStage = 0; // Индекс текущего этапа
-    this.callManager = this.app.callManager; // Используем CallManager для звонков
+    this.key = ""; // уникальный идентификатор события
   }
 
-  // Метод активации первого этапа
+  /**
+   * Активирует событие: если ещё не зарегистрировано, логирует его в дневнике.
+   */
   async activate() {
-    if (this.currentStage === 0) {
-      await this.eventManager.addDiaryEntry(this.getLocalizedText(this.stages[0].key, this.stages[0].text));
+    if (!this.eventManager.isEventLogged(this.key)) {
+      console.log(`Активируем событие: ${this.key}`);
+      await this.eventManager.addDiaryEntry(this.key);
     }
   }
 
-  // Переход к следующему этапу
-  async advanceStage() {
-    this.currentStage++;
-    if (this.currentStage < this.stages.length) {
-      await this.eventManager.addDiaryEntry(this.getLocalizedText(this.stages[this.currentStage].key, this.stages[this.currentStage].text));
-    } else {
-      await this.eventManager.addDiaryEntry(this.getLocalizedText("final", this.finalText));
-      this.app.ghostManager.startNewGhostEvent(); // Запуск следующего события
-    }
-  }
-
-  // Утилитарный метод для получения локализованного текста
-  getLocalizedText(key, defaultText) {
-    const lang = this.languageManager.getLanguage();
-    return this.languageManager.locales[lang][key] || defaultText;
-  }
-
-  // Обработка звонка
-  async handleCall() {
-    // Запускаем звонок (если он активен)
-    await this.callManager.startCall("welcome", {
-      onAnswer: async () => {
-        await this.advanceStage();  // Переходим к следующему этапу после ответа
-      },
-      onIgnore: async () => {
-        await this.advanceStage();  // Переход к следующему этапу, если звонок был проигнорирован
-      }
-    });
+  /**
+   * Добавляет запись в дневник.
+   * @param {string} text – текст записи
+   */
+  async addDiaryEntry(text) {
+    await this.eventManager.addDiaryEntry(text);
   }
 }

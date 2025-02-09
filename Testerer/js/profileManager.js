@@ -1,16 +1,17 @@
+// /js/profileManager.js
 export class ProfileManager {
   isProfileSaved() {
     return !!localStorage.getItem('profile');
   }
-  
+
   getProfile() {
     return JSON.parse(localStorage.getItem('profile'));
   }
-  
+
   saveProfile(profile) {
     localStorage.setItem('profile', JSON.stringify(profile));
   }
-  
+
   resetProfile() {
     localStorage.removeItem('profile');
     localStorage.removeItem('regData');
@@ -21,10 +22,11 @@ export class ProfileManager {
     localStorage.removeItem("ghostProgress");
     // Сброс типа локации
     localStorage.removeItem("locationType");
+    // Сброс состояния квестов
+    localStorage.removeItem("questProgress");
     window.location.reload();
   }
-  
-  // Экспорт профиля вместе с дневником и планом квартиры
+
   exportProfileData(databaseManager, apartmentPlanManager) {
     const profileStr = localStorage.getItem('profile');
     if (!profileStr) {
@@ -33,11 +35,13 @@ export class ProfileManager {
     }
     const diaryEntries = databaseManager.getDiaryEntries();
     const apartmentPlanData = apartmentPlanManager ? apartmentPlanManager.rooms : [];
-    
+    const questProgressData = databaseManager.getQuestProgress();
+
     const exportData = {
       profile: JSON.parse(profileStr),
       diary: diaryEntries,
-      apartment: apartmentPlanData
+      apartment: apartmentPlanData,
+      quests: questProgressData
     };
 
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -50,8 +54,7 @@ export class ProfileManager {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
-  
-  // Импорт профиля вместе с дневником и планом квартиры
+
   importProfileData(file, databaseManager, apartmentPlanManager) {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -63,7 +66,7 @@ export class ProfileManager {
           return;
         }
         this.saveProfile(importedData.profile);
-        
+
         if (importedData.diary && Array.isArray(importedData.diary)) {
           importedData.diary.forEach(entry => {
             if (entry.entry && entry.timestamp) {
@@ -75,14 +78,22 @@ export class ProfileManager {
           });
           databaseManager.saveDatabase();
         }
-        
+
         if (importedData.apartment && Array.isArray(importedData.apartment)) {
           if (apartmentPlanManager) {
             apartmentPlanManager.rooms = importedData.apartment;
             apartmentPlanManager.renderRooms();
           }
         }
-        
+
+        if (importedData.quests && Array.isArray(importedData.quests)) {
+          importedData.quests.forEach(progress => {
+            if (progress.quest_key && progress.status) {
+              databaseManager.addQuestProgress(progress.quest_key, progress.status);
+            }
+          });
+        }
+
         alert("Profile imported successfully. Reloading page.");
         window.location.reload();
       } catch (err) {
@@ -92,26 +103,24 @@ export class ProfileManager {
     };
     reader.readAsText(file);
   }
-  
-  // Методы для работы с прогрессом по призракам
+
   saveGhostProgress(progress) {
     localStorage.setItem('ghostProgress', JSON.stringify(progress));
   }
-  
+
   getGhostProgress() {
     const progress = localStorage.getItem('ghostProgress');
     return progress ? JSON.parse(progress) : null;
   }
-  
+
   resetGhostProgress() {
     localStorage.removeItem('ghostProgress');
   }
 
-  // Новые методы для работы с типом локации
   saveLocationType(locationType) {
     localStorage.setItem('locationType', locationType);
   }
-  
+
   getLocationType() {
     return localStorage.getItem('locationType');
   }

@@ -1,4 +1,4 @@
-export class GhostEvent1 {
+export class GhostEvent2 {
   /**
    * @param {EventManager} eventManager – менеджер событий
    * @param {App} appInstance – ссылка на основной объект приложения
@@ -6,22 +6,22 @@ export class GhostEvent1 {
   constructor(eventManager, appInstance) {
     this.eventManager = eventManager;
     this.app = appInstance;
-    this.key = "ghost_1";  // Уникальный идентификатор события
-    this.doneKey = "ghost_1_done";
+    this.key = "ghost_2";  // Уникальный идентификатор события
+    this.doneKey = "ghost_2_done";
   }
 
   /**
-   * При активации события будет происходить проявление призрака через VisualEffectsManager
+   * При активации события будет происходить проявление второго призрака через VisualEffectsManager
    * и добавление записи в дневник.
    */
   async activate() {
     if (!this.eventManager.isEventLogged(this.key)) {
-      console.log(`🔮 Призрак 1 активирован`);
+      console.log(`🔮 Призрак 2 активирован`);
       await this.eventManager.addDiaryEntry(this.key);
       
-      // Визуальный эффект для первого призрака
+      // Визуальный эффект для второго призрака
       const effectsManager = new VisualEffectsManager();
-      effectsManager.triggerGhostEffect("ghost_1");
+      effectsManager.triggerGhostEffect("ghost_2");
     }
   }
 
@@ -29,9 +29,8 @@ export class GhostEvent1 {
    * Проверка завершенности события.
    */
   async checkStatus() {
-    // В данном случае, для простоты, можно всегда возвращать true.
-    // Однако можно добавить логику для проверки, например, через камеру или взаимодействие.
-    return true;
+    // Логика для проверки завершенности второго призрака
+    return true;  // Пример для простоты
   }
 
   /**
@@ -43,14 +42,14 @@ export class GhostEvent1 {
       if (!this.eventManager.isEventLogged(this.doneKey)) {
         await this.eventManager.addDiaryEntry(this.doneKey);
       }
-      alert("🎉 Призрак 1 завершен!");
+      alert("🎉 Призрак 2 завершен!");
       
       // Переход к следующему событию или квесту
       if (this.app.ghostManager) {
         this.app.ghostManager.triggerNextPhenomenon();
       }
     } else {
-      alert("❌ Призрак 1 не завершен, попробуйте еще раз.");
+      alert("❌ Призрак 2 не завершен, попробуйте еще раз.");
     }
   }
 }

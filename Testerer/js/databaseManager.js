@@ -1,3 +1,4 @@
+// /js/databaseManager.js
 export class DatabaseManager {
   constructor() {
     this.db = null;
@@ -21,18 +22,22 @@ export class DatabaseManager {
     } else {
       this.db = new SQL.Database();
       this.db.run(`
-  CREATE TABLE IF NOT EXISTS diary (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    entry TEXT,
-    timestamp TEXT
-  );
-  CREATE TABLE IF NOT EXISTS apartment_plan (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    floor_number INTEGER,
-    room_data TEXT
-  );
-`);
-
+        CREATE TABLE IF NOT EXISTS diary (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          entry TEXT,
+          timestamp TEXT
+        );
+        CREATE TABLE IF NOT EXISTS apartment_plan (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          floor_number INTEGER,
+          room_data TEXT
+        );
+        CREATE TABLE IF NOT EXISTS quest_progress (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          quest_key TEXT,
+          status TEXT
+        );
+      `);
     }
     console.log("📖 Database initialized!");
   }
@@ -73,38 +78,25 @@ export class DatabaseManager {
     return [];
   }
 
-addApartmentRooms(floor, rooms) {
-  const roomsJSON = JSON.stringify(rooms);
-  console.log(`Сохраняем локации для этажа ${floor}: `, rooms);
-  
-  // Удаляем существующие записи для этого этажа
-  this.db.run("DELETE FROM apartment_plan WHERE floor_number = ?", [floor]);
-  console.log(`Старые локации для этажа ${floor} удалены.`);
-  
-  // Вставляем новую запись, содержащую массив комнат для данного этажа
-  this.db.run("INSERT INTO apartment_plan (floor_number, room_data) VALUES (?, ?)", [floor, roomsJSON]);
-  console.log(`Локации для этажа ${floor} добавлены. Данные: ${roomsJSON}`);
-  
-  // Выводим текущее состояние таблицы для отладки
-  const result = this.db.exec("SELECT * FROM apartment_plan WHERE floor_number = " + floor);
-  console.log("Текущее содержимое apartment_plan для этажа " + floor + ": ", result);
-  
-  this.saveDatabase();
-}
-
-
-
-getApartmentPlan(floor, callback) {
-  const stmt = this.db.prepare("SELECT room_data FROM apartment_plan WHERE floor_number = ?");
-  stmt.bind([floor]);
-  if (stmt.step()) {
-    const row = stmt.get();
-    const rooms = JSON.parse(row[0]);
-    callback(rooms);
-  } else {
-    callback([]);
+  addQuestProgress(questKey, status) {
+    if (!this.db) {
+      console.error("⚠️ Database not initialized!");
+      return;
+    }
+    this.db.run("INSERT INTO quest_progress (quest_key, status) VALUES (?, ?)", [questKey, status]);
+    console.log(`✅ Quest progress added: ${questKey} - ${status}`);
+    this.saveDatabase();
   }
-  stmt.free();
-}
 
+  getQuestProgress(questKey) {
+    if (!this.db) {
+      console.error("⚠️ Database not initialized!");
+      return null;
+    }
+    const result = this.db.exec("SELECT * FROM quest_progress WHERE quest_key = ?", [questKey]);
+    if (result.length > 0) {
+      return result[0].values.map(row => ({ id: row[0], quest_key: row[1], status: row[2] }));
+    }
+    return [];
+  }
 }

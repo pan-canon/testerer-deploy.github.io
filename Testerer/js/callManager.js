@@ -1,3 +1,4 @@
+// /js/callManager.js
 export class CallManager {
   /**
    * @param {EventManager} eventManager – менеджер дневника
@@ -50,16 +51,16 @@ export class CallManager {
       cameraBtn.classList.add("glowing");
     });
 
-ignoreCallBtn.addEventListener("click", async () => {
-  localStorage.setItem("callHandled", "true");
-  const ignoredText = this.languageManager.locales[this.languageManager.getLanguage()]["ignored_call"];
-  await this.endCall(ringtone, answerCallBtn, ignoreCallBtn, ignoredText);
-  
-  // Запускаем цепочку явлений для призраков, даже если пользователь не ответил
-  if (this.app.ghostManager) {
-    await this.app.ghostManager.triggerNextPhenomenon();
-  }
-});
+    ignoreCallBtn.addEventListener("click", async () => {
+      localStorage.setItem("callHandled", "true");
+      const ignoredText = this.languageManager.locales[this.languageManager.getLanguage()]["ignored_call"];
+      await this.endCall(ringtone, answerCallBtn, ignoreCallBtn, ignoredText);
+      
+      // Запускаем цепочку явлений для призраков, даже если пользователь не ответил
+      if (this.app.ghostManager) {
+        await this.app.ghostManager.triggerNextPhenomenon();
+      }
+    });
 
     this.app.mainScreen.appendChild(answerCallBtn);
     this.app.mainScreen.appendChild(ignoreCallBtn);

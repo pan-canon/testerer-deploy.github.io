@@ -1,6 +1,5 @@
+// /js/quests/mirrorQuest.js
 import { BaseQuest } from './baseQuest.js';
-// Предположим, что GhostManager импортируется в основном модуле или создаётся в App
-// и доступен через this.app.ghostManager
 
 export class MirrorQuest extends BaseQuest {
   /**
@@ -61,7 +60,6 @@ export class MirrorQuest extends BaseQuest {
       alert("✅ Задание «подойти к зеркалу» выполнено!");
 
       // После успешного завершения зеркального квеста запускаем цепочку призрака 1
-      // Предполагается, что в App уже создан экземпляр ghostManager
       if (this.app.ghostManager) {
         this.app.ghostManager.triggerNextPhenomenon();
       }

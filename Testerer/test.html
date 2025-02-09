@@ -48,6 +48,7 @@
     async function init() {
       await setupCamera();
       await loadModels();
+      console.log("Models loaded and camera set up, ready to capture!");
     }
 
     // Селфи: захват кадра с камеры и сохранение в формате base64
@@ -61,7 +62,7 @@
       selfieImage = canvas.toDataURL();
       console.log("Selfie captured:", selfieImage);
 
-      // Получаем дескриптор для селфи
+      // Проверяем, обнаружено ли лицо на селфи
       const detections = await detectFace(selfieImage);
       if (detections.length > 0) {
         selfieDescriptor = detections[0].descriptor;
@@ -84,10 +85,11 @@
       if (liveDetections.length > 0) {
         const liveDescriptor = liveDetections[0].descriptor;
 
+        // Сравниваем дескрипторы
         const distance = faceapi.euclideanDistance(selfieDescriptor, liveDescriptor);
         console.log("Face similarity:", distance);
 
-        if (distance < 0.6) {
+        if (distance < 0.6) { // Снижение порога для совпадений
           console.log("Faces match!");
         } else {
           console.log("Faces do not match.");
@@ -99,7 +101,9 @@
 
     // Функция для обнаружения лица и получения дескрипторов
     async function detectFace(imageData) {
-      const img = await faceapi.bufferToImage(imageData);
+      const img = new Image();
+      img.src = imageData;
+      await new Promise(resolve => img.onload = resolve);
       const detections = await faceapi.detectAllFaces(img)
         .withFaceLandmarks()
         .withFaceDescriptors();

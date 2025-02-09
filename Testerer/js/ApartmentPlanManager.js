@@ -186,34 +186,40 @@ export class ApartmentPlanManager {
     });
   }
 
-  saveToDB() {
-    const currentRooms = this.rooms.filter(room => room.floor === this.currentFloor);
-    this.dbManager.addApartmentRooms(this.currentFloor, currentRooms);
-  }
+saveToDB() {
+  const currentRooms = this.rooms.filter(room => room.floor === this.currentFloor);
+  console.log("Сохраняем в БД комнаты: ", currentRooms);
+  this.dbManager.addApartmentRooms(this.currentFloor, currentRooms);
+}
 
-  loadFromDB() {
-    this.dbManager.getApartmentPlan(this.currentFloor, (rooms) => {
-      if (!rooms || rooms.length === 0) {
-        console.log(`Локации для этажа ${this.currentFloor} не созданы, выбран дефолт.`);
-      } else {
-        console.log(`Найденные локации для этажа ${this.currentFloor}: `, rooms);
-      }
-      this.rooms = rooms;
-      this.renderRooms();
-    });
-  }
+loadFromDB() {
+  console.log("Загружаем данные для этажа:", this.currentFloor);
+  this.dbManager.getApartmentPlan(this.currentFloor, (rooms) => {
+    if (!rooms || rooms.length === 0) {
+      console.log(`Локации для этажа ${this.currentFloor} не созданы, выбран дефолт.`);
+    } else {
+      console.log(`Найденные локации для этажа ${this.currentFloor}: `, rooms);
+    }
+    this.rooms = rooms;
+    this.renderRooms();
+  });
+}
 
-  nextFloor() {
-    this.currentFloor++;
+
+nextFloor() {
+  console.log("Переключаем на следующий этаж");
+  this.currentFloor++;
+  this.loadFromDB();
+}
+
+prevFloor() {
+  if (this.currentFloor > 1) {
+    console.log("Переключаем на предыдущий этаж");
+    this.currentFloor--;
     this.loadFromDB();
   }
+}
 
-  prevFloor() {
-    if (this.currentFloor > 1) {
-      this.currentFloor--;
-      this.loadFromDB();
-    }
-  }
 
   showLocationTypeModal(onConfirm, onCancel) {
     const modalOverlay = document.createElement("div");

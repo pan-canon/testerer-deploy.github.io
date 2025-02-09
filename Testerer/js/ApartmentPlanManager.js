@@ -205,7 +205,6 @@ loadFromDB() {
   });
 }
 
-
 nextFloor() {
   console.log("Переключаем на следующий этаж");
   this.currentFloor++;
@@ -276,12 +275,14 @@ prevFloor() {
     const confirmBtn = document.createElement("button");
     confirmBtn.textContent = "Подтвердить";
     confirmBtn.style.marginRight = "10px";
-    confirmBtn.addEventListener("click", () => {
-      console.log("Нажата кнопка Подтвердить");
-      const selectedType = selectElem.value;
-      if (onConfirm) onConfirm(selectedType);
-      modalOverlay.remove();
-    });
+confirmBtn.addEventListener("click", () => {
+  console.log("Нажата кнопка Подтвердить, выбран тип:", selectElem.value);
+  const selectedType = selectElem.value;
+  if (onConfirm) onConfirm(selectedType);
+  console.log("Удаляем модальное окно");
+  modalOverlay.remove(); // Удаление модального окна
+});
+
     btnContainer.appendChild(confirmBtn);
     
     const cancelBtn = document.createElement("button");

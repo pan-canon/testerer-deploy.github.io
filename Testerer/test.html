@@ -52,25 +52,32 @@
     }
 
     // Селфи: захват кадра с камеры и сохранение в формате base64
-    captureButton.addEventListener("click", async () => {
-      console.log("Capturing selfie...");
-      const canvas = document.createElement('canvas');
-      canvas.width = videoElement.videoWidth;
-      canvas.height = videoElement.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-      selfieImage = canvas.toDataURL();
-      console.log("Selfie captured:", selfieImage);
+// Селфи: захват кадра с камеры и сохранение в формате base64
+captureButton.addEventListener("click", async () => {
+  console.log("Capturing selfie...");
+  const canvas = document.createElement('canvas');
+  canvas.width = videoElement.videoWidth;
+  canvas.height = videoElement.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+  selfieImage = canvas.toDataURL();
+  console.log("Selfie captured:", selfieImage);
 
-      // Проверяем, обнаружено ли лицо на селфи
-      const detections = await detectFace(selfieImage);
-      if (detections.length > 0) {
-        selfieDescriptor = detections[0].descriptor;
-        console.log("Selfie descriptor captured");
-      } else {
-        console.log("No face detected in selfie");
-      }
-    });
+  // Преобразуем строку base64 в объект Image
+  const img = new Image();
+  img.src = selfieImage;
+  await new Promise(resolve => img.onload = resolve);
+
+  // Проверяем, обнаружено ли лицо на селфи
+  const detections = await detectFace(img);
+  if (detections.length > 0) {
+    selfieDescriptor = detections[0].descriptor;
+    console.log("Selfie descriptor captured");
+  } else {
+    console.log("No face detected in selfie");
+  }
+});
+
 
     // Сравнение селфи с текущим кадром
     compareButton.addEventListener("click", async () => {

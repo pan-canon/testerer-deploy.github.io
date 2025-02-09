@@ -1,4 +1,3 @@
-// /js/quests/baseQuest.js
 export class BaseQuest {
   /**
    * @param {EventManager} eventManager – менеджер событий (для работы с дневником)

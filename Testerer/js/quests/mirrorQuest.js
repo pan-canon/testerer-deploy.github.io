@@ -1,4 +1,3 @@
-// /js/quests/mirrorQuest.js
 import { BaseQuest } from './baseQuest.js';
 
 export class MirrorQuest extends BaseQuest {

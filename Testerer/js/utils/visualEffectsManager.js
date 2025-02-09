@@ -1,4 +1,3 @@
-// /js/visualEffectsManager.js
 export class VisualEffectsManager {
   triggerMirrorEffect() {
     // Эффект затемнения фона

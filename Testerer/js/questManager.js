@@ -1,4 +1,3 @@
-// /js/questManager.js
 import { MirrorQuest } from './quests/mirrorQuest.js';
 
 export class QuestManager {

@@ -1,4 +1,3 @@
-// /js/profileManager.js
 export class ProfileManager {
   isProfileSaved() {
     return !!localStorage.getItem('profile');

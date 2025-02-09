@@ -1,4 +1,3 @@
-// /js/ghosts/ghostManager.js
 export class GhostManager {
   constructor(eventManager, profileManager, app) {
     this.eventManager = eventManager;

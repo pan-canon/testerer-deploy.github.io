@@ -1,4 +1,3 @@
-// /js/databaseManager.js
 export class DatabaseManager {
   constructor() {
     this.db = null;

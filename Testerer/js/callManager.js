@@ -1,4 +1,3 @@
-// /js/callManager.js
 export class CallManager {
   /**
    * @param {EventManager} eventManager – менеджер дневника

@@ -1,4 +1,3 @@
-// /js/gameEventManager.js
 import { WelcomeEvent } from './events/welcomeEvent.js';
 
 export class GameEventManager {

@@ -1,4 +1,3 @@
-// /js/events/baseEvent.js
 export class BaseEvent {
   /**
    * @param {EventManager} eventManager – менеджер для работы с дневником

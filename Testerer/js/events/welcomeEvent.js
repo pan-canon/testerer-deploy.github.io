@@ -1,4 +1,3 @@
-// /js/events/welcomeEvent.js
 import { BaseEvent } from './baseEvent.js';
 import { VisualEffectsManager } from '../utils/visualEffectsManager.js';
 

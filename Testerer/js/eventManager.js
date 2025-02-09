@@ -1,4 +1,3 @@
-// /js/eventManager.js
 export class EventManager {
   constructor(databaseManager, languageManager, ghostManager) {
     this.databaseManager = databaseManager;

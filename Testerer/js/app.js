@@ -27,7 +27,7 @@ export class App {
     this.profileNameElem = document.getElementById('profile-name');
     this.profilePhotoElem = document.getElementById('profile-photo');
     this.resetBtn = document.getElementById('reset-data');
-    this.exportBtn = document.getElementById('export-profile');
+    this.exportBtn = document.getElementById('export-profile-btn');
     this.importFileInput = document.getElementById('import-file');
     this.importBtn = document.getElementById('import-profile-btn');
     
@@ -236,7 +236,7 @@ async toggleCameraView() {
   const toggleDiaryBtn = document.getElementById("toggle-diary");
   const buttonsToHide = [
     document.getElementById("reset-data"),
-    document.getElementById("export-profile"),
+    document.getElementById("export-profile-btn"),
     document.getElementById("import-profile-container")
   ];
 

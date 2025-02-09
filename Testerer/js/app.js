@@ -1,5 +1,3 @@
-// /js/app.js
-
 import { LanguageManager } from './languageManager.js';
 import { cameraSectionManager } from './cameraSectionManager.js';
 import { ImageUtils } from './utils/imageUtils.js';
@@ -54,7 +52,7 @@ export class App {
     this.init();
   }
 
-  loadAppState() {
+loadAppState() {
     // Загружаем состояние из localStorage
     const savedGhostId = localStorage.getItem('currentGhostId');
     if (savedGhostId) {
@@ -69,8 +67,6 @@ export class App {
     this.loadAppState();
     // Дополнительная инициализация приложения
   }
-}
-
   
   bindEvents() {
     // Привязка событий формы и переключения экранов

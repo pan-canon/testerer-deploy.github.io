@@ -1,5 +1,5 @@
 // QuestManager.js
-import { GhostEvent1 } from './ghosts/GhostEvent1.js';
+import { GhostEvent1 } from './ghosts/ghostEvent1.js';
 
 export class QuestManager {
   constructor(eventManager, appInstance) {

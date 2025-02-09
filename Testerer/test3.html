@@ -40,6 +40,10 @@
             font-size: 18px;
             font-weight: bold;
         }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
@@ -50,6 +54,7 @@
     <input type="file" id="image" accept="image/*" />
     <button id="smileButton">Добавить улыбку</button>
 
+    <div id="imageContainer"></div>
     <canvas id="canvas" style="display: none;"></canvas>
     <div class="result" id="result"></div>
 </div>
@@ -67,13 +72,19 @@
 
     // Функция для добавления улыбки
     async function addSmile() {
-        const image = document.getElementById('image').files[0];
-        if (!image) {
+        const imageInput = document.getElementById('image').files[0];
+        if (!imageInput) {
             alert('Пожалуйста, загрузите изображение.');
             return;
         }
 
-        const img = await faceapi.bufferToImage(image);
+        const img = await faceapi.bufferToImage(imageInput);
+        
+        // Отображаем загруженное изображение на странице
+        const imageContainer = document.getElementById('imageContainer');
+        imageContainer.innerHTML = ''; // Очистить предыдущие изображения
+        imageContainer.appendChild(img);
+
         const canvas = document.getElementById('canvas');
         const displaySize = { width: img.width, height: img.height };
         faceapi.matchDimensions(canvas, displaySize);
@@ -113,6 +124,7 @@
         ctx.lineWidth = 2;
         ctx.stroke();
 
+        // Покажем канвас с изменённым изображением
         document.getElementById('result').textContent = 'Улыбка добавлена!';
         document.body.appendChild(canvas);  // Показываем изменённое изображение
     }

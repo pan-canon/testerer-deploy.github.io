@@ -52,6 +52,7 @@ function showLocationTypeModal(onConfirm, onCancel) {
   
   const confirmBtn = document.createElement("button");
   confirmBtn.textContent = "Подтвердить";
+  confirmBtn.id = "confirm-btn"; // Добавлен id
   confirmBtn.style.marginRight = "10px";
   confirmBtn.addEventListener("click", () => {
     console.log("Нажата кнопка Подтвердить");
@@ -60,15 +61,33 @@ function showLocationTypeModal(onConfirm, onCancel) {
     modalOverlay.remove();
   });
   btnContainer.appendChild(confirmBtn);
-  
+
   const cancelBtn = document.createElement("button");
   cancelBtn.textContent = "Отмена";
+  cancelBtn.id = "cancel-btn"; // Добавлен id
   cancelBtn.addEventListener("click", () => {
     console.log("Нажата кнопка Отмена");
     if (onCancel) onCancel();
     modalOverlay.remove();
   });
   btnContainer.appendChild(cancelBtn);
+
+const nextFloorBtn = document.createElement("button");
+nextFloorBtn.textContent = "Следующий этаж";
+nextFloorBtn.id = "next-floor-btn"; // Добавлен id
+nextFloorBtn.addEventListener("click", () => {
+  this.nextFloor();
+});
+btnContainer.appendChild(nextFloorBtn);
+
+const prevFloorBtn = document.createElement("button");
+prevFloorBtn.textContent = "Предыдущий этаж";
+prevFloorBtn.id = "prev-floor-btn"; // Добавлен id
+prevFloorBtn.addEventListener("click", () => {
+  this.prevFloor();
+});
+btnContainer.appendChild(prevFloorBtn);
+
   
   modal.appendChild(btnContainer);
   modalOverlay.appendChild(modal);

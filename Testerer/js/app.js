@@ -52,7 +52,7 @@ export class App {
     this.init();
   }
 
-loadAppState() {
+  loadAppState() {
     // Загружаем состояние из localStorage
     const savedGhostId = localStorage.getItem('currentGhostId');
     if (savedGhostId) {

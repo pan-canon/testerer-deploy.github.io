@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Face-api.js Example</title>
-  <!-- Подключаем face-api.js из локальной папки -->
   <script src="js/libs/face-api.js"></script>
 </head>
 <body>
@@ -19,6 +18,7 @@
     let captureButton = document.getElementById("capture");
     let compareButton = document.getElementById("compare");
     let selfieImage = null; // Для хранения селфи
+    let selfieDescriptor = null; // Для хранения дескриптора лица из селфи
 
     // Инициализация камеры
     async function setupCamera() {
@@ -40,7 +40,7 @@
       console.log("Models loaded");
     }
 
-    // Загружаем камеру и модели
+    // Запуск инициализации камеры и моделей
     async function init() {
       await setupCamera();
       await loadModels();
@@ -54,29 +54,43 @@
       ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
       selfieImage = canvas.toDataURL();
       console.log("Selfie captured:", selfieImage);
+
+      // Получаем дескриптор для селфи
+      const detections = await detectFace(selfieImage);
+      if (detections.length > 0) {
+        selfieDescriptor = detections[0].descriptor;
+        console.log("Selfie descriptor captured");
+      }
     });
 
     // Сравнение селфи с текущим кадром
     compareButton.addEventListener("click", async () => {
-      if (!selfieImage) {
+      if (!selfieDescriptor) {
         console.log("No selfie captured to compare with.");
         return;
       }
 
       console.log("Comparing selfie with live camera feed...");
-      const faceMatcher = new faceapi.FaceMatcher(await detectFace(selfieImage));
-      const liveFace = await detectFace(videoElement);
 
-      const distance = faceMatcher.computeBestMatch(liveFace[0].descriptor);
-      console.log("Face similarity:", distance.toString());
-      if (distance.distance < 0.6) {
-        console.log("Faces match!");
+      const liveDetections = await detectFace(videoElement);
+      if (liveDetections.length > 0) {
+        const liveDescriptor = liveDetections[0].descriptor;
+
+        // Сравниваем дескрипторы
+        const distance = faceapi.euclideanDistance(selfieDescriptor, liveDescriptor);
+        console.log("Face similarity:", distance);
+
+        if (distance < 0.6) { // Снижение порога для совпадений
+          console.log("Faces match!");
+        } else {
+          console.log("Faces do not match.");
+        }
       } else {
-        console.log("Faces do not match.");
+        console.log("No face detected in the live camera feed.");
       }
     });
 
-    // Функция для обнаружения лица
+    // Функция для обнаружения лица и получения дескрипторов
     async function detectFace(imageData) {
       const img = await faceapi.bufferToImage(imageData);
       const detections = await faceapi.detectAllFaces(img)
@@ -85,7 +99,7 @@
       return detections;
     }
 
-    // Запускаем инициализацию
+    // Запуск инициализации
     init();
   </script>
 </body>

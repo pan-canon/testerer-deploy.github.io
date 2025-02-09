@@ -106,6 +106,56 @@ async function detectFace(imageData) {
 }
 
 // Сравнение селфи с текущим кадром
+captureButton.addEventListener("click", async () => {
+  console.log("Capturing selfie...");
+  const canvas = document.createElement('canvas');
+  canvas.width = videoElement.videoWidth;
+  canvas.height = videoElement.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+  selfieImage = canvas.toDataURL();
+  console.log("Selfie captured:", selfieImage);
+
+  // Преобразуем строку base64 в объект Image
+  const img = new Image();
+  img.src = selfieImage;
+  await new Promise(resolve => {
+    img.onload = () => {
+      console.log("Image loaded successfully");
+      resolve();
+    };
+  });
+
+  // Проверяем, обнаружено ли лицо на селфи
+  const detections = await detectFace(img);
+  console.log("Face detections on selfie:", detections);
+
+  if (detections.length > 0) {
+    selfieDescriptor = detections[0].descriptor;
+    console.log("Selfie descriptor captured:", selfieDescriptor);
+  } else {
+    console.log("No face detected in selfie");
+  }
+});
+
+// Функция для обнаружения лица и получения дескрипторов
+async function detectFace(imageData) {
+  console.log("Detecting face on image...");
+  const detections = await faceapi.detectAllFaces(imageData)
+    .withFaceLandmarks()
+    .withFaceDescriptors();
+  
+  console.log("Detection results:", detections);
+  
+  if (detections && detections.length > 0) {
+    return detections;
+  } else {
+    console.log("No faces detected in this image.");
+    return [];
+  }
+}
+
+// Сравнение селфи с текущим кадром
 compareButton.addEventListener("click", async () => {
   if (!selfieDescriptor) {
     console.log("No selfie captured to compare with.");
@@ -133,6 +183,7 @@ compareButton.addEventListener("click", async () => {
     console.log("No face detected in the live camera feed.");
   }
 });
+
 
 
 // Функция для обнаружения лица и получения дескрипторов

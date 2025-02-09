@@ -1,8 +1,9 @@
 // /js/eventManager.js
 export class EventManager {
-  constructor(databaseManager, languageManager) {
+  constructor(databaseManager, languageManager, ghostManager) {
     this.databaseManager = databaseManager;
     this.languageManager = languageManager;
+    this.ghostManager = ghostManager;
     // Контейнер для дневника должен быть в index.html с id="diary"
     this.diaryContainer = document.getElementById("diary");
   }
@@ -81,5 +82,17 @@ export class EventManager {
     // Добавляем запись с ключом "mirror_quest" – при отображении будет локализовано
     this.addDiaryEntry("mirror_quest");
     console.log("🎭 Starting mirror quest...");
+  }
+
+  // Новый метод для начала квеста для текущего призрака
+  async startGhostQuest() {
+    const ghost = this.ghostManager.getCurrentGhost();
+    if (ghost) {
+      const questKey = `ghost_${ghost.id}_quest`;
+      await this.addDiaryEntry(questKey);
+      console.log(`👻 Starting quest for ${ghost.name}...`);
+    } else {
+      console.error("⚠️ No active ghost found.");
+    }
   }
 }

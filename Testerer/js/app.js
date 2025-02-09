@@ -1,3 +1,5 @@
+// /js/app.js
+
 import { LanguageManager } from './languageManager.js';
 import { cameraSectionManager } from './cameraSectionManager.js';
 import { ImageUtils } from './utils/imageUtils.js';
@@ -37,12 +39,13 @@ export class App {
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
     // Сначала создаём eventManager, затем CallManager, QuestManager и GameEventManager
-this.eventManager = new EventManager(this.databaseManager, this.languageManager);
-this.callManager = new CallManager(this.eventManager, this, this.languageManager);
-this.questManager = new QuestManager(this.eventManager, this);
-this.gameEventManager = new GameEventManager(this.eventManager, this, this.languageManager);
-this.showProfileModal = new ShowProfileModal(this);
-this.ghostManager = new GhostManager(this.eventManager, this.profileManager, this);
+    this.eventManager = new EventManager(this.databaseManager, this.languageManager);
+    this.callManager = new CallManager(this.eventManager, this, this.languageManager);
+    this.questManager = new QuestManager(this.eventManager, this);
+    this.gameEventManager = new GameEventManager(this.eventManager, this, this.languageManager);
+    this.showProfileModal = new ShowProfileModal(this);
+    this.ghostManager = new GhostManager(this.eventManager, this.profileManager, this);
+    
     // Технические поля для обработки изображений
     this.tempCanvas = document.createElement("canvas");
     this.tempCtx = this.tempCanvas.getContext("2d");
@@ -50,6 +53,24 @@ this.ghostManager = new GhostManager(this.eventManager, this.profileManager, thi
     this.bindEvents();
     this.init();
   }
+
+  loadAppState() {
+    // Загружаем состояние из localStorage
+    const savedGhostId = localStorage.getItem('currentGhostId');
+    if (savedGhostId) {
+      this.ghostManager.setCurrentGhost(parseInt(savedGhostId));
+    } else {
+      this.ghostManager.setCurrentGhost(1); // Устанавливаем Призрак 1 как текущего по умолчанию
+    }
+  }
+
+  init() {
+    // Загружаем состояние при инициализации
+    this.loadAppState();
+    // Дополнительная инициализация приложения
+  }
+}
+
   
   bindEvents() {
     // Привязка событий формы и переключения экранов

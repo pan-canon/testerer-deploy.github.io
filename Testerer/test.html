@@ -52,42 +52,6 @@
     }
 
     // Селфи: захват кадра с камеры и сохранение в формате base64
-// Сохранение селфи и дескриптора в localStorage
-captureButton.addEventListener("click", async () => {
-  console.log("Capturing selfie...");
-  const canvas = document.createElement('canvas');
-  canvas.width = videoElement.videoWidth;
-  canvas.height = videoElement.videoHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-  selfieImage = canvas.toDataURL();
-  console.log("Selfie captured:", selfieImage);
-
-  const img = new Image();
-  img.src = selfieImage;
-  await new Promise(resolve => {
-    img.onload = () => {
-      console.log("Image loaded successfully");
-      resolve();
-    };
-  });
-
-  const detections = await detectFace(img);
-  console.log("Face detections on selfie:", detections);
-
-  if (detections.length > 0) {
-    selfieDescriptor = detections[0].descriptor;
-    console.log("Selfie descriptor captured:", selfieDescriptor);
-
-    // Сохраняем в localStorage
-    localStorage.setItem('selfie', selfieImage);
-    localStorage.setItem('selfieDescriptor', JSON.stringify(selfieDescriptor));
-    console.log("Selfie and descriptor saved to localStorage");
-  } else {
-    console.log("No face detected in selfie");
-  }
-});
-
 // Сравнение с сохраненным селфи
 compareButton.addEventListener("click", async () => {
   console.log("Comparing with saved selfie...");

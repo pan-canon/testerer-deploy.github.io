@@ -57,7 +57,7 @@ function showLocationTypeModal(onConfirm, onCancel) {
     console.log("Нажата кнопка Подтвердить");
     const selectedType = selectElem.value;
     if (onConfirm) onConfirm(selectedType);
-    modalOverlay.remove();
+    modalOverlay.remove();  // Закрытие модального окна после подтверждения
   });
   btnContainer.appendChild(confirmBtn);
   
@@ -66,7 +66,7 @@ function showLocationTypeModal(onConfirm, onCancel) {
   cancelBtn.addEventListener("click", () => {
     console.log("Нажата кнопка Отмена");
     if (onCancel) onCancel();
-    modalOverlay.remove();
+    modalOverlay.remove();  // Закрытие модального окна после отмены
   });
   btnContainer.appendChild(cancelBtn);
   
@@ -75,7 +75,9 @@ function showLocationTypeModal(onConfirm, onCancel) {
   document.body.appendChild(modalOverlay);
 }
 
-export class ApartmentPlanManager {
+// Включим функцию в класс ApartmentPlanManager
+
+class ApartmentPlanManager {
   constructor(containerId, dbManager) {
     this.container = document.getElementById(containerId);
     this.dbManager = dbManager;
@@ -88,9 +90,9 @@ export class ApartmentPlanManager {
     this.gridCols = 10;
     this.createTable();
     this.attachEvents();
-this.dbManager.initDatabasePromise.then(() => {
-  this.loadFromDB();
-});
+    this.dbManager.initDatabasePromise.then(() => {
+      this.loadFromDB();
+    });
   }
   
   createTable() {
@@ -181,56 +183,55 @@ this.dbManager.initDatabasePromise.then(() => {
     }
   }
   
-finishSelection(e) {
-  if (this.isSelecting) {
-    this.isSelecting = false;
-    // Если не было выделено ни одной ячейки, задаем дефолтное помещение на весь план
-    if (!this.startCell || !this.endCell) {
-      this.startCell = { row: 0, col: 0 };
-      this.endCell = { row: this.gridRows - 1, col: this.gridCols - 1 };
-    }
-    
-    // Вызываем модальное окно для выбора типа помещения
-    showLocationTypeModal(
-      (selectedType) => {
-        if (this.app && this.app.profileManager) {
-          this.app.profileManager.saveLocationType(selectedType);
-        }
-        const room = {
-          floor: this.currentFloor,
-          startRow: Math.min(this.startCell.row, this.endCell.row),
-          startCol: Math.min(this.startCell.col, this.endCell.col),
-          endRow: Math.max(this.startCell.row, this.endCell.row),
-          endCol: Math.max(this.startCell.col, this.endCell.col),
-          type: selectedType
-        };
-        this.rooms.push(room);
-        this.saveToDB();
-        this.renderRooms();
-      },
-      () => {
-        // При отмене устанавливаем значение по умолчанию "Другое"
-        console.log("Локация не выбрана, выбран тип по умолчанию: 'Другое'.");
-        if (this.app && this.app.profileManager) {
-          this.app.profileManager.saveLocationType("Другое");
-        }
-        const room = {
-          floor: this.currentFloor,
-          startRow: Math.min(this.startCell.row, this.endCell.row),
-          startCol: Math.min(this.startCell.col, this.endCell.col),
-          endRow: Math.max(this.startCell.row, this.endCell.row),
-          endCol: Math.max(this.startCell.col, this.endCell.col),
-          type: "Другое"
-        };
-        this.rooms.push(room);
-        this.saveToDB();
-        this.renderRooms();
+  finishSelection(e) {
+    if (this.isSelecting) {
+      this.isSelecting = false;
+      // Если не было выделено ни одной ячейки, задаем дефолтное помещение на весь план
+      if (!this.startCell || !this.endCell) {
+        this.startCell = { row: 0, col: 0 };
+        this.endCell = { row: this.gridRows - 1, col: this.gridCols - 1 };
       }
-    );
+      
+      // Вызываем модальное окно для выбора типа помещения
+      showLocationTypeModal(
+        (selectedType) => {
+          if (this.app && this.app.profileManager) {
+            this.app.profileManager.saveLocationType(selectedType);
+          }
+          const room = {
+            floor: this.currentFloor,
+            startRow: Math.min(this.startCell.row, this.endCell.row),
+            startCol: Math.min(this.startCell.col, this.endCell.col),
+            endRow: Math.max(this.startCell.row, this.endCell.row),
+            endCol: Math.max(this.startCell.col, this.endCell.col),
+            type: selectedType
+          };
+          this.rooms.push(room);
+          this.saveToDB();
+          this.renderRooms();
+        },
+        () => {
+          // При отмене устанавливаем значение по умолчанию "Другое"
+          console.log("Локация не выбрана, выбран тип по умолчанию: 'Другое'.");
+          if (this.app && this.app.profileManager) {
+            this.app.profileManager.saveLocationType("Другое");
+          }
+          const room = {
+            floor: this.currentFloor,
+            startRow: Math.min(this.startCell.row, this.endCell.row),
+            startCol: Math.min(this.startCell.col, this.endCell.col),
+            endRow: Math.max(this.startCell.row, this.endCell.row),
+            endCol: Math.max(this.startCell.col, this.endCell.col),
+            type: "Другое"
+          };
+          this.rooms.push(room);
+          this.saveToDB();
+          this.renderRooms();
+        }
+      );
+    }
   }
-}
 
-  
   highlightSelection() {
     // Сброс подсветки всех ячеек
     Array.from(this.table.getElementsByTagName("td")).forEach(cell => {
@@ -264,48 +265,42 @@ finishSelection(e) {
     });
   }
   
-saveToDB() {
-  console.log("Сохраняем данные этажей...");
-  const currentRooms = this.rooms.filter(room => room.floor === this.currentFloor);
-  console.log("Текущие локации для этажа", this.currentFloor, currentRooms);
-  
-  // Проверка, что данные сохраняются корректно
-  this.dbManager.addApartmentRooms(this.currentFloor, currentRooms).then(() => {
-    console.log("Локации успешно сохранены в базу данных!");
-    this.renderRooms();  // Обновление отображения на экране
-  }).catch(error => {
-    console.error("Ошибка при сохранении данных: ", error);
-  });
-}
+  saveToDB() {
+    console.log("Сохраняем данные этажей...");
+    const currentRooms = this.rooms.filter(room => room.floor === this.currentFloor);
+    console.log("Текущие локации для этажа", this.currentFloor, currentRooms);
+    
+    this.dbManager.addApartmentRooms(this.currentFloor, currentRooms).then(() => {
+      console.log("Локации успешно сохранены в базу данных!");
+      this.renderRooms();  // Обновление отображения на экране
+    }).catch(error => {
+      console.error("Ошибка при сохранении данных: ", error);
+    });
+  }
 
-  
-loadFromDB() {
-  console.log(`Загружаем данные для этажа ${this.currentFloor}...`);
-  this.dbManager.getApartmentPlan(this.currentFloor, (rooms) => {
-    console.log(`Загружены локации для этажа ${this.currentFloor}: `, rooms);
-    if (!rooms || rooms.length === 0) {
-      console.log("Локации не найдены, создаем по умолчанию.");
-    }
-    this.rooms = rooms || [];
-    this.renderRooms();
-  });
-}
+  loadFromDB() {
+    console.log(`Загружаем данные для этажа ${this.currentFloor}...`);
+    this.dbManager.getApartmentPlan(this.currentFloor, (rooms) => {
+      console.log(`Загружены локации для этажа ${this.currentFloor}: `, rooms);
+      if (!rooms || rooms.length === 0) {
+        console.log("Локации не найдены, создаем по умолчанию.");
+      }
+      this.rooms = rooms || [];
+      this.renderRooms();
+    });
+  }
 
-
-
-  
-nextFloor() {
-  console.log("Переход на следующий этаж...");
-  this.currentFloor++;
-  this.loadFromDB();
-}
-
-prevFloor() {
-  if (this.currentFloor > 1) {
-    console.log("Переход на предыдущий этаж...");
-    this.currentFloor--;
+  nextFloor() {
+    console.log("Переход на следующий этаж...");
+    this.currentFloor++;
     this.loadFromDB();
   }
-}
 
+  prevFloor() {
+    if (this.currentFloor > 1) {
+      console.log("Переход на предыдущий этаж...");
+      this.currentFloor--;
+      this.loadFromDB();
+    }
+  }
 }

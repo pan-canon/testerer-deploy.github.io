@@ -52,42 +52,87 @@
     }
 
     // Селфи: захват кадра с камеры и сохранение в формате base64
-    captureButton.addEventListener("click", async () => {
-      console.log("Capturing selfie...");
-      const canvas = document.createElement('canvas');
-      canvas.width = videoElement.videoWidth;
-      canvas.height = videoElement.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-      selfieImage = canvas.toDataURL();
-      console.log("Selfie captured:", selfieImage);
+// Сохранение селфи и дескриптора в localStorage
+captureButton.addEventListener("click", async () => {
+  console.log("Capturing selfie...");
+  const canvas = document.createElement('canvas');
+  canvas.width = videoElement.videoWidth;
+  canvas.height = videoElement.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+  selfieImage = canvas.toDataURL();
+  console.log("Selfie captured:", selfieImage);
 
-      // Преобразуем строку base64 в объект Image
-      const img = new Image();
-      img.src = selfieImage;
-      await new Promise(resolve => {
-        img.onload = () => {
-          console.log("Image loaded successfully");
-          resolve();
-        };
-      });
+  const img = new Image();
+  img.src = selfieImage;
+  await new Promise(resolve => {
+    img.onload = () => {
+      console.log("Image loaded successfully");
+      resolve();
+    };
+  });
 
-      // Проверяем, обнаружено ли лицо на селфи
-      const detections = await detectFace(img);
-      console.log("Face detections on selfie:", detections);
+  const detections = await detectFace(img);
+  console.log("Face detections on selfie:", detections);
 
-      if (detections.length > 0) {
-        selfieDescriptor = detections[0].descriptor;
-        console.log("Selfie descriptor captured:", selfieDescriptor);
+  if (detections.length > 0) {
+    selfieDescriptor = detections[0].descriptor;
+    console.log("Selfie descriptor captured:", selfieDescriptor);
 
-        // Сохраняем селфи в localStorage
-        localStorage.setItem('selfie', selfieImage);
-        localStorage.setItem('selfieDescriptor', JSON.stringify(selfieDescriptor));
-        console.log("Selfie and descriptor saved to localStorage");
-      } else {
-        console.log("No face detected in selfie");
-      }
-    });
+    // Сохраняем в localStorage
+    localStorage.setItem('selfie', selfieImage);
+    localStorage.setItem('selfieDescriptor', JSON.stringify(selfieDescriptor));
+    console.log("Selfie and descriptor saved to localStorage");
+  } else {
+    console.log("No face detected in selfie");
+  }
+});
+
+// Сравнение с сохраненным селфи
+compareButton.addEventListener("click", async () => {
+  console.log("Comparing with saved selfie...");
+
+  // Извлекаем сохраненные данные из localStorage
+  const savedSelfie = localStorage.getItem('selfie');
+  const savedSelfieDescriptor = JSON.parse(localStorage.getItem('selfieDescriptor'));
+
+  if (!savedSelfie || !savedSelfieDescriptor) {
+    console.log("No selfie found in localStorage. Capture a selfie first.");
+    return;
+  }
+
+  // Преобразуем сохранённое селфи обратно в изображение
+  const img = new Image();
+  img.src = savedSelfie;
+  await new Promise(resolve => {
+    img.onload = () => {
+      console.log("Saved selfie loaded successfully");
+      resolve();
+    };
+  });
+
+  // Получаем дескриптор для текущего кадра с камеры
+  const currentDetections = await detectFace(img);
+  console.log("Face detections on current frame:", currentDetections);
+
+  if (currentDetections.length > 0) {
+    const currentDescriptor = currentDetections[0].descriptor;
+    console.log("Current descriptor:", currentDescriptor);
+
+    // Сравниваем дескрипторы
+    const distance = faceapi.euclideanDistance(savedSelfieDescriptor, currentDescriptor);
+    console.log("Distance between descriptors:", distance);
+
+    if (distance < 0.6) {
+      console.log("Faces match!");
+    } else {
+      console.log("Faces do not match.");
+    }
+  } else {
+    console.log("No face detected in current frame.");
+  }
+});
+
 
     // Функция для обнаружения лица и получения дескрипторов
     async function detectFace(imageData) {

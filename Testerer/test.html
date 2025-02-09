@@ -32,12 +32,16 @@
     // Загружаем модели
     async function loadModels() {
       console.log("Loading models...");
-      await Promise.all([
-        faceapi.nets.ssdMobilenetv1.loadFromUri('/models'),
-        faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
-        faceapi.nets.faceRecognitionNet.loadFromUri('/models')
-      ]);
-      console.log("Models loaded");
+      try {
+        await Promise.all([
+          faceapi.nets.ssdMobilenetv1.loadFromUri('/models'),
+          faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
+          faceapi.nets.faceRecognitionNet.loadFromUri('/models')
+        ]);
+        console.log("Models loaded");
+      } catch (error) {
+        console.log("Error loading models:", error);
+      }
     }
 
     // Запуск инициализации камеры и моделей
@@ -62,6 +66,8 @@
       if (detections.length > 0) {
         selfieDescriptor = detections[0].descriptor;
         console.log("Selfie descriptor captured");
+      } else {
+        console.log("No face detected in selfie");
       }
     });
 
@@ -82,7 +88,7 @@
         const distance = faceapi.euclideanDistance(selfieDescriptor, liveDescriptor);
         console.log("Face similarity:", distance);
 
-        if (distance < 0.6) { // Снижение порога для совпадений
+        if (distance < 0.6) {
           console.log("Faces match!");
         } else {
           console.log("Faces do not match.");

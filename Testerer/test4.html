@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Мультяшная 3D версия пространства</title>
+  <title>Мультяшная 3D версия комнаты с AR</title>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-ar.js"></script>
   <style>
@@ -12,23 +12,26 @@
   </style>
 </head>
 <body>
-  <!-- Основная сцена для AR -->
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-    
-    <!-- Камера для отслеживания пространства -->
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;">
+
+    <!-- Камера для отслеживания положения устройства -->
     <a-entity camera></a-entity>
-    
-    <!-- Мультяшная плоскость пола (простая зеленая поверхность) -->
-    <a-entity geometry="primitive: plane; width: 10; height: 10"
+
+    <!-- Плоскость пола (мультяшный стиль) -->
+    <a-entity id="floor" geometry="primitive: plane; width: 10; height: 10"
               material="color: #90ee90; shader: flat; opacity: 0.6"
-              position="0 0 -5"></a-entity>
-    
-    <!-- Мультяшные стены (яркие цвета) -->
-    <a-box color="#add8e6" position="5 2.5 -3" scale="1 5 1"></a-box> <!-- Стена 1 -->
-    <a-box color="#ff6347" position="-5 2.5 -3" scale="1 5 1"></a-box> <!-- Стена 2 -->
-    
-    <!-- Углы комнаты (мультяшные объекты) -->
+              position="0 0 0"></a-entity>
+
+    <!-- Мультяшная стена 1 -->
+    <a-box color="#ff6347" position="5 2.5 -3" scale="1 5 1"></a-box>
+
+    <!-- Мультяшная стена 2 -->
+    <a-box color="#add8e6" position="-5 2.5 -3" scale="1 5 1"></a-box>
+
+    <!-- Мультяшный угол комнаты -->
     <a-box color="#ff7f50" position="5 2.5 -8" scale="1 5 1"></a-box>
+
+    <!-- Мультяшный угол комнаты -->
     <a-box color="#ff7f50" position="-5 2.5 -8" scale="1 5 1"></a-box>
 
     <!-- Камера для отслеживания маркеров -->

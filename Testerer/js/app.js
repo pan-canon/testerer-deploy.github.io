@@ -6,7 +6,7 @@ import { ApartmentPlanManager } from './ApartmentPlanManager.js';
 import { DatabaseManager } from './databaseManager.js';
 import { ShowProfileModal } from './showProfileModal.js';
 import { EventManager } from './eventManager.js';
-import { CallManager } from './callManager.js';
+// import { CallManager } from './callManager.js'; // Удаляем CallManager, т.к. он больше не используется
 import { QuestManager } from './questManager.js';
 import { GameEventManager } from './gameEventManager.js';
 import { GhostManager } from './ghostManager.js';
@@ -31,26 +31,34 @@ export class App {
     this.importFileInput = document.getElementById('import-file');
     this.importBtn = document.getElementById('import-profile-btn');
     
-    // Менеджеры
+    // Инициализация менеджеров
     this.languageManager = new LanguageManager('language-selector');
     this.cameraSectionManager = new cameraSectionManager();
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
-    // Сначала создаём eventManager, затем CallManager, QuestManager и GameEventManager
+    
+    // Создаем eventManager. Обратите внимание, что больше не создаем CallManager,
+    // т.к. функциональность звонков удалена.
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
-    this.callManager = new CallManager(this.eventManager, this, this.languageManager);
+    // this.callManager = new CallManager(this.eventManager, this, this.languageManager); // Удалено!
+    
     this.questManager = new QuestManager(this.eventManager, this);
     this.gameEventManager = new GameEventManager(this.eventManager, this, this.languageManager);
     this.showProfileModal = new ShowProfileModal(this);
     this.ghostManager = new GhostManager(this.eventManager, this.profileManager, this);
     
-    // Технические поля для обработки изображений
+    // Технические поля для обработки изображений: временная канва для создания снимков
     this.tempCanvas = document.createElement("canvas");
     this.tempCtx = this.tempCanvas.getContext("2d");
 
+    // Привязываем события интерфейса
     this.bindEvents();
+    // Запускаем инициализацию приложения (например, загрузку состояния и базу данных)
     this.init();
   }
+  
+  // Остальные методы класса App (loadAppState, init, bindEvents, и т.д.)
+}
 
   loadAppState() {
     // Загружаем состояние из localStorage

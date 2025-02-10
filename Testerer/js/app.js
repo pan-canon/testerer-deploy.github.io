@@ -13,68 +13,104 @@ import { GhostManager } from './ghostManager.js';
 
 export class App {
   constructor() {
-    // DOM-элементы экранов и формы
-    this.registrationScreen = document.getElementById('registration-screen');
-    this.selfieScreen = document.getElementById('selfie-screen');
-    this.mainScreen = document.getElementById('main-screen');
-    this.nameInput = document.getElementById('player-name');
-    this.genderSelect = document.getElementById('player-gender');
-    this.nextStepBtn = document.getElementById('next-step-btn');
-    this.selfieVideo = document.getElementById('selfie-video');
-    this.captureBtn = document.getElementById('capture-btn');
-    this.selfiePreview = document.getElementById('selfie-preview');
-    this.completeBtn = document.getElementById('complete-registration');
-    this.profileNameElem = document.getElementById('profile-name');
-    this.profilePhotoElem = document.getElementById('profile-photo');
-    this.resetBtn = document.getElementById('reset-data');
-    this.exportBtn = document.getElementById('export-profile-btn');
-    this.importFileInput = document.getElementById('import-file');
-    this.importBtn = document.getElementById('import-profile-btn');
-    
-    // Инициализация менеджеров
-    this.languageManager = new LanguageManager('language-selector');
-    this.cameraSectionManager = new cameraSectionManager();
-    this.profileManager = new ProfileManager();
-    this.databaseManager = new DatabaseManager();
-    
-    // Создаем eventManager. Обратите внимание, что больше не создаем CallManager,
-    // т.к. функциональность звонков удалена.
-    this.eventManager = new EventManager(this.databaseManager, this.languageManager);
-    // this.callManager = new CallManager(this.eventManager, this, this.languageManager); // Удалено!
-    
-    this.questManager = new QuestManager(this.eventManager, this);
-    this.gameEventManager = new GameEventManager(this.eventManager, this, this.languageManager);
-    this.showProfileModal = new ShowProfileModal(this);
-    this.ghostManager = new GhostManager(this.eventManager, this.profileManager, this);
-    
-    // Технические поля для обработки изображений: временная канва для создания снимков
-    this.tempCanvas = document.createElement("canvas");
-    this.tempCtx = this.tempCanvas.getContext("2d");
+    try {
+      // Проверка элементов DOM
+      console.log("Initializing App...");
+      this.registrationScreen = document.getElementById('registration-screen');
+      console.log("registrationScreen:", this.registrationScreen);
 
-    // Привязываем события интерфейса
-    this.bindEvents();
-    // Запускаем инициализацию приложения (например, загрузку состояния и базу данных)
-    this.init();
-  }
+      this.selfieScreen = document.getElementById('selfie-screen');
+      console.log("selfieScreen:", this.selfieScreen);
 
-  loadAppState() {
-    // Загружаем состояние из localStorage
-    const savedGhostId = localStorage.getItem('currentGhostId');
-    if (savedGhostId) {
-      this.ghostManager.setCurrentGhost(parseInt(savedGhostId));
-    } else {
-      this.ghostManager.setCurrentGhost(1); // Устанавливаем Призрак 1 как текущего по умолчанию
+      this.mainScreen = document.getElementById('main-screen');
+      console.log("mainScreen:", this.mainScreen);
+
+      // Прочие элементы...
+      this.nameInput = document.getElementById('player-name');
+      console.log("nameInput:", this.nameInput);
+
+      // Инициализация менеджеров
+      console.log("Initializing managers...");
+      this.languageManager = new LanguageManager('language-selector');
+      console.log("languageManager:", this.languageManager);
+
+      this.cameraSectionManager = new cameraSectionManager();
+      console.log("cameraSectionManager:", this.cameraSectionManager);
+
+      this.profileManager = new ProfileManager();
+      console.log("profileManager:", this.profileManager);
+
+      this.databaseManager = new DatabaseManager();
+      console.log("databaseManager:", this.databaseManager);
+
+      this.eventManager = new EventManager(this.databaseManager, this.languageManager);
+      console.log("eventManager:", this.eventManager);
+
+      this.gameEventManager = new GameEventManager(this.eventManager, this, this.languageManager);
+      console.log("gameEventManager:", this.gameEventManager);
+
+      this.ghostManager = new GhostManager(this.eventManager, this.profileManager, this);
+      console.log("ghostManager:", this.ghostManager);
+
+      // Важное: инициализация дополнительных объектов
+      this.tempCanvas = document.createElement("canvas");
+      this.tempCtx = this.tempCanvas.getContext("2d");
+      console.log("tempCanvas:", this.tempCanvas);
+
+      // Связывание событий
+      this.bindEvents();
+      this.init();
+    } catch (error) {
+      console.error("Error during App initialization:", error);
     }
   }
 
-  init() {
-    // Загружаем состояние при инициализации
-    this.loadAppState();
-    // Дополнительная инициализация приложения
+  async init() {
+    try {
+      console.log("App initialization started...");
+
+      await this.databaseManager.initDatabasePromise;
+      console.log("Database initialized.");
+
+      const entries = this.databaseManager.getDiaryEntries();
+      console.log("Diary entries after initialization:", entries);
+
+      if (entries.length > 0) {
+        const cameraBtn = document.getElementById("toggle-camera");
+        cameraBtn.style.display = "inline-block";
+      }
+
+      if (this.profileManager.isProfileSaved()) {
+        this.showMainScreen();
+        this.eventManager.updateDiaryDisplay();
+
+        if (
+          localStorage.getItem("registrationCompleted") === "true" &&
+          localStorage.getItem("callHandled") === "true" &&
+          localStorage.getItem("mirrorQuestActive") === "true"
+        ) {
+          const cameraBtn = document.getElementById("toggle-camera");
+          cameraBtn.style.display = "inline-block";
+          cameraBtn.classList.add("glowing");
+        }
+
+        if (
+          localStorage.getItem("registrationCompleted") === "true" &&
+          localStorage.getItem("callHandled") !== "true"
+        ) {
+          setTimeout(() => {
+            this.gameEventManager.activateEvent("welcome");
+          }, 5000);
+        }
+      } else {
+        this.showRegistrationScreen();
+      }
+
+    } catch (error) {
+      console.error("Error during initialization process:", error);
+    }
   }
-  
-// Удаление CallManager
-// this.callManager = new CallManager(this.eventManager, this, this.languageManager);
+}
 
 // Привязка событий без использования callManager
 bindEvents() {

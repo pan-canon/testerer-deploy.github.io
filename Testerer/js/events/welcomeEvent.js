@@ -18,18 +18,19 @@ export class WelcomeEvent extends BaseEvent {
    * При активации события запускается звонок через CallManager.
    * Обработчик нажатия кнопки «Ответить» задаётся здесь.
    */
-  async activate() {
-    // Не логируем запись сразу – запись появится только при ответе на звонок.
-    console.log("Активируем событие 'welcome': инициируем звонок");
-    this.app.callManager.startCall("welcome", {
-      onAnswer: async () => {
-        // Логируем запись с текстом "mirror_quest"
-        const mirrorQuestText = this.languageManager.locales[this.languageManager.getLanguage()]["mirror_quest"];
-        await this.addDiaryEntry(mirrorQuestText);
-        // Вызовем визуальный эффект через VisualEffectsManager
-        const effectsManager = new VisualEffectsManager();
-        effectsManager.triggerMirrorEffect();
-      }
-    });
-  }
+async activate() {
+  console.log("Активируем событие 'welcome': инициируем звонок");
+  // Вместо прямого вызова звонка, добавляем его через CallManager
+  this.app.callManager.startCall("welcome", {
+    onAnswer: async () => {
+      // Логируем запись с текстом "mirror_quest"
+      const mirrorQuestText = this.languageManager.locales[this.languageManager.getLanguage()]["mirror_quest"];
+      await this.addDiaryEntry(mirrorQuestText);
+      // Вызовем визуальный эффект через VisualEffectsManager
+      const effectsManager = new VisualEffectsManager();
+      effectsManager.triggerMirrorEffect();
+    }
+  });
+}
+
 }

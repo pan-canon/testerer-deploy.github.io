@@ -107,12 +107,12 @@ export class App {
       this.showMainScreen();
       this.eventManager.updateDiaryDisplay();
       
-      // Если регистрация завершена, но звонок ещё не обработан, активируем событие "welcome"
-if (localStorage.getItem("registrationCompleted") === "true") {
-  setTimeout(() => {
-    this.gameEventManager.startEvent("welcome"); // Запуск события "welcome"
-  }, 5000);
-}
+      // Если регистрация завершена, активируем событие "welcome"
+      if (localStorage.getItem("registrationCompleted") === "true") {
+        setTimeout(() => {
+          this.gameEventManager.startEvent("welcome"); // Запуск события "welcome"
+        }, 5000);
+      }
       
       if (
         localStorage.getItem("registrationCompleted") === "true" &&
@@ -194,31 +194,37 @@ if (localStorage.getItem("registrationCompleted") === "true") {
     }
   }
   
-  completeRegistration() {
-    if (!this.selfiePreview.src || this.selfiePreview.src === "") {
-      alert("Please capture your selfie before completing registration.");
-      return;
-    }
-    const regDataStr = localStorage.getItem('regData');
-    if (!regDataStr) {
-      alert("Registration data missing.");
-      return;
-    }
-    const regData = JSON.parse(regDataStr);
-    const profile = {
-      name: regData.name,
-      gender: regData.gender,
-      language: regData.language,
-      selfie: this.selfiePreview.src
-    };
-    this.profileManager.saveProfile(profile);
-    localStorage.setItem("registrationCompleted", "true");
-    this.cameraSectionManager.stopCamera();
-    this.showMainScreen();
-    
-    // СТАРТ ИГРЫ! Вместо прямого запуска звонка, активируем событие "welcome"
-    this.gameEventManager.activateEvent("welcome");
+async completeRegistration() {
+  if (!this.selfiePreview.src || this.selfiePreview.src === "") {
+    alert("Please capture your selfie before completing registration.");
+    return;
   }
+
+  const regDataStr = localStorage.getItem('regData');
+  if (!regDataStr) {
+    alert("Registration data missing.");
+    return;
+  }
+  
+  const regData = JSON.parse(regDataStr);
+  const profile = {
+    name: regData.name,
+    gender: regData.gender,
+    language: regData.language,
+    selfie: this.selfiePreview.src
+  };
+  this.profileManager.saveProfile(profile);
+  localStorage.setItem("registrationCompleted", "true");
+  this.cameraSectionManager.stopCamera();
+  this.showMainScreen();
+  
+  // Вместо создания нового объекта WelcomeEvent, используем gameEventManager для запуска события
+  await this.gameEventManager.startEvent("welcome");
+
+  // Сделаем кнопку камеры доступной
+  this.toggleCameraButton(true);  // Делает кнопку камеры видимой
+}
+
 
 
 // 🔹 Переключение между камерой и дневником

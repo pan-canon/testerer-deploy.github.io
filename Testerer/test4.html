@@ -3,21 +3,76 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR.js Пример</title>
-  <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/jeromeetienne/AR.js/aframe/build/aframe-ar.js"></script>
+  <title>Three.js: Камера и 3D объекты</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; }
+  </style>
 </head>
-<body style="margin: 0; overflow: hidden;">
-  <!-- AR-сцена с использованием AR.js и A-Frame -->
-  <a-scene embedded arjs>
-    <!-- Используем маркер hiro, когда его видит камера, появляется 3D объект -->
-    <a-marker preset="hiro">
-      <!-- 3D-объект, который появляется на маркере -->
-      <a-box position="0 0.5 0" material="color: red;"></a-box>
-    </a-marker>
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    let scene, camera, renderer, video, videoTexture, videoMaterial, videoMesh;
+    let cube;
 
-    <!-- Камера, которая будет использоваться для отслеживания маркера -->
-    <a-camera></a-camera>
-  </a-scene>
+    // Инициализация сцены, камеры и рендерера
+    function init() {
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Захват видео с камеры
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function (stream) {
+          video = document.createElement('video');
+          video.srcObject = stream;
+          video.play();
+          
+          // Создание текстуры для видео
+          videoTexture = new THREE.VideoTexture(video);
+          videoTexture.minFilter = THREE.LinearFilter;
+          videoTexture.magFilter = THREE.LinearFilter;
+          videoTexture.format = THREE.RGBFormat;
+          
+          // Создание плоскости для отображения видео
+          const geometry = new THREE.PlaneGeometry(5, 3);
+          videoMaterial = new THREE.MeshBasicMaterial({ map: videoTexture });
+          videoMesh = new THREE.Mesh(geometry, videoMaterial);
+          videoMesh.position.z = -5;  // Позиционируем плоскость немного дальше камеры
+          scene.add(videoMesh);
+
+          // Добавление куба
+          const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+          const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+          cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+          cube.position.set(0, 0, -3);  // Позиция куба
+          scene.add(cube);
+
+          // Камера
+          camera.position.z = 5;
+
+          animate(); // Запуск анимации
+        })
+        .catch(function (err) {
+          console.log("Ошибка при захвате видео: " + err);
+        });
+    }
+
+    // Анимация
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      // Добавление простого вращения куба
+      cube.rotation.x += 0.01;
+      cube.rotation.y += 0.01;
+
+      // Рендеринг сцены
+      renderer.render(scene, camera);
+    }
+
+    init();
+  </script>
 </body>
 </html>

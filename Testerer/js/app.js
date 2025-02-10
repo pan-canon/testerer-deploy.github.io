@@ -6,7 +6,6 @@ import { ApartmentPlanManager } from './ApartmentPlanManager.js';
 import { DatabaseManager } from './databaseManager.js';
 import { ShowProfileModal } from './showProfileModal.js';
 import { EventManager } from './eventManager.js';
-import { CallManager } from './callManager.js';
 import { QuestManager } from './questManager.js';
 import { GameEventManager } from './gameEventManager.js';
 import { GhostManager } from './ghostManager.js';
@@ -38,7 +37,6 @@ export class App {
     this.databaseManager = new DatabaseManager();
     // Сначала создаём eventManager, затем CallManager, QuestManager и GameEventManager
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
-    this.callManager = new CallManager(this.eventManager, this, this.languageManager);
     this.questManager = new QuestManager(this.eventManager, this);
     this.gameEventManager = new GameEventManager(this.eventManager, this, this.languageManager);
     this.showProfileModal = new ShowProfileModal(this);
@@ -221,10 +219,8 @@ if (
     this.cameraSectionManager.stopCamera();
     this.showMainScreen();
     
-    // Вместо прямого запуска звонка, активируем событие "welcome"
-    setTimeout(() => {
-      this.gameEventManager.activateEvent("welcome");
-    }, 5000);
+    // СТАРТ ИГРЫ! Вместо прямого запуска звонка, активируем событие "welcome"
+    this.gameEventManager.activateEvent("welcome");
   }
 
 

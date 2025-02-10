@@ -1,4 +1,5 @@
 import { MirrorQuest } from './quests/mirrorQuest.js';
+import { FinalQuest } from './quests/finalQuest.js';
 
 export class QuestManager {
   /**
@@ -11,7 +12,8 @@ export class QuestManager {
     this.profileManager = profileManager;
     // Регистрируем доступные квесты
     this.quests = [
-      new MirrorQuest(this.eventManager, this.app)
+      new MirrorQuest(this.eventManager, this.app),
+      new FinalQuest(this.eventManager, this.app),
       // В будущем сюда можно добавить новые квесты
     ];
   }

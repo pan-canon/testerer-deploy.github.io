@@ -107,12 +107,12 @@ export class App {
       this.showMainScreen();
       this.eventManager.updateDiaryDisplay();
       
-      // Если регистрация завершена, но звонок ещё не обработан, активируем событие "welcome"
-if (localStorage.getItem("registrationCompleted") === "true") {
-  setTimeout(() => {
-    this.gameEventManager.startEvent("welcome"); // Запуск события "welcome"
-  }, 5000);
-}
+      // Если регистрация завершена, активируем событие "welcome"
+      if (localStorage.getItem("registrationCompleted") === "true") {
+        setTimeout(() => {
+          this.gameEventManager.startEvent("welcome"); // Запуск события "welcome"
+        }, 5000);
+      }
       
       if (
         localStorage.getItem("registrationCompleted") === "true" &&

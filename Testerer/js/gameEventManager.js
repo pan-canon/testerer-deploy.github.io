@@ -4,6 +4,7 @@ export class GameEventManager {
     this.app = appInstance;
     this.languageManager = languageManager;
     this.events = [
+      new WelcomeEvent(this.eventManager, this.app, this.languageManager),
       // Ваши другие события...
     ];
     this.currentEventIndex = 0;

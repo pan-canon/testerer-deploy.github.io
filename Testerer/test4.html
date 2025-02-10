@@ -3,30 +3,89 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR.js: Привязка объекта к маркеру</title>
-  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/aframe-ar.js@2.0.0/dist/aframe-ar.js"></script>
+  <title>TensorFlow.js + Three.js</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     body { margin: 0; overflow: hidden; }
     canvas { display: block; }
   </style>
 </head>
 <body>
-  <!-- Сцена AR -->
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-    
-    <!-- Камера для отслеживания положения -->
-    <a-entity camera></a-entity>
+  <script>
+    let video, scene, camera, renderer, cube;
 
-    <!-- Маркер для отслеживания -->
-    <a-marker preset="hiro">
+    // Инициализация камеры и сцены
+    async function init() {
+      // Инициализация сцены Three.js
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Добавляем куб
+      const geometry = new THREE.BoxGeometry();
+      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+      cube = new THREE.Mesh(geometry, material);
+      cube.position.z = -5;
+      scene.add(cube);
+
+      // Настройка камеры
+      camera.position.z = 5;
+
+      // Получаем доступ к видеопотоку с камеры
+      video = document.createElement('video');
+      video.width = 640;
+      video.height = 480;
+      video.autoplay = true;
+      video.muted = true;
+
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+
+      // Загружаем модель BodyPix
+      const net = await bodyPix.load();
+      detectSurface(net);
+    }
+
+    // Функция для детектирования поверхности
+    async function detectSurface(net) {
+      const videoCanvas = document.createElement('canvas');
+      videoCanvas.width = video.width;
+      videoCanvas.height = video.height;
+
+      const ctx = videoCanvas.getContext('2d');
       
-      <!-- Куб, привязанный к маркеру -->
-      <a-box color="#ff6347" position="0 0.5 0" scale="1 1 1"></a-box>
-    </a-marker>
+      // Рендерим кадры с камеры и анализируем их
+      function frame() {
+        ctx.drawImage(video, 0, 0, video.width, video.height);
 
-    <!-- Система для рендеринга в реальном времени -->
-    <a-entity light="type: directional; color: #fff; intensity: 0.5" position="5 10 -10"></a-entity>
-  </a-scene>
+        // Получаем сегментацию изображения с помощью BodyPix
+        net.segmentPerson(video).then(segmentation => {
+          // Здесь можно добавить код для поиска пола или другого объекта
+
+          // Для примера, просто перемещаем куб в зависимости от того, где в кадре находится человек
+          const personMask = segmentation.data; // Массив, содержащий данные маски
+          const personData = personMask.filter(value => value > 0); // Выбираем только пиксели, относящиеся к человеку
+
+          if (personData.length > 0) {
+            cube.position.x = Math.random() * 2 - 1; // Позиция куба случайным образом
+            cube.position.y = Math.random() * 2 - 1;
+          }
+
+          // Рендерим сцену
+          renderer.render(scene, camera);
+          requestAnimationFrame(frame);
+        });
+      }
+      
+      // Запуск цикла обработки кадров
+      frame();
+    }
+
+    init();
+  </script>
 </body>
 </html>

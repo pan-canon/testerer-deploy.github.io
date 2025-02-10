@@ -1,109 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three.js с дополненной реальностью</title>
-    <style>
-        body { margin: 0; overflow: hidden; }
-        canvas { display: block; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AR.js Пример</title>
+  <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/jeromeetienne/AR.js/aframe/build/aframe-ar.js"></script>
 </head>
-<body>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script>
-        let scene, camera, renderer;
-        let video, videoTexture, videoMaterial;
-        let floorMesh, ceilingMesh;
-        let raycaster, mouse;
-        let objectToAdd;
+<body style="margin: 0; overflow: hidden;">
+  <!-- AR-сцена с использованием AR.js и A-Frame -->
+  <a-scene embedded arjs>
+    <!-- Используем маркер hiro, когда его видит камера, появляется 3D объект -->
+    <a-marker preset="hiro">
+      <!-- 3D-объект, который появляется на маркере -->
+      <a-box position="0 0.5 0" material="color: red;"></a-box>
+    </a-marker>
 
-        async function init() {
-            // Сцена, камера и рендерер
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
-
-            // Захват видео с веб-камеры
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            video = document.createElement('video');
-            video.srcObject = stream;
-            video.play();
-
-            // Создаём текстуру для видео
-            videoTexture = new THREE.VideoTexture(video);
-            videoTexture.minFilter = THREE.LinearFilter;
-            videoTexture.magFilter = THREE.LinearFilter;
-            videoTexture.format = THREE.RGBFormat;
-
-            // Создаём материал для видео
-            videoMaterial = new THREE.MeshBasicMaterial({ map: videoTexture });
-
-            // Добавляем пол (статический объект)
-            const floorGeometry = new THREE.PlaneGeometry(10, 10);
-            floorMesh = new THREE.Mesh(floorGeometry, videoMaterial);
-            floorMesh.rotation.x = Math.PI / 2;  // Поворот для того, чтобы плоскость стала горизонтальной
-            floorMesh.position.y = -2.5;
-            scene.add(floorMesh);
-
-            // Добавляем потолок (статический объект)
-            const ceilingGeometry = new THREE.PlaneGeometry(10, 10);
-            const ceilingMaterial = new THREE.MeshBasicMaterial({ color: 0x555555, side: THREE.DoubleSide });
-            ceilingMesh = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
-            ceilingMesh.rotation.x = Math.PI / 2;  // Поворот для того, чтобы плоскость стала горизонтальной
-            ceilingMesh.position.y = 2.5;
-            scene.add(ceilingMesh);
-
-            // Настроим камеру
-            camera.position.z = 5;
-
-            // Raycaster для определения поверхности
-            raycaster = new THREE.Raycaster();
-            mouse = new THREE.Vector2();
-
-            // Добавляем объект с фиксированным интервалом
-            setInterval(addRandomObject, Math.random() * 5000 + 1000);
-
-            animate();
-        }
-
-        function addRandomObject() {
-            const isFloor = Math.random() > 0.5;  // Случайный выбор: пол или потолок
-            const objectGeometry = new THREE.BoxGeometry(1, 1, 1);
-            const objectMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-            const objectMesh = new THREE.Mesh(objectGeometry, objectMaterial);
-            
-            if (isFloor) {
-                // Добавление на пол
-                objectMesh.position.set(
-                    Math.random() * 10 - 5,  // Случайная позиция по оси X
-                    -2.5 + 0.5,              // Позиция на полу
-                    Math.random() * 10 - 5   // Случайная позиция по оси Z
-                );
-            } else {
-                // Добавление на потолок
-                objectMesh.position.set(
-                    Math.random() * 10 - 5,  // Случайная позиция по оси X
-                    2.5 - 0.5,               // Позиция на потолке
-                    Math.random() * 10 - 5   // Случайная позиция по оси Z
-                );
-            }
-
-            // Масштабируем объект в зависимости от его расстояния от камеры (фокус)
-            const distance = camera.position.distanceTo(objectMesh.position);
-            objectMesh.scale.set(distance / 5, distance / 5, distance / 5); // Масштабирование по расстоянию
-
-            scene.add(objectMesh);
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            renderer.render(scene, camera);
-        }
-
-        init();
-    </script>
+    <!-- Камера, которая будет использоваться для отслеживания маркера -->
+    <a-camera></a-camera>
+  </a-scene>
 </body>
 </html>

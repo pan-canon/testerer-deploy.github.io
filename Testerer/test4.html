@@ -25,15 +25,22 @@
   const videoWidth = 640;
   const videoHeight = 480;
 
-  // Устанавливаем камеру
+  // Функция для доступа к камере
   async function setupCamera() {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: videoWidth, height: videoHeight }
-    });
-    videoElement.srcObject = stream;
-    await new Promise(resolve => {
-      videoElement.onloadedmetadata = () => { resolve(videoElement); };
-    });
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: videoWidth, height: videoHeight }
+      });
+      videoElement.srcObject = stream;
+      await new Promise(resolve => {
+        videoElement.onloadedmetadata = () => { resolve(videoElement); };
+      });
+      videoElement.play();
+      console.log("Камера подключена успешно");
+    } catch (err) {
+      console.error("Ошибка доступа к камере: ", err);
+      alert("Не удалось получить доступ к камере.");
+    }
   }
 
   // Инициализация MediaPipe FaceMesh
@@ -46,7 +53,6 @@
   // Запуск камеры и обработка
   async function detectFace() {
     await setupCamera();
-    videoElement.play();
     canvasElement.width = videoWidth;
     canvasElement.height = videoHeight;
 
@@ -69,6 +75,8 @@
           });
         }
         requestAnimationFrame(drawFaceLandmarks);
+      }).catch(err => {
+        console.error("Ошибка в обработке лиц: ", err);
       });
     }
 

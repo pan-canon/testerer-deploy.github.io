@@ -1,40 +1,26 @@
+import { WelcomeEvent } from './events/welcomeEvent.js';
+
 export class GameEventManager {
+  /**
+   * @param {EventManager} eventManager – менеджер дневника
+   * @param {App} appInstance – ссылка на приложение
+   * @param {LanguageManager} languageManager – для локализации
+   */
   constructor(eventManager, appInstance, languageManager) {
     this.eventManager = eventManager;
     this.app = appInstance;
     this.languageManager = languageManager;
     this.events = [
       new WelcomeEvent(this.eventManager, this.app, this.languageManager)
-      // Ваши другие события...
+      // В будущем можно добавить другие события
     ];
     this.currentEventIndex = 0;
   }
 
-  // Метод для активации события "welcome" (инициирует первую запись)
-  async startEvent(eventKey) {
-    console.log(`Запуск события: ${eventKey}`);
-    if (eventKey === "welcome") {
-      // Добавляем запись о просьбе подойти к зеркалу
-      await this.eventManager.addGhostDiaryEntry("Они просят меня подойти к зеркалу");
-
-      // Активируем квест с зеркалом
-      this.app.questManager.activateQuest("mirror_quest");
-    }
-  }
-
-  // Метод для старта квеста для текущего призрака
-  async startGhostQuest() {
-    const ghost = this.app.ghostManager.getCurrentGhost();
-    if (ghost) {
-      const questKey = `ghost_${ghost.id}_quest`;
-      await this.eventManager.addGhostDiaryEntry(questKey);
-      console.log(`👻 Starting quest for ${ghost.name}...`);
-    } else {
-      console.error("⚠️ No active ghost found.");
-    }
-  }
-
-  // Активируем событие по ключу
+  /**
+   * Активирует событие по его ключу.
+   * @param {string} key – идентификатор события
+   */
   async activateEvent(key) {
     const event = this.events.find(e => e.key === key);
     if (event) {
@@ -49,7 +35,9 @@ export class GameEventManager {
     }
   }
 
-  // Метод для активации следующего события
+  /**
+   * Активирует следующее событие в списке.
+   */
   async activateNextEvent() {
     const nextEvent = this.events[this.currentEventIndex];
     if (nextEvent) {

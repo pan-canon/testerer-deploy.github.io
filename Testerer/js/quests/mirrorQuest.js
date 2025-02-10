@@ -58,10 +58,10 @@ export class MirrorQuest extends BaseQuest {
       localStorage.removeItem("mirrorQuestActive");
       alert("✅ Задание «подойти к зеркалу» выполнено!");
 
-// После завершения квеста проверяем, нужно ли активировать финальный квест
-if (this.app.ghostManager) {
-  this.app.ghostManager.checkFinalQuestActivation();
-}
+      // После успешного завершения зеркального квеста запускаем цепочку призрака 1
+      if (this.app.ghostManager) {
+        this.app.ghostManager.triggerNextPhenomenon();
+      }
     } else {
       alert("❌ Нет совпадения! Попробуйте ещё раз!");
     }

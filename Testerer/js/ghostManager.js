@@ -4,10 +4,20 @@ export class GhostManager {
     this.profileManager = profileManager;
     this.app = app;
     this.ghosts = [
-      { id: 1, name: "призрак 1", usedLetters: [] },
-      { id: 2, name: "призрак 2", usedLetters: [] }
+      { id: 1, name: "призрак 1", allowedPhenomena: ["call", "randomCall"], phenomenaCount: 6 },
+      { id: 2, name: "призрак 2", allowedPhenomena: ["call"], phenomenaCount: 6 },
+      { id: 3, name: "призрак 3", allowedPhenomena: ["call"], phenomenaCount: 6 },
+      { id: 4, name: "призрак 4", allowedPhenomena: ["call"], phenomenaCount: 6 },
+      { id: 5, name: "призрак 5", allowedPhenomena: ["call"], phenomenaCount: 6 },
+      { id: 6, name: "призрак 6", allowedPhenomena: ["call"], phenomenaCount: 6 },
+      { id: 7, name: "призрак 7", allowedPhenomena: ["call"], phenomenaCount: 6 },
+      { id: 8, name: "призрак 8", allowedPhenomena: ["call"], phenomenaCount: 6 },
+      { id: 9, name: "призрак 9", allowedPhenomena: ["call"], phenomenaCount: 6 },
+      { id: 10, name: "призрак 10", allowedPhenomena: ["call"], phenomenaCount: 6 },
+      { id: 11, name: "призрак 11", allowedPhenomena: ["call"], phenomenaCount: 6 },
+      { id: 12, name: "призрак 12", allowedPhenomena: ["call"], phenomenaCount: 6 },
+      { id: 13, name: "призрак 13", allowedPhenomena: ["call"], phenomenaCount: 6 }
     ];
-
     this.currentGhostId = 1;
     this.currentPhenomenonIndex = 0;
     this.loadState();
@@ -25,60 +35,68 @@ export class GhostManager {
   }
 
   finishCurrentGhost() {
-    const ghost = this.getCurrentGhost();
-    if (ghost) {
-      ghost.isFinished = true;
-      console.log(`Призрак ${ghost.name} завершен.`);
+    if (this.getCurrentGhost()) {
+      this.getCurrentGhost().isFinished = true;
+      console.log(`Призрак ${this.getCurrentGhost().name} завершен.`);
       this.saveState();
     }
   }
 
   isCurrentGhostFinished() {
-    const ghost = this.getCurrentGhost();
-    return ghost && ghost.isFinished;
-  }
-
-  checkFinalQuestActivation() {
-    const ghost = this.getCurrentGhost();
-    if (!ghost) return;
-    
-    const nameLength = ghost.name.length;
-    const usedLetters = ghost.usedLetters.length;
-
-    // Если использованы все буквы, активируем финальный квест
-    if (usedLetters >= nameLength - 2) { // Т.е. когда все, кроме последних 2 букв
-      this.activateFinalQuest();
-    }
-  }
-
-  activateFinalQuest() {
-    console.log("Финальный квест активирован для Призрака 1");
-    this.app.questManager.activateQuest("final_quest"); // Активируем финальный квест
-    this.finishCurrentGhost();
+    return this.getCurrentGhost() && this.getCurrentGhost().isFinished;
   }
 
   async triggerNextPhenomenon() {
     const ghost = this.getCurrentGhost();
     if (!ghost) return;
-    
-    const nextLetter = ghost.name.charAt(ghost.usedLetters.length);  // Берем следующую букву
-    
-    // Если буква ещё не использована, активируем её
-    if (!ghost.usedLetters.includes(nextLetter)) {
-      this.markLetterAsUsed(nextLetter);
-      await this.eventManager.addGhostDiaryEntry(`Использована буква: ${nextLetter}`);
-      console.log(`Добавлена буква в дневник: ${nextLetter}`);
-    }
+    if (this.currentPhenomenonIndex < ghost.phenomenaCount) {
+      let phenomenonType;
 
-    // Проверка на финальный квест
-    this.checkFinalQuestActivation();
-  }
+      const currentLocation = this.profileManager.getLocationType();
 
-  markLetterAsUsed(letter) {
-    const ghost = this.getCurrentGhost();
-    if (ghost && !ghost.usedLetters.includes(letter)) {
-      ghost.usedLetters.push(letter);
-      console.log(`Буква ${letter} помечена как использованная.`);
+      if (this.currentGhostId === 1 && this.currentPhenomenonIndex === 0) {
+        phenomenonType = "call";
+      } else if (currentLocation) {
+        const locationAllowedPhenomena = {
+          "Кухня": ["call", "randomCall"],
+          "Спальня": ["call", "randomCall"],
+          "Гостиная": ["call", "randomCall"],
+          "Ванная": ["call", "randomCall"],
+          "Коридор": ["call", "randomCall"],
+          "Другое": ["call", "randomCall"],
+          "Подъезд": ["call", "randomCall"],
+          "Кабинет": ["call", "randomCall"],
+          "Библиотека": ["call", "randomCall"],
+          "Детская": ["call", "randomCall"],
+          "Кладовая": ["call", "randomCall"],
+          "Гараж": ["call", "randomCall"]
+        };
+        const locationPhenomena = locationAllowedPhenomena[currentLocation] || [];
+        const intersection = ghost.allowedPhenomena.filter(p => locationPhenomena.includes(p));
+        if (intersection.length > 0) {
+          phenomenonType = intersection[Math.floor(Math.random() * intersection.length)];
+        } else {
+          phenomenonType = ghost.allowedPhenomena[Math.floor(Math.random() * ghost.allowedPhenomena.length)];
+        }
+      } else {
+        phenomenonType = ghost.allowedPhenomena[Math.floor(Math.random() * ghost.allowedPhenomena.length)];
+      }
+
+      const phenomenonEntry = `${ghost.name}: явление ${this.currentPhenomenonIndex + 1} (${phenomenonType})`;
+      await this.eventManager.addDiaryEntry(phenomenonEntry);
+      console.log(`Триггер явления для ${ghost.name}: ${phenomenonEntry}`);
+
+      this.currentPhenomenonIndex++;
+      this.profileManager.saveGhostProgress({
+        ghostId: this.currentGhostId,
+        phenomenonIndex: this.currentPhenomenonIndex
+      });
+
+      if (this.currentPhenomenonIndex === ghost.phenomenaCount) {
+        const finalEntry = `${ghost.name}: финальное явление – персонаж убит!`;
+        await this.eventManager.addDiaryEntry(finalEntry);
+        console.log(finalEntry);
+      }
     }
   }
 

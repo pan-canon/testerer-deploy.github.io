@@ -12,60 +12,63 @@ export class EventManager {
     return entries.some(entry => entry.entry === eventKey);
   }
 
-  // Метод добавления записи в дневник от имени призрака
-  async addDiaryEntry(key, imageData = null, isFromGhost = false) {
+  async addDiaryEntry(key, imageData = null) {
+    // Если передано изображение, сохраняем запись в виде:
+    // "<текст ключа>\n[photo attached]\n<dataURL изображения>"
     let entry = key;
     if (imageData) {
       entry = `${key}\n[photo attached]\n${imageData}`;
     }
-
-    // Если запись должна быть от имени призрака
-    if (isFromGhost) {
-      const ghost = this.ghostManager.getCurrentGhost();
-      entry = `${ghost.name}: ${entry}`; // Добавляем имя призрака
-    }
-
-    // Сохраняем запись в базу данных
     await this.databaseManager.addDiaryEntry(entry);
     this.updateDiaryDisplay();
   }
 
-  // Обновление отображения дневника
   updateDiaryDisplay() {
     if (!this.diaryContainer) {
       console.error("Diary container not found!");
       return;
     }
+    // Очищаем контейнер дневника
     this.diaryContainer.innerHTML = "";
     const entries = this.databaseManager.getDiaryEntries();
     const seen = new Set();
     const currentLanguage = this.languageManager.getLanguage();
 
     entries.forEach(entry => {
+      // Если уже выводили такую запись, пропускаем
       if (seen.has(entry.entry)) return;
       seen.add(entry.entry);
-
+      
+      // Если запись содержит метку "[photo attached]", разбиваем её
       if (entry.entry.includes("[photo attached]")) {
         const parts = entry.entry.split("\n[photo attached]\n");
         const textPart = parts[0];
         const imageData = parts[1];
 
+        // Создаём обёртку
         const wrapper = document.createElement("div");
 
+        // Отображаем текст (локализованный, если есть)
         const p = document.createElement("p");
-        const localizedText = this.languageManager.locales[currentLanguage][textPart] || textPart;
+        const localizedText =
+          this.languageManager.locales[currentLanguage][textPart] || textPart;
         p.textContent = `${localizedText} (${entry.timestamp})`;
         wrapper.appendChild(p);
 
+        // Отображаем изображение
         const img = document.createElement("img");
         img.src = imageData;
-        img.alt = this.languageManager.locales[currentLanguage]["photo_attached"] || "Photo attached";
+        img.alt =
+          this.languageManager.locales[currentLanguage]["photo_attached"] ||
+          "Photo attached";
         img.style.maxWidth = "100%";
         wrapper.appendChild(img);
 
         this.diaryContainer.appendChild(wrapper);
       } else {
-        const localizedText = this.languageManager.locales[currentLanguage][entry.entry] || entry.entry;
+        // Для текстовых записей – локализуем, если нужно
+        const localizedText =
+          this.languageManager.locales[currentLanguage][entry.entry] || entry.entry;
         const p = document.createElement("p");
         p.textContent = `${localizedText} (${entry.timestamp})`;
         this.diaryContainer.appendChild(p);
@@ -74,8 +77,21 @@ export class EventManager {
     console.log("📖 Diary updated.");
   }
 
-  // Метод для добавления записи от имени призрака
-  async addGhostDiaryEntry(key, imageData = null) {
-    await this.addDiaryEntry(key, imageData, true); // isFromGhost = true
+  startMirrorQuest() {
+    // Добавляем запись с ключом "mirror_quest" – при отображении будет локализовано
+    this.addDiaryEntry("mirror_quest");
+    console.log("🎭 Starting mirror quest...");
+  }
+
+  // Новый метод для начала квеста для текущего призрака
+  async startGhostQuest() {
+    const ghost = this.ghostManager.getCurrentGhost();
+    if (ghost) {
+      const questKey = `ghost_${ghost.id}_quest`;
+      await this.addDiaryEntry(questKey);
+      console.log(`👻 Starting quest for ${ghost.name}...`);
+    } else {
+      console.error("⚠️ No active ghost found.");
+    }
   }
 }

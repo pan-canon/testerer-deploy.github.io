@@ -6,6 +6,7 @@ import { ApartmentPlanManager } from './ApartmentPlanManager.js';
 import { DatabaseManager } from './databaseManager.js';
 import { ShowProfileModal } from './showProfileModal.js';
 import { EventManager } from './eventManager.js';
+import { CallManager } from './callManager.js';
 import { QuestManager } from './questManager.js';
 import { GameEventManager } from './gameEventManager.js';
 import { GhostManager } from './ghostManager.js';
@@ -37,6 +38,7 @@ export class App {
     this.databaseManager = new DatabaseManager();
     // Сначала создаём eventManager, затем CallManager, QuestManager и GameEventManager
     this.eventManager = new EventManager(this.databaseManager, this.languageManager);
+    this.callManager = new CallManager(this.eventManager, this, this.languageManager);
     this.questManager = new QuestManager(this.eventManager, this);
     this.gameEventManager = new GameEventManager(this.eventManager, this, this.languageManager);
     this.showProfileModal = new ShowProfileModal(this);
@@ -107,12 +109,15 @@ export class App {
       this.showMainScreen();
       this.eventManager.updateDiaryDisplay();
       
-      // Если регистрация завершена, активируем событие "welcome"
-      if (localStorage.getItem("registrationCompleted") === "true") {
-        setTimeout(() => {
-          this.gameEventManager.startEvent("welcome"); // Запуск события "welcome"
-        }, 5000);
-      }
+      // Если регистрация завершена, но звонок ещё не обработан, активируем событие "welcome"
+if (
+  localStorage.getItem("registrationCompleted") === "true" &&
+  localStorage.getItem("callHandled") !== "true"
+) {
+  setTimeout(() => {
+    this.gameEventManager.activateEvent("welcome");
+  }, 5000);
+}
       
       if (
         localStorage.getItem("registrationCompleted") === "true" &&
@@ -194,39 +199,33 @@ export class App {
     }
   }
   
-async completeRegistration() {
-  if (!this.selfiePreview.src || this.selfiePreview.src === "") {
-    alert("Please capture your selfie before completing registration.");
-    return;
+  completeRegistration() {
+    if (!this.selfiePreview.src || this.selfiePreview.src === "") {
+      alert("Please capture your selfie before completing registration.");
+      return;
+    }
+    const regDataStr = localStorage.getItem('regData');
+    if (!regDataStr) {
+      alert("Registration data missing.");
+      return;
+    }
+    const regData = JSON.parse(regDataStr);
+    const profile = {
+      name: regData.name,
+      gender: regData.gender,
+      language: regData.language,
+      selfie: this.selfiePreview.src
+    };
+    this.profileManager.saveProfile(profile);
+    localStorage.setItem("registrationCompleted", "true");
+    this.cameraSectionManager.stopCamera();
+    this.showMainScreen();
+    
+    // Вместо прямого запуска звонка, активируем событие "welcome"
+    setTimeout(() => {
+      this.gameEventManager.activateEvent("welcome");
+    }, 5000);
   }
-  
-  const regDataStr = localStorage.getItem('regData');
-  if (!regDataStr) {
-    alert("Registration data missing.");
-    return;
-  }
-
-  const regData = JSON.parse(regDataStr);
-  const profile = {
-    name: regData.name,
-    gender: regData.gender,
-    language: regData.language,
-    selfie: this.selfiePreview.src
-  };
-
-  this.profileManager.saveProfile(profile);
-  localStorage.setItem("registrationCompleted", "true");
-  this.cameraSectionManager.stopCamera();
-  this.showMainScreen();
-
-  // Убираем кнопку "Продолжить"
-  this.toggleCameraButton(true); // Делает кнопку камеры доступной
-
-  // После этого активируем событие "welcome"
-  this.gameEventManager.activateEvent("welcome"); // или создаем новый объект `WelcomeEvent`, когда он нужен
-}
-
-
 
 
 // 🔹 Переключение между камерой и дневником

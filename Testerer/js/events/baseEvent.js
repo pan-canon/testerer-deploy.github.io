@@ -1,27 +1,34 @@
-export class BaseEvent {
+import { BaseEvent } from './baseEvent.js';
+import { VisualEffectsManager } from '../utils/visualEffectsManager.js';
+
+export class WelcomeEvent extends BaseEvent {
   /**
-   * @param {EventManager} eventManager – менеджер для работы с дневником
+   * @param {EventManager} eventManager – менеджер дневника
+   * @param {App} appInstance – ссылка на приложение
+   * @param {LanguageManager} languageManager – для локализации
    */
-  constructor(eventManager) {
-    this.eventManager = eventManager;
-    this.key = ""; // уникальный идентификатор события
+  constructor(eventManager, appInstance, languageManager) {
+    super(eventManager);
+    this.app = appInstance;
+    this.languageManager = languageManager;
+    this.key = "welcome"; // ключ события
   }
 
   /**
-   * Активирует событие: если ещё не зарегистрировано, логирует его в дневнике.
+   * При активации события теперь не запускается звонок.
+   * Вместо этого сразу регистрируется запись с предложением подойти к зеркалу,
+   * а также запускается визуальный эффект.
    */
   async activate() {
-    if (!this.eventManager.isEventLogged(this.key)) {
-      console.log(`Активируем событие: ${this.key}`);
-      await this.eventManager.addDiaryEntry(this.key);
-    }
-  }
-
-  /**
-   * Добавляет запись в дневник.
-   * @param {string} text – текст записи
-   */
-  async addDiaryEntry(text) {
-    await this.eventManager.addDiaryEntry(text);
+    console.log("Активируем событие 'welcome': регистрируем приглашение подойти к зеркалу");
+    // Получаем локализованный текст для приглашения (например, "Подойди к зеркалу")
+    const mirrorQuestText = this.languageManager.locales[this.languageManager.getLanguage()]["mirror_quest"];
+    
+    // Логируем запись в дневнике с этим текстом (запись теперь создаётся от имени призрака)
+    await this.addDiaryEntry(mirrorQuestText);
+    
+    // Вызываем визуальный эффект, например, эффект зеркала
+    const effectsManager = new VisualEffectsManager();
+    effectsManager.triggerMirrorEffect();
   }
 }

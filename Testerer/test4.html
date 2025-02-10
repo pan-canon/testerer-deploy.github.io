@@ -3,31 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR с WebXR и A-Frame</title>
+  <title>AR.js: Привязка объекта к маркеру</title>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/aframe-xr@1.0.0/dist/aframe-xr.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/aframe-webxr-ui@1.0.0/dist/aframe-webxr-ui.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe-ar.js@2.0.0/dist/aframe-ar.js"></script>
   <style>
     body { margin: 0; overflow: hidden; }
     canvas { display: block; }
   </style>
 </head>
 <body>
-  <a-scene xr="session: immersive-ar;">
-    <!-- Камера для отслеживания движения устройства -->
+  <!-- Сцена AR -->
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+    
+    <!-- Камера для отслеживания положения -->
     <a-entity camera></a-entity>
 
-    <!-- Плоскость для создания визуализации поверхности (например, пола) -->
-    <a-plane id="floor" position="0 0 -5" width="10" height="10" color="#90ee90" opacity="0.5"></a-plane>
+    <!-- Маркер для отслеживания -->
+    <a-marker preset="hiro">
+      
+      <!-- Куб, привязанный к маркеру -->
+      <a-box color="#ff6347" position="0 0.5 0" scale="1 1 1"></a-box>
+    </a-marker>
 
-    <!-- Мультяшный куб (можно заменить на любой другой объект) -->
-    <a-box position="0 0.5 -3" color="#ff6347" scale="2 2 2"></a-box>
-
-    <!-- Интерфейс для WebXR -->
-    <a-entity xr-button></a-entity>
-
-    <!-- Камера и управление -->
-    <a-camera></a-camera>
+    <!-- Система для рендеринга в реальном времени -->
+    <a-entity light="type: directional; color: #fff; intensity: 0.5" position="5 10 -10"></a-entity>
   </a-scene>
 </body>
 </html>

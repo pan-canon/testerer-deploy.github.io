@@ -199,13 +199,13 @@ async completeRegistration() {
     alert("Please capture your selfie before completing registration.");
     return;
   }
-
+  
   const regDataStr = localStorage.getItem('regData');
   if (!regDataStr) {
     alert("Registration data missing.");
     return;
   }
-  
+
   const regData = JSON.parse(regDataStr);
   const profile = {
     name: regData.name,
@@ -213,17 +213,19 @@ async completeRegistration() {
     language: regData.language,
     selfie: this.selfiePreview.src
   };
+
   this.profileManager.saveProfile(profile);
   localStorage.setItem("registrationCompleted", "true");
   this.cameraSectionManager.stopCamera();
   this.showMainScreen();
-  
-  // Вместо создания нового объекта WelcomeEvent, используем gameEventManager для запуска события
-  await this.gameEventManager.startEvent("welcome");
 
-  // Сделаем кнопку камеры доступной
-  this.toggleCameraButton(true);  // Делает кнопку камеры видимой
+  // Убираем кнопку "Продолжить"
+  this.toggleCameraButton(true); // Делает кнопку камеры доступной
+
+  // После этого активируем событие "welcome"
+  this.gameEventManager.activateEvent("welcome"); // или создаем новый объект `WelcomeEvent`, когда он нужен
 }
+
 
 
 

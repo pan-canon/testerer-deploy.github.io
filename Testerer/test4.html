@@ -3,26 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Face Filter with TensorFlow.js and MediaPipe</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection"></script>
+  <title>Face Filter with MediaPipe</title>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
   <style>
     body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #000; }
     video { transform: scaleX(-1); width: 100%; max-width: 640px; }
+    canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
   </style>
 </head>
 <body>
 
 <video id="video" autoplay></video>
+<canvas id="canvas"></canvas>
 
 <script>
-  // Получение доступа к камере
+  // Настройки камеры
   const videoElement = document.getElementById('video');
+  const canvasElement = document.getElementById('canvas');
+  const ctx = canvasElement.getContext('2d');
   const videoWidth = 640;
   const videoHeight = 480;
 
+  // Устанавливаем камеру
   async function setupCamera() {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { width: videoWidth, height: videoHeight }
@@ -33,67 +36,67 @@
     });
   }
 
-  // Инициализация модели FaceMesh из MediaPipe
-  const faceMesh = new faceMesh.FaceMesh({
+  // Инициализация MediaPipe FaceMesh
+  const faceMesh = new FaceMesh.FaceMesh({
     locateFaces: true,
+    minDetectionConfidence: 0.5,
+    minTrackingConfidence: 0.5
   });
 
-  // Запуск видео и обработка лиц
+  // Запуск камеры и обработка
   async function detectFace() {
     await setupCamera();
-
-    // Обработка видео
     videoElement.play();
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    canvasElement.width = videoWidth;
+    canvasElement.height = videoHeight;
 
     function drawFaceLandmarks() {
       ctx.drawImage(videoElement, 0, 0, videoWidth, videoHeight);
-      
-      faceMesh.send({ image: videoElement })
-        .then(results => {
-          if (results.multiFaceLandmarks) {
-            results.multiFaceLandmarks.forEach(landmarks => {
-              // Рисуем точки на лице
-              ctx.strokeStyle = '#FF0000';
-              ctx.lineWidth = 2;
-              landmarks.forEach(point => {
-                ctx.beginPath();
-                ctx.arc(point.x * videoWidth, point.y * videoHeight, 2, 0, 2 * Math.PI);
-                ctx.fill();
-              });
-
-              // Здесь можно изменить лицо, например, применить фильтр
-              applyFilter(ctx, landmarks);
+      faceMesh.send({ image: videoElement }).then(results => {
+        if (results.multiFaceLandmarks) {
+          results.multiFaceLandmarks.forEach(landmarks => {
+            // Рисуем точки на лице
+            ctx.strokeStyle = '#FF0000';
+            ctx.lineWidth = 2;
+            landmarks.forEach(point => {
+              ctx.beginPath();
+              ctx.arc(point.x * videoWidth, point.y * videoHeight, 2, 0, 2 * Math.PI);
+              ctx.fill();
             });
-          }
-          requestAnimationFrame(drawFaceLandmarks);
-        });
+
+            // Здесь можно добавить фильтр, например, выделить глаза
+            applyFilterToEyes(landmarks);
+          });
+        }
+        requestAnimationFrame(drawFaceLandmarks);
+      });
     }
-    
+
     drawFaceLandmarks();
   }
 
-  // Пример фильтра, который изменяет лицо (например, делает его ярче)
-  function applyFilter(ctx, landmarks) {
-    ctx.globalCompositeOperation = 'source-over';
-    
-    // Пример: создаём маску на основе зоны вокруг глаз
-    const leftEye = landmarks[33]; // Точка на левом глазу
-    const rightEye = landmarks[133]; // Точка на правом глазу
-
-    const eyeDist = Math.abs(leftEye.x - rightEye.x) * videoWidth;
+  // Пример фильтра для выделения глаз
+  function applyFilterToEyes(landmarks) {
+    const leftEye = landmarks[33];  // Координаты левого глаза
+    const rightEye = landmarks[133]; // Координаты правого глаза
+    const eyeRadius = Math.abs(leftEye.x - rightEye.x) * videoWidth / 2;
 
     // Нарисуем круг вокруг глаз
     ctx.beginPath();
-    ctx.arc((leftEye.x + rightEye.x) * videoWidth / 2, (leftEye.y + rightEye.y) * videoHeight / 2, eyeDist / 2, 0, 2 * Math.PI);
+    ctx.arc(
+      (leftEye.x + rightEye.x) * videoWidth / 2,
+      (leftEye.y + rightEye.y) * videoHeight / 2,
+      eyeRadius,
+      0, 2 * Math.PI
+    );
     ctx.lineWidth = 5;
-    ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+    ctx.strokeStyle = 'rgba(0, 255, 0, 0.7)';
     ctx.stroke();
   }
 
-  // Запуск функции для обнаружения лиц
+  // Запускаем процесс
   detectFace();
+
 </script>
 
 </body>

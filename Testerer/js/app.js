@@ -57,25 +57,6 @@ export class App {
     this.init();
   }
   
-  // Остальные методы класса App (loadAppState, init, bindEvents, и т.д.)
-}
-
-  loadAppState() {
-    // Загружаем состояние из localStorage
-    const savedGhostId = localStorage.getItem('currentGhostId');
-    if (savedGhostId) {
-      this.ghostManager.setCurrentGhost(parseInt(savedGhostId));
-    } else {
-      this.ghostManager.setCurrentGhost(1); // Устанавливаем Призрак 1 как текущего по умолчанию
-    }
-  }
-
-  init() {
-    // Загружаем состояние при инициализации
-    this.loadAppState();
-    // Дополнительная инициализация приложения
-  }
-  
 // Удаление CallManager
 // this.callManager = new CallManager(this.eventManager, this, this.languageManager);
 

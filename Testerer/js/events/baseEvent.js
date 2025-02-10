@@ -1,34 +1,27 @@
-import { BaseEvent } from './baseEvent.js';
-import { VisualEffectsManager } from '../utils/visualEffectsManager.js';
-
-export class WelcomeEvent extends BaseEvent {
+export class BaseEvent {
   /**
-   * @param {EventManager} eventManager – менеджер дневника
-   * @param {App} appInstance – ссылка на приложение
-   * @param {LanguageManager} languageManager – для локализации
+   * @param {EventManager} eventManager – менеджер для работы с дневником
    */
-  constructor(eventManager, appInstance, languageManager) {
-    super(eventManager);
-    this.app = appInstance;
-    this.languageManager = languageManager;
-    this.key = "welcome"; // ключ события
+  constructor(eventManager) {
+    this.eventManager = eventManager;
+    this.key = ""; // уникальный идентификатор события
   }
 
   /**
-   * При активации события теперь не запускается звонок.
-   * Вместо этого сразу регистрируется запись с предложением подойти к зеркалу,
-   * а также запускается визуальный эффект.
+   * Активирует событие: если ещё не зарегистрировано, логирует его в дневнике.
    */
   async activate() {
-    console.log("Активируем событие 'welcome': регистрируем приглашение подойти к зеркалу");
-    // Получаем локализованный текст для приглашения (например, "Подойди к зеркалу")
-    const mirrorQuestText = this.languageManager.locales[this.languageManager.getLanguage()]["mirror_quest"];
-    
-    // Логируем запись в дневнике с этим текстом (запись теперь создаётся от имени призрака)
-    await this.addDiaryEntry(mirrorQuestText);
-    
-    // Вызываем визуальный эффект, например, эффект зеркала
-    const effectsManager = new VisualEffectsManager();
-    effectsManager.triggerMirrorEffect();
+    if (!this.eventManager.isEventLogged(this.key)) {
+      console.log(`Активируем событие: ${this.key}`);
+      await this.eventManager.addDiaryEntry(this.key);
+    }
+  }
+
+  /**
+   * Добавляет запись в дневник.
+   * @param {string} text – текст записи
+   */
+  async addDiaryEntry(text) {
+    await this.eventManager.addDiaryEntry(text);
   }
 }

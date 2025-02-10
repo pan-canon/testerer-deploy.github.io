@@ -68,70 +68,71 @@ export class App {
     // Дополнительная инициализация приложения
   }
   
-  bindEvents() {
-    // Привязка событий формы и переключения экранов
-    this.nameInput.addEventListener('input', () => this.validateRegistration());
-    this.genderSelect.addEventListener('change', () => this.validateRegistration());
-    this.nextStepBtn.addEventListener('click', () => this.goToApartmentPlanScreen());
-    this.captureBtn.addEventListener('click', () => this.captureSelfie());
-    this.completeBtn.addEventListener('click', () => this.completeRegistration());
-    this.resetBtn.addEventListener('click', () => this.profileManager.resetProfile());
-    this.exportBtn.addEventListener('click', () => this.exportProfile());
-    this.importBtn.addEventListener('click', () => this.importProfile());
-    this.profilePhotoElem.addEventListener("click", () => this.showProfileModal.show());
-    document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
-    document.getElementById("prev-floor-btn").addEventListener("click", () => {
-      if (this.apartmentPlanManager) {
-        this.apartmentPlanManager.prevFloor();
-      }
-    });
-    document.getElementById("next-floor-btn").addEventListener("click", () => {
-      if (this.apartmentPlanManager) {
-        this.apartmentPlanManager.nextFloor();
-      }
-    });
-    document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
-    document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
+// Удаление CallManager
+// this.callManager = new CallManager(this.eventManager, this, this.languageManager);
+
+// Привязка событий без использования callManager
+bindEvents() {
+  this.nameInput.addEventListener('input', () => this.validateRegistration());
+  this.genderSelect.addEventListener('change', () => this.validateRegistration());
+  this.nextStepBtn.addEventListener('click', () => this.goToApartmentPlanScreen());
+  this.captureBtn.addEventListener('click', () => this.captureSelfie());
+  this.completeBtn.addEventListener('click', () => this.completeRegistration());
+  this.resetBtn.addEventListener('click', () => this.profileManager.resetProfile());
+  this.exportBtn.addEventListener('click', () => this.exportProfile());
+  this.importBtn.addEventListener('click', () => this.importProfile());
+  this.profilePhotoElem.addEventListener("click", () => this.showProfileModal.show());
+  document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
+  document.getElementById("prev-floor-btn").addEventListener("click", () => {
+    if (this.apartmentPlanManager) {
+      this.apartmentPlanManager.prevFloor();
+    }
+  });
+  document.getElementById("next-floor-btn").addEventListener("click", () => {
+    if (this.apartmentPlanManager) {
+      this.apartmentPlanManager.nextFloor();
+    }
+  });
+  document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
+  document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
+}
+  
+async init() {
+  await this.databaseManager.initDatabasePromise;
+  
+  const entries = this.databaseManager.getDiaryEntries();
+  console.log("Проверяем дневник после инициализации:", entries);
+  
+  if (entries.length > 0) {
+    const cameraBtn = document.getElementById("toggle-camera");
+    cameraBtn.style.display = "inline-block";
   }
   
-  async init() {
-    await this.databaseManager.initDatabasePromise;
+  if (this.profileManager.isProfileSaved()) {
+    this.showMainScreen();
+    this.eventManager.updateDiaryDisplay();
     
-    const entries = this.databaseManager.getDiaryEntries();
-    console.log("Проверяем дневник после инициализации:", entries);
-    
-    if (entries.length > 0) {
+    // Если регистрация завершена и есть активные квесты
+    if (
+      localStorage.getItem("registrationCompleted") === "true" &&
+      localStorage.getItem("mirrorQuestActive") === "true"
+    ) {
       const cameraBtn = document.getElementById("toggle-camera");
       cameraBtn.style.display = "inline-block";
+      cameraBtn.classList.add("glowing");
     }
-    
-    if (this.profileManager.isProfileSaved()) {
-      this.showMainScreen();
-      this.eventManager.updateDiaryDisplay();
-      
-      // Если регистрация завершена, но звонок ещё не обработан, активируем событие "welcome"
-if (
-  localStorage.getItem("registrationCompleted") === "true" &&
-  localStorage.getItem("callHandled") !== "true"
-) {
-  setTimeout(() => {
-    this.gameEventManager.activateEvent("welcome");
-  }, 5000);
-}
-      
-      if (
-        localStorage.getItem("registrationCompleted") === "true" &&
-        localStorage.getItem("callHandled") === "true" &&
-        localStorage.getItem("mirrorQuestActive") === "true"
-      ) {
-        const cameraBtn = document.getElementById("toggle-camera");
-        cameraBtn.style.display = "inline-block";
-        cameraBtn.classList.add("glowing");
-      }
-    } else {
-      this.showRegistrationScreen();
+
+    // Новый запуск игрового события, если оно еще не было активировано
+    if (localStorage.getItem("registrationCompleted") === "true" &&
+        localStorage.getItem("mirrorQuestActive") !== "true") {
+      setTimeout(() => {
+        this.gameEventManager.activateEvent("welcome");
+      }, 5000);
     }
+  } else {
+    this.showRegistrationScreen();
   }
+}
   
   validateRegistration() {
     this.nextStepBtn.disabled = !(this.nameInput.value.trim() !== "" && this.genderSelect.value !== "");
@@ -199,33 +200,33 @@ if (
     }
   }
   
-  completeRegistration() {
-    if (!this.selfiePreview.src || this.selfiePreview.src === "") {
-      alert("Please capture your selfie before completing registration.");
-      return;
-    }
-    const regDataStr = localStorage.getItem('regData');
-    if (!regDataStr) {
-      alert("Registration data missing.");
-      return;
-    }
-    const regData = JSON.parse(regDataStr);
-    const profile = {
-      name: regData.name,
-      gender: regData.gender,
-      language: regData.language,
-      selfie: this.selfiePreview.src
-    };
-    this.profileManager.saveProfile(profile);
-    localStorage.setItem("registrationCompleted", "true");
-    this.cameraSectionManager.stopCamera();
-    this.showMainScreen();
-    
-    // Вместо прямого запуска звонка, активируем событие "welcome"
-    setTimeout(() => {
-      this.gameEventManager.activateEvent("welcome");
-    }, 5000);
+completeRegistration() {
+  if (!this.selfiePreview.src || this.selfiePreview.src === "") {
+    alert("Please capture your selfie before completing registration.");
+    return;
   }
+  const regDataStr = localStorage.getItem('regData');
+  if (!regDataStr) {
+    alert("Registration data missing.");
+    return;
+  }
+  const regData = JSON.parse(regDataStr);
+  const profile = {
+    name: regData.name,
+    gender: regData.gender,
+    language: regData.language,
+    selfie: this.selfiePreview.src
+  };
+  this.profileManager.saveProfile(profile);
+  localStorage.setItem("registrationCompleted", "true");
+  this.cameraSectionManager.stopCamera();
+  this.showMainScreen();
+  
+  // Вместо звонка активируем событие "welcome"
+  setTimeout(() => {
+    this.gameEventManager.activateEvent("welcome");
+  }, 5000);
+}
 
 
 // 🔹 Переключение между камерой и дневником
@@ -264,7 +265,6 @@ async toggleCameraView() {
     });
     console.log("Видео готово:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
 
-    // Здесь нет вызова триггера квестов, поскольку событие навешивается внутри квеста.
   } else {
     console.log("📓 Возвращаемся в блог...");
     diary.style.display = "block";

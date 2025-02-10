@@ -3,26 +3,98 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR with Camera Tracking</title>
-  <script src="https://cdn.jsdelivr.net/npm/aframe@1.2.0/dist/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/jeromeetienne/AR.js/aframe/build/aframe-ar.js"></script>
+  <title>Face Filter with TensorFlow.js and MediaPipe</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
   <style>
-    body { margin: 0; overflow: hidden; }
+    body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #000; }
+    video { transform: scaleX(-1); width: 100%; max-width: 640px; }
   </style>
 </head>
-<body style="margin: 0; overflow: hidden;">
+<body>
 
-  <a-scene embedded arjs>
-    <!-- Камера будет отслеживать положение и движение устройства -->
-    <a-camera gps-camera rotation-reader position="0 1.6 0">
-      <!-- Объект, который будет следовать за камерой -->
-      <a-box position="0 0 -2" material="color: blue;"></a-box>
-    </a-camera>
+<video id="video" autoplay></video>
 
-    <!-- Обычная сцена, добавьте освещение и другие объекты -->
-    <a-light type="ambient" intensity="0.5"></a-light>
-    <a-light type="directional" intensity="1" position="5 5 -5"></a-light>
-  </a-scene>
+<script>
+  // Получение доступа к камере
+  const videoElement = document.getElementById('video');
+  const videoWidth = 640;
+  const videoHeight = 480;
+
+  async function setupCamera() {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: videoWidth, height: videoHeight }
+    });
+    videoElement.srcObject = stream;
+    await new Promise(resolve => {
+      videoElement.onloadedmetadata = () => { resolve(videoElement); };
+    });
+  }
+
+  // Инициализация модели FaceMesh из MediaPipe
+  const faceMesh = new faceMesh.FaceMesh({
+    locateFaces: true,
+  });
+
+  // Запуск видео и обработка лиц
+  async function detectFace() {
+    await setupCamera();
+
+    // Обработка видео
+    videoElement.play();
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    function drawFaceLandmarks() {
+      ctx.drawImage(videoElement, 0, 0, videoWidth, videoHeight);
+      
+      faceMesh.send({ image: videoElement })
+        .then(results => {
+          if (results.multiFaceLandmarks) {
+            results.multiFaceLandmarks.forEach(landmarks => {
+              // Рисуем точки на лице
+              ctx.strokeStyle = '#FF0000';
+              ctx.lineWidth = 2;
+              landmarks.forEach(point => {
+                ctx.beginPath();
+                ctx.arc(point.x * videoWidth, point.y * videoHeight, 2, 0, 2 * Math.PI);
+                ctx.fill();
+              });
+
+              // Здесь можно изменить лицо, например, применить фильтр
+              applyFilter(ctx, landmarks);
+            });
+          }
+          requestAnimationFrame(drawFaceLandmarks);
+        });
+    }
+    
+    drawFaceLandmarks();
+  }
+
+  // Пример фильтра, который изменяет лицо (например, делает его ярче)
+  function applyFilter(ctx, landmarks) {
+    ctx.globalCompositeOperation = 'source-over';
+    
+    // Пример: создаём маску на основе зоны вокруг глаз
+    const leftEye = landmarks[33]; // Точка на левом глазу
+    const rightEye = landmarks[133]; // Точка на правом глазу
+
+    const eyeDist = Math.abs(leftEye.x - rightEye.x) * videoWidth;
+
+    // Нарисуем круг вокруг глаз
+    ctx.beginPath();
+    ctx.arc((leftEye.x + rightEye.x) * videoWidth / 2, (leftEye.y + rightEye.y) * videoHeight / 2, eyeDist / 2, 0, 2 * Math.PI);
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+    ctx.stroke();
+  }
+
+  // Запуск функции для обнаружения лиц
+  detectFace();
+</script>
 
 </body>
 </html>

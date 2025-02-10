@@ -1,110 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR with Three.js</title>
-  <style>
-    body { margin: 0; overflow: hidden; }
-    canvas { display: block; }
-  </style>
+  <script src="https://cdn.jsdelivr.net/gh/jeromeetienne/AR.js/aframe/build/aframe-ar.js"></script>
 </head>
-<body>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script>
-    // Создаем базовую сцену, камеру и рендерер с Three.js
-    let scene = new THREE.Scene();
-    let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    let renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-    // Создаем 3D-объект (например, куб)
-    let geometry = new THREE.BoxGeometry(1, 1, 1);
-    let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    let cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
-
-    // Масштабируем объект
-    cube.scale.set(0.5, 0.5, 0.5); // Уменьшаем размер объекта
-
-    // Устанавливаем начальное положение камеры
-    camera.position.z = 5;
-
-    // Инициализация AR сессии
-    let xrSession = null;
-    let xrReferenceSpace = null;
-
-    async function startAR() {
-      if (navigator.xr) {
-        try {
-          xrSession = await navigator.xr.requestSession('immersive-ar', {
-            requiredFeatures: ['hit-test']
-          });
-
-          xrSession.addEventListener('end', onARSessionEnded);
-          xrReferenceSpace = await xrSession.requestReferenceSpace('local');
-
-          let hitTestSource = null;
-
-          // Получаем данные о касаниях экрана
-          xrSession.requestHitTestSource({ space: xrReferenceSpace }).then((source) => {
-            hitTestSource = source;
-          });
-
-          // Обновляем состояние сцены в цикле
-          function onXRFrame(t, frame) {
-            let xrPose = frame.getViewerPose(xrReferenceSpace);
-            if (xrPose) {
-              // Получаем позицию и ориентацию устройства
-              let hitTestResults = frame.getHitTestResults(hitTestSource);
-              if (hitTestResults.length > 0) {
-                let hitPose = hitTestResults[0].getPose(xrReferenceSpace);
-                if (hitPose) {
-                  // Обновляем позицию куба
-                  cube.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
-                }
-              }
-            }
-
-            renderer.render(scene, camera);
-            xrSession.requestAnimationFrame(onXRFrame);
-          }
-
-          xrSession.requestAnimationFrame(onXRFrame);
-          xrSession.requestReferenceSpace('local');
-        } catch (err) {
-          console.error('Ошибка при запуске AR-сессии:', err);
-        }
-      }
-    }
-
-    function onARSessionEnded() {
-      xrSession = null;
-      xrReferenceSpace = null;
-    }
-
-    // Проверяем, поддерживает ли браузер AR
-    if (navigator.xr) {
-      startAR();
-    } else {
-      alert('Ваш браузер не поддерживает AR!');
-    }
-
-    // Обработка изменений размера окна
-    window.addEventListener('resize', () => {
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-    });
-
-    // Основной рендер
-    function animate() {
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    }
-    animate();
-  </script>
+<body style="margin: 0; overflow: hidden;">
+  <a-scene embedded arjs>
+    <a-marker preset="hiro">
+      <a-box position="0 0.5 0" material="color: blue;"></a-box>
+    </a-marker>
+    <a-entity camera></a-entity>
+  </a-scene>
 </body>
 </html>

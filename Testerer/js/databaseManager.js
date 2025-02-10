@@ -6,7 +6,7 @@ export class DatabaseManager {
 
   async initDatabase() {
     const SQL = await initSqlJs({
-      locateFile: file => `js/${file}`
+      locateFile: file => js/${file}
     });
     // Проверяем, сохранена ли база в localStorage
     const savedDb = localStorage.getItem("diaryDB");
@@ -20,7 +20,7 @@ export class DatabaseManager {
       this.db = new SQL.Database(bytes);
     } else {
       this.db = new SQL.Database();
-      this.db.run(`
+      this.db.run(
         CREATE TABLE IF NOT EXISTS diary (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           entry TEXT,
@@ -36,7 +36,6 @@ export class DatabaseManager {
           quest_key TEXT,
           status TEXT
         );
-      `);
     }
     console.log("📖 Database initialized!");
   }
@@ -83,7 +82,7 @@ export class DatabaseManager {
       return;
     }
     this.db.run("INSERT INTO quest_progress (quest_key, status) VALUES (?, ?)", [questKey, status]);
-    console.log(`✅ Quest progress added: ${questKey} - ${status}`);
+    console.log(✅ Quest progress added: ${questKey} - ${status});
     this.saveDatabase();
   }
 

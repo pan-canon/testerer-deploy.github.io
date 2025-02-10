@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js - Добавление объектов на пол или потолок</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let scene, camera, renderer;
+        let raycaster, mouse, clock;
+        let floorMesh, ceilingMesh;
+        
+        function init() {
+            // Сцена, камера и рендерер
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+            
+            // Устанавливаем камеру на позицию
+            camera.position.z = 5;
+
+            // Добавляем пол (статический объект)
+            const floorGeometry = new THREE.PlaneGeometry(10, 10);
+            const floorMaterial = new THREE.MeshBasicMaterial({ color: 0x808080, side: THREE.DoubleSide });
+            floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
+            floorMesh.rotation.x = Math.PI / 2;  // Поворот для того, чтобы плоскость стала горизонтальной
+            floorMesh.position.y = -2.5;
+            scene.add(floorMesh);
+
+            // Добавляем потолок (статический объект)
+            const ceilingGeometry = new THREE.PlaneGeometry(10, 10);
+            const ceilingMaterial = new THREE.MeshBasicMaterial({ color: 0x555555, side: THREE.DoubleSide });
+            ceilingMesh = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+            ceilingMesh.rotation.x = Math.PI / 2;  // Поворот для того, чтобы плоскость стала горизонтальной
+            ceilingMesh.position.y = 2.5;
+            scene.add(ceilingMesh);
+
+            // Raycaster для определения поверхности
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            clock = new THREE.Clock();
+
+            // Таймер для случайного добавления объекта
+            setInterval(addRandomObject, Math.random() * 5000 + 1000);
+
+            animate();
+        }
+
+        function addRandomObject() {
+            const isFloor = Math.random() > 0.5;  // Случайный выбор: пол или потолок
+            const objectGeometry = new THREE.BoxGeometry(1, 1, 1);
+            const objectMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const objectMesh = new THREE.Mesh(objectGeometry, objectMaterial);
+            
+            if (isFloor) {
+                // Добавление на пол
+                objectMesh.position.set(
+                    Math.random() * 10 - 5,  // Случайная позиция по оси X
+                    -2.5 + 0.5,              // Позиция на полу
+                    Math.random() * 10 - 5   // Случайная позиция по оси Z
+                );
+            } else {
+                // Добавление на потолок
+                objectMesh.position.set(
+                    Math.random() * 10 - 5,  // Случайная позиция по оси X
+                    2.5 - 0.5,               // Позиция на потолке
+                    Math.random() * 10 - 5   // Случайная позиция по оси Z
+                );
+            }
+
+            scene.add(objectMesh);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+</body>
+</html>

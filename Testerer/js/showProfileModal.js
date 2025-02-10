@@ -7,14 +7,14 @@ export class ShowProfileModal {
   }
 
   show() {
-    // Получаем текущий профиль
+    // Получаем текущий профиль из менеджера профиля
     const profile = this.app.profileManager.getProfile();
     if (!profile) {
       alert("Профиль не найден.");
       return;
     }
     
-    // Создаем оверлей для модального окна с прокруткой
+    // Создаем оверлей для модального окна с возможностью прокрутки
     const modalOverlay = document.createElement("div");
     modalOverlay.id = "profile-modal-overlay";
     Object.assign(modalOverlay.style, {
@@ -31,7 +31,7 @@ export class ShowProfileModal {
       overflowY: "auto"
     });
     
-    // Контейнер модального окна
+    // Создаем контейнер модального окна
     const modal = document.createElement("div");
     modal.id = "profile-modal";
     Object.assign(modal.style, {
@@ -45,12 +45,12 @@ export class ShowProfileModal {
       boxShadow: "0 0 10px rgba(0,0,0,0.3)"
     });
     
-    // Заголовок
+    // Заголовок модального окна
     const title = document.createElement("h2");
     title.textContent = "Редактирование профиля";
     modal.appendChild(title);
     
-    // Блок аватара
+    // Блок аватара (селфи)
     const avatarContainer = document.createElement("div");
     avatarContainer.style.textAlign = "center";
     
@@ -65,14 +65,14 @@ export class ShowProfileModal {
     });
     avatarContainer.appendChild(avatarImg);
     
-    // Кнопка обновления селфи
+    // Кнопка для обновления селфи
     const updateSelfieBtn = document.createElement("button");
     updateSelfieBtn.textContent = "Обновить селфи";
     updateSelfieBtn.style.marginTop = "10px";
     updateSelfieBtn.addEventListener("click", () => {
-      // Запускаем отдельное модальное окно для редактирования селфи
+      // Открываем отдельное модальное окно для редактирования селфи
       this.showSelfieEditModal((newSelfieSrc) => {
-        // Колбэк после успешного захвата селфи: обновляем аватар в мини-профиле
+        // После успешного захвата селфи обновляем аватар в мини-профиле
         avatarImg.src = newSelfieSrc;
       });
     });
@@ -80,7 +80,7 @@ export class ShowProfileModal {
     
     modal.appendChild(avatarContainer);
     
-    // Поле редактирования логина
+    // Поле для редактирования логина
     const loginLabel = document.createElement("label");
     loginLabel.textContent = "Логин:";
     loginLabel.style.display = "block";
@@ -101,10 +101,10 @@ export class ShowProfileModal {
     planContainer.style.padding = "10px";
     planContainer.style.marginBottom = "15px";
     if (this.app.apartmentPlanManager && this.app.apartmentPlanManager.rooms.length > 0) {
-      // Клонируем таблицу плана
+      // Клонируем таблицу плана квартиры
       const planClone = this.app.apartmentPlanManager.table.cloneNode(true);
       planContainer.appendChild(planClone);
-      // Добавляем кнопки переключения этажей только если этажей больше одного
+      // Если этажей больше одного, добавляем кнопки для переключения этажей
       const floors = this.app.apartmentPlanManager.rooms.map(room => room.floor);
       const uniqueFloors = [...new Set(floors)];
       if (uniqueFloors.length > 1) {
@@ -144,7 +144,7 @@ export class ShowProfileModal {
     note.style.fontStyle = "italic";
     modal.appendChild(note);
 
-    // Блок отображения наград (призраков)
+    // Блок отображения наград (призраков) и их прогресса
     const rewardsContainer = document.createElement("div");
     rewardsContainer.id = "ghost-rewards-container";
     rewardsContainer.style.display = "flex";
@@ -152,12 +152,10 @@ export class ShowProfileModal {
     rewardsContainer.style.justifyContent = "center";
     rewardsContainer.style.marginTop = "20px";
     
-    // Получаем прогресс призрака из ProfileManager
-    // Ожидается, что ghostProgress имеет формат { ghostId: число, phenomenonIndex: число }
-    const ghostProgress = this.app.profileManager.getGhostProgress();
-    const totalGhosts = 13;
-    
-    for (let i = 1; i <= totalGhosts; i++) {
+    // Если доступен менеджер призраков, получаем список призраков
+    const ghostList = (this.app.ghostManager && this.app.ghostManager.ghosts) || [];
+    // Для каждого призрака создаем элемент-иконку с отображением прогресса
+    ghostList.forEach(ghost => {
       const ghostIcon = document.createElement("div");
       ghostIcon.className = "ghost-icon";
       ghostIcon.style.width = "60px";
@@ -172,23 +170,24 @@ export class ShowProfileModal {
       ghostIcon.style.fontWeight = "bold";
       ghostIcon.style.position = "relative";
       
-      if (ghostProgress && ghostProgress.ghostId === i) {
-         // Активный призрак: отображаем сегментированный прогресс (простой вариант)
-         ghostIcon.textContent = `${ghostProgress.phenomenonIndex}/6`;
-         ghostIcon.style.borderColor = "#4caf50"; // зелёная рамка для активного
+      // Получаем прогресс призрака из profileManager
+      const ghostProgress = this.app.profileManager.getGhostProgress();
+      if (ghostProgress && ghostProgress.ghostId === ghost.id) {
+        // Если это активный призрак, отображаем текущий шаг и общее количество шагов
+        ghostIcon.textContent = `${ghostProgress.phenomenonIndex}/${ghost.phenomenaCount}`;
+        ghostIcon.style.borderColor = "#4caf50"; // зеленая рамка для активного призрака
       } else {
-         // Заблокированный призрак: выводим название и применяем эффект "grayscale"
-         ghostIcon.textContent = `Призрак ${i}`;
-         ghostIcon.style.filter = "grayscale(100%)";
+        // Для неактивных или заблокированных призраков отображаем имя (или номер)
+        ghostIcon.textContent = ghost.name;
+        ghostIcon.style.filter = "grayscale(100%)";
       }
       
       rewardsContainer.appendChild(ghostIcon);
-    }
+    });
     
     modal.appendChild(rewardsContainer);
 
-    
-    // Кнопки "Отмена" и "Сохранить"
+    // Контейнер для кнопок "Отмена" и "Сохранить"
     const btnContainer = document.createElement("div");
     btnContainer.style.textAlign = "right";
     btnContainer.style.marginTop = "20px";
@@ -204,11 +203,13 @@ export class ShowProfileModal {
     const saveBtn = document.createElement("button");
     saveBtn.textContent = "Сохранить изменения";
     saveBtn.addEventListener("click", () => {
+      // Обновляем профиль с новыми данными (логин и селфи)
       const updatedProfile = Object.assign({}, profile, {
         name: loginInput.value,
         selfie: avatarImg.src
       });
       this.app.profileManager.saveProfile(updatedProfile);
+      // Обновляем мини-профиль в основном интерфейсе
       this.app.profileNameElem.textContent = updatedProfile.name;
       this.app.profilePhotoElem.src = updatedProfile.selfie;
       document.body.removeChild(modalOverlay);
@@ -280,7 +281,7 @@ export class ShowProfileModal {
     captureBtn.style.display = "block";
     captureBtn.style.margin = "10px auto";
     captureBtn.addEventListener("click", () => {
-      // Захватываем текущий кадр
+      // Захватываем текущий кадр с видео
       if (!this.app.cameraSectionManager.videoElement ||
           !this.app.cameraSectionManager.videoElement.srcObject) {
         alert("Камера не включена.");
@@ -309,7 +310,7 @@ export class ShowProfileModal {
     cancelBtn.style.display = "block";
     cancelBtn.style.margin = "10px auto";
     cancelBtn.addEventListener("click", () => {
-      // Останавливаем камеру и закрываем окно
+      // Останавливаем камеру и закрываем окно редактирования селфи
       this.app.cameraSectionManager.stopCamera();
       document.body.removeChild(selfieOverlay);
     });

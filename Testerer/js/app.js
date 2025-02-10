@@ -56,6 +56,22 @@ export class App {
     // Запускаем инициализацию приложения (например, загрузку состояния и базу данных)
     this.init();
   }
+
+  loadAppState() {
+    // Загружаем состояние из localStorage
+    const savedGhostId = localStorage.getItem('currentGhostId');
+    if (savedGhostId) {
+      this.ghostManager.setCurrentGhost(parseInt(savedGhostId));
+    } else {
+      this.ghostManager.setCurrentGhost(1); // Устанавливаем Призрак 1 как текущего по умолчанию
+    }
+  }
+
+  init() {
+    // Загружаем состояние при инициализации
+    this.loadAppState();
+    // Дополнительная инициализация приложения
+  }
   
 // Удаление CallManager
 // this.callManager = new CallManager(this.eventManager, this, this.languageManager);

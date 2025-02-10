@@ -110,7 +110,7 @@ export class App {
       // Если регистрация завершена, но звонок ещё не обработан, активируем событие "welcome"
 if (localStorage.getItem("registrationCompleted") === "true") {
   setTimeout(() => {
-    this.gameEventManager.activateEvent("welcome"); // Запуск события "welcome"
+    this.gameEventManager.startEvent("welcome"); // Запуск события "welcome"
   }, 5000);
 }
       

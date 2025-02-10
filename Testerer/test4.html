@@ -13,7 +13,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         let scene, camera, renderer;
-        let raycaster, mouse, clock;
         let floorMesh, ceilingMesh;
         
         function init() {
@@ -42,12 +41,6 @@
             ceilingMesh.rotation.x = Math.PI / 2;  // Поворот для того, чтобы плоскость стала горизонтальной
             ceilingMesh.position.y = 2.5;
             scene.add(ceilingMesh);
-
-            // Raycaster для определения поверхности
-            raycaster = new THREE.Raycaster();
-            mouse = new THREE.Vector2();
-
-            clock = new THREE.Clock();
 
             // Таймер для случайного добавления объекта
             setInterval(addRandomObject, Math.random() * 5000 + 1000);

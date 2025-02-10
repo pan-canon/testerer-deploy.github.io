@@ -3,76 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Three.js: Камера и 3D объекты</title>
+  <title>Мультяшная 3D версия комнаты</title>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/jeromeetienne/AR.js/aframe/build/aframe-ar.js"></script>
   <style>
     body { margin: 0; overflow: hidden; }
     canvas { display: block; }
   </style>
 </head>
 <body>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script>
-    let scene, camera, renderer, video, videoTexture, videoMaterial, videoMesh;
-    let cube;
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+    <!-- Камера -->
+    <a-entity camera></a-entity>
 
-    // Инициализация сцены, камеры и рендерера
-    function init() {
-      scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-      renderer = new THREE.WebGLRenderer();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      document.body.appendChild(renderer.domElement);
+    <!-- Мультяшный стиль пола (плоскость с материалом, похожим на мультфильм) -->
+    <a-entity geometry="primitive: plane; width: 10; height: 10"
+              material="color: #90ee90; shader: flat; opacity: 0.7"
+              position="0 0 -5"></a-entity>
 
-      // Захват видео с камеры
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(function (stream) {
-          video = document.createElement('video');
-          video.srcObject = stream;
-          video.play();
-          
-          // Создание текстуры для видео
-          videoTexture = new THREE.VideoTexture(video);
-          videoTexture.minFilter = THREE.LinearFilter;
-          videoTexture.magFilter = THREE.LinearFilter;
-          videoTexture.format = THREE.RGBFormat;
-          
-          // Создание плоскости для отображения видео
-          const geometry = new THREE.PlaneGeometry(5, 3);
-          videoMaterial = new THREE.MeshBasicMaterial({ map: videoTexture });
-          videoMesh = new THREE.Mesh(geometry, videoMaterial);
-          videoMesh.position.z = -5;  // Позиционируем плоскость немного дальше камеры
-          scene.add(videoMesh);
+    <!-- Мультяшный куб -->
+    <a-box color="#ff6347" position="0 0.5 -3" scale="1 1 1" animation="property: rotation; to: 0 360 0; loop: true; dur: 2000"></a-box>
 
-          // Добавление куба
-          const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-          const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-          cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-          cube.position.set(0, 0, -3);  // Позиция куба
-          scene.add(cube);
-
-          // Камера
-          camera.position.z = 5;
-
-          animate(); // Запуск анимации
-        })
-        .catch(function (err) {
-          console.log("Ошибка при захвате видео: " + err);
-        });
-    }
-
-    // Анимация
-    function animate() {
-      requestAnimationFrame(animate);
-      
-      // Добавление простого вращения куба
-      cube.rotation.x += 0.01;
-      cube.rotation.y += 0.01;
-
-      // Рендеринг сцены
-      renderer.render(scene, camera);
-    }
-
-    init();
-  </script>
+    <!-- Простая геометрия для создания мультяшной стены -->
+    <a-box color="#add8e6" position="-5 2.5 -3" scale="1 5 1"></a-box>
+    
+    <!-- Камера для отслеживания маркеров -->
+    <a-camera></a-camera>
+  </a-scene>
 </body>
 </html>

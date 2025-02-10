@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three.js с веб-камерой</title>
+    <title>Three.js с дополненной реальностью</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
@@ -16,6 +16,7 @@
         let video, videoTexture, videoMaterial;
         let floorMesh, ceilingMesh;
         let raycaster, mouse;
+        let objectToAdd;
 
         async function init() {
             // Сцена, камера и рендерер
@@ -62,7 +63,7 @@
             raycaster = new THREE.Raycaster();
             mouse = new THREE.Vector2();
 
-            // Таймер для случайного добавления объекта
+            // Добавляем объект с фиксированным интервалом
             setInterval(addRandomObject, Math.random() * 5000 + 1000);
 
             animate();
@@ -89,6 +90,10 @@
                     Math.random() * 10 - 5   // Случайная позиция по оси Z
                 );
             }
+
+            // Масштабируем объект в зависимости от его расстояния от камеры (фокус)
+            const distance = camera.position.distanceTo(objectMesh.position);
+            objectMesh.scale.set(distance / 5, distance / 5, distance / 5); // Масштабирование по расстоянию
 
             scene.add(objectMesh);
         }

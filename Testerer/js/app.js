@@ -108,12 +108,9 @@ export class App {
       this.eventManager.updateDiaryDisplay();
       
       // Если регистрация завершена, но звонок ещё не обработан, активируем событие "welcome"
-if (
-  localStorage.getItem("registrationCompleted") === "true" &&
-  localStorage.getItem("callHandled") !== "true"
-) {
+if (localStorage.getItem("registrationCompleted") === "true") {
   setTimeout(() => {
-    this.gameEventManager.activateEvent("welcome");
+    this.gameEventManager.activateEvent("welcome"); // Запуск события "welcome"
   }, 5000);
 }
       

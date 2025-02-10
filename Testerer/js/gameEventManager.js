@@ -21,19 +21,13 @@ export class GameEventManager {
    * Активирует событие по его ключу.
    * @param {string} key – идентификатор события
    */
-  async activateEvent(key) {
-    const event = this.events.find(e => e.key === key);
-    if (event) {
-      await event.activate();
-      this.currentEventIndex++;
-      if (this.currentEventIndex < this.events.length) {
-        // Автоматически активируем следующее событие
-        await this.activateNextEvent();
-      }
-    } else {
-      console.warn(`Событие с ключом "${key}" не найдено.`);
-    }
+activateEvent(key) {
+  if (key === "welcome") {
+    // Активируем первое событие: просьба подойти к зеркалу
+    this.app.eventManager.startEvent("welcome");
   }
+}
+
 
   /**
    * Активирует следующее событие в списке.

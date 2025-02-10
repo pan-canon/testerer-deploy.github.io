@@ -12,24 +12,26 @@ export class EventManager {
     return entries.some(entry => entry.entry === eventKey);
   }
 
-async addDiaryEntry(key, imageData = null, isFromGhost = false) {
-  // Если передано изображение, сохраняем запись в виде:
-  let entry = key;
-  if (imageData) {
-    entry = `${key}\n[photo attached]\n${imageData}`;
+  // Метод добавления записи в дневник от имени призрака
+  async addDiaryEntry(key, imageData = null, isFromGhost = false) {
+    // Если передано изображение, сохраняем запись в виде:
+    let entry = key;
+    if (imageData) {
+      entry = `${key}\n[photo attached]\n${imageData}`;
+    }
+
+    // Если запись должна быть от имени призрака
+    if (isFromGhost) {
+      const ghost = this.ghostManager.getCurrentGhost();
+      entry = `${ghost.name}: ${entry}`; // Добавляем имя призрака
+    }
+
+    // Сохраняем запись в базу данных
+    await this.databaseManager.addDiaryEntry(entry);
+    this.updateDiaryDisplay();
   }
 
-  // Если запись должна быть от имени призрака
-  if (isFromGhost) {
-    const ghost = this.ghostManager.getCurrentGhost();
-    entry = `${ghost.name}: ${entry}`; // Добавляем имя призрака
-  }
-
-  await this.databaseManager.addDiaryEntry(entry);
-  this.updateDiaryDisplay();
-}
-
-
+  // Обновление отображения дневника
   updateDiaryDisplay() {
     if (!this.diaryContainer) {
       console.error("Diary container not found!");
@@ -84,25 +86,32 @@ async addDiaryEntry(key, imageData = null, isFromGhost = false) {
     console.log("📖 Diary updated.");
   }
 
-startMirrorQuest() {
-  // Добавляем запись с ключом "mirror_quest" – при отображении будет локализовано
-  this.addGhostDiaryEntry("mirror_quest");
-  console.log("🎭 Starting mirror quest...");
-}
+  // Метод для добавления записи от имени призрака
+  async addGhostDiaryEntry(key, imageData = null) {
+    await this.addDiaryEntry(key, imageData, true); // isFromGhost = true
+  }
 
-async addGhostDiaryEntry(key, imageData = null) {
-  await this.addDiaryEntry(key, imageData, true);
-}
-
-  // Новый метод для начала квеста для текущего призрака
+  // Новый метод для старта квеста
   async startGhostQuest() {
     const ghost = this.ghostManager.getCurrentGhost();
     if (ghost) {
       const questKey = `ghost_${ghost.id}_quest`;
-      await this.addDiaryEntry(questKey);
+      await this.addGhostDiaryEntry(questKey);
       console.log(`👻 Starting quest for ${ghost.name}...`);
     } else {
       console.error("⚠️ No active ghost found.");
+    }
+  }
+
+  // Метод для активации события "welcome" (инициирует первую запись)
+  async startEvent(eventKey) {
+    console.log(`Запуск события: ${eventKey}`);
+    if (eventKey === "welcome") {
+      // Добавляем запись о просьбе подойти к зеркалу
+      await this.addGhostDiaryEntry("Они просят меня подойти к зеркалу");
+
+      // Активируем квест с зеркалом
+      this.app.questManager.activateQuest("mirror_quest");
     }
   }
 }

@@ -9,56 +9,56 @@ export class EventManager {
   // Проверяем, была ли уже добавлена запись с данным ключом в дневник
   isEventLogged(eventKey) {
     const entries = this.databaseManager.getDiaryEntries();
-return result[0].values.map(row => {
-  let parsed;
-  try {
-    parsed = JSON.parse(row[1]);
-  } catch (e) {
-    parsed = { entry: row[1], postClass: "user-post" };
-  }
-  return { id: row[0], ...parsed, timestamp: row[2] };
-});
-
+    return entries.some(entry => entry.entry === eventKey);
   }
 
   // Добавляем запись в дневник, с пометкой о том, от кого эта запись (призрак или пользователь)
-  async addDiaryEntry(entry, isPostFromGhost = false) {
-const entryData = { entry, postClass };
-const serialized = JSON.stringify(entryData);
-await this.databaseManager.addDiaryEntry(serialized);
-    this.updateDiaryDisplay();
+async addDiaryEntry(entry, isPostFromGhost = false) {
+  const postClass = isPostFromGhost ? "ghost-post" : "user-post"; // Класс для оформления поста
+  const entryData = { entry, postClass };
+  const serializedEntry = JSON.stringify(entryData); // Сериализуем объект
+  await this.databaseManager.addDiaryEntry(serializedEntry);
+  this.updateDiaryDisplay();
+}
+
+
+updateDiaryDisplay() {
+  if (!this.diaryContainer) {
+    console.error("Diary container not found!");
+    return;
   }
+  
+  // Очищаем контейнер дневника
+  this.diaryContainer.innerHTML = "";
+  
+  // Получаем массив записей из базы; каждая запись имеет структуру:
+  // { id, entry, postClass, timestamp }
+  const entries = this.databaseManager.getDiaryEntries();
+  const seen = new Set();
+  const currentLanguage = this.languageManager.getLanguage();
 
-  // Обновляем отображение дневника
-  updateDiaryDisplay() {
-    if (!this.diaryContainer) {
-      console.error("Diary container not found!");
-      return;
-    }
-    this.diaryContainer.innerHTML = "";  // Очищаем контейнер дневника
-    const entries = this.databaseManager.getDiaryEntries();
-    const seen = new Set();
-    const currentLanguage = this.languageManager.getLanguage();
+  entries.forEach(entryObj => {
+    // Предотвращаем дублирование: можно проверять по id или по тексту записи
+    if (seen.has(entryObj.id)) return;
+    seen.add(entryObj.id);
 
-    entries.forEach(entry => {
-      if (seen.has(entry.entry)) return;
-      seen.add(entry.entry);
+    // Создаем обёртку для записи
+    const wrapper = document.createElement("div");
+    // Добавляем CSS-класс записи (например, ghost-post или user-post)
+    wrapper.classList.add(entryObj.postClass);
 
-      const wrapper = document.createElement("div");
-      const p = document.createElement("p");
-      
-      // Локализуем текст в зависимости от источника
-      const localizedText =
-        this.languageManager.locales[currentLanguage][entry.entry] || entry.entry;
-      p.textContent = `${localizedText} (${entry.timestamp})`;
-      
-      // Добавляем класс поста (от призрака или пользователя)
-      wrapper.classList.add(entry.postClass);  
-      wrapper.appendChild(p);
+    // Создаем элемент абзаца для текста записи
+    const p = document.createElement("p");
+    // Локализуем текст: если для ключа entry есть перевод в текущем языке, используем его
+    const localizedText =
+      this.languageManager.locales[currentLanguage][entryObj.entry] || entryObj.entry;
+    p.textContent = `${localizedText} (${entryObj.timestamp})`;
+    wrapper.appendChild(p);
 
-      // Если запись содержит изображение, отображаем его
-      if (entry.entry.includes("[photo attached]")) {
-        const parts = entry.entry.split("\n[photo attached]\n");
+    // Если запись содержит метку "[photo attached]", значит к ней прикреплено изображение
+    if (entryObj.entry.includes("[photo attached]")) {
+      const parts = entryObj.entry.split("\n[photo attached]\n");
+      if (parts.length >= 2) {
         const imageData = parts[1];
         const img = document.createElement("img");
         img.src = imageData;
@@ -66,12 +66,15 @@ await this.databaseManager.addDiaryEntry(serialized);
         img.style.maxWidth = "100%";
         wrapper.appendChild(img);
       }
+    }
 
-      this.diaryContainer.appendChild(wrapper);
-    });
+    // Добавляем обёртку с записью в контейнер дневника
+    this.diaryContainer.appendChild(wrapper);
+  });
 
-    console.log("📖 Diary updated.");
-  }
+  console.log("📖 Diary updated.");
+}
+
 
   // Новый метод для начала квеста с зеркалом после регистрации
   async startMirrorQuest() {

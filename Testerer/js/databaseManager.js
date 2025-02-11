@@ -65,17 +65,25 @@ this.db.run(`
     this.saveDatabase();
   }
 
-  getDiaryEntries() {
-    if (!this.db) {
-      console.error("⚠️ Database not initialized!");
-      return [];
-    }
-    const result = this.db.exec("SELECT * FROM diary ORDER BY timestamp DESC");
-    if (result.length > 0) {
-      return result[0].values.map(row => ({ id: row[0], entry: row[1], timestamp: row[2] }));
-    }
+getDiaryEntries() {
+  if (!this.db) {
+    console.error("⚠️ Database not initialized!");
     return [];
   }
+  const result = this.db.exec("SELECT * FROM diary ORDER BY timestamp DESC");
+  if (result.length > 0) {
+    return result[0].values.map(row => {
+      let parsed;
+      try {
+        parsed = JSON.parse(row[1]); // Пытаемся распарсить поле записи
+      } catch (e) {
+        parsed = { entry: row[1], postClass: "user-post" }; // Если не получилось, используем значение по умолчанию
+      }
+      return { id: row[0], ...parsed, timestamp: row[2] };
+    });
+  }
+  return [];
+}
 
   addQuestProgress(questKey, status) {
     if (!this.db) {

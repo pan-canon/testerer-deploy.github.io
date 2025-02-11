@@ -1,4 +1,4 @@
-import { BaseMirrorQuest } from './quests/mirrorQuest.js';
+import { BaseMirrorQuest } from './quests/baseMirrorQuest.js';
 
 export class QuestManager {
   /**

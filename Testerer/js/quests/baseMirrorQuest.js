@@ -16,15 +16,6 @@ export class BaseMirrorQuest {
    * Регистрируем события на действия с элементами интерфейса.
    */
   registerEvents() {
-    const cameraBtn = document.getElementById("toggle-camera");
-    if (cameraBtn) {
-      cameraBtn.addEventListener("click", async () => {
-        if (localStorage.getItem("mirrorQuestActive") === "true") {
-          console.log("🪞 Запущена проверка зеркального квеста через событие кнопки");
-          await this.finish();
-        }
-      });
-    }
   }
 
   /**
@@ -41,17 +32,18 @@ export class BaseMirrorQuest {
   /**
    * Проверка статуса текущего зеркального квеста.
    */
-  async checkStatus() {
-    console.log("🪞 Зеркальный квест активно. Запускаем проверку...");
-    return new Promise(resolve => {
-      setTimeout(async () => {
-        console.log("⏱ Запуск сравнения текущего кадра...");
-        const success = await this.app.compareCurrentFrame();
-        console.log("⏱ Результат сравнения:", success);
-        resolve(success);
-      }, 3000);
-    });
-  }
+async checkStatus() {
+  console.log("🪞 Зеркальный квест активно. Запускаем проверку...");
+  return new Promise(resolve => {
+    setTimeout(async () => {
+      console.log("⏱ Запуск сравнения текущего кадра...");
+      const success = await this.app.compareCurrentFrame();
+      console.log("⏱ Результат сравнения:", success);
+      resolve(success);
+    }, 5000);
+  });
+}
+
 
   /**
    * Завершение квеста (проверка и запись результатов в дневник).

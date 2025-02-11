@@ -29,6 +29,7 @@ export class App {
     this.exportBtn = document.getElementById('export-profile-btn');
     this.importFileInput = document.getElementById('import-file');
     this.importBtn = document.getElementById('import-profile-btn');
+    this.postBtn = document.getElementById('post-btn');
     
     // Менеджеры
     this.languageManager = new LanguageManager('language-selector');
@@ -70,7 +71,8 @@ async init() {
   cameraBtn.style.display = "inline-block";
 
   // Обновляем дневник (при этом логика дублей будет решаться отдельно)
-  this.eventManager.updateDiaryDisplay();
+this.eventManager.updateDiaryDisplay();
+this.updatePostButtonState();
 
   if (this.profileManager.isProfileSaved()) {
     this.showMainScreen();
@@ -104,6 +106,7 @@ async init() {
     this.resetBtn.addEventListener('click', () => this.profileManager.resetProfile());
     this.exportBtn.addEventListener('click', () => this.exportProfile());
     this.importBtn.addEventListener('click', () => this.importProfile());
+    this.postBtn.addEventListener("click", () => this.handlePostButtonClick());
     this.profilePhotoElem.addEventListener("click", () => this.showProfileModal.show());
     document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
     document.getElementById("prev-floor-btn").addEventListener("click", () => {
@@ -299,6 +302,26 @@ importProfile() {
   this.profileManager.importProfileData(file, this.databaseManager, this.apartmentPlanManager);
 }
 
+
+updatePostButtonState() {
+  // Активировать кнопку "Запостить", если квест с зеркалом активен (приглашение от призрака)
+  if (localStorage.getItem("mirrorQuestActive") === "true") {
+    this.postBtn.disabled = false;
+  } else {
+    this.postBtn.disabled = true;
+  }
+}
+
+async handlePostButtonClick() {
+  if (localStorage.getItem("mirrorQuestActive") === "true") {
+    // Добавляем пост от лица пользователя
+    await this.eventManager.addDiaryEntry("user_post_started_mirror_quest", false);
+    // Запускаем проверку (завершение) зеркального квеста через QuestManager
+    await this.questManager.checkQuest("mirror_quest");
+  } else {
+    alert("Ждите приглашения от призрака для начала квеста.");
+  }
+}
 
 
 async compareCurrentFrame() {

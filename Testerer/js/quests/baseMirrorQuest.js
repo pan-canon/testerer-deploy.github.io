@@ -22,7 +22,7 @@ export class BaseMirrorQuest {
    * Активируем событие, если оно еще не было выполнено.
    */
 async activate() {
-  // Если событие ещё не добавлено в дневник, добавляем его (один раз)
+  // Если событие ещё не добавлено в дневник, добавляем его один раз
   if (!this.eventManager.isEventLogged(this.key)) {
     console.log(`Активируем событие: ${this.key}`);
     await this.eventManager.addDiaryEntry(this.key);
@@ -32,6 +32,7 @@ async activate() {
   // Обновляем состояние кнопки "Запостить"
   this.app.updatePostButtonState();
 }
+
 
 
   /**
@@ -61,7 +62,7 @@ async finish() {
   const randomLetter = this.getRandomLetter(ghost.name);
   
   if (success) {
-    // Если квест выполнен: добавляем пост от юзера с фото (если оно есть) и выбранной буквой
+    // Если квест выполнен: добавляем пост от юзера с фото (если есть) и выбранной буквой
     const photoData = this.app.lastMirrorPhoto ? ` [photo attached]\n${this.app.lastMirrorPhoto}` : "";
     await this.eventManager.addDiaryEntry(`user_post_success: ${randomLetter}${photoData}`, false);
     alert("✅ Задание «подойти к зеркалу» выполнено!");
@@ -76,10 +77,9 @@ async finish() {
   localStorage.removeItem("mirrorQuestActive");
   this.app.updatePostButtonState();
   
-  // Важно: здесь мы больше не вызываем автоматический триггер следующего шага (triggerNextPhenomenon)
-  // Это гарантирует, что пост (запись) будет добавлена лишь один раз для текущего события,
-  // и дальнейшие действия зависят только от нажатия кнопки "Запостить" или таймаута.
+  // НЕ вызываем здесь triggerNextPhenomenon() – дальнейшее добавление постов происходит только при новом запуске события
 }
+
 
 
 getRandomLetter(name) {

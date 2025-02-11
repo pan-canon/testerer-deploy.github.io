@@ -305,6 +305,9 @@ showMainScreen() {
     // Восстанавливаем сохранённое селфи для последующего сравнения
     this.selfieData = profile.selfie;
   }
+
+  // Если в localStorage есть активное событие, обновляем состояние кнопки
+  this.updatePostButtonState();
 }
 
 
@@ -330,12 +333,14 @@ importProfile() {
 
 
 updatePostButtonState() {
-  if (localStorage.getItem("mirrorQuestActive") === "true") {
-    this.postBtn.disabled = false;
-  } else {
-    this.postBtn.disabled = true;
+  // Читаем флаг активности события
+  const isActive = localStorage.getItem("mirrorQuestActive") === "true";
+  console.log("updatePostButtonState: mirrorQuestActive =", isActive);
+  if (this.postBtn) {
+    this.postBtn.disabled = !isActive;
   }
 }
+
 
 
 async handlePostButtonClick() {

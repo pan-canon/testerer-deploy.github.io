@@ -27,11 +27,10 @@ async activate() {
     await this.eventManager.addDiaryEntry(this.key);
   }
   console.log("Зеркальный квест запущен по нажатию кнопки.");
-  // Добавляем (не устанавливаем) дополнительное логирование, затем планируем автоматическое завершение квеста через 5 секунд
-  setTimeout(() => {
-    this.finish();
-  }, 5000);
+  // Вместо немедленного запуска проверки, устанавливаем флаг активации квеста
+  localStorage.setItem("mirrorQuestActive", "true");
 }
+
 
 
 

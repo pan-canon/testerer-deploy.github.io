@@ -278,14 +278,23 @@ async toggleCameraView() {
     });
     await this.cameraSectionManager.startCamera();
 
-    await new Promise(resolve => {
-      if (this.cameraSectionManager.videoElement.readyState >= 2) {
-        resolve();
-      } else {
-        this.cameraSectionManager.videoElement.onloadedmetadata = () => resolve();
-      }
-    });
-    console.log("Видео готово:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
+await new Promise(resolve => {
+  if (this.cameraSectionManager.videoElement.readyState >= 2) {
+    resolve();
+  } else {
+    this.cameraSectionManager.videoElement.onloadedmetadata = () => resolve();
+  }
+});
+console.log("Видео готово:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
+
+// Ждем 5 секунд, чтобы дать время пользователю настроиться, затем запускаем проверку квеста, если флаг активен
+setTimeout(async () => {
+  if (localStorage.getItem("mirrorQuestActive") === "true") {
+    console.log("Запускаем проверку зеркального квеста после включения камеры...");
+    await this.questManager.triggerMirrorQuestIfActive();
+  }
+}, 5000);
+
 
     // Здесь нет вызова триггера квестов, поскольку событие навешивается внутри квеста.
   } else {

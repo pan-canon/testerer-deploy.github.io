@@ -1,3 +1,5 @@
+import { BaseMirrorQuest } from './quests/mirrorQuest.js';
+
 export class QuestManager {
   /**
    * @param {EventManager} eventManager – менеджер событий (для работы с дневником)
@@ -9,7 +11,7 @@ export class QuestManager {
     this.profileManager = profileManager;
     // Регистрируем доступные квесты
     this.quests = [
-      new MirrorQuest(this.eventManager, this.app)
+      new BaseMirrorQuest(this.eventManager, this.app)
       // В будущем сюда можно добавить новые квесты
     ];
   }

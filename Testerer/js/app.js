@@ -93,40 +93,33 @@ export class App {
   }
   
 async init() {
-  // Сначала загружаем состояние (например, текущего призрака)
+  // Загружаем состояние и ждём инициализацию базы данных
   this.loadAppState();
-  
-  // Ожидаем инициализацию базы данных
   await this.databaseManager.initDatabasePromise;
-  
-  const entries = this.databaseManager.getDiaryEntries();
-  console.log("Проверяем дневник после инициализации:", entries);
-  
-  if (entries.length > 0) {
-    const cameraBtn = document.getElementById("toggle-camera");
-    cameraBtn.style.display = "inline-block";
-  }
-  
+
+  // Делать кнопку камеры видимой всегда (после регистрации)
+  const cameraBtn = document.getElementById("toggle-camera");
+  cameraBtn.style.display = "inline-block";
+
+  // Обновляем дневник (при этом логика дублей будет решаться отдельно)
+  this.eventManager.updateDiaryDisplay();
+
   if (this.profileManager.isProfileSaved()) {
     this.showMainScreen();
-    this.eventManager.updateDiaryDisplay();
     
-    // Если регистрация завершена, активируем событие "welcome".
-    // Убираем проверку "callHandled", так как звонки отключены.
+    // Если регистрация завершена, активируем событие "welcome" через 5 секунд
     if (localStorage.getItem("registrationCompleted") === "true") {
       setTimeout(() => {
         this.gameEventManager.activateEvent("welcome");
       }, 5000);
     }
-    
-    // Если регистрация завершена и активен зеркальный квест, делаем кнопку камеры видимой и подсвеченной
-    if (
-      localStorage.getItem("registrationCompleted") === "true" &&
-      localStorage.getItem("mirrorQuestActive") === "true"
-    ) {
-      const cameraBtn = document.getElementById("toggle-camera");
-      cameraBtn.style.display = "inline-block";
+
+    // (Если нужно, здесь можно добавить или убрать класс "glowing" — его можно выставлять в зависимости от квеста)
+    // Например, если квест активен, то:
+    if (localStorage.getItem("mirrorQuestActive") === "true") {
       cameraBtn.classList.add("glowing");
+    } else {
+      cameraBtn.classList.remove("glowing");
     }
   } else {
     this.showRegistrationScreen();

@@ -13,7 +13,6 @@ export class GameEventManager {
     this.languageManager = languageManager;
     this.events = [
       new WelcomeEvent(this.eventManager, this.app, this.languageManager),
-      new BaseMirrorQuest(this.eventManager, this.app)  // Добавляем квест с зеркалом в список событий
       // В будущем можно добавить другие события
     ];
     this.currentEventIndex = 0;  // Индекс текущего события

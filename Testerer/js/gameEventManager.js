@@ -1,5 +1,4 @@
 import { WelcomeEvent } from './events/welcomeEvent.js';
-import { MirrorQuest } from './quests/baseMirrorQuest.js';  // Импортируем новый квест с зеркалом
 
 export class GameEventManager {
   /**
@@ -12,11 +11,10 @@ export class GameEventManager {
     this.app = appInstance;
     this.languageManager = languageManager;
     this.events = [
-      new WelcomeEvent(this.eventManager, this.app, this.languageManager),
-      new MirrorQuest(this.eventManager, this.app)  // Добавляем квест с зеркалом в список событий
+      new WelcomeEvent(this.eventManager, this.app, this.languageManager)
       // В будущем можно добавить другие события
     ];
-    this.currentEventIndex = 0;  // Индекс текущего события
+    this.currentEventIndex = 0;
   }
 
   /**
@@ -28,8 +26,8 @@ export class GameEventManager {
     if (event) {
       await event.activate();
       this.currentEventIndex++;
-      // Автоматически активируем следующее событие после завершения текущего
       if (this.currentEventIndex < this.events.length) {
+        // Автоматически активируем следующее событие
         await this.activateNextEvent();
       }
     } else {
@@ -45,31 +43,5 @@ export class GameEventManager {
     if (nextEvent) {
       await nextEvent.activate();
     }
-  }
-
-  /**
-   * Метод для активации событий, связанных с квестами (например, зеркальный квест).
-   * После завершения одного квеста активируется новый.
-   */
-  async startQuest() {
-    const ghost = this.app.ghostManager.getCurrentGhost();  // Получаем текущего призрака
-    const questKey = `ghost_${ghost.id}_quest`;
-
-    // Активируем квест для текущего призрака
-    await this.activateEvent(questKey);
-
-    // После завершения квеста и выполнения всех действий запускаем следующее событие
-    if (this.currentEventIndex < this.events.length) {
-      await this.activateNextEvent();
-    }
-  }
-
-  /**
-   * Запускаем квест с зеркалом (будет активирован через событие в дневнике).
-   */
-  async startMirrorQuest() {
-    // Запускаем квест с зеркалом
-    await this.activateEvent('mirror_quest');
-    console.log("🪞 Mirror Quest started.");
   }
 }

@@ -3,115 +3,84 @@ export class EventManager {
     this.databaseManager = databaseManager;
     this.languageManager = languageManager;
     this.ghostManager = ghostManager;
+    // Контейнер для дневника должен быть в index.html с id="diary"
     this.diaryContainer = document.getElementById("diary");
   }
 
-  // Проверяем, была ли уже добавлена запись с данным ключом в дневник
   isEventLogged(eventKey) {
     const entries = this.databaseManager.getDiaryEntries();
     return entries.some(entry => entry.entry === eventKey);
   }
 
-  // Добавляем запись в дневник, с пометкой о том, от кого эта запись (призрак или пользователь)
-  async addDiaryEntry(entry, isPostFromGhost = false) {
-    const postClass = isPostFromGhost ? "ghost-post" : "user-post";  // Класс для оформления поста в зависимости от источника
-    const entryData = { entry, postClass };
-    await this.databaseManager.addDiaryEntry(entryData);
+  async addDiaryEntry(key, imageData = null) {
+    // Если передано изображение, сохраняем запись в виде:
+    // "<текст ключа>\n[photo attached]\n<dataURL изображения>"
+    let entry = key;
+    if (imageData) {
+      entry = `${key}\n[photo attached]\n${imageData}`;
+    }
+    await this.databaseManager.addDiaryEntry(entry);
     this.updateDiaryDisplay();
   }
 
-  // Обновляем отображение дневника
   updateDiaryDisplay() {
     if (!this.diaryContainer) {
       console.error("Diary container not found!");
       return;
     }
-    this.diaryContainer.innerHTML = "";  // Очищаем контейнер дневника
+    // Очищаем контейнер дневника
+    this.diaryContainer.innerHTML = "";
     const entries = this.databaseManager.getDiaryEntries();
     const seen = new Set();
     const currentLanguage = this.languageManager.getLanguage();
 
     entries.forEach(entry => {
+      // Если уже выводили такую запись, пропускаем
       if (seen.has(entry.entry)) return;
       seen.add(entry.entry);
-
-      const wrapper = document.createElement("div");
-      const p = document.createElement("p");
       
-      // Локализуем текст в зависимости от источника
-      const localizedText =
-        this.languageManager.locales[currentLanguage][entry.entry] || entry.entry;
-      p.textContent = `${localizedText} (${entry.timestamp})`;
-      
-      // Добавляем класс поста (от призрака или пользователя)
-      wrapper.classList.add(entry.postClass);  
-      wrapper.appendChild(p);
-
-      // Если запись содержит изображение, отображаем его
+      // Если запись содержит метку "[photo attached]", разбиваем её
       if (entry.entry.includes("[photo attached]")) {
         const parts = entry.entry.split("\n[photo attached]\n");
+        const textPart = parts[0];
         const imageData = parts[1];
+
+        // Создаём обёртку
+        const wrapper = document.createElement("div");
+
+        // Отображаем текст (локализованный, если есть)
+        const p = document.createElement("p");
+        const localizedText =
+          this.languageManager.locales[currentLanguage][textPart] || textPart;
+        p.textContent = `${localizedText} (${entry.timestamp})`;
+        wrapper.appendChild(p);
+
+        // Отображаем изображение
         const img = document.createElement("img");
         img.src = imageData;
-        img.alt = this.languageManager.locales[currentLanguage]["photo_attached"] || "Photo attached";
+        img.alt =
+          this.languageManager.locales[currentLanguage]["photo_attached"] ||
+          "Photo attached";
         img.style.maxWidth = "100%";
         wrapper.appendChild(img);
+
+        this.diaryContainer.appendChild(wrapper);
+      } else {
+        // Для текстовых записей – локализуем, если нужно
+        const localizedText =
+          this.languageManager.locales[currentLanguage][entry.entry] || entry.entry;
+        const p = document.createElement("p");
+        p.textContent = `${localizedText} (${entry.timestamp})`;
+        this.diaryContainer.appendChild(p);
       }
-
-      this.diaryContainer.appendChild(wrapper);
     });
-
     console.log("📖 Diary updated.");
   }
 
-  // Новый метод для начала квеста с зеркалом после регистрации
-  async startMirrorQuest() {
-    // Запись от призрака с просьбой подойти к зеркалу
-    await this.addDiaryEntry("Подойди к зеркалу", true);
+  startMirrorQuest() {
+    // Добавляем запись с ключом "mirror_quest" – при отображении будет локализовано
+    this.addDiaryEntry("mirror_quest");
     console.log("🎭 Starting mirror quest...");
-    
-    // Создаем кнопку "Что это?" в записи
-    this.createWhatIsThisButton();
-  }
-
-  // Создаем кнопку "Что это?" с таймером на исчезновение
-  createWhatIsThisButton() {
-    const buttonContainer = document.createElement("div");
-    const button = document.createElement("button");
-    button.textContent = "Что это?!";
-    button.id = "what_is_this_button";
-    
-    // Обработчик для начала квеста по нажатию
-    button.addEventListener("click", async () => {
-      await this.startMirrorQuestProcess();
-      button.style.display = 'none';  // Скрыть кнопку после нажатия
-    });
-    
-    // Таймер для автоматического исчезновения кнопки через 5 секунд
-    setTimeout(() => {
-      button.style.display = 'none';
-    }, 5000);
-
-    buttonContainer.appendChild(button);
-    this.diaryContainer.appendChild(buttonContainer);
-  }
-
-  // Запуск процесса зеркального квеста
-  async startMirrorQuestProcess() {
-    // Логика для начала квеста и добавления фотографии или текста
-    const success = await this.checkStatus();  // Проверка статуса (если игрок перед зеркалом)
-    if (success) {
-      const photoOrText = "Буква Z";  // Это для примера, нужно будет настроить на буквы
-      await this.addDiaryEntry(photoOrText);
-    } else {
-      alert("❌ Квест не пройден!");
-    }
-  }
-
-  // Метод проверки статуса зеркального квеста (если игрок перед зеркалом)
-  async checkStatus() {
-    const success = await this.app.compareCurrentFrame();  // Проверка кадра с зеркалом
-    return success;
   }
 
   // Новый метод для начала квеста для текущего призрака
@@ -119,7 +88,7 @@ export class EventManager {
     const ghost = this.ghostManager.getCurrentGhost();
     if (ghost) {
       const questKey = `ghost_${ghost.id}_quest`;
-      await this.addDiaryEntry(questKey, true);  // Запись от призрака
+      await this.addDiaryEntry(questKey);
       console.log(`👻 Starting quest for ${ghost.name}...`);
     } else {
       console.error("⚠️ No active ghost found.");

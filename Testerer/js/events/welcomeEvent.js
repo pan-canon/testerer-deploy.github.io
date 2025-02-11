@@ -15,20 +15,21 @@ export class WelcomeEvent extends BaseEvent {
   }
 
   /**
-   * При активации события теперь не запускается звонок.
-   * Вместо этого сразу регистрируется запись с предложением подойти к зеркалу,
-   * а также запускается визуальный эффект.
+   * При активации события запускается звонок через CallManager.
+   * Обработчик нажатия кнопки «Ответить» задаётся здесь.
    */
   async activate() {
-    console.log("Активируем событие 'welcome': регистрируем приглашение подойти к зеркалу");
-    // Получаем локализованный текст для приглашения (например, "Подойди к зеркалу")
-    const mirrorQuestText = this.languageManager.locales[this.languageManager.getLanguage()]["mirror_quest"];
-    
-    // Логируем запись в дневнике с этим текстом (запись теперь создаётся от имени призрака)
-    await this.addDiaryEntry(mirrorQuestText);
-    
-    // Вызываем визуальный эффект, например, эффект зеркала
-    const effectsManager = new VisualEffectsManager();
-    effectsManager.triggerMirrorEffect();
+    // Не логируем запись сразу – запись появится только при ответе на звонок.
+    console.log("Активируем событие 'welcome': инициируем звонок");
+    this.app.callManager.startCall("welcome", {
+      onAnswer: async () => {
+        // Логируем запись с текстом "mirror_quest"
+        const mirrorQuestText = this.languageManager.locales[this.languageManager.getLanguage()]["mirror_quest"];
+        await this.addDiaryEntry(mirrorQuestText);
+        // Вызовем визуальный эффект через VisualEffectsManager
+        const effectsManager = new VisualEffectsManager();
+        effectsManager.triggerMirrorEffect();
+      }
+    });
   }
 }

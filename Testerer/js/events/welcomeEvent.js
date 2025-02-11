@@ -20,12 +20,13 @@ export class WelcomeEvent extends BaseEvent {
    * а также запускается визуальный эффект.
    */
 async activate() {
+  // Если событие уже зарегистрировано, пропускаем повторную активацию
   if (this.eventManager.isEventLogged(this.key)) {
     console.log("Событие 'welcome' уже зарегистрировано. Пропускаем активацию.");
     return;
   }
   console.log("Активируем событие 'welcome': регистрируем приглашение подойти к зеркалу");
-  // Регистрируем событие с использованием ключа "welcome" – это гарантирует уникальность
+  // Регистрируем событие с ключом "welcome"
   await this.addDiaryEntry(this.key);
   // Устанавливаем флаг готовности для запуска квеста
   localStorage.setItem("mirrorQuestReady", "true");
@@ -33,6 +34,7 @@ async activate() {
   const effectsManager = new VisualEffectsManager();
   effectsManager.triggerMirrorEffect();
 }
+
 
 
 

@@ -143,6 +143,8 @@ bindEvents() {
   });
   document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
   document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
+
+
 }
 
   
@@ -333,13 +335,14 @@ importProfile() {
 
 
 updatePostButtonState() {
-  // Читаем флаг готовности запуска квеста
+  // Используем флаг "mirrorQuestReady" для определения готовности запуска квеста
   const isReady = localStorage.getItem("mirrorQuestReady") === "true";
   console.log("updatePostButtonState: mirrorQuestReady =", isReady);
   if (this.postBtn) {
     this.postBtn.disabled = !isReady;
   }
 }
+
 
 
 

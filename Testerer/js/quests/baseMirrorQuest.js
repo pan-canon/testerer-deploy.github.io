@@ -26,10 +26,13 @@ async activate() {
     console.log(`Активируем событие: ${this.key}`);
     await this.eventManager.addDiaryEntry(this.key);
   }
-  // Здесь больше не устанавливаем флаг, поскольку запуск квеста происходит по нажатию кнопки.
-  // (Если требуется, можно логировать активацию квеста.)
   console.log("Зеркальный квест запущен по нажатию кнопки.");
+  // Добавляем (не устанавливаем) дополнительное логирование, затем планируем автоматическое завершение квеста через 5 секунд
+  setTimeout(() => {
+    this.finish();
+  }, 5000);
 }
+
 
 
 
@@ -54,36 +57,36 @@ async checkStatus() {
    * Завершение квеста (проверка и запись результатов в дневник).
    */
 async finish() {
-  // Ждем 5 секунд и проверяем статус квеста
+  // Выполняем проверку статуса квеста (например, через сравнение снимка)
   const success = await this.checkStatus();
-  // Получаем текущего призрака и выбираем из его имени случайную букву
+  // Получаем текущего призрака и выбираем случайную букву из его имени
   const ghost = this.app.ghostManager.getCurrentGhost();
   const randomLetter = this.getRandomLetter(ghost.name);
   
   if (success) {
-    // Если квест выполнен: добавляем пост от юзера с фото (если есть) и выбранной буквой
+    // Если квест выполнен – добавляем пост от пользователя с результатом и (если есть) фото
     const photoData = this.app.lastMirrorPhoto ? ` [photo attached]\n${this.app.lastMirrorPhoto}` : "";
     await this.eventManager.addDiaryEntry(`user_post_success: ${randomLetter}${photoData}`, false);
     alert("✅ Задание «подойти к зеркалу» выполнено!");
   } else {
-    // Если квест не выполнен: добавляем пост от юзера с выбранной буквой
+    // Если не выполнен – добавляем пост с неуспехом
     await this.eventManager.addDiaryEntry(`user_post_failed: ${randomLetter}`, false);
     alert("❌ Квест проигнорирован!");
-    // Здесь автоматическая повторная активация не происходит – новый запуск возможен лишь по кнопке «Запостить»
   }
   
   // Удаляем флаг активности (если он использовался) и обновляем состояние кнопки "Запостить"
   localStorage.removeItem("mirrorQuestActive");
   this.app.updatePostButtonState();
   
-  // Удаляем класс "glowing" с кнопки камеры – квест завершён
+  // Убираем класс тени с кнопки камеры
   const cameraBtn = document.getElementById("toggle-camera");
   if (cameraBtn) {
     cameraBtn.classList.remove("glowing");
   }
   
-  // Не вызываем triggerNextPhenomenon(), чтобы пост создавался ровно один раз.
+  // Обратите внимание: дальнейшее автоматическое добавление постов не происходит – новый запуск возможен только по нажатию "Запостить"
 }
+
 
 
 

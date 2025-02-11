@@ -14,7 +14,7 @@ export class GameEventManager {
     this.languageManager = languageManager;
     this.events = [
       new WelcomeEvent(this.eventManager, this.app, this.languageManager),
-      new GhostEvent1(this.eventManager, this.app),
+      /*new GhostEvent1(this.eventManager, this.app),*/
       // В будущем можно добавить другие события
     ];
     this.currentEventIndex = 0;  // Индекс текущего события

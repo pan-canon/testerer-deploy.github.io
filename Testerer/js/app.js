@@ -360,15 +360,14 @@ async handlePostButtonClick() {
     localStorage.removeItem("mirrorQuestReady");
     this.updatePostButtonState();
     console.log("Добавляем пост от пользователя");
-    await this.eventManager.addDiaryEntry("Тест", false);
-    console.log("Открываем режим камеры для квеста");
-    this.toggleCameraView();
-    const cameraBtn = document.getElementById("toggle-camera");
-    if (cameraBtn) {
-      cameraBtn.classList.add("glowing");
-    }
-    console.log("Запускаем активацию квеста");
-    await this.questManager.activateQuest("mirror_quest");
+await this.eventManager.addDiaryEntry("Тест", false);
+// Не переключаем автоматически на камеру – оставляем пост видимым
+const cameraBtn = document.getElementById("toggle-camera");
+if (cameraBtn) {
+  cameraBtn.classList.add("glowing");
+}
+await this.questManager.activateQuest("mirror_quest");
+
   } else {
     alert("Ждите приглашения от призрака для начала квеста.");
   }

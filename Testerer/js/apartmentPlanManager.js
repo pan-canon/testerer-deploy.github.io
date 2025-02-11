@@ -17,6 +17,7 @@ export class ApartmentPlanManager {
     this.gridCols = 10;
     this.createTable();
     this.attachEvents();
+    // После инициализации базы загружаем данные для первого этажа
     this.dbManager.initDatabasePromise.then(() => {
       this.loadFromDB();
     });
@@ -68,7 +69,7 @@ export class ApartmentPlanManager {
   }
 
   handleTouchStart(e) {
-    e.preventDefault();  // чтобы предотвратить нежелательный скроллинг
+    e.preventDefault();
     const touch = e.touches[0];
     const target = document.elementFromPoint(touch.clientX, touch.clientY);
     if (target && target.tagName === "TD") {
@@ -113,8 +114,9 @@ export class ApartmentPlanManager {
   finishSelection(e) {
     if (this.isSelecting) {
       this.isSelecting = false;
-      // Если не было выделено ни одной ячейки, задаем дефолтное помещение на весь план
+      // Если не было выделено ни одной ячейки, можно задать дефолтное выделение (но здесь можно и не делать ничего)
       if (!this.startCell || !this.endCell) {
+        // По желанию, можно задать выделение на весь план
         this.startCell = { row: 0, col: 0 };
         this.endCell = { row: this.gridRows - 1, col: this.gridCols - 1 };
       }
@@ -122,7 +124,7 @@ export class ApartmentPlanManager {
       // Вызываем модальное окно для выбора типа помещения
       this.showLocationTypeModal(
         (selectedType) => {
-          // Сохраняем выбранный тип через profileManager (если нужно)
+          // Если подтверждено, добавляем новую «комнату»
           if (this.app && this.app.profileManager) {
             this.app.profileManager.saveLocationType(selectedType);
           }
@@ -139,22 +141,12 @@ export class ApartmentPlanManager {
           this.renderRooms();
         },
         () => {
-          // При отмене устанавливаем значение по умолчанию "Другое"
-          console.log("Локация не выбрана, выбран тип по умолчанию: 'Другое'.");
-          if (this.app && this.app.profileManager) {
-            this.app.profileManager.saveLocationType("Другое");
-          }
-          const room = {
-            floor: this.currentFloor,
-            startRow: Math.min(this.startCell.row, this.endCell.row),
-            startCol: Math.min(this.startCell.col, this.endCell.col),
-            endRow: Math.max(this.startCell.row, this.endCell.row),
-            endCol: Math.max(this.startCell.col, this.endCell.col),
-            type: "Другое"
-          };
-          this.rooms.push(room);
-          this.saveToDB();
-          this.renderRooms();
+          // Если нажата "Отмена", просто отменяем выделение и не сохраняем ничего
+          console.log("Выбор отменён. Новая комната не добавлена.");
+          // Сбрасываем выделение
+          this.startCell = null;
+          this.endCell = null;
+          this.highlightSelection();
         }
       );
     }
@@ -195,7 +187,7 @@ export class ApartmentPlanManager {
 
   saveToDB() {
     const currentRooms = this.rooms.filter(room => room.floor === this.currentFloor);
-    console.log("Сохраняем в БД комнаты: ", currentRooms);
+    console.log("Сохраняем в БД для этажа", this.currentFloor, currentRooms);
     this.dbManager.addApartmentRooms(this.currentFloor, currentRooms);
   }
 
@@ -203,18 +195,56 @@ export class ApartmentPlanManager {
     console.log("Загружаем данные для этажа:", this.currentFloor);
     this.dbManager.getApartmentPlan(this.currentFloor, (rooms) => {
       if (!rooms || rooms.length === 0) {
-        console.log(`Локации для этажа ${this.currentFloor} не созданы, выбран дефолт.`);
+        console.log(`Для этажа ${this.currentFloor} данных нет.`);
+        // Если этаж не трогали, можно задать дефолтное значение — один большой блок
+        // Например, если это первый этаж или этаж новый:
+        if (this.currentFloor === 1 || confirm("Этаж пуст. Заполнить дефолтным планом (все клетки)?")) {
+          const defaultRoom = {
+            floor: this.currentFloor,
+            startRow: 0,
+            startCol: 0,
+            endRow: this.gridRows - 1,
+            endCol: this.gridCols - 1,
+            type: "Дефолт"
+          };
+          this.rooms = [defaultRoom];
+          this.saveToDB();
+          console.log(`Этаж ${this.currentFloor} сохранён с дефолтным планом.`);
+        } else {
+          this.rooms = [];
+        }
       } else {
-        console.log(`Найденные локации для этажа ${this.currentFloor}: `, rooms);
+        console.log(`Найденные данные для этажа ${this.currentFloor}:`, rooms);
+        this.rooms = rooms;
       }
-      this.rooms = rooms;
       this.renderRooms();
     });
   }
 
   nextFloor() {
-    console.log("Переключаем на следующий этаж");
+    // При переходе на следующий этаж проверяем: если на текущем этаже данных нет, предлагаем сохранить дефолтный план
+    if (this.rooms.filter(r => r.floor === this.currentFloor).length === 0) {
+      if (confirm("На этом этаже нет заполненных помещений. Желаете сохранить дефолтный план (все клетки) и перейти на следующий этаж?")) {
+        const defaultRoom = {
+          floor: this.currentFloor,
+          startRow: 0,
+          startCol: 0,
+          endRow: this.gridRows - 1,
+          endCol: this.gridCols - 1,
+          type: "Дефолт"
+        };
+        this.rooms.push(defaultRoom);
+        this.saveToDB();
+      } else {
+        // Если пользователь отменяет, не переключаем этаж
+        return;
+      }
+    }
+    // Переходим на следующий этаж
     this.currentFloor++;
+    // Сбрасываем данные для нового этажа (или загружаем их из БД, если они уже были сохранены ранее)
+    this.rooms = [];
+    this.initTable();
     this.loadFromDB();
   }
 
@@ -285,11 +315,9 @@ export class ApartmentPlanManager {
       console.log("Нажата кнопка Подтвердить, выбран тип:", selectElem.value);
       const selectedType = selectElem.value;
       if (onConfirm) onConfirm(selectedType);
-      console.log("Удаляем модальное окно");
-    
-      // Добавляем небольшую задержку перед удалением окна
+      // Немного задержки перед удалением модального окна
       setTimeout(() => {
-        modalOverlay.remove(); // Удаление модального окна
+        modalOverlay.remove();
       }, 50);
     });
     

@@ -106,7 +106,10 @@ this.updatePostButtonState();
     this.resetBtn.addEventListener('click', () => this.profileManager.resetProfile());
     this.exportBtn.addEventListener('click', () => this.exportProfile());
     this.importBtn.addEventListener('click', () => this.importProfile());
-    this.postBtn.addEventListener("click", () => this.handlePostButtonClick());
+if (this.postBtn) {
+  this.postBtn.addEventListener("click", () => this.handlePostButtonClick());
+}
+
     this.profilePhotoElem.addEventListener("click", () => this.showProfileModal.show());
     document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
     document.getElementById("prev-floor-btn").addEventListener("click", () => {

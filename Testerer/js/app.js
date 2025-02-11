@@ -355,25 +355,25 @@ updatePostButtonState() {
 
 
 async handlePostButtonClick() {
+  console.log("Кнопка 'Запостить' нажата");
   if (localStorage.getItem("mirrorQuestReady") === "true") {
-    // Убираем флаг приглашения, чтобы предотвратить повторный запуск
     localStorage.removeItem("mirrorQuestReady");
     this.updatePostButtonState();
-    // Добавляем пост от пользователя с текстом "Тест" (заглушка)
+    console.log("Добавляем пост от пользователя");
     await this.eventManager.addDiaryEntry("Тест", false);
-    // Открываем режим камеры для выполнения квеста
+    console.log("Открываем режим камеры для квеста");
     this.toggleCameraView();
-    // Добавляем класс тени к кнопке камеры, пока квест не завершён
     const cameraBtn = document.getElementById("toggle-camera");
     if (cameraBtn) {
       cameraBtn.classList.add("glowing");
     }
-    // Запускаем проверку (квест) – после 5 секунд внутри checkQuest() вызовется finish()
+    console.log("Запускаем активацию квеста");
     await this.questManager.activateQuest("mirror_quest");
   } else {
     alert("Ждите приглашения от призрака для начала квеста.");
   }
 }
+
 
 
 

@@ -74,27 +74,23 @@ async init() {
 this.eventManager.updateDiaryDisplay();
 this.updatePostButtonState();
 
-  if (this.profileManager.isProfileSaved()) {
-    this.showMainScreen();
-    
-    // Если регистрация завершена, активируем событие "welcome" через 5 секунд
-    if (localStorage.getItem("registrationCompleted") === "true") {
-      setTimeout(() => {
-        this.gameEventManager.activateEvent("welcome");
-      }, 5000);
-    }
+if (this.profileManager.isProfileSaved()) {
+  this.showMainScreen();
+  
+  // Если профиль сохранён, можно запускать событие "welcome" через 5 секунд
+  setTimeout(() => {
+    this.gameEventManager.activateEvent("welcome");
+  }, 5000);
 
-    // (Если нужно, здесь можно добавить или убрать класс "glowing" — его можно выставлять в зависимости от квеста)
-    // Например, если квест активен, то:
-    if (localStorage.getItem("mirrorQuestActive") === "true") {
-      cameraBtn.classList.add("glowing");
-    } else {
-      cameraBtn.classList.remove("glowing");
-    }
+  if (localStorage.getItem("mirrorQuestActive") === "true") {
+    cameraBtn.classList.add("glowing");
   } else {
-    this.showRegistrationScreen();
+    cameraBtn.classList.remove("glowing");
   }
+} else {
+  this.showRegistrationScreen();
 }
+
   
   bindEvents() {
     // Привязка событий формы и переключения экранов
@@ -109,6 +105,7 @@ this.updatePostButtonState();
 if (this.postBtn) {
   this.postBtn.addEventListener("click", () => this.handlePostButtonClick());
 }
+
 
     this.profilePhotoElem.addEventListener("click", () => this.showProfileModal.show());
     document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());

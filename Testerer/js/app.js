@@ -144,7 +144,12 @@ bindEvents() {
   document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
   document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
 
-
+// Добавьте сразу после уже существующих привязок событий
+if (this.postBtn) {
+  this.postBtn.addEventListener('click', () => this.handlePostButtonClick());
+} else {
+  console.error("Элемент post-btn не найден!");
+}
 }
 
   

@@ -88,6 +88,7 @@ if (this.profileManager.isProfileSaved()) {
     }, 5000);
   }
 
+  // Проверяем наличие флага mirrorQuestActive и обновляем стиль кнопки камеры
   if (localStorage.getItem("mirrorQuestActive") === "true") {
     cameraBtn.classList.add("glowing");
   } else {

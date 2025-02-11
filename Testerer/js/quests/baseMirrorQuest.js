@@ -22,16 +22,15 @@ export class BaseMirrorQuest {
    * Активируем событие, если оно еще не было выполнено.
    */
 async activate() {
-  // Если событие ещё не добавлено в дневник, добавляем его один раз
   if (!this.eventManager.isEventLogged(this.key)) {
     console.log(`Активируем событие: ${this.key}`);
     await this.eventManager.addDiaryEntry(this.key);
   }
-  // Устанавливаем флаг активности зеркального квеста
-  localStorage.setItem("mirrorQuestActive", "true");
-  // Обновляем состояние кнопки "Запостить"
-  this.app.updatePostButtonState();
+  // Здесь больше не устанавливаем флаг, поскольку запуск квеста происходит по нажатию кнопки.
+  // (Если требуется, можно логировать активацию квеста.)
+  console.log("Зеркальный квест запущен по нажатию кнопки.");
 }
+
 
 
 

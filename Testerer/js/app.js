@@ -92,36 +92,50 @@ if (this.profileManager.isProfileSaved()) {
 }
 
   
-  bindEvents() {
-    // Привязка событий формы и переключения экранов
-    this.nameInput.addEventListener('input', () => this.validateRegistration());
-    this.genderSelect.addEventListener('change', () => this.validateRegistration());
-    this.nextStepBtn.addEventListener('click', () => this.goToApartmentPlanScreen());
-    this.captureBtn.addEventListener('click', () => this.captureSelfie());
-    this.completeBtn.addEventListener('click', () => this.completeRegistration());
-    this.resetBtn.addEventListener('click', () => this.profileManager.resetProfile());
-    this.exportBtn.addEventListener('click', () => this.exportProfile());
-    this.importBtn.addEventListener('click', () => this.importProfile());
-if (this.postBtn) {
-  this.postBtn.addEventListener("click", () => this.handlePostButtonClick());
+bindEvents() {
+  // Добавляем обработчики для полей регистрации с отладочным выводом
+  this.nameInput.addEventListener('input', () => {
+    console.log("Name input changed:", this.nameInput.value);
+    this.validateRegistration();
+  });
+
+  this.genderSelect.addEventListener('change', () => {
+    console.log("Gender select changed:", this.genderSelect.value);
+    this.validateRegistration();
+  });
+
+  // Обработчик для кнопки "Next" с отладочным сообщением
+  if (this.nextStepBtn) {
+    this.nextStepBtn.addEventListener('click', () => {
+      console.log("Next button clicked");
+      this.goToApartmentPlanScreen();
+    });
+  } else {
+    console.error("Элемент next-step-btn не найден!");
+  }
+
+  // Привязка остальных событий (оставьте, как есть)
+  this.captureBtn.addEventListener('click', () => this.captureSelfie());
+  this.completeBtn.addEventListener('click', () => this.completeRegistration());
+  this.resetBtn.addEventListener('click', () => this.profileManager.resetProfile());
+  this.exportBtn.addEventListener('click', () => this.exportProfile());
+  this.importBtn.addEventListener('click', () => this.importProfile());
+  this.profilePhotoElem.addEventListener("click", () => this.showProfileModal.show());
+  document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
+  document.getElementById("prev-floor-btn").addEventListener("click", () => {
+    if (this.apartmentPlanManager) {
+      this.apartmentPlanManager.prevFloor();
+    }
+  });
+  document.getElementById("next-floor-btn").addEventListener("click", () => {
+    if (this.apartmentPlanManager) {
+      this.apartmentPlanManager.nextFloor();
+    }
+  });
+  document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
+  document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
 }
 
-
-    this.profilePhotoElem.addEventListener("click", () => this.showProfileModal.show());
-    document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
-    document.getElementById("prev-floor-btn").addEventListener("click", () => {
-      if (this.apartmentPlanManager) {
-        this.apartmentPlanManager.prevFloor();
-      }
-    });
-    document.getElementById("next-floor-btn").addEventListener("click", () => {
-      if (this.apartmentPlanManager) {
-        this.apartmentPlanManager.nextFloor();
-      }
-    });
-    document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
-    document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
-  }
   
 validateRegistration() {
   const isValid = (this.nameInput.value.trim() !== "" && this.genderSelect.value !== "");

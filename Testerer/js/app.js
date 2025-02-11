@@ -123,9 +123,12 @@ if (this.postBtn) {
     document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
   }
   
-  validateRegistration() {
-    this.nextStepBtn.disabled = !(this.nameInput.value.trim() !== "" && this.genderSelect.value !== "");
-  }
+validateRegistration() {
+  const isValid = (this.nameInput.value.trim() !== "" && this.genderSelect.value !== "");
+  console.log("validateRegistration:", isValid);
+  this.nextStepBtn.disabled = !isValid;
+}
+
 
   goToApartmentPlanScreen() {
     const regData = {

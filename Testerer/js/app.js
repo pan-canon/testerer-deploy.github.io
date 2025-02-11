@@ -98,7 +98,6 @@ if (this.profileManager.isProfileSaved()) {
   this.showRegistrationScreen();
 }
 
-
   
 bindEvents() {
   // Добавляем обработчики для полей регистрации с отладочным выводом

@@ -98,6 +98,7 @@ if (this.profileManager.isProfileSaved()) {
   console.log("Profile not found, showing registration screen.");
   this.showRegistrationScreen();
 }
+}
 
   
 bindEvents() {

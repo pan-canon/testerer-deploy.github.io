@@ -343,6 +343,7 @@ updatePostButtonState() {
 
 
 
+
 async handlePostButtonClick() {
   if (localStorage.getItem("mirrorQuestActive") === "true") {
     // Добавляем пост от лица пользователя

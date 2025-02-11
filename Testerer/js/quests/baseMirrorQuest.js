@@ -67,18 +67,20 @@ async finish() {
     await this.eventManager.addDiaryEntry(`user_post_success: ${randomLetter}${photoData}`, false);
     alert("✅ Задание «подойти к зеркалу» выполнено!");
   } else {
-    // Если квест не выполнен: добавляем пост от юзера с выбранной буквой и активируем событие welcome для повторения
+    // Если квест не выполнен: добавляем пост от юзера с выбранной буквой
     await this.eventManager.addDiaryEntry(`user_post_failed: ${randomLetter}`, false);
     alert("❌ Квест проигнорирован!");
-    await this.app.gameEventManager.activateEvent("welcome");
+    // НЕ активируем здесь автоматически событие "welcome", чтобы избежать дублирования записей
+    // Если нужно повторно вызвать событие, это можно сделать по нажатию кнопки "Запостить"
   }
   
-  // Удаляем флаг активности зеркального квеста, чтобы пост больше не добавлялся автоматически
+  // Удаляем флаг активности зеркального квеста и обновляем состояние кнопки
   localStorage.removeItem("mirrorQuestActive");
   this.app.updatePostButtonState();
   
-  // НЕ вызываем здесь triggerNextPhenomenon() – дальнейшее добавление постов происходит только при новом запуске события
+  // Не вызываем triggerNextPhenomenon() – дальнейшее добавление постов происходит только по нажатию на кнопку
 }
+
 
 
 

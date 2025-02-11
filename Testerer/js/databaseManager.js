@@ -20,23 +20,23 @@ export class DatabaseManager {
       this.db = new SQL.Database(bytes);
     } else {
       this.db = new SQL.Database();
-this.db.run(`
-  CREATE TABLE IF NOT EXISTS diary (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    entry TEXT,
-    timestamp TEXT
-  );
-  CREATE TABLE IF NOT EXISTS apartment_plan (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    floor_number INTEGER,
-    room_data TEXT
-  );
-  CREATE TABLE IF NOT EXISTS quest_progress (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    quest_key TEXT,
-    status TEXT
-  );
-`);
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS diary (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          entry TEXT,
+          timestamp TEXT
+        );
+        CREATE TABLE IF NOT EXISTS apartment_plan (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          floor_number INTEGER,
+          room_data TEXT
+        );
+        CREATE TABLE IF NOT EXISTS quest_progress (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          quest_key TEXT,
+          status TEXT
+        );
+      `);
     }
     console.log("📖 Database initialized!");
   }
@@ -65,25 +65,25 @@ this.db.run(`
     this.saveDatabase();
   }
 
-getDiaryEntries() {
-  if (!this.db) {
-    console.error("⚠️ Database not initialized!");
+  getDiaryEntries() {
+    if (!this.db) {
+      console.error("⚠️ Database not initialized!");
+      return [];
+    }
+    const result = this.db.exec("SELECT * FROM diary ORDER BY timestamp DESC");
+    if (result.length > 0) {
+      return result[0].values.map(row => {
+        let parsed;
+        try {
+          parsed = JSON.parse(row[1]); // Пытаемся распарсить поле записи
+        } catch (e) {
+          parsed = { entry: row[1], postClass: "user-post" }; // Если не получилось, используем значение по умолчанию
+        }
+        return { id: row[0], ...parsed, timestamp: row[2] };
+      });
+    }
     return [];
   }
-  const result = this.db.exec("SELECT * FROM diary ORDER BY timestamp DESC");
-  if (result.length > 0) {
-    return result[0].values.map(row => {
-      let parsed;
-      try {
-        parsed = JSON.parse(row[1]); // Пытаемся распарсить поле записи
-      } catch (e) {
-        parsed = { entry: row[1], postClass: "user-post" }; // Если не получилось, используем значение по умолчанию
-      }
-      return { id: row[0], ...parsed, timestamp: row[2] };
-    });
-  }
-  return [];
-}
 
   addQuestProgress(questKey, status) {
     if (!this.db) {
@@ -105,5 +105,41 @@ getDiaryEntries() {
       return result[0].values.map(row => ({ id: row[0], quest_key: row[1], status: row[2] }));
     }
     return [];
+  }
+
+  // Новый метод: сохраняет данные для плана квартиры по этажу
+  addApartmentRooms(floor, rooms) {
+    if (!this.db) {
+      console.error("⚠️ Database not initialized!");
+      return;
+    }
+    const roomData = JSON.stringify(rooms);
+    // Удаляем предыдущие записи для данного этажа и вставляем новые
+    this.db.run("DELETE FROM apartment_plan WHERE floor_number = ?", [floor]);
+    this.db.run("INSERT INTO apartment_plan (floor_number, room_data) VALUES (?, ?)", [floor, roomData]);
+    console.log(`✅ Apartment rooms saved for floor ${floor}`);
+    this.saveDatabase();
+  }
+
+  // Новый метод: получает данные плана квартиры для указанного этажа
+  getApartmentPlan(floor, callback) {
+    if (!this.db) {
+      console.error("⚠️ Database not initialized!");
+      callback([]);
+      return;
+    }
+    const result = this.db.exec("SELECT room_data FROM apartment_plan WHERE floor_number = ?", [floor]);
+    if (result.length > 0 && result[0].values.length > 0) {
+      const roomData = result[0].values[0][0];
+      let rooms = [];
+      try {
+        rooms = JSON.parse(roomData);
+      } catch (e) {
+        console.error("Error parsing room_data", e);
+      }
+      callback(rooms);
+    } else {
+      callback([]);
+    }
   }
 }

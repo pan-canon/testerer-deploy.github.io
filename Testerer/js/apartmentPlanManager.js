@@ -1,7 +1,13 @@
 export class ApartmentPlanManager {
-  constructor(containerId, dbManager) {
+  /**
+   * @param {string} containerId — ID контейнера, куда будет вставлена таблица
+   * @param {DatabaseManager} dbManager — менеджер базы данных
+   * @param {App} app — ссылка на главный объект приложения (если требуется доступ к profileManager и др.)
+   */
+  constructor(containerId, dbManager, app) {
     this.container = document.getElementById(containerId);
     this.dbManager = dbManager;
+    this.app = app; // Сохраняем ссылку на приложение
     this.rooms = []; // массив объектов: {floor, startRow, startCol, endRow, endCol, type}
     this.currentFloor = 1;
     this.isSelecting = false;
@@ -116,6 +122,7 @@ export class ApartmentPlanManager {
       // Вызываем модальное окно для выбора типа помещения
       this.showLocationTypeModal(
         (selectedType) => {
+          // Сохраняем выбранный тип через profileManager (если нужно)
           if (this.app && this.app.profileManager) {
             this.app.profileManager.saveLocationType(selectedType);
           }
@@ -186,39 +193,38 @@ export class ApartmentPlanManager {
     });
   }
 
-saveToDB() {
-  const currentRooms = this.rooms.filter(room => room.floor === this.currentFloor);
-  console.log("Сохраняем в БД комнаты: ", currentRooms);
-  this.dbManager.addApartmentRooms(this.currentFloor, currentRooms);
-}
+  saveToDB() {
+    const currentRooms = this.rooms.filter(room => room.floor === this.currentFloor);
+    console.log("Сохраняем в БД комнаты: ", currentRooms);
+    this.dbManager.addApartmentRooms(this.currentFloor, currentRooms);
+  }
 
-loadFromDB() {
-  console.log("Загружаем данные для этажа:", this.currentFloor);
-  this.dbManager.getApartmentPlan(this.currentFloor, (rooms) => {
-    if (!rooms || rooms.length === 0) {
-      console.log(`Локации для этажа ${this.currentFloor} не созданы, выбран дефолт.`);
-    } else {
-      console.log(`Найденные локации для этажа ${this.currentFloor}: `, rooms);
-    }
-    this.rooms = rooms;
-    this.renderRooms();
-  });
-}
+  loadFromDB() {
+    console.log("Загружаем данные для этажа:", this.currentFloor);
+    this.dbManager.getApartmentPlan(this.currentFloor, (rooms) => {
+      if (!rooms || rooms.length === 0) {
+        console.log(`Локации для этажа ${this.currentFloor} не созданы, выбран дефолт.`);
+      } else {
+        console.log(`Найденные локации для этажа ${this.currentFloor}: `, rooms);
+      }
+      this.rooms = rooms;
+      this.renderRooms();
+    });
+  }
 
-nextFloor() {
-  console.log("Переключаем на следующий этаж");
-  this.currentFloor++;
-  this.loadFromDB();
-}
-
-prevFloor() {
-  if (this.currentFloor > 1) {
-    console.log("Переключаем на предыдущий этаж");
-    this.currentFloor--;
+  nextFloor() {
+    console.log("Переключаем на следующий этаж");
+    this.currentFloor++;
     this.loadFromDB();
   }
-}
 
+  prevFloor() {
+    if (this.currentFloor > 1) {
+      console.log("Переключаем на предыдущий этаж");
+      this.currentFloor--;
+      this.loadFromDB();
+    }
+  }
 
   showLocationTypeModal(onConfirm, onCancel) {
     const modalOverlay = document.createElement("div");
@@ -275,18 +281,18 @@ prevFloor() {
     const confirmBtn = document.createElement("button");
     confirmBtn.textContent = "Подтвердить";
     confirmBtn.style.marginRight = "10px";
-confirmBtn.addEventListener("click", () => {
-  console.log("Нажата кнопка Подтвердить, выбран тип:", selectElem.value);
-  const selectedType = selectElem.value;
-  if (onConfirm) onConfirm(selectedType);
-  console.log("Удаляем модальное окно");
-
-  // Добавляем небольшую задержку перед удалением окна
-  setTimeout(() => {
-    modalOverlay.remove(); // Удаление модального окна
-  }, 50);
-});
-
+    confirmBtn.addEventListener("click", () => {
+      console.log("Нажата кнопка Подтвердить, выбран тип:", selectElem.value);
+      const selectedType = selectElem.value;
+      if (onConfirm) onConfirm(selectedType);
+      console.log("Удаляем модальное окно");
+    
+      // Добавляем небольшую задержку перед удалением окна
+      setTimeout(() => {
+        modalOverlay.remove(); // Удаление модального окна
+      }, 50);
+    });
+    
     btnContainer.appendChild(confirmBtn);
     
     const cancelBtn = document.createElement("button");

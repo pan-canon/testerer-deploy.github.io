@@ -344,6 +344,19 @@ async compareCurrentFrame() {
   }
 }
 
-
+  goToApartmentPlanScreen() {
+    const regData = {
+      name: this.nameInput.value.trim(),
+      gender: this.genderSelect.value,
+      language: document.getElementById('language-selector').value
+    };
+    localStorage.setItem('regData', JSON.stringify(regData));
+    this.registrationScreen.style.display = 'none';
+    document.getElementById('apartment-plan-screen').style.display = 'block';
+    if (!this.apartmentPlanManager) {
+      // Передаем также "this" (ссылку на App) в качестве третьего параметра
+      this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', this.databaseManager, this);
+    }
+  }
 
 }

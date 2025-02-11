@@ -134,8 +134,7 @@ async init() {
     this.registrationScreen.style.display = 'none';
     document.getElementById('apartment-plan-screen').style.display = 'block';
     if (!this.apartmentPlanManager) {
-      // Передаем также "this" (ссылку на App) в качестве третьего параметра
-      this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', this.databaseManager, this);
+      this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', this.databaseManager);
     }
   }
   

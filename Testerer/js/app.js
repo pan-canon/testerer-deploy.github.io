@@ -100,7 +100,7 @@ if (this.profileManager.isProfileSaved()) {
 }
 }
 
-  
+
 bindEvents() {
   // Добавляем обработчики для полей регистрации с отладочным выводом
   this.nameInput.addEventListener('input', () => {
@@ -330,13 +330,13 @@ importProfile() {
 
 
 updatePostButtonState() {
-  // Активировать кнопку "Запостить", если квест с зеркалом активен (приглашение от призрака)
   if (localStorage.getItem("mirrorQuestActive") === "true") {
     this.postBtn.disabled = false;
   } else {
     this.postBtn.disabled = true;
   }
 }
+
 
 async handlePostButtonClick() {
   if (localStorage.getItem("mirrorQuestActive") === "true") {

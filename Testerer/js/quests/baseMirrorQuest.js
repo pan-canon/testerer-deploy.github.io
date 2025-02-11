@@ -21,13 +21,18 @@ export class BaseMirrorQuest {
   /**
    * Активируем событие, если оно еще не было выполнено.
    */
-  async activate() {
-    if (!this.eventManager.isEventLogged(this.key)) {
-      console.log(`Активируем событие: ${this.key}`);
-      await this.eventManager.addDiaryEntry(this.key); // Логируем в дневник
-      localStorage.setItem("mirrorQuestActive", "true"); // Отмечаем, что квест активен
-    }
+async activate() {
+  // Если событие ещё не добавлено в дневник, добавляем его (один раз)
+  if (!this.eventManager.isEventLogged(this.key)) {
+    console.log(`Активируем событие: ${this.key}`);
+    await this.eventManager.addDiaryEntry(this.key);
   }
+  // Устанавливаем флаг активности зеркального квеста
+  localStorage.setItem("mirrorQuestActive", "true");
+  // Обновляем состояние кнопки "Запостить"
+  this.app.updatePostButtonState();
+}
+
 
   /**
    * Проверка статуса текущего зеркального квеста.
@@ -49,32 +54,33 @@ async checkStatus() {
    * Завершение квеста (проверка и запись результатов в дневник).
    */
 async finish() {
-  // Ждём 5 секунд и проверяем статус квеста
+  // Ждем 5 секунд и проверяем статус квеста
   const success = await this.checkStatus();
   // Получаем текущего призрака и выбираем из его имени случайную букву
   const ghost = this.app.ghostManager.getCurrentGhost();
   const randomLetter = this.getRandomLetter(ghost.name);
   
   if (success) {
-    // Если квест выполнен: добавляем пост от юзера с фото и выбранной буквой
+    // Если квест выполнен: добавляем пост от юзера с фото (если оно есть) и выбранной буквой
     const photoData = this.app.lastMirrorPhoto ? ` [photo attached]\n${this.app.lastMirrorPhoto}` : "";
     await this.eventManager.addDiaryEntry(`user_post_success: ${randomLetter}${photoData}`, false);
     alert("✅ Задание «подойти к зеркалу» выполнено!");
   } else {
-    // Если квест не выполнен (проигнорирован): добавляем пост от юзера с выбранной буквой
+    // Если квест не выполнен: добавляем пост от юзера с выбранной буквой и активируем событие welcome для повторения
     await this.eventManager.addDiaryEntry(`user_post_failed: ${randomLetter}`, false);
     alert("❌ Квест проигнорирован!");
-    // Запускаем новое событие (аналогичное welcome), чтобы повторить приглашение
     await this.app.gameEventManager.activateEvent("welcome");
   }
   
-  // Зафиксировать отработанный шаг (одна буква) – независимо от результата квеста
-  if (this.app.ghostManager) {
-    await this.app.ghostManager.triggerNextPhenomenon();
-  }
-  // Сбрасываем флаг активности зеркального квеста
+  // Удаляем флаг активности зеркального квеста, чтобы пост больше не добавлялся автоматически
   localStorage.removeItem("mirrorQuestActive");
+  this.app.updatePostButtonState();
+  
+  // Важно: здесь мы больше не вызываем автоматический триггер следующего шага (triggerNextPhenomenon)
+  // Это гарантирует, что пост (запись) будет добавлена лишь один раз для текущего события,
+  // и дальнейшие действия зависят только от нажатия кнопки "Запостить" или таймаута.
 }
+
 
 getRandomLetter(name) {
   // Оставляем в строке только буквы (латинские и кириллические) и убираем пробелы/цифры

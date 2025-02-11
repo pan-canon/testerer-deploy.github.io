@@ -20,23 +20,23 @@ export class DatabaseManager {
       this.db = new SQL.Database(bytes);
     } else {
       this.db = new SQL.Database();
-      this.db.run(
-        CREATE TABLE IF NOT EXISTS diary (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          entry TEXT,
-          timestamp TEXT
-        );
-        CREATE TABLE IF NOT EXISTS apartment_plan (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          floor_number INTEGER,
-          room_data TEXT
-        );
-        CREATE TABLE IF NOT EXISTS quest_progress (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          quest_key TEXT,
-          status TEXT
-        );
-      );
+this.db.run(`
+  CREATE TABLE IF NOT EXISTS diary (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry TEXT,
+    timestamp TEXT
+  );
+  CREATE TABLE IF NOT EXISTS apartment_plan (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    floor_number INTEGER,
+    room_data TEXT
+  );
+  CREATE TABLE IF NOT EXISTS quest_progress (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    quest_key TEXT,
+    status TEXT
+  );
+`);
     }
     console.log("📖 Database initialized!");
   }

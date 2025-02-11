@@ -102,13 +102,23 @@ async init() {
   const entries = this.databaseManager.getDiaryEntries();
   console.log("Проверяем дневник после инициализации:", entries);
   
-const cameraBtn = document.getElementById("toggle-camera");
-cameraBtn.style.display = "inline-block";
+  if (entries.length > 0) {
+    const cameraBtn = document.getElementById("toggle-camera");
+    cameraBtn.style.display = "inline-block";
+  }
   
   if (this.profileManager.isProfileSaved()) {
     this.showMainScreen();
     this.eventManager.updateDiaryDisplay();
-
+    
+    // Если регистрация завершена, активируем событие "welcome".
+    // Убираем проверку "callHandled", так как звонки отключены.
+    if (localStorage.getItem("registrationCompleted") === "true") {
+      setTimeout(() => {
+        this.gameEventManager.activateEvent("welcome");
+      }, 5000);
+    }
+    
     // Если регистрация завершена и активен зеркальный квест, делаем кнопку камеры видимой и подсвеченной
     if (
       localStorage.getItem("registrationCompleted") === "true" &&
@@ -211,7 +221,7 @@ cameraBtn.style.display = "inline-block";
     this.cameraSectionManager.stopCamera();
     this.showMainScreen();
     
-    // Активируем событие "welcome"
+    // Вместо прямого запуска звонка, активируем событие "welcome"
     setTimeout(() => {
       this.gameEventManager.activateEvent("welcome");
     }, 5000);

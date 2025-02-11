@@ -1,4 +1,9 @@
 export class BaseMirrorQuest {
+  /**
+   * Базовый класс для квеста с зеркалом и управления событиями.
+   * @param {EventManager} eventManager – менеджер событий для работы с дневником
+   * @param {App} appInstance – ссылка на приложение для доступа к камере и остальным функциям
+   */
   constructor(eventManager, appInstance) {
     this.eventManager = eventManager;
     this.app = appInstance;
@@ -7,45 +12,35 @@ export class BaseMirrorQuest {
     this.registerEvents(); // Регистрируем обработчики для действий с камерами
   }
 
-  async activate() {
-    if (!this.eventManager.isEventLogged(this.key)) {
-      console.log(`Активируем событие: ${this.key}`);
-      await this.eventManager.addDiaryEntry(this.key);
-      
-      // Отмечаем, что зеркальный квест активен
-      localStorage.setItem("mirrorQuestActive", "true");
-      
-      // Подсвечиваем кнопку камеры
-      const cameraBtn = document.getElementById("toggle-camera");
-      if (cameraBtn) {
-        cameraBtn.classList.add("glowing");
-      }
-      
-      // Создаем кнопку "Запостить", если её ещё нет
-      if (!document.getElementById("post-button")) {
-        const postButton = document.createElement("button");
-        postButton.id = "post-button";
-        postButton.textContent = "Запостить";
-        postButton.addEventListener("click", async () => {
-          await this.finish();
-          postButton.remove();
-        });
-        document.getElementById("main-screen").appendChild(postButton);
-      }
-      
-      // Запускаем таймер на автоматическое завершение квеста (например, через 60 секунд)
-      this.questTimeout = setTimeout(() => {
+  /**
+   * Регистрируем события на действия с элементами интерфейса.
+   */
+  registerEvents() {
+    const cameraBtn = document.getElementById("toggle-camera");
+    if (cameraBtn) {
+      cameraBtn.addEventListener("click", async () => {
         if (localStorage.getItem("mirrorQuestActive") === "true") {
-          if (cameraBtn) cameraBtn.classList.remove("glowing");
-          localStorage.removeItem("mirrorQuestActive");
-          alert("Время для выполнения зеркального квеста истекло.");
-          const postButton = document.getElementById("post-button");
-          if (postButton) postButton.remove();
+          console.log("🪞 Запущена проверка зеркального квеста через событие кнопки");
+          await this.finish();
         }
-      }, 60000);
+      });
     }
   }
 
+  /**
+   * Активируем событие, если оно еще не было выполнено.
+   */
+  async activate() {
+    if (!this.eventManager.isEventLogged(this.key)) {
+      console.log(`Активируем событие: ${this.key}`);
+      await this.eventManager.addDiaryEntry(this.key); // Логируем в дневник
+      localStorage.setItem("mirrorQuestActive", "true"); // Отмечаем, что квест активен
+    }
+  }
+
+  /**
+   * Проверка статуса текущего зеркального квеста.
+   */
   async checkStatus() {
     console.log("🪞 Зеркальный квест активно. Запускаем проверку...");
     return new Promise(resolve => {
@@ -58,44 +53,34 @@ export class BaseMirrorQuest {
     });
   }
 
+  /**
+   * Завершение квеста (проверка и запись результатов в дневник).
+   */
   async finish() {
     if (this.eventManager.isEventLogged(this.doneKey)) {
       console.log(`Квест "${this.key}" уже выполнен, повторная проверка не требуется.`);
       return;
     }
 
-    const success = await this.checkStatus();
+    const success = await this.checkStatus(); // Проверка на совпадение с зеркалом
     if (success) {
-      if (this.questTimeout) {
-        clearTimeout(this.questTimeout);
-      }
       if (!this.eventManager.isEventLogged(this.doneKey)) {
-        await this.eventManager.addDiaryEntry(this.doneKey);
-        await this.eventManager.addDiaryEntry("what_was_it", this.app.lastMirrorPhoto);
+        await this.eventManager.addDiaryEntry(this.doneKey); // Логируем завершение квеста
+        await this.eventManager.addDiaryEntry("what_was_it", this.app.lastMirrorPhoto); // Добавляем фото последнего кадра
       }
       const cameraBtn = document.getElementById("toggle-camera");
       if (cameraBtn) {
-        cameraBtn.classList.remove("glowing");
+        cameraBtn.classList.remove("glowing"); // Убираем подсветку с кнопки камеры
       }
-      localStorage.removeItem("mirrorQuestActive");
+      localStorage.removeItem("mirrorQuestActive"); // Завершаем квест
       alert("✅ Задание «подойти к зеркалу» выполнено!");
+
+      // После успешного завершения зеркального квеста запускаем следующее явление призрака
       if (this.app.ghostManager) {
         this.app.ghostManager.triggerNextPhenomenon();
       }
     } else {
       alert("❌ Нет совпадения! Попробуйте ещё раз!");
-    }
-  }
-
-  registerEvents() {
-    const cameraBtn = document.getElementById("toggle-camera");
-    if (cameraBtn) {
-      cameraBtn.addEventListener("click", async () => {
-        if (localStorage.getItem("mirrorQuestActive") === "true") {
-          console.log("🪞 Запущена проверка зеркального квеста через событие кнопки");
-          await this.finish();
-        }
-      });
     }
   }
 }

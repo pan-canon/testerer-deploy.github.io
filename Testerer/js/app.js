@@ -92,40 +92,46 @@ export class App {
     document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
   }
   
-  async init() {
-    await this.databaseManager.initDatabasePromise;
+async init() {
+  // Сначала загружаем состояние (например, текущего призрака)
+  this.loadAppState();
+  
+  // Ожидаем инициализацию базы данных
+  await this.databaseManager.initDatabasePromise;
+  
+  const entries = this.databaseManager.getDiaryEntries();
+  console.log("Проверяем дневник после инициализации:", entries);
+  
+  if (entries.length > 0) {
+    const cameraBtn = document.getElementById("toggle-camera");
+    cameraBtn.style.display = "inline-block";
+  }
+  
+  if (this.profileManager.isProfileSaved()) {
+    this.showMainScreen();
+    this.eventManager.updateDiaryDisplay();
     
-    const entries = this.databaseManager.getDiaryEntries();
-    console.log("Проверяем дневник после инициализации:", entries);
+    // Если регистрация завершена, активируем событие "welcome".
+    // Убираем проверку "callHandled", так как звонки отключены.
+    if (localStorage.getItem("registrationCompleted") === "true") {
+      setTimeout(() => {
+        this.gameEventManager.activateEvent("welcome");
+      }, 5000);
+    }
     
-    if (entries.length > 0) {
+    // Если регистрация завершена и активен зеркальный квест, делаем кнопку камеры видимой и подсвеченной
+    if (
+      localStorage.getItem("registrationCompleted") === "true" &&
+      localStorage.getItem("mirrorQuestActive") === "true"
+    ) {
       const cameraBtn = document.getElementById("toggle-camera");
       cameraBtn.style.display = "inline-block";
+      cameraBtn.classList.add("glowing");
     }
-    
-    if (this.profileManager.isProfileSaved()) {
-      this.showMainScreen();
-      this.eventManager.updateDiaryDisplay();
-      
-      // Если регистрация завершена, но звонок ещё не обработан, активируем событие "welcome"
-if (localStorage.getItem("registrationCompleted") === "true") {
-  setTimeout(() => {
-    this.gameEventManager.activateEvent("welcome");
-  }, 5000);
-}
-      
-      if (
-        localStorage.getItem("registrationCompleted") === "true" &&
-        localStorage.getItem("mirrorQuestActive") === "true"
-      ) {
-        const cameraBtn = document.getElementById("toggle-camera");
-        cameraBtn.style.display = "inline-block";
-        cameraBtn.classList.add("glowing");
-      }
-    } else {
-      this.showRegistrationScreen();
-    }
+  } else {
+    this.showRegistrationScreen();
   }
+}
   
   validateRegistration() {
     this.nextStepBtn.disabled = !(this.nameInput.value.trim() !== "" && this.genderSelect.value !== "");

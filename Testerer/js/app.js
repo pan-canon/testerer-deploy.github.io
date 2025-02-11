@@ -60,38 +60,6 @@ export class App {
     }
   }
 
-  init() {
-    // Загружаем состояние при инициализации
-    this.loadAppState();
-    // Дополнительная инициализация приложения
-  }
-  
-  bindEvents() {
-    // Привязка событий формы и переключения экранов
-    this.nameInput.addEventListener('input', () => this.validateRegistration());
-    this.genderSelect.addEventListener('change', () => this.validateRegistration());
-    this.nextStepBtn.addEventListener('click', () => this.goToApartmentPlanScreen());
-    this.captureBtn.addEventListener('click', () => this.captureSelfie());
-    this.completeBtn.addEventListener('click', () => this.completeRegistration());
-    this.resetBtn.addEventListener('click', () => this.profileManager.resetProfile());
-    this.exportBtn.addEventListener('click', () => this.exportProfile());
-    this.importBtn.addEventListener('click', () => this.importProfile());
-    this.profilePhotoElem.addEventListener("click", () => this.showProfileModal.show());
-    document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
-    document.getElementById("prev-floor-btn").addEventListener("click", () => {
-      if (this.apartmentPlanManager) {
-        this.apartmentPlanManager.prevFloor();
-      }
-    });
-    document.getElementById("next-floor-btn").addEventListener("click", () => {
-      if (this.apartmentPlanManager) {
-        this.apartmentPlanManager.nextFloor();
-      }
-    });
-    document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
-    document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
-  }
-  
 async init() {
   // Загружаем состояние и ждём инициализацию базы данных
   this.loadAppState();
@@ -125,6 +93,32 @@ async init() {
     this.showRegistrationScreen();
   }
 }
+  
+  bindEvents() {
+    // Привязка событий формы и переключения экранов
+    this.nameInput.addEventListener('input', () => this.validateRegistration());
+    this.genderSelect.addEventListener('change', () => this.validateRegistration());
+    this.nextStepBtn.addEventListener('click', () => this.goToApartmentPlanScreen());
+    this.captureBtn.addEventListener('click', () => this.captureSelfie());
+    this.completeBtn.addEventListener('click', () => this.completeRegistration());
+    this.resetBtn.addEventListener('click', () => this.profileManager.resetProfile());
+    this.exportBtn.addEventListener('click', () => this.exportProfile());
+    this.importBtn.addEventListener('click', () => this.importProfile());
+    this.profilePhotoElem.addEventListener("click", () => this.showProfileModal.show());
+    document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
+    document.getElementById("prev-floor-btn").addEventListener("click", () => {
+      if (this.apartmentPlanManager) {
+        this.apartmentPlanManager.prevFloor();
+      }
+    });
+    document.getElementById("next-floor-btn").addEventListener("click", () => {
+      if (this.apartmentPlanManager) {
+        this.apartmentPlanManager.nextFloor();
+      }
+    });
+    document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
+    document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
+  }
   
   validateRegistration() {
     this.nextStepBtn.disabled = !(this.nameInput.value.trim() !== "" && this.genderSelect.value !== "");

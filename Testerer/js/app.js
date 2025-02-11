@@ -2,7 +2,7 @@ import { LanguageManager } from './languageManager.js';
 import { cameraSectionManager } from './cameraSectionManager.js';
 import { ImageUtils } from './utils/imageUtils.js';
 import { ProfileManager } from './profileManager.js';
-import { ApartmentPlanManager } from './ApartmentPlanManager.js';
+import { ApartmentPlanManager } from './apartmentPlanManager.js';
 import { DatabaseManager } from './databaseManager.js';
 import { ShowProfileModal } from './showProfileModal.js';
 import { EventManager } from './eventManager.js';

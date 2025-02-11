@@ -1,6 +1,6 @@
 import { WelcomeEvent } from './events/welcomeEvent.js';
 import { BaseMirrorQuest } from './quests/baseMirrorQuest.js';  // Импортируем новый квест с зеркалом
-import { GhostEvent1 } from '../ghostEvent1.js';
+/*import { GhostEvent1 } from '../ghostEvent1.js';*/
 
 export class GameEventManager {
   /**

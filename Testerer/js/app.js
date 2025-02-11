@@ -333,8 +333,7 @@ importProfile() {
 
 
 updatePostButtonState() {
-  // Теперь используем флаг "mirrorQuestReady", который устанавливается ghost-ом,
-  // сигнализируя, что приглашение (ghost post) появилось и кнопка должна быть активной.
+  // Читаем флаг готовности запуска квеста
   const isReady = localStorage.getItem("mirrorQuestReady") === "true";
   console.log("updatePostButtonState: mirrorQuestReady =", isReady);
   if (this.postBtn) {
@@ -346,15 +345,23 @@ updatePostButtonState() {
 
 
 
+
 async handlePostButtonClick() {
-  // Убираем флаг приглашения, чтобы предотвратить повторный запуск
-  localStorage.removeItem("mirrorQuestReady");
-  this.updatePostButtonState();
-  // Добавляем пост от юзера с текстом "Тест" (заглушка)
-  await this.eventManager.addDiaryEntry("Тест", false);
-  // Запускаем зеркальный квест – теперь вызовем его активацию
-  await this.questManager.activateQuest("mirror_quest");
+  if (localStorage.getItem("mirrorQuestReady") === "true") {
+    // Убираем флаг приглашения, чтобы предотвратить повторный запуск
+    localStorage.removeItem("mirrorQuestReady");
+    this.updatePostButtonState();
+    // Добавляем пост от пользователя с текстом "Тест" (заглушка)
+    await this.eventManager.addDiaryEntry("Тест", false);
+    // Открываем режим камеры для выполнения квеста
+    this.toggleCameraView();
+    // Запускаем проверку зеркального квеста (которая через 5 сек вызовет finish())
+    await this.questManager.checkQuest("mirror_quest");
+  } else {
+    alert("Ждите приглашения от призрака для начала квеста.");
+  }
 }
+
 
 
 

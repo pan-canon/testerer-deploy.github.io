@@ -3,7 +3,7 @@ import { App } from './app.js';
 document.addEventListener("DOMContentLoaded", async () => {
   const app = new App();
 
-/*  // Регистрация сервис-воркера (без дублирования)
+  // Регистрация сервис-воркера (без дублирования)
   if ('serviceWorker' in navigator) {
     try {
       const BASE_PATH = window.location.pathname.includes("/Testerer/") 
@@ -14,5 +14,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (error) {
       console.error('❌ Ошибка при регистрации Service Worker:', error);
     }
-  }*/
+  }
 });

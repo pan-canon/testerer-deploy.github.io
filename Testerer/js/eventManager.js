@@ -9,14 +9,23 @@ export class EventManager {
   // Проверяем, была ли уже добавлена запись с данным ключом в дневник
   isEventLogged(eventKey) {
     const entries = this.databaseManager.getDiaryEntries();
-    return entries.some(entry => entry.entry === eventKey);
+return result[0].values.map(row => {
+  let parsed;
+  try {
+    parsed = JSON.parse(row[1]);
+  } catch (e) {
+    parsed = { entry: row[1], postClass: "user-post" };
+  }
+  return { id: row[0], ...parsed, timestamp: row[2] };
+});
+
   }
 
   // Добавляем запись в дневник, с пометкой о том, от кого эта запись (призрак или пользователь)
   async addDiaryEntry(entry, isPostFromGhost = false) {
-    const postClass = isPostFromGhost ? "ghost-post" : "user-post";  // Класс для оформления поста в зависимости от источника
-    const entryData = { entry, postClass };
-    await this.databaseManager.addDiaryEntry(entryData);
+const entryData = { entry, postClass };
+const serialized = JSON.stringify(entryData);
+await this.databaseManager.addDiaryEntry(serialized);
     this.updateDiaryDisplay();
   }
 

@@ -70,17 +70,23 @@ async init() {
   const cameraBtn = document.getElementById("toggle-camera");
   cameraBtn.style.display = "inline-block";
 
-  // Обновляем дневник (при этом логика дублей будет решаться отдельно)
+// Обновляем дневник (при этом логика дублей будет решаться отдельно)
 this.eventManager.updateDiaryDisplay();
-this.updatePostButtonState();
 
+// Добавляем отладочное сообщение для проверки сохранённого профиля
 if (this.profileManager.isProfileSaved()) {
+  const profile = this.profileManager.getProfile();
+  console.log("Profile found:", profile);
+  
+  // Если профиль найден, показываем основной экран
   this.showMainScreen();
   
-  // Если профиль сохранён, можно запускать событие "welcome" через 5 секунд
-  setTimeout(() => {
-    this.gameEventManager.activateEvent("welcome");
-  }, 5000);
+  // Если регистрация завершена, активируем событие "welcome" через 5 секунд
+  if (localStorage.getItem("registrationCompleted") === "true") {
+    setTimeout(() => {
+      this.gameEventManager.activateEvent("welcome");
+    }, 5000);
+  }
 
   if (localStorage.getItem("mirrorQuestActive") === "true") {
     cameraBtn.classList.add("glowing");
@@ -88,8 +94,10 @@ if (this.profileManager.isProfileSaved()) {
     cameraBtn.classList.remove("glowing");
   }
 } else {
+  console.log("Profile not found, showing registration screen.");
   this.showRegistrationScreen();
 }
+
 
   
 bindEvents() {

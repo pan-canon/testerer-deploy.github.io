@@ -31,11 +31,6 @@ async activate() {
   localStorage.setItem("mirrorQuestActive", "true");
 }
 
-
-
-
-
-
   /**
    * Проверка статуса текущего зеркального квеста.
    */

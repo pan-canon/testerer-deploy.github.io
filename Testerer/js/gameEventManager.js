@@ -1,5 +1,6 @@
 import { WelcomeEvent } from './events/welcomeEvent.js';
 import { BaseMirrorQuest } from './quests/baseMirrorQuest.js';  // Импортируем новый квест с зеркалом
+import { GhostEvent1 } from './ghostEvent1.js';
 
 export class GameEventManager {
   /**
@@ -13,6 +14,7 @@ export class GameEventManager {
     this.languageManager = languageManager;
     this.events = [
       new WelcomeEvent(this.eventManager, this.app, this.languageManager),
+      new GhostEvent1(this.eventManager, this.app),
       // В будущем можно добавить другие события
     ];
     this.currentEventIndex = 0;  // Индекс текущего события

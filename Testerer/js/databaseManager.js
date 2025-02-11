@@ -36,6 +36,7 @@ export class DatabaseManager {
           quest_key TEXT,
           status TEXT
         );
+      );
     }
     console.log("📖 Database initialized!");
   }

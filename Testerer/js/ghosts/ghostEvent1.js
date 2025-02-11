@@ -1,7 +1,7 @@
 import { GhostTextManager } from './ghostTextManager.js';
 import ghostTextsConfig from './ghostTextsConfig.js';
 import ghostQuestsConfig from './ghostQuestsConfig.js';
-import { VisualEffectsManager } from './visualEffectsManager.js';
+import { VisualEffectsManager } from '../visualEffectsManager.js';
 
 export class GhostEvent1 {
   /**

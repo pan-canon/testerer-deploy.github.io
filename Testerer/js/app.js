@@ -369,7 +369,6 @@ async handlePostButtonClick() {
     localStorage.removeItem("mirrorQuestReady");
     this.updatePostButtonState();
     console.log("Добавляем пост от пользователя");
-await this.eventManager.addDiaryEntry("Тест", false);
 // Не переключаем автоматически на камеру – оставляем пост видимым
 const cameraBtn = document.getElementById("toggle-camera");
 if (cameraBtn) {

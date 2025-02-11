@@ -28,22 +28,32 @@ export class ProfileManager {
    * Удаляются данные регистрации, базы данных дневника, прогресс призраков, тип локации и состояние квестов.
    * После сброса страница перезагружается.
    */
-  resetProfile() {
-    localStorage.removeItem("registrationCompleted");
-    localStorage.removeItem('profile');
-    localStorage.removeItem('regData');
-    localStorage.removeItem('diaryDB');
-    localStorage.removeItem('ghostState');
-    // Удаляем устаревшие данные, связанные с звонками – в новой логике они не используются
-    // localStorage.removeItem("callHandled");
-    // Сброс прогресса по призракам
-    localStorage.removeItem("ghostProgress");
-    // Сброс типа локации
-    localStorage.removeItem("locationType");
-    // Сброс состояния квестов
-    localStorage.removeItem("questProgress");
-    window.location.reload();
+resetProfile() {
+  // Сохраняем значение языка
+  const language = localStorage.getItem("language");
+
+  // Удаляем все данные профиля и связанные с ними ключи
+  localStorage.removeItem("registrationCompleted");
+  localStorage.removeItem("profile");
+  localStorage.removeItem("regData");
+  localStorage.removeItem("diaryDB");
+  localStorage.removeItem("ghostState");
+  // Удаляем устаревшие данные, связанные с звонками – в новой логике они не используются
+  // localStorage.removeItem("callHandled");
+  localStorage.removeItem("ghostProgress");
+  localStorage.removeItem("locationType");
+  localStorage.removeItem("questProgress");
+  localStorage.removeItem("mirrorQuestReady");
+  localStorage.removeItem("mirrorQuestActive");
+
+  // Восстанавливаем сохранённый язык (если он был)
+  if (language !== null) {
+    localStorage.setItem("language", language);
   }
+
+  window.location.reload();
+}
+
 
   /**
    * Экспортирует данные профиля вместе с дневником, планом квартиры и прогрессом квестов.

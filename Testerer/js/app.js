@@ -355,12 +355,18 @@ async handlePostButtonClick() {
     await this.eventManager.addDiaryEntry("Тест", false);
     // Открываем режим камеры для выполнения квеста
     this.toggleCameraView();
-    // Запускаем проверку зеркального квеста (которая через 5 сек вызовет finish())
+    // Добавляем класс тени к кнопке камеры, пока квест не завершён
+    const cameraBtn = document.getElementById("toggle-camera");
+    if (cameraBtn) {
+      cameraBtn.classList.add("glowing");
+    }
+    // Запускаем проверку (квест) – после 5 секунд внутри checkQuest() вызовется finish()
     await this.questManager.checkQuest("mirror_quest");
   } else {
     alert("Ждите приглашения от призрака для начала квеста.");
   }
 }
+
 
 
 

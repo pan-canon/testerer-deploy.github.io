@@ -83,7 +83,7 @@ this.db.run(`
       return;
     }
     this.db.run("INSERT INTO quest_progress (quest_key, status) VALUES (?, ?)", [questKey, status]);
-    console.log(✅ Quest progress added: ${questKey} - ${status});
+    console.log(`✅ Quest progress added: ${questKey} - ${status}`);
     this.saveDatabase();
   }
 

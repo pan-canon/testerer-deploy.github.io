@@ -108,38 +108,42 @@ export class DatabaseManager {
   }
 
   // Новый метод: сохраняет данные для плана квартиры по этажу
-  addApartmentRooms(floor, rooms) {
-    if (!this.db) {
-      console.error("⚠️ Database not initialized!");
-      return;
-    }
-    const roomData = JSON.stringify(rooms);
-    // Удаляем предыдущие записи для данного этажа и вставляем новые
-    this.db.run("DELETE FROM apartment_plan WHERE floor_number = ?", [floor]);
-    this.db.run("INSERT INTO apartment_plan (floor_number, room_data) VALUES (?, ?)", [floor, roomData]);
-    console.log(`✅ Apartment rooms saved for floor ${floor}`);
-    this.saveDatabase();
+addApartmentRooms(floor, rooms) {
+  if (!this.db) {
+    console.error("⚠️ Database not initialized!");
+    return;
   }
+  const roomData = JSON.stringify(rooms);
+  console.log(`Сохраняем для этажа ${floor}:`, roomData);
+  // Удаляем предыдущие записи для данного этажа и вставляем новые
+  this.db.run("DELETE FROM apartment_plan WHERE floor_number = ?", [floor]);
+  this.db.run("INSERT INTO apartment_plan (floor_number, room_data) VALUES (?, ?)", [floor, roomData]);
+  console.log(`✅ Apartment rooms saved for floor ${floor}`);
+  this.saveDatabase();
+}
+
 
   // Новый метод: получает данные плана квартиры для указанного этажа
-  getApartmentPlan(floor, callback) {
-    if (!this.db) {
-      console.error("⚠️ Database not initialized!");
-      callback([]);
-      return;
-    }
-    const result = this.db.exec("SELECT room_data FROM apartment_plan WHERE floor_number = ?", [floor]);
-    if (result.length > 0 && result[0].values.length > 0) {
-      const roomData = result[0].values[0][0];
-      let rooms = [];
-      try {
-        rooms = JSON.parse(roomData);
-      } catch (e) {
-        console.error("Error parsing room_data", e);
-      }
-      callback(rooms);
-    } else {
-      callback([]);
-    }
+getApartmentPlan(floor, callback) {
+  if (!this.db) {
+    console.error("⚠️ Database not initialized!");
+    callback([]);
+    return;
   }
+  const result = this.db.exec("SELECT room_data FROM apartment_plan WHERE floor_number = ?", [floor]);
+  console.log("Результат запроса для этажа", floor, result);
+  if (result.length > 0 && result[0].values.length > 0) {
+    const roomData = result[0].values[0][0];
+    let rooms = [];
+    try {
+      rooms = JSON.parse(roomData);
+    } catch (e) {
+      console.error("Error parsing room_data", e);
+    }
+    callback(rooms);
+  } else {
+    callback([]);
+  }
+}
+
 }

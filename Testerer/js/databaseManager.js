@@ -6,7 +6,7 @@ export class DatabaseManager {
 
   async initDatabase() {
     const SQL = await initSqlJs({
-      locateFile: file => js/${file}
+      locateFile: file => `js/${file}`
     });
     // Проверяем, сохранена ли база в localStorage
     const savedDb = localStorage.getItem("diaryDB");

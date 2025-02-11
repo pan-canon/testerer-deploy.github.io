@@ -48,31 +48,39 @@ async checkStatus() {
   /**
    * Завершение квеста (проверка и запись результатов в дневник).
    */
-  async finish() {
-    if (this.eventManager.isEventLogged(this.doneKey)) {
-      console.log(`Квест "${this.key}" уже выполнен, повторная проверка не требуется.`);
-      return;
-    }
-
-    const success = await this.checkStatus(); // Проверка на совпадение с зеркалом
-    if (success) {
-      if (!this.eventManager.isEventLogged(this.doneKey)) {
-        await this.eventManager.addDiaryEntry(this.doneKey); // Логируем завершение квеста
-        await this.eventManager.addDiaryEntry("what_was_it", this.app.lastMirrorPhoto); // Добавляем фото последнего кадра
-      }
-      const cameraBtn = document.getElementById("toggle-camera");
-      if (cameraBtn) {
-        cameraBtn.classList.remove("glowing"); // Убираем подсветку с кнопки камеры
-      }
-      localStorage.removeItem("mirrorQuestActive"); // Завершаем квест
-      alert("✅ Задание «подойти к зеркалу» выполнено!");
-
-      // После успешного завершения зеркального квеста запускаем следующее явление призрака
-      if (this.app.ghostManager) {
-        this.app.ghostManager.triggerNextPhenomenon();
-      }
-    } else {
-      alert("❌ Нет совпадения! Попробуйте ещё раз!");
-    }
+async finish() {
+  // Ждём 5 секунд и проверяем статус квеста
+  const success = await this.checkStatus();
+  // Получаем текущего призрака и выбираем из его имени случайную букву
+  const ghost = this.app.ghostManager.getCurrentGhost();
+  const randomLetter = this.getRandomLetter(ghost.name);
+  
+  if (success) {
+    // Если квест выполнен: добавляем пост от юзера с фото и выбранной буквой
+    const photoData = this.app.lastMirrorPhoto ? ` [photo attached]\n${this.app.lastMirrorPhoto}` : "";
+    await this.eventManager.addDiaryEntry(`user_post_success: ${randomLetter}${photoData}`, false);
+    alert("✅ Задание «подойти к зеркалу» выполнено!");
+  } else {
+    // Если квест не выполнен (проигнорирован): добавляем пост от юзера с выбранной буквой
+    await this.eventManager.addDiaryEntry(`user_post_failed: ${randomLetter}`, false);
+    alert("❌ Квест проигнорирован!");
+    // Запускаем новое событие (аналогичное welcome), чтобы повторить приглашение
+    await this.app.gameEventManager.activateEvent("welcome");
   }
+  
+  // Зафиксировать отработанный шаг (одна буква) – независимо от результата квеста
+  if (this.app.ghostManager) {
+    await this.app.ghostManager.triggerNextPhenomenon();
+  }
+  // Сбрасываем флаг активности зеркального квеста
+  localStorage.removeItem("mirrorQuestActive");
+}
+
+getRandomLetter(name) {
+  // Оставляем в строке только буквы (латинские и кириллические) и убираем пробелы/цифры
+  const letters = name.replace(/[^A-Za-zА-Яа-яЁё]/g, '').split('');
+  if (letters.length === 0) return '';
+  const randomIndex = Math.floor(Math.random() * letters.length);
+  return letters[randomIndex];
+}
 }

@@ -50,13 +50,17 @@
 </div>
 
 <!-- Новый экран регистрации плана квартиры (Шаг 2) -->
-<!-- Экран определения местоположения (ранее "План квартиры") -->
 <div id="apartment-plan-screen" style="display: none;">
-  <h2>Определение местоположения</h2>
-  <p>Пожалуйста, разрешите доступ к геолокации и подтвердите, что вы находитесь в нужном месте.</p>
-  <button type="button" id="request-geolocation-btn">Определить местоположение</button>
+  <h2>План квартиры</h2>
+  <div id="apartment-plan-container">
+    <!-- Таблица будет создана динамически модулем ApartmentPlanManager -->
+  </div>
+  <div>
+    <button type="button" id="prev-floor-btn">Предыдущий этаж</button>
+    <button type="button" id="next-floor-btn">Следующий этаж</button>
+  </div>
+  <button type="button" id="apartment-plan-next-btn">Далее</button>
 </div>
-
 
 
   <!-- Экран создания селфи (Шаг 3) -->

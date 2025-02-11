@@ -4,49 +4,42 @@ export class DatabaseManager {
     this.initDatabasePromise = this.initDatabase();
   }
 
-async initDatabase() {
-  const SQL = await initSqlJs({
-    locateFile: file => `js/${file}`
-  });
-  // Проверяем, сохранена ли база в localStorage
-  const savedDb = localStorage.getItem("diaryDB");
-  if (savedDb) {
-    // Декодируем base64 в Uint8Array
-    const byteStr = atob(savedDb);
-    const bytes = new Uint8Array(byteStr.length);
-    for (let i = 0; i < byteStr.length; i++) {
-      bytes[i] = byteStr.charCodeAt(i);
+  async initDatabase() {
+    const SQL = await initSqlJs({
+      locateFile: file => `js/${file}`
+    });
+    // Проверяем, сохранена ли база в localStorage
+    const savedDb = localStorage.getItem("diaryDB");
+    if (savedDb) {
+      // Декодируем base64 в Uint8Array
+      const byteStr = atob(savedDb);
+      const bytes = new Uint8Array(byteStr.length);
+      for (let i = 0; i < byteStr.length; i++) {
+        bytes[i] = byteStr.charCodeAt(i);
+      }
+      this.db = new SQL.Database(bytes);
+    } else {
+      this.db = new SQL.Database();
+this.db.run(`
+  CREATE TABLE IF NOT EXISTS diary (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry TEXT,
+    timestamp TEXT
+  );
+  CREATE TABLE IF NOT EXISTS apartment_plan (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    floor_number INTEGER,
+    room_data TEXT
+  );
+  CREATE TABLE IF NOT EXISTS quest_progress (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    quest_key TEXT,
+    status TEXT
+  );
+`);
     }
-    this.db = new SQL.Database(bytes);
-  } else {
-    this.db = new SQL.Database();
-    this.db.run(`
-      CREATE TABLE IF NOT EXISTS diary (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        entry TEXT,
-        timestamp TEXT
-      );
-      CREATE TABLE IF NOT EXISTS apartment_plan (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        floor_number INTEGER,
-        room_data TEXT
-      );
-      CREATE TABLE IF NOT EXISTS quest_progress (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        quest_key TEXT,
-        status TEXT
-      );
-      CREATE TABLE IF NOT EXISTS user_location (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        latitude REAL,
-        longitude REAL,
-        timestamp TEXT
-      );
-    `);
+    console.log("📖 Database initialized!");
   }
-  console.log("📖 Database initialized!");
-}
-
 
   saveDatabase() {
     if (!this.db) return;
@@ -60,21 +53,6 @@ async initDatabase() {
     const base64 = btoa(binaryStr);
     localStorage.setItem("diaryDB", base64);
   }
-
-saveUserLocation(latitude, longitude) {
-  if (!this.db) {
-    console.error("⚠️ Database not initialized!");
-    return;
-  }
-  const timestamp = new Date().toISOString();
-  this.db.run(
-    "INSERT INTO user_location (latitude, longitude, timestamp) VALUES (?, ?, ?)",
-    [latitude, longitude, timestamp]
-  );
-  console.log(`✅ Geolocation saved: lat=${latitude}, long=${longitude}`);
-  this.saveDatabase();
-}
-
 
   async addDiaryEntry(entry) {
     if (!this.db) {

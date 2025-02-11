@@ -42,34 +42,42 @@ updateDiaryDisplay() {
     if (seen.has(entryObj.id)) return;
     seen.add(entryObj.id);
 
-    // Создаем обёртку для записи
-    const wrapper = document.createElement("div");
-    // Добавляем CSS-класс записи (например, ghost-post или user-post)
-    wrapper.classList.add(entryObj.postClass);
+// Создаем обёртку для записи в виде article
+const articleElem = document.createElement("article");
+// Добавляем CSS-класс записи (например, ghost-post или user-post)
+articleElem.classList.add(entryObj.postClass);
 
-    // Создаем элемент абзаца для текста записи
-    const p = document.createElement("p");
-    // Локализуем текст: если для ключа entry есть перевод в текущем языке, используем его
-    const localizedText =
-      this.languageManager.locales[currentLanguage][entryObj.entry] || entryObj.entry;
-    p.textContent = `${localizedText} (${entryObj.timestamp})`;
-    wrapper.appendChild(p);
 
-    // Если запись содержит метку "[photo attached]", значит к ней прикреплено изображение
-    if (entryObj.entry.includes("[photo attached]")) {
-      const parts = entryObj.entry.split("\n[photo attached]\n");
-      if (parts.length >= 2) {
-        const imageData = parts[1];
-        const img = document.createElement("img");
-        img.src = imageData;
-        img.alt = this.languageManager.locales[currentLanguage]["photo_attached"] || "Photo attached";
-        img.style.maxWidth = "100%";
-        wrapper.appendChild(img);
-      }
-    }
+// Разбиваем запись на основной текст и, если есть, изображение
+let mainText = entryObj.entry;
+let imageData = null;
+if (entryObj.entry.includes("[photo attached]")) {
+  const parts = entryObj.entry.split("\n[photo attached]\n");
+  mainText = parts[0];
+  if (parts.length >= 2) {
+    imageData = parts[1];
+  }
+}
+// Локализуем основной текст
+const localizedText =
+  this.languageManager.locales[currentLanguage][mainText] || mainText;
+
+// Создаем элемент абзаца для текста записи
+const p = document.createElement("p");
+p.textContent = `${localizedText} (${entryObj.timestamp})`;
+articleElem.appendChild(p);
+
+// Если имеется прикрепленное изображение, добавляем его как элемент <img>
+if (imageData) {
+  const img = document.createElement("img");
+  img.src = imageData;
+  img.alt = this.languageManager.locales[currentLanguage]["photo_attached"] || "Photo attached";
+  img.style.maxWidth = "100%";
+  articleElem.appendChild(img);
+}
 
     // Добавляем обёртку с записью в контейнер дневника
-    this.diaryContainer.appendChild(wrapper);
+    this.diaryContainer.appendChild(articleElem);
   });
 
   console.log("📖 Diary updated.");

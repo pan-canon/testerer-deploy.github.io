@@ -77,17 +77,11 @@ export class App {
     this.exportBtn.addEventListener('click', () => this.exportProfile());
     this.importBtn.addEventListener('click', () => this.importProfile());
     this.profilePhotoElem.addEventListener("click", () => this.showProfileModal.show());
-    document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
-    document.getElementById("prev-floor-btn").addEventListener("click", () => {
-      if (this.apartmentPlanManager) {
-        this.apartmentPlanManager.prevFloor();
-      }
-    });
-    document.getElementById("next-floor-btn").addEventListener("click", () => {
-      if (this.apartmentPlanManager) {
-        this.apartmentPlanManager.nextFloor();
-      }
-    });
+  // Новый обработчик для кнопки геолокации (на экране второго шага)
+  const geoBtn = document.getElementById("request-geolocation-btn");
+  if (geoBtn) {
+    geoBtn.addEventListener("click", () => this.requestGeolocation());
+  }
     document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
     document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
   }
@@ -350,6 +344,32 @@ async compareCurrentFrame() {
   }
 }
 
+requestGeolocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        console.log("Получена геолокация:", latitude, longitude);
+        // Сохраняем координаты в localStorage (при необходимости)
+        localStorage.setItem('userLocation', JSON.stringify({ latitude, longitude }));
+        
+        // Сохраняем в базу данных (используя новый метод в DatabaseManager, см. ниже)
+        this.databaseManager.saveUserLocation(latitude, longitude);
+        
+        // Переходим к следующему шагу (например, экран селфи)
+        document.getElementById('apartment-plan-screen').style.display = 'none';
+        this.goToSelfieScreen();
+      },
+      (error) => {
+        console.error("Ошибка получения геолокации:", error);
+        alert("Не удалось определить ваше местоположение. Пожалуйста, включите геолокацию и повторите попытку.");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  } else {
+    alert("Ваш браузер не поддерживает геолокацию.");
+  }
+}
 
 
 }

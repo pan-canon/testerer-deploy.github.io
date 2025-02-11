@@ -29,10 +29,11 @@ export class ProfileManager {
    * После сброса страница перезагружается.
    */
   resetProfile() {
+    localStorage.removeItem("registrationCompleted");
     localStorage.removeItem('profile');
     localStorage.removeItem('regData');
     localStorage.removeItem('diaryDB');
-    localStorage.removeItem("registrationCompleted");
+    localStorage.removeItem('ghostState');
     // Удаляем устаревшие данные, связанные с звонками – в новой логике они не используются
     // localStorage.removeItem("callHandled");
     // Сброс прогресса по призракам

@@ -1,5 +1,5 @@
 import { WelcomeEvent } from './events/welcomeEvent.js';
-import { MirrorQuest } from './quests/mirrorQuest.js';  // Импортируем новый квест с зеркалом
+import { BaseMirrorQuest } from './quests/baseMirrorQuest.js';  // Импортируем новый квест с зеркалом
 
 export class GameEventManager {
   /**

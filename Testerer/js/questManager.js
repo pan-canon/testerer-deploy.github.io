@@ -1,5 +1,3 @@
-import { MirrorQuest } from './quests/mirrorQuest.js';
-
 export class QuestManager {
   /**
    * @param {EventManager} eventManager – менеджер событий (для работы с дневником)

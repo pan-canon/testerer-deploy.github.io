@@ -364,7 +364,7 @@ async handlePostButtonClick() {
       cameraBtn.classList.add("glowing");
     }
     // Запускаем проверку (квест) – после 5 секунд внутри checkQuest() вызовется finish()
-    await this.questManager.checkQuest("mirror_quest");
+    await this.questManager.activateQuest("mirror_quest");
   } else {
     alert("Ждите приглашения от призрака для начала квеста.");
   }

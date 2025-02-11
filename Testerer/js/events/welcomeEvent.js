@@ -27,7 +27,7 @@ async activate() {
   }
   console.log("Активируем событие 'welcome': регистрируем приглашение подойти к зеркалу");
   // Регистрируем событие с ключом "welcome"
-  await this.addDiaryEntry(this.key);
+  await this.eventManager.addDiaryEntry(this.key, true);
   // Устанавливаем флаг готовности для запуска квеста
   localStorage.setItem("mirrorQuestReady", "true");
   this.app.updatePostButtonState();

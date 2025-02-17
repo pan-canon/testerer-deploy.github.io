@@ -199,14 +199,13 @@ validateRegistration() {
   }
   
   goToSelfieScreen() {
-    window.switchScreen('selfie-screen', 'selfie-buttons');
-    const selfieContainer = document.getElementById('selfie-container');
-    selfieContainer.style.display = 'block';
-    this.cameraSectionManager.attachTo('selfie-container', {
-      width: "100%",
-      maxWidth: "400px",
-      filter: "grayscale(100%)"
-    });
+const globalCamera = document.getElementById('global-camera');
+globalCamera.style.display = 'block';
+this.cameraSectionManager.attachTo('global-camera', {
+  width: "100%",
+  height: "100%",
+  filter: "grayscale(100%)"
+});
     this.cameraSectionManager.startCamera();
     this.completeBtn.disabled = true;
   }
@@ -235,7 +234,13 @@ validateRegistration() {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const grayscaleData = ImageUtils.convertToGrayscale(canvas);
       this.selfiePreview.src = grayscaleData;
-      this.selfiePreview.style.display = 'block';
+this.selfiePreview.style.display = 'none'; // если больше не нужна в оригинальном месте
+// Новая миниатюра в панели управления:
+const thumbnail = document.getElementById('selfie-thumbnail');
+thumbnail.src = grayscaleData;
+thumbnail.style.display = 'block';
+this.completeBtn.disabled = false;
+this.selfieData = grayscaleData;
       // Сделать видимым родительский элемент (если он скрыт)
       this.selfiePreview.parentNode.style.display = 'block';
       this.completeBtn.disabled = false;
@@ -267,6 +272,7 @@ validateRegistration() {
     this.profileManager.saveProfile(profile);
     localStorage.setItem("registrationCompleted", "true");
     this.cameraSectionManager.stopCamera();
+    document.getElementById('global-camera').style.display = 'none';
     this.showMainScreen();
     
     // Вместо прямого запуска звонка, активируем событие "welcome"

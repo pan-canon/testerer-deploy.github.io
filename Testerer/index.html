@@ -98,10 +98,6 @@
     <!-- Экран создания селфи (Шаг 3) -->
     <section id="selfie-screen" style="display: none;">
       <h1 class="title" data-i18n="take_selfie">Take a Selfie</h1>
-      <div id="selfie-container" style="display: none; width: 100%; max-width: 400px;"></div>
-      <figure class="image is-128x128" style="display: none;">
-        <img id="selfie-preview" src="" alt="Selfie Preview">
-      </figure>
     </section>
 
     <!-- Основной экран (например, блог/дневник) -->
@@ -129,6 +125,8 @@
 
   <!-- Панель управления (все кнопки перемещены сюда) -->
   <div id="controls-panel" class="box">
+    <img id="selfie-thumbnail" src="" alt="Selfie Thumbnail" style="display: none; width: 50px; height: 50px; border-radius: 50%;">
+
     <!-- Кнопки для экрана регистрации -->
     <div id="registration-buttons" class="buttons">
       <button class="button is-link" type="button" id="next-step-btn" data-i18n="next" disabled>Next</button>

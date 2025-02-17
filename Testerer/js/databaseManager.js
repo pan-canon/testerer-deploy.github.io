@@ -145,6 +145,26 @@ export class DatabaseManager {
   }
 
   /**
+   * addApartmentRooms – сохраняет данные плана квартиры для указанного этажа.
+   * @param {number} floor - номер этажа.
+   * @param {Array} rooms - массив объектов, описывающих помещения (например, {floor, startRow, startCol, endRow, endCol, type}).
+   */
+  addApartmentRooms(floor, rooms) {
+    if (!this.db) {
+      console.error("⚠️ Database not initialized!");
+      return;
+    }
+    // Преобразуем массив комнат в JSON-строку
+    const roomData = JSON.stringify(rooms);
+    // Удаляем старые данные для этого этажа (если есть)
+    this.db.run("DELETE FROM apartment_plan WHERE floor_number = ?", [floor]);
+    // Вставляем новые данные
+    this.db.run("INSERT INTO apartment_plan (floor_number, room_data) VALUES (?, ?)", [floor, roomData]);
+    console.log(`✅ Apartment plan for floor ${floor} saved.`);
+    this.saveDatabase();
+  }
+
+  /**
    * getApartmentPlan – возвращает данные плана квартиры для указанного этажа.
    * @param {number} floor - Номер этажа.
    * @param {function} callback - Функция обратного вызова, которая получает массив данных (план).

@@ -4,117 +4,161 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Game Registration</title>
-  <!-- Подключаем стиль Pico.css и дополнительные стили -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <!-- Подключаем Bulma CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <style>
-    .glowing {
-  box-shadow: 0 0 10px 2px #ff0;
-}
-
-</style>
+    /* Глобальный контейнер для контента с ограниченной шириной */
+    #global-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    /* Контейнер для камеры – полноэкранный */
+    #global-camera {
+      display: none; /* по умолчанию скрыт */
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      z-index: 1000;
+    }
+    /* Панель управления – фиксированная внизу по центру, поверх всего */
+    #controls-panel {
+      position: fixed;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1010;
+      padding: 0.5rem;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 5px;
+    }
+  </style>
 </head>
-
 <body>
+  <!-- Глобальный контейнер для основного контента -->
+  <div id="global-content" class="container box">
+    <!-- Экран регистрации (Шаг 1) -->
+    <section id="registration-screen">
+      <h1 class="title" data-i18n="welcome">Welcome!</h1>
+      <form id="registration-form">
+        <div class="field">
+          <label class="label" for="player-name" data-i18n="enter_name">Enter your name:</label>
+          <div class="control">
+            <input class="input" type="text" id="player-name" required>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label" for="player-gender" data-i18n="select_gender">Select your gender:</label>
+          <div class="control">
+            <div class="select">
+              <select id="player-gender" required>
+                <option value="" disabled selected>Select</option>
+                <option value="male" data-i18n="male">Male</option>
+                <option value="female" data-i18n="female">Female</option>
+                <option value="other" data-i18n="other">Other</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label" for="language-selector" data-i18n="select_language">Select Language:</label>
+          <div class="control">
+            <div class="select">
+              <select id="language-selector">
+                <option value="en">English</option>
+                <option value="ru">Русский</option>
+                <option value="uk">Українська</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </form>
+      <!-- Импорт профиля (альтернативный вход) -->
+      <div id="import-profile-container" class="box">
+        <h2 class="subtitle" data-i18n="import_profile">Import Profile</h2>
+        <div class="field">
+          <div class="control">
+            <input class="input" type="file" id="import-file" accept=".json">
+          </div>
+        </div>
+      </div>
+    </section>
 
-  <!-- Экран регистрации (Шаг 1) -->
-<div id="registration-screen">
-  <h1 data-i18n="welcome">Welcome!</h1>
-  <form id="registration-form">
-    <label for="player-name" data-i18n="enter_name">Enter your name:</label>
-    <input type="text" id="player-name" required>
+    <!-- Экран плана квартиры (Шаг 2) -->
+    <section id="apartment-plan-screen" style="display: none;">
+      <h2 class="title">План квартиры</h2>
+      <div id="apartment-plan-container">
+        <!-- Таблица создаётся динамически -->
+      </div>
+    </section>
 
-    <label for="player-gender" data-i18n="select_gender">Select your gender:</label>
-    <select id="player-gender" required>
-      <option value="" disabled selected>Select</option>
-      <option value="male" data-i18n="male">Male</option>
-      <option value="female" data-i18n="female">Female</option>
-      <option value="other" data-i18n="other">Other</option>
-    </select>
+    <!-- Экран создания селфи (Шаг 3) -->
+    <section id="selfie-screen" style="display: none;">
+      <h1 class="title" data-i18n="take_selfie">Take a Selfie</h1>
+      <div id="selfie-container" style="display: none; width: 100%; max-width: 400px;"></div>
+      <figure class="image is-128x128" style="display: none;">
+        <img id="selfie-preview" src="" alt="Selfie Preview">
+      </figure>
+    </section>
 
-    <label for="language-selector" data-i18n="select_language">Select Language:</label>
-    <select id="language-selector">
-      <option value="en">English</option>
-      <option value="ru">Русский</option>
-      <option value="uk">Українська</option>
-    </select>
-
-    <button type="button" id="next-step-btn" data-i18n="next" disabled>Next</button>
-  </form>
-
-  <!-- Импорт профиля (альтернативный вход) -->
-  <div id="import-profile-container">
-    <h2 data-i18n="import_profile">Import Profile</h2>
-    <input type="file" id="import-file" accept=".json">
-    <button type="button" id="import-profile-btn" data-i18n="import">Import</button>
+    <!-- Основной экран (например, блог/дневник) -->
+    <section id="main-screen" style="display: none;">
+      <h2 class="title" data-i18n="diary">Your Diary</h2>
+      <div id="profile-info" class="box">
+        <figure class="image is-128x128">
+          <img id="profile-photo" alt="Profile Photo" style="display: none; border-radius: 50%;">
+        </figure>
+        <p id="profile-name"></p>
+      </div>
+      <div id="diary" class="content"></div>
+    </section>
   </div>
-</div>
 
-<!-- Новый экран регистрации плана квартиры (Шаг 2) -->
-<div id="apartment-plan-screen" style="display: none;">
-  <h2>План квартиры</h2>
-  <div id="apartment-plan-container">
-    <!-- Таблица будет создана динамически модулем ApartmentPlanManager -->
+  <!-- Глобальный контейнер для камеры -->
+  <div id="global-camera">
+    <div class="camera-inner">
+      <!-- Видеоэлемент и оверлеи создаются динамически -->
+      <div id="camera-controls-overlay">
+        <!-- Элементы управления камерой, если нужны -->
+      </div>
+    </div>
   </div>
-  <div>
-    <button type="button" id="prev-floor-btn">Предыдущий этаж</button>
-    <button type="button" id="next-floor-btn">Следующий этаж</button>
+
+  <!-- Панель управления (все кнопки перемещены сюда) -->
+  <div id="controls-panel" class="box">
+    <!-- Кнопки для экрана регистрации -->
+    <div id="registration-buttons" class="buttons">
+      <button class="button is-link" type="button" id="next-step-btn" data-i18n="next" disabled>Next</button>
+      <button class="button is-info" type="button" id="import-profile-btn" data-i18n="import">Import Profile</button>
+    </div>
+    <!-- Кнопки для экрана плана квартиры -->
+    <div id="apartment-plan-buttons" class="buttons" style="display: none;">
+      <button class="button" type="button" id="prev-floor-btn">Предыдущий этаж</button>
+      <button class="button" type="button" id="next-floor-btn">Следующий этаж</button>
+      <button class="button is-link" type="button" id="apartment-plan-next-btn">Далее</button>
+    </div>
+    <!-- Кнопки для экрана создания селфи -->
+    <div id="selfie-buttons" class="buttons" style="display: none;">
+      <button class="button is-primary" type="button" id="capture-btn" data-i18n="capture">Capture</button>
+      <button class="button is-success" type="button" id="complete-registration" data-i18n="complete" disabled>Complete</button>
+    </div>
+    <!-- Кнопки для основного экрана (блог/дневник) -->
+    <div id="main-buttons" class="buttons" style="display: none;">
+      <button class="button" id="post-btn" disabled>Запостить</button>
+      <button class="button" type="button" id="toggle-camera" data-i18n="open_camera">Open Camera</button>
+      <button class="button" type="button" id="toggle-diary" data-i18n="open_diary">Open Diary</button>
+      <button class="button is-danger" type="button" id="reset-data" data-i18n="reset">Reset Data</button>
+      <button class="button is-info" type="button" id="export-profile-btn" data-i18n="export">Export Profile</button>
+    </div>
   </div>
-  <button type="button" id="apartment-plan-next-btn">Далее</button>
-</div>
 
-
-  <!-- Экран создания селфи (Шаг 3) -->
-  <div id="selfie-screen" style="display: none;">
-    <h1 data-i18n="take_selfie">Take a Selfie</h1>
-<div id="selfie-container" style="display: none; width: 100%; max-width: 400px;"></div>
-
-    <br>
-    <button type="button" id="capture-btn" data-i18n="capture">Capture</button>
-    <br>
-    <img id="selfie-preview" src="" alt="Selfie Preview" style="display: none; max-width: 400px;">
-    <br>
-    <button type="button" id="complete-registration" data-i18n="complete" disabled>Complete</button>
-  </div>
-  
-<!-- Основной экран (например, дневник) – после регистрации -->
-<div id="main-screen" style="display: none;">
-  <h2 data-i18n="diary">Your Diary</h2>
-  <div id="profile-info">
-    <img id="profile-photo" alt="Profile Photo" style="display: none; max-width: 100px; border-radius: 50%;">
-    <p id="profile-name"></p>
-  </div>
-  <div id="diary"></div>
-
-  <!-- Кнопки управления -->
-<div id="camera-controls">
-<!-- В нужном месте основного экрана (main-screen) -->
-<button id="post-btn" disabled>Запостить</button>
-  <button type="button" id="toggle-camera" data-i18n="open_camera" style="display: none;">Open Camera</button>
-  <button type="button" id="toggle-diary" data-i18n="open_diary" style="display: none;">Open Diary</button>
-</div>
-
-  <!-- Кнопка сброса данных -->
-  <button type="button" id="reset-data" data-i18n="reset">Reset Data</button>
-  <!-- Новая кнопка экспорта профиля -->
-  <button type="button" id="export-profile-btn" data-i18n="export">Export Profile</button>
-</div>
-
-<!-- Единый контейнер для камеры (используется во всех режимах) -->
-<div id="camera-container" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000;">
-  <!-- Видеоэлемент будет создан динамически -->
-  <!-- Здесь можно добавить отдельный контейнер для оверлеев (элементы управления) -->
-  <div id="camera-controls-overlay" style="position: absolute; top: 0; width: 100%; z-index: 1010;">
-    <!-- Элементы управления будут добавляться динамически -->
-  </div>
-</div>
-
-  
   <!-- Скрипты -->
-  <!-- Основной скрипт -->
   <script src="js/sql-wasm.js"></script>
   <script src="js/libs/face-api.js"></script>
   <script src="js/locales.js"></script>
   <script type="module" src="js/main.js"></script>
-
 </body>
 </html>

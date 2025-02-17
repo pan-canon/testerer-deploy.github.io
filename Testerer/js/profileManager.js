@@ -28,32 +28,31 @@ export class ProfileManager {
    * Удаляются данные регистрации, базы данных дневника, прогресс призраков, тип локации и состояние квестов.
    * После сброса страница перезагружается.
    */
-resetProfile() {
-  // Сохраняем значение языка
-  const language = localStorage.getItem("language");
+  resetProfile() {
+    // Сохраняем значение языка
+    const language = localStorage.getItem("language");
 
-  // Удаляем все данные профиля и связанные с ними ключи
-  localStorage.removeItem("registrationCompleted");
-  localStorage.removeItem("profile");
-  localStorage.removeItem("regData");
-  localStorage.removeItem("diaryDB");
-  localStorage.removeItem("ghostState");
-  // Удаляем устаревшие данные, связанные с звонками – в новой логике они не используются
-  // localStorage.removeItem("callHandled");
-  localStorage.removeItem("ghostProgress");
-  localStorage.removeItem("locationType");
-  localStorage.removeItem("questProgress");
-  localStorage.removeItem("mirrorQuestReady");
-  localStorage.removeItem("mirrorQuestActive");
+    // Удаляем все данные профиля и связанные с ними ключи
+    localStorage.removeItem("registrationCompleted");
+    localStorage.removeItem("profile");
+    localStorage.removeItem("regData");
+    localStorage.removeItem("diaryDB");
+    localStorage.removeItem("ghostState");
+    // Удаляем устаревшие данные, связанные с звонками – в новой логике они не используются
+    // localStorage.removeItem("callHandled");
+    localStorage.removeItem("ghostProgress");
+    localStorage.removeItem("locationType");
+    localStorage.removeItem("questProgress");
+    localStorage.removeItem("mirrorQuestReady");
+    localStorage.removeItem("mirrorQuestActive");
 
-  // Восстанавливаем сохранённый язык (если он был)
-  if (language !== null) {
-    localStorage.setItem("language", language);
+    // Восстанавливаем сохранённый язык (если он был)
+    if (language !== null) {
+      localStorage.setItem("language", language);
+    }
+
+    window.location.reload();
   }
-
-  window.location.reload();
-}
-
 
   /**
    * Экспортирует данные профиля вместе с дневником, планом квартиры и прогрессом квестов.
@@ -62,15 +61,30 @@ resetProfile() {
    * @param {Object} apartmentPlanManager – менеджер плана квартиры.
    */
   exportProfileData(databaseManager, apartmentPlanManager) {
+    // Получаем профиль из localStorage.
     const profileStr = localStorage.getItem('profile');
     if (!profileStr) {
       alert("No profile found to export.");
       return;
     }
+    // Получаем записи дневника.
     const diaryEntries = databaseManager.getDiaryEntries();
+    // Получаем данные плана квартиры, если они существуют.
     const apartmentPlanData = apartmentPlanManager ? apartmentPlanManager.rooms : [];
-    const questProgressData = databaseManager.getQuestProgress();
+    
+    // Получаем данные прогресса квестов. Так как метод getQuestProgress требует ключ, 
+    // вместо этого мы выполняем SQL-запрос для получения всех записей из таблицы quest_progress.
+    let questProgressData = [];
+    const result = databaseManager.db.exec("SELECT * FROM quest_progress ORDER BY id DESC");
+    if (result.length > 0) {
+      questProgressData = result[0].values.map(row => ({
+        id: row[0],
+        quest_key: row[1],
+        status: row[2]
+      }));
+    }
 
+    // Формируем объект экспорта, включающий профиль, дневник, данные квартиры и прогресс квестов.
     const exportData = {
       profile: JSON.parse(profileStr),
       diary: diaryEntries,
@@ -78,6 +92,7 @@ resetProfile() {
       quests: questProgressData
     };
 
+    // Создаем Blob из JSON-строки с отступами для читабельности.
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -101,16 +116,16 @@ resetProfile() {
     reader.onload = (e) => {
       try {
         const importedData = JSON.parse(e.target.result);
-        // Проверяем наличие основных полей профиля
+        // Проверяем наличие основных полей профиля.
         if (!importedData.profile || !importedData.profile.name || !importedData.profile.gender ||
             !importedData.profile.selfie || !importedData.profile.language) {
           alert("Invalid profile file. Required profile fields are missing.");
           return;
         }
-        // Сохраняем профиль
+        // Сохраняем профиль.
         this.saveProfile(importedData.profile);
 
-        // Импортируем записи дневника
+        // Импортируем записи дневника.
         if (importedData.diary && Array.isArray(importedData.diary)) {
           importedData.diary.forEach(entry => {
             if (entry.entry && entry.timestamp) {
@@ -123,7 +138,7 @@ resetProfile() {
           databaseManager.saveDatabase();
         }
 
-        // Импортируем данные плана квартиры, если они существуют
+        // Импортируем данные плана квартиры, если они существуют.
         if (importedData.apartment && Array.isArray(importedData.apartment)) {
           if (apartmentPlanManager) {
             apartmentPlanManager.rooms = importedData.apartment;
@@ -131,7 +146,7 @@ resetProfile() {
           }
         }
 
-        // Импортируем прогресс квестов
+        // Импортируем прогресс квестов.
         if (importedData.quests && Array.isArray(importedData.quests)) {
           importedData.quests.forEach(progress => {
             if (progress.quest_key && progress.status) {

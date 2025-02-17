@@ -12,6 +12,8 @@ import { GhostManager } from './ghostManager.js';
 
 export class App {
   constructor() {
+    // Привязываем метод switchScreen к глобальному объекту, если нужен глобальный доступ
+    window.switchScreen = this.switchScreen.bind(this);
     // DOM-элементы экранов и формы
     this.registrationScreen = document.getElementById('registration-screen');
     this.selfieScreen = document.getElementById('selfie-screen');
@@ -101,6 +103,29 @@ if (this.profileManager.isProfileSaved()) {
 }
 
 
+switchScreen(screenId, buttonsGroupId) {
+    // Скрываем все секции (экраны)
+    document.querySelectorAll('section').forEach(section => section.style.display = 'none');
+    
+    // Показываем выбранный экран
+    const targetScreen = document.getElementById(screenId);
+    if (targetScreen) {
+      targetScreen.style.display = 'block';
+    }
+    
+    // Скрываем все группы кнопок в панели управления
+    document.querySelectorAll('#controls-panel > .buttons').forEach(group => group.style.display = 'none');
+    
+    // Если указана группа кнопок для данного экрана – показываем её
+    if (buttonsGroupId) {
+      const targetGroup = document.getElementById(buttonsGroupId);
+      if (targetGroup) {
+        targetGroup.style.display = 'flex';
+      }
+    }
+  }
+
+
 bindEvents() {
   // Добавляем обработчики для полей регистрации с отладочным выводом
   this.nameInput.addEventListener('input', () => {
@@ -167,16 +192,14 @@ validateRegistration() {
       language: document.getElementById('language-selector').value
     };
     localStorage.setItem('regData', JSON.stringify(regData));
-    this.registrationScreen.style.display = 'none';
-    document.getElementById('apartment-plan-screen').style.display = 'block';
+    window.switchScreen('apartment-plan-screen', 'apartment-plan-buttons');
     if (!this.apartmentPlanManager) {
       this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', this.databaseManager);
     }
   }
   
   goToSelfieScreen() {
-    document.getElementById('apartment-plan-screen').style.display = 'none';
-    this.selfieScreen.style.display = 'block';
+    window.switchScreen('selfie-screen', 'selfie-buttons');
     const selfieContainer = document.getElementById('selfie-container');
     selfieContainer.style.display = 'block';
     this.cameraSectionManager.attachTo('selfie-container', {
@@ -310,9 +333,7 @@ setTimeout(async () => {
 
  
 showMainScreen() {
-  this.registrationScreen.style.display = 'none';
-  this.selfieScreen.style.display = 'none';
-  this.mainScreen.style.display = 'block';
+  window.switchScreen('main-screen', 'main-buttons');
   const profile = this.profileManager.getProfile();
   if (profile) {
     this.profileNameElem.textContent = profile.name;
@@ -328,9 +349,7 @@ showMainScreen() {
 
 
   showRegistrationScreen() {
-    this.registrationScreen.style.display = 'block';
-    this.selfieScreen.style.display = 'none';
-    this.mainScreen.style.display = 'none';
+    window.switchScreen('registration-screen', 'registration-buttons');
   }
 
 

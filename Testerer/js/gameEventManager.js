@@ -1,6 +1,6 @@
 import { WelcomeEvent } from './events/welcomeEvent.js';
 import { BaseMirrorQuest } from './quests/baseMirrorQuest.js';  // Новый квест с зеркалом
-// Неиспользуемый GhostEvent1 удалён, чтобы не путать логику.
+// import { GhostEvent1 } from './events/ghostEvent1.js';
 
 export class GameEventManager {
   /**
@@ -23,6 +23,8 @@ export class GameEventManager {
       new WelcomeEvent(this.eventManager, this.app, this.languageManager)
       // Можно добавить другие события, например:
       // new BaseMirrorQuest(this.eventManager, this.app)
+      // Активировать новую логику поверх текущей по готовности
+      // new GhostEvent1(this.eventManager, this.app)
     ];
     
     // Индекс текущего события, который будет использоваться для последовательного запуска.

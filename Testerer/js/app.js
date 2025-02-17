@@ -201,17 +201,21 @@ validateRegistration() {
     }
   }
   
-  goToSelfieScreen() {
-const globalCamera = document.getElementById('global-camera');
-globalCamera.style.display = 'block';
-this.cameraSectionManager.attachTo('global-camera', {
-  width: "100%",
-  height: "100%",
-  filter: "grayscale(100%)"
-});
-    this.cameraSectionManager.startCamera();
-    this.completeBtn.disabled = true;
-  }
+goToSelfieScreen() {
+  // Переключаем экран на селфи и показываем соответствующую группу кнопок
+  window.switchScreen('selfie-screen', 'selfie-buttons');
+  
+  // Открываем глобальный контейнер камеры
+  const globalCamera = document.getElementById('global-camera');
+  globalCamera.style.display = 'block';
+  this.cameraSectionManager.attachTo('global-camera', {
+    width: "100%",
+    height: "100%",
+    filter: "grayscale(100%)"
+  });
+  this.cameraSectionManager.startCamera();
+  this.completeBtn.disabled = true;
+}
   
   captureSelfie() {
     console.log("📸 Попытка сделать снимок...");

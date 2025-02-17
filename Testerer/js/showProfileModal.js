@@ -115,18 +115,18 @@ export class ShowProfileModal {
     planContainer.style.border = "1px solid #ccc";
     planContainer.style.padding = "10px";
     planContainer.style.marginBottom = "15px";
-    // Если менеджер плана квартиры существует и содержит данные комнат, клонируем таблицу плана.
-    if (this.app.apartmentPlanManager && this.app.apartmentPlanManager.rooms.length > 0) {
+    if (this.app.apartmentPlanManager && this.app.apartmentPlanManager.table) {
+      // Клонируем таблицу плана квартиры, если она существует
       const planClone = this.app.apartmentPlanManager.table.cloneNode(true);
       planContainer.appendChild(planClone);
-      // Если существует более одного этажа, добавляем элементы управления этажами.
+      // Если этажей больше одного, добавляем кнопки для переключения этажей
       const floors = this.app.apartmentPlanManager.rooms.map(room => room.floor);
       const uniqueFloors = [...new Set(floors)];
       if (uniqueFloors.length > 1) {
         const floorControls = document.createElement("div");
         floorControls.style.textAlign = "center";
         floorControls.style.marginTop = "10px";
-
+        
         const prevFloorBtn = document.createElement("button");
         prevFloorBtn.textContent = "Предыдущий этаж";
         prevFloorBtn.addEventListener("click", () => {
@@ -135,7 +135,6 @@ export class ShowProfileModal {
           const newPlan = this.app.apartmentPlanManager.table.cloneNode(true);
           planContainer.appendChild(newPlan);
         });
-
         const nextFloorBtn = document.createElement("button");
         nextFloorBtn.textContent = "Следующий этаж";
         nextFloorBtn.style.marginLeft = "10px";
@@ -145,7 +144,6 @@ export class ShowProfileModal {
           const newPlan = this.app.apartmentPlanManager.table.cloneNode(true);
           planContainer.appendChild(newPlan);
         });
-
         floorControls.appendChild(prevFloorBtn);
         floorControls.appendChild(nextFloorBtn);
         planContainer.appendChild(floorControls);

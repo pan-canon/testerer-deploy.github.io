@@ -236,6 +236,8 @@ validateRegistration() {
       const grayscaleData = ImageUtils.convertToGrayscale(canvas);
       this.selfiePreview.src = grayscaleData;
       this.selfiePreview.style.display = 'block';
+      // Сделать видимым родительский элемент (если он скрыт)
+      this.selfiePreview.parentNode.style.display = 'block';
       this.completeBtn.disabled = false;
       this.selfieData = grayscaleData;
       console.log("✅ Снимок успешно сделан!");

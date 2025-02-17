@@ -217,47 +217,47 @@ goToSelfieScreen() {
   this.completeBtn.disabled = true;
 }
   
-  captureSelfie() {
-    console.log("📸 Попытка сделать снимок...");
-    if (!this.cameraSectionManager.videoElement || !this.cameraSectionManager.videoElement.srcObject) {
-      console.error("❌ Камера не активна!");
-      alert("Ошибка: Камера не включена.");
-      return;
-    }
-    const video = this.cameraSectionManager.videoElement;
-    if (video.readyState < 2) {
-      console.warn("⏳ Камера ещё не готова...");
-      alert("Подождите, пока камера загрузится.");
-      return;
-    }
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 480;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        throw new Error("Не удалось получить контекст рисования.");
-      }
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const grayscaleData = ImageUtils.convertToGrayscale(canvas);
-      this.selfiePreview.src = grayscaleData;
-this.selfiePreview.style.display = 'none'; // если больше не нужна в оригинальном месте
-// Новая миниатюра в панели управления:
-const thumbnail = document.getElementById('selfie-thumbnail');
-thumbnail.src = grayscaleData;
-thumbnail.style.display = 'block';
-this.completeBtn.disabled = false;
-this.selfieData = grayscaleData;
-      // Сделать видимым родительский элемент (если он скрыт)
-      this.selfiePreview.parentNode.style.display = 'block';
-      this.completeBtn.disabled = false;
-      this.selfieData = grayscaleData;
-      console.log("✅ Снимок успешно сделан!");
-    } catch (error) {
-      console.error("❌ Ошибка при создании снимка:", error);
-      alert("Ошибка при создании снимка! Попробуйте снова.");
-    }
+captureSelfie() {
+  console.log("📸 Попытка сделать снимок...");
+  if (!this.cameraSectionManager.videoElement || !this.cameraSectionManager.videoElement.srcObject) {
+    console.error("❌ Камера не активна!");
+    alert("Ошибка: Камера не включена.");
+    return;
   }
+  const video = this.cameraSectionManager.videoElement;
+  if (video.readyState < 2) {
+    console.warn("⏳ Камера ещё не готова...");
+    alert("Подождите, пока камера загрузится.");
+    return;
+  }
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error("Не удалось получить контекст рисования.");
+    }
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const grayscaleData = ImageUtils.convertToGrayscale(canvas);
+    // Показываем превью, а не скрываем его:
+    this.selfiePreview.src = grayscaleData;
+    this.selfiePreview.style.display = 'block';
+    
+    // Устанавливаем миниатюру в панели управления:
+    const thumbnail = document.getElementById('selfie-thumbnail');
+    thumbnail.src = grayscaleData;
+    thumbnail.style.display = 'block';
+    
+    this.completeBtn.disabled = false;
+    this.selfieData = grayscaleData;
+    console.log("✅ Снимок успешно сделан!");
+  } catch (error) {
+    console.error("❌ Ошибка при создании снимка:", error);
+    alert("Ошибка при создании снимка! Попробуйте снова.");
+  }
+}
+
   
   completeRegistration() {
     if (!this.selfiePreview.src || this.selfiePreview.src === "") {

@@ -1,5 +1,4 @@
 // App.js – главный класс приложения
-
 import { LanguageManager } from './languageManager.js';
 import { cameraSectionManager } from './cameraSectionManager.js';
 import { ImageUtils } from './utils/imageUtils.js';
@@ -319,7 +318,7 @@ export class App {
    */
   async toggleCameraView() {
     const diary = document.getElementById("diary");
-    const cameraContainer = document.getElementById("camera-container");
+    const cameraContainer = document.getElementById("global-camera");
     const toggleCameraBtn = document.getElementById("toggle-camera");
     const toggleDiaryBtn = document.getElementById("toggle-diary");
     const buttonsToHide = [

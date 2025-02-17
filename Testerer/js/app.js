@@ -380,6 +380,13 @@ export class App {
    */
   showMainScreen() {
     window.switchScreen('main-screen', 'main-buttons');
+    // В режиме блога должны быть видны только кнопки для блога,
+    // поэтому принудительно скрываем кнопку "Open Diary".
+    const toggleCameraBtn = document.getElementById("toggle-camera");
+    const toggleDiaryBtn = document.getElementById("toggle-diary");
+    if (toggleCameraBtn) toggleCameraBtn.style.display = "inline-block";
+    if (toggleDiaryBtn) toggleDiaryBtn.style.display = "none";
+    
     const profile = this.profileManager.getProfile();
     if (profile) {
       this.profileNameElem.textContent = profile.name;

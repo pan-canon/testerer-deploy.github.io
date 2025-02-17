@@ -114,15 +114,18 @@ switchScreen(screenId, buttonsGroupId) {
     }
     
     // Скрываем все группы кнопок в панели управления
-    document.querySelectorAll('#controls-panel > .buttons').forEach(group => group.style.display = 'none');
-    
-    // Если указана группа кнопок для данного экрана – показываем её
-    if (buttonsGroupId) {
-      const targetGroup = document.getElementById(buttonsGroupId);
-      if (targetGroup) {
-        targetGroup.style.display = 'flex';
-      }
-    }
+document.querySelectorAll('#controls-panel > .buttons').forEach(group => {
+  group.style.display = 'none';
+  group.style.pointerEvents = 'none';
+});
+if (buttonsGroupId) {
+  const targetGroup = document.getElementById(buttonsGroupId);
+  if (targetGroup) {
+    targetGroup.style.display = 'flex';
+    targetGroup.style.pointerEvents = 'auto';
+  }
+}
+
   }
 
 

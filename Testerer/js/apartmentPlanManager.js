@@ -176,25 +176,23 @@ export class ApartmentPlanManager {
    * Затем вызывается модальное окно для выбора типа помещения.
    */
   finishSelection(e) {
+    // Если событие произошло внутри модального окна, игнорируем его
+    if (e.target.closest('#location-type-modal-overlay')) return;
+
     if (this.isSelecting) {
       this.isSelecting = false;
-      // Если по каким-то причинам начальная или конечная ячейка не установлена,
-      // выбираем весь план по умолчанию.
+      // Если не было выделено ни одной ячейки, задаем дефолтное помещение на весь план
       if (!this.startCell || !this.endCell) {
         this.startCell = { row: 0, col: 0 };
         this.endCell = { row: this.gridRows - 1, col: this.gridCols - 1 };
       }
       
-      // Вызываем модальное окно для выбора типа помещения.
-      // onConfirm: функция, которая вызывается, если пользователь выбирает тип помещения.
-      // onCancel: функция, вызываемая, если пользователь отменяет выбор.
+      // Вызываем модальное окно для выбора типа помещения
       this.showLocationTypeModal(
         (selectedType) => {
-          // Сохраняем выбранный тип помещения через профиль, если доступно.
           if (this.app && this.app.profileManager) {
             this.app.profileManager.saveLocationType(selectedType);
           }
-          // Формируем объект помещения с координатами выделенной области.
           const room = {
             floor: this.currentFloor,
             startRow: Math.min(this.startCell.row, this.endCell.row),
@@ -203,15 +201,11 @@ export class ApartmentPlanManager {
             endCol: Math.max(this.startCell.col, this.endCell.col),
             type: selectedType
           };
-          // Добавляем помещение в массив комнат.
           this.rooms.push(room);
-          // Сохраняем данные в базе данных.
           this.saveToDB();
-          // Обновляем отображение помещений.
           this.renderRooms();
         },
         () => {
-          // При отмене выбора используем значение по умолчанию "Другое".
           console.log("Локация не выбрана, выбран тип по умолчанию: 'Другое'.");
           if (this.app && this.app.profileManager) {
             this.app.profileManager.saveLocationType("Другое");

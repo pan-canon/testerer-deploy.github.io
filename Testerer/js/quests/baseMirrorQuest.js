@@ -1,4 +1,4 @@
-import { BaseEvent } from './baseEvent.js';
+import { BaseEvent } from '../events/baseEvent.js';
 import { VisualEffectsManager } from '../utils/visualEffectsManager.js';
 
 /**

@@ -15,7 +15,8 @@ export class App {
   constructor() {
     // Привязываем метод switchScreen к глобальному объекту для возможности вызова из других модулей.
     window.switchScreen = this.switchScreen.bind(this);
-    
+    // Флаг, показывающий, открыт ли режим камеры
+    this.isCameraOpen = false;
     // Получаем DOM-элементы экранов и формы регистрации
     this.registrationScreen = document.getElementById('registration-screen');
     this.selfieScreen = document.getElementById('selfie-screen');
@@ -317,8 +318,9 @@ export class App {
    * toggleCameraView – переключает отображение между камерой и дневником.
    */
   async toggleCameraView() {
+    // Используем глобальный контейнер камеры, а не "camera-container"
     const diary = document.getElementById("diary");
-    const cameraContainer = document.getElementById("global-camera");
+    const globalCamera = document.getElementById("global-camera");
     const toggleCameraBtn = document.getElementById("toggle-camera");
     const toggleDiaryBtn = document.getElementById("toggle-diary");
     const buttonsToHide = [
@@ -327,21 +329,21 @@ export class App {
       document.getElementById("import-profile-container")
     ];
 
-    if (cameraContainer.style.display === "none") {
+    if (!this.isCameraOpen) {
+      // Открываем режим камеры
       console.log("📸 Переключаемся на камеру...");
       diary.style.display = "none";
-      cameraContainer.style.display = "flex";
+      globalCamera.style.display = "flex";
       toggleCameraBtn.style.display = "none";
       toggleDiaryBtn.style.display = "inline-block";
       buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
 
-      // Прикрепляем видео к контейнеру камеры и запускаем камеру.
-      this.cameraSectionManager.attachTo('camera-container', {
+      // Прикрепляем видео к глобальному контейнеру камеры
+      this.cameraSectionManager.attachTo('global-camera', {
         width: "100%",
         height: "100%"
       });
       await this.cameraSectionManager.startCamera();
-
       await new Promise(resolve => {
         if (this.cameraSectionManager.videoElement.readyState >= 2) {
           resolve();
@@ -351,20 +353,25 @@ export class App {
       });
       console.log("Видео готово:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
 
+      // Если флаг mirrorQuestActive активен, запускаем проверку (через 5 секунд)
       setTimeout(async () => {
         if (localStorage.getItem("mirrorQuestActive") === "true") {
           console.log("Запускаем проверку зеркального квеста после включения камеры...");
           await this.questManager.triggerMirrorQuestIfActive();
         }
       }, 5000);
+
+      this.isCameraOpen = true;
     } else {
+      // Закрываем режим камеры и возвращаем дневник
       console.log("📓 Возвращаемся в блог...");
       diary.style.display = "block";
-      cameraContainer.style.display = "none";
+      globalCamera.style.display = "none";
       toggleCameraBtn.style.display = "inline-block";
       toggleDiaryBtn.style.display = "none";
       buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
       this.cameraSectionManager.stopCamera();
+      this.isCameraOpen = false;
     }
   }
 

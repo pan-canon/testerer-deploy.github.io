@@ -57,3 +57,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 });
+
+// Новый обработчик события load, который скрывает прелоадер после полной загрузки всех ресурсов
+window.addEventListener("load", () => {
+  // Получаем элемент прелоадера из DOM (убедитесь, что в вашем index.html есть элемент с id="preloader")
+  const preloader = document.getElementById("preloader");
+  if (preloader) {
+    // Добавляем плавное уменьшение прозрачности прелоадера
+    preloader.style.opacity = 1;
+    const fadeEffect = setInterval(() => {
+      if (preloader.style.opacity > 0) {
+        preloader.style.opacity -= 0.1;
+      } else {
+        // Когда прозрачность достигнет 0, останавливаем интервал и скрываем прелоадер
+        clearInterval(fadeEffect);
+        preloader.style.display = "none";
+      }
+    }, 50); // Интервал в 50 мс для плавности эффекта
+  }
+});

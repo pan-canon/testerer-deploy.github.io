@@ -115,38 +115,47 @@ export class ShowProfileModal {
     planContainer.style.border = "1px solid #ccc";
     planContainer.style.padding = "10px";
     planContainer.style.marginBottom = "15px";
-    if (this.app.apartmentPlanManager && this.app.apartmentPlanManager.table) {
-      // Клонируем таблицу плана квартиры, если она существует
-      const planClone = this.app.apartmentPlanManager.table.cloneNode(true);
-      planContainer.appendChild(planClone);
-      // Если этажей больше одного, добавляем кнопки для переключения этажей
-      const floors = this.app.apartmentPlanManager.rooms.map(room => room.floor);
-      const uniqueFloors = [...new Set(floors)];
-      if (uniqueFloors.length > 1) {
-        const floorControls = document.createElement("div");
-        floorControls.style.textAlign = "center";
-        floorControls.style.marginTop = "10px";
-        
-        const prevFloorBtn = document.createElement("button");
-        prevFloorBtn.textContent = "Предыдущий этаж";
-        prevFloorBtn.addEventListener("click", () => {
-          this.app.apartmentPlanManager.prevFloor();
-          planContainer.innerHTML = "";
-          const newPlan = this.app.apartmentPlanManager.table.cloneNode(true);
-          planContainer.appendChild(newPlan);
-        });
-        const nextFloorBtn = document.createElement("button");
-        nextFloorBtn.textContent = "Следующий этаж";
-        nextFloorBtn.style.marginLeft = "10px";
-        nextFloorBtn.addEventListener("click", () => {
-          this.app.apartmentPlanManager.nextFloor();
-          planContainer.innerHTML = "";
-          const newPlan = this.app.apartmentPlanManager.table.cloneNode(true);
-          planContainer.appendChild(newPlan);
-        });
-        floorControls.appendChild(prevFloorBtn);
-        floorControls.appendChild(nextFloorBtn);
-        planContainer.appendChild(floorControls);
+    // Если менеджер плана квартиры существует и содержит данные комнат, клонируем таблицу плана.
+    if (this.app.apartmentPlanManager) {
+      // Если таблица ещё не создана, пытаемся её создать
+      if (!this.app.apartmentPlanManager.table) {
+        this.app.apartmentPlanManager.createTable();
+      }
+      if (this.app.apartmentPlanManager.table) {
+        // Если таблица теперь существует, клонируем её и отображаем
+        const planClone = this.app.apartmentPlanManager.table.cloneNode(true);
+        planContainer.appendChild(planClone);
+        // Если этажей больше одного, добавляем кнопки для переключения этажей
+        const floors = this.app.apartmentPlanManager.rooms.map(room => room.floor);
+        const uniqueFloors = [...new Set(floors)];
+        if (uniqueFloors.length > 1) {
+          const floorControls = document.createElement("div");
+          floorControls.style.textAlign = "center";
+          floorControls.style.marginTop = "10px";
+          
+          const prevFloorBtn = document.createElement("button");
+          prevFloorBtn.textContent = "Предыдущий этаж";
+          prevFloorBtn.addEventListener("click", () => {
+            this.app.apartmentPlanManager.prevFloor();
+            planContainer.innerHTML = "";
+            const newPlan = this.app.apartmentPlanManager.table.cloneNode(true);
+            planContainer.appendChild(newPlan);
+          });
+          const nextFloorBtn = document.createElement("button");
+          nextFloorBtn.textContent = "Следующий этаж";
+          nextFloorBtn.style.marginLeft = "10px";
+          nextFloorBtn.addEventListener("click", () => {
+            this.app.apartmentPlanManager.nextFloor();
+            planContainer.innerHTML = "";
+            const newPlan = this.app.apartmentPlanManager.table.cloneNode(true);
+            planContainer.appendChild(newPlan);
+          });
+          floorControls.appendChild(prevFloorBtn);
+          floorControls.appendChild(nextFloorBtn);
+          planContainer.appendChild(floorControls);
+        }
+      } else {
+        planContainer.textContent = "План квартиры отсутствует.";
       }
     } else {
       planContainer.textContent = "План квартиры отсутствует.";

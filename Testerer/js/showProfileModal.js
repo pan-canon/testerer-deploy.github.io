@@ -1,26 +1,21 @@
 /**
- * Класс ShowProfileModal отвечает за отображение модального окна профиля.
- * В нём реализовано редактирование профиля, включая обновление селфи, изменение логина,
- * просмотр плана квартиры и отображение наград (прогресса призраков).
+ * Класс ShowProfileModal отвечает за отображение модального окна профиля,
+ * где пользователь может редактировать данные своего профиля, включая селфи,
+ * логин, просматривать план квартиры и видеть награды (прогресс призраков).
  */
 export class ShowProfileModal {
   /**
-   * @param {App} appInstance - ссылка на главный объект приложения
+   * Конструктор класса.
+   * @param {App} appInstance - Ссылка на главный объект приложения для доступа ко всем менеджерам и данным.
    */
   constructor(appInstance) {
-    // Сохраняем ссылку на главный объект приложения для доступа к его менеджерам и данным.
+    // Сохраняем ссылку на главный объект приложения.
     this.app = appInstance;
   }
 
   /**
    * Метод show – открывает модальное окно профиля.
-   * Здесь происходит:
-   *  - Извлечение текущего профиля;
-   *  - Создание оверлея и контейнера модального окна;
-   *  - Отображение аватара, кнопки обновления селфи, полей для редактирования логина;
-   *  - Если доступен план квартиры, отображается его клон и кнопки переключения этажей;
-   *  - Отображение блока с наградами (прогресс призраков);
-   *  - Кнопки для отмены и сохранения изменений.
+   * В этом окне отображается текущий профиль, позволяющее пользователю редактировать данные.
    */
   show() {
     // Получаем текущий профиль через менеджер профиля.
@@ -30,7 +25,7 @@ export class ShowProfileModal {
       return;
     }
 
-    // Создаем оверлей для модального окна с возможностью прокрутки.
+    // Создаем оверлей для модального окна с фиксированным позиционированием и затемненным фоном.
     const modalOverlay = document.createElement("div");
     modalOverlay.id = "profile-modal-overlay";
     Object.assign(modalOverlay.style, {
@@ -47,7 +42,7 @@ export class ShowProfileModal {
       overflowY: "auto"
     });
 
-    // Создаем контейнер самого модального окна.
+    // Создаем контейнер модального окна.
     const modal = document.createElement("div");
     modal.id = "profile-modal";
     Object.assign(modal.style, {
@@ -66,10 +61,11 @@ export class ShowProfileModal {
     title.textContent = "Редактирование профиля";
     modal.appendChild(title);
 
-    // Блок для аватара (селфи).
+    // Блок для отображения аватара (селфи).
     const avatarContainer = document.createElement("div");
     avatarContainer.style.textAlign = "center";
-    // Создаем изображение для аватара.
+
+    // Создаем элемент изображения для аватара.
     const avatarImg = document.createElement("img");
     avatarImg.id = "profile-modal-avatar";
     avatarImg.src = profile.selfie;
@@ -85,10 +81,10 @@ export class ShowProfileModal {
     const updateSelfieBtn = document.createElement("button");
     updateSelfieBtn.textContent = "Обновить селфи";
     updateSelfieBtn.style.marginTop = "10px";
-    // При нажатии открывается отдельное модальное окно для захвата нового селфи.
     updateSelfieBtn.addEventListener("click", () => {
+      // Открываем отдельное модальное окно для редактирования селфи.
       this.showSelfieEditModal((newSelfieSrc) => {
-        // После успешного захвата селфи обновляем аватар в модальном окне.
+        // После успешного захвата селфи обновляем аватар.
         avatarImg.src = newSelfieSrc;
       });
     });
@@ -115,41 +111,51 @@ export class ShowProfileModal {
     planContainer.style.border = "1px solid #ccc";
     planContainer.style.padding = "10px";
     planContainer.style.marginBottom = "15px";
-    // Если менеджер плана квартиры существует и содержит данные комнат, клонируем таблицу плана.
+    // Если менеджер плана квартиры существует, пытаемся отобразить план.
     if (this.app.apartmentPlanManager) {
-      // Если таблица ещё не создана, пытаемся её создать
+      // Если таблица еще не создана, пытаемся её создать.
       if (!this.app.apartmentPlanManager.table) {
         this.app.apartmentPlanManager.createTable();
       }
+      // Если таблица успешно создана, клонируем ее для отображения.
       if (this.app.apartmentPlanManager.table) {
-        // Если таблица теперь существует, клонируем её и отображаем
         const planClone = this.app.apartmentPlanManager.table.cloneNode(true);
         planContainer.appendChild(planClone);
-        // Если этажей больше одного, добавляем кнопки для переключения этажей
+        // Если существует несколько этажей, добавляем кнопки переключения этажей.
         const floors = this.app.apartmentPlanManager.rooms.map(room => room.floor);
         const uniqueFloors = [...new Set(floors)];
         if (uniqueFloors.length > 1) {
           const floorControls = document.createElement("div");
           floorControls.style.textAlign = "center";
           floorControls.style.marginTop = "10px";
-          
+
           const prevFloorBtn = document.createElement("button");
           prevFloorBtn.textContent = "Предыдущий этаж";
           prevFloorBtn.addEventListener("click", () => {
             this.app.apartmentPlanManager.prevFloor();
             planContainer.innerHTML = "";
-            const newPlan = this.app.apartmentPlanManager.table.cloneNode(true);
-            planContainer.appendChild(newPlan);
+            if (this.app.apartmentPlanManager.table) {
+              const newPlan = this.app.apartmentPlanManager.table.cloneNode(true);
+              planContainer.appendChild(newPlan);
+            } else {
+              planContainer.textContent = "План квартиры отсутствует.";
+            }
           });
+
           const nextFloorBtn = document.createElement("button");
           nextFloorBtn.textContent = "Следующий этаж";
           nextFloorBtn.style.marginLeft = "10px";
           nextFloorBtn.addEventListener("click", () => {
             this.app.apartmentPlanManager.nextFloor();
             planContainer.innerHTML = "";
-            const newPlan = this.app.apartmentPlanManager.table.cloneNode(true);
-            planContainer.appendChild(newPlan);
+            if (this.app.apartmentPlanManager.table) {
+              const newPlan = this.app.apartmentPlanManager.table.cloneNode(true);
+              planContainer.appendChild(newPlan);
+            } else {
+              planContainer.textContent = "План квартиры отсутствует.";
+            }
           });
+
           floorControls.appendChild(prevFloorBtn);
           floorControls.appendChild(nextFloorBtn);
           planContainer.appendChild(floorControls);
@@ -162,7 +168,7 @@ export class ShowProfileModal {
     }
     modal.appendChild(planContainer);
 
-    // Отображаем информационную надпись.
+    // Информационная надпись.
     const note = document.createElement("p");
     note.textContent = "Переехать и начать с чистого листа - это иногда помогает избавиться от привидений, но не всегда.";
     note.style.fontStyle = "italic";
@@ -171,12 +177,13 @@ export class ShowProfileModal {
     // Блок для отображения наград (прогресс призраков).
     const rewardsContainer = document.createElement("div");
     rewardsContainer.id = "ghost-rewards-container";
-    rewardsContainer.style.display = "flex";
-    rewardsContainer.style.flexWrap = "wrap";
-    rewardsContainer.style.justifyContent = "center";
-    rewardsContainer.style.marginTop = "20px";
-
-    // Если менеджер призраков доступен, получаем список призраков.
+    Object.assign(rewardsContainer.style, {
+      display: "flex",
+      flexWrap: "wrap",
+      justifyContent: "center",
+      marginTop: "20px"
+    });
+    // Получаем список призраков из менеджера призраков.
     const ghostList = (this.app.ghostManager && this.app.ghostManager.ghosts) || [];
     ghostList.forEach(ghost => {
       const ghostIcon = document.createElement("div");
@@ -194,15 +201,14 @@ export class ShowProfileModal {
         fontWeight: "bold",
         position: "relative"
       });
-
-      // Получаем прогресс призрака из profileManager.
+      // Получаем прогресс призрака из менеджера профиля.
       const ghostProgress = this.app.profileManager.getGhostProgress();
       if (ghostProgress && ghostProgress.ghostId === ghost.id) {
-        // Если призрак активен, отображаем текущий шаг и общее количество.
+        // Если призрак активен, отображаем текущий шаг и общее количество шагов.
         ghostIcon.textContent = `${ghostProgress.phenomenonIndex}/${ghost.phenomenaCount}`;
         ghostIcon.style.borderColor = "#4caf50"; // Зеленая рамка для активного призрака.
       } else {
-        // Для остальных отображаем имя или номер призрака с эффектом серой гаммы.
+        // Для остальных призраков отображаем имя с эффектом серой гаммы.
         ghostIcon.textContent = ghost.name;
         ghostIcon.style.filter = "grayscale(100%)";
       }
@@ -228,7 +234,7 @@ export class ShowProfileModal {
     const saveBtn = document.createElement("button");
     saveBtn.textContent = "Сохранить изменения";
     saveBtn.addEventListener("click", () => {
-      // Обновляем профиль, объединяя старые данные с изменениями.
+      // Обновляем профиль, объединяя старые данные с новыми (логин и селфи).
       const updatedProfile = Object.assign({}, profile, {
         name: loginInput.value,
         selfie: avatarImg.src
@@ -249,7 +255,7 @@ export class ShowProfileModal {
 
   /**
    * Метод showSelfieEditModal – открывает отдельное модальное окно для редактирования селфи.
-   * После захвата нового селфи вызывается переданный колбэк для обновления аватара в модальном окне профиля.
+   * После захвата нового селфи вызывается переданный колбэк для обновления аватара.
    * @param {Function} onSelfieCaptured - функция, вызываемая с новым селфи (dataURL) после его захвата.
    */
   showSelfieEditModal(onSelfieCaptured) {
@@ -299,7 +305,7 @@ export class ShowProfileModal {
     });
     selfieModal.appendChild(videoContainer);
 
-    // Прикрепляем видео к контейнеру с заданными опциями (например, фильтр).
+    // Прикрепляем видео к контейнеру с заданными опциями (например, с фильтром).
     this.app.cameraSectionManager.attachTo("selfie-video-container", {
       width: "100%",
       maxWidth: "400px",

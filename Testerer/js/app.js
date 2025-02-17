@@ -239,7 +239,8 @@ captureSelfie() {
       throw new Error("Не удалось получить контекст рисования.");
     }
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const grayscaleData = ImageUtils.convertToGrayscale(canvas);
+    const grayscaleData = canvas.toDataURL('image/png');
+
     // Показываем превью, а не скрываем его:
     this.selfiePreview.src = grayscaleData;
     this.selfiePreview.style.display = 'block';

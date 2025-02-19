@@ -38,13 +38,15 @@ export class App {
     this.importFileInput = document.getElementById('import-file');
     this.importBtn = document.getElementById('import-profile-btn');
     this.postBtn = document.getElementById('post-btn');
+    this.controlsPanel = document.getElementById("controls-panel"); // Привязываем панель управления
+    this.visualEffectsManager = new VisualEffectsManager(this.controlsPanel); // Создаем глобальный экземпляр эффектов
 
     // Инициализируем менеджеры приложения.
     this.languageManager = new LanguageManager('language-selector');
     this.cameraSectionManager = new cameraSectionManager();
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
-    this.eventManager = new EventManager(this.databaseManager, this.languageManager);
+    this.eventManager = new EventManager(this.databaseManager, this.languageManager, this.ghostManager, this.visualEffectsManager);
     this.questManager = new QuestManager(this.eventManager, this);
     this.gameEventManager = new GameEventManager(this.eventManager, this, this.languageManager);
     this.showProfileModal = new ShowProfileModal(this);

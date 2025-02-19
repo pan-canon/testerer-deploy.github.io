@@ -1,5 +1,4 @@
 import { BaseEvent } from '../events/baseEvent.js';
-import { VisualEffectsManager } from '../utils/visualEffectsManager.js';
 
 /**
  * BaseMirrorQuest – базовый класс для зеркального квеста.

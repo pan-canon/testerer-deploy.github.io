@@ -144,19 +144,19 @@ export class EventManager {
           staticSpan.style.transition = "opacity 0.5s ease-in-out"; // Плавный переход
           // Очищаем контейнер и вставляем оба элемента
           textContainer.textContent = "";
+          // Устанавливаем для даты начальное состояние скрытым с плавным переходом
+          staticSpan.style.opacity = "0";
+          staticSpan.style.transition = "opacity 0.5s ease-in-out";
           textContainer.appendChild(animatedSpan);
           textContainer.appendChild(staticSpan);
           if (entryObj.postClass === "ghost-post") {
               effectsManager.triggerGhostTextEffect(animatedSpan, messageText, () => {
-                  setTimeout(() => {
-                      staticSpan.style.opacity = "1"; // Плавное появление даты
-                  }, 100);
+                  // После завершения анимации основного текста делаем дату видимой
+                  setTimeout(() => { staticSpan.style.opacity = "1"; }, 100);
               });
           } else {
               effectsManager.triggerUserTextEffect(animatedSpan, messageText, () => {
-                  setTimeout(() => {
-                      staticSpan.style.opacity = "1";
-                  }, 100);
+                  setTimeout(() => { staticSpan.style.opacity = "1"; }, 100);
               });
           }
       } else {

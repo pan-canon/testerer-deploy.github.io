@@ -1,15 +1,18 @@
+// Утилиты
+import { ImageUtils } from './utils/imageUtils.js';
+import { VisualEffectsManager } from './utils/visualEffectsManager.js';
+// Менеджеры
+import { DatabaseManager } from './databaseManager.js';
 import { LanguageManager } from './languageManager.js';
 import { cameraSectionManager } from './cameraSectionManager.js';
-import { ImageUtils } from './utils/imageUtils.js';
 import { ProfileManager } from './profileManager.js';
 import { ApartmentPlanManager } from './apartmentPlanManager.js';
-import { DatabaseManager } from './databaseManager.js';
-import { ShowProfileModal } from './showProfileModal.js';
-import { EventManager } from './eventManager.js';
-import { QuestManager } from './questManager.js';
-import { GameEventManager } from './gameEventManager.js';
 import { GhostManager } from './ghostManager.js';
-import { VisualEffectsManager } from './utils/visualEffectsManager.js';
+import { EventManager } from './eventManager.js';
+import { GameEventManager } from './gameEventManager.js';
+import { QuestManager } from './questManager.js';
+// Компоненты UI
+import { ShowProfileModal } from './showProfileModal.js';
 
 export class App {
   constructor() {
@@ -26,10 +29,7 @@ export class App {
     this.nameInput = document.getElementById('player-name');
     this.genderSelect = document.getElementById('player-gender');
     this.nextStepBtn = document.getElementById('next-step-btn');
-    // Если элемент видео не используется, его можно удалить – оставляем, если понадобится.
-    // this.selfieVideo = document.getElementById('selfie-video');
     this.captureBtn = document.getElementById('capture-btn');
-    // Для превью используется либо full-size (selfie-preview) либо миниатюра (selfie-thumbnail)
     this.selfiePreview = document.getElementById('selfie-preview');
     this.completeBtn = document.getElementById('complete-registration');
     this.profileNameElem = document.getElementById('profile-name');
@@ -40,18 +40,26 @@ export class App {
     this.importBtn = document.getElementById('import-profile-btn');
     this.postBtn = document.getElementById('post-btn');
     this.controlsPanel = document.getElementById("controls-panel"); // Привязываем панель управления
-    this.visualEffectsManager = new VisualEffectsManager(this.controlsPanel); // Создаем глобальный экземпляр эффектов
+
+    // Создаем глобальный экземпляр визуальных эффектов.
+    this.visualEffectsManager = new VisualEffectsManager(this.controlsPanel);
 
     // Инициализируем менеджеры приложения.
     this.languageManager = new LanguageManager('language-selector');
     this.cameraSectionManager = new cameraSectionManager();
     this.profileManager = new ProfileManager();
     this.databaseManager = new DatabaseManager();
+
+    // Сначала создаём ghostManager без ссылки на eventManager.
+    this.ghostManager = new GhostManager(null, this.profileManager, this);
+    // Теперь создаём eventManager, передавая ghostManager.
     this.eventManager = new EventManager(this.databaseManager, this.languageManager, this.ghostManager, this.visualEffectsManager);
+    // Обновляем ghostManager, установив ссылку на eventManager.
+    this.ghostManager.eventManager = this.eventManager;
+
     this.questManager = new QuestManager(this.eventManager, this);
     this.gameEventManager = new GameEventManager(this.eventManager, this, this.languageManager);
     this.showProfileModal = new ShowProfileModal(this);
-    this.ghostManager = new GhostManager(this.eventManager, this.profileManager, this);
 
     // Создаем временную канву для обработки изображений.
     this.tempCanvas = document.createElement("canvas");

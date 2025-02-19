@@ -1,5 +1,4 @@
 import { BaseEvent } from './baseEvent.js';
-import { VisualEffectsManager } from '../utils/visualEffectsManager.js';
 
 /**
  * WelcomeEvent – событие приветствия, которое уведомляет пользователя о приглашении подойти к зеркалу.
@@ -61,7 +60,7 @@ export class WelcomeEvent extends BaseEvent {
     this.app.updatePostButtonState();
     
     // Создаем экземпляр VisualEffectsManager и запускаем зеркальный визуальный эффект.
-    const effectsManager = new VisualEffectsManager();
+    const effectsManager = this.app.visualEffectsManager;
     effectsManager.triggerMirrorEffect();
   }
 }

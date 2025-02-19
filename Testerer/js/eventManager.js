@@ -96,7 +96,11 @@ export class EventManager {
       const formattedTimestamp = entryObj.timestamp.replace(/\.\d+Z$/, '');
 
       if (imageData) {
-        // Если присутствует прикрепленное изображение, создаем и добавляем его первым
+        // Если присутствует прикрепленное изображение, проверяем, начинается ли строка с "data:".
+        // Если нет, добавляем префикс "data:image/png;base64,".
+        if (!/^data:/.test(imageData)) {
+          imageData = "data:image/png;base64," + imageData;
+        }
         const img = document.createElement("img");
         img.src = imageData;
         img.alt = this.languageManager.locales[currentLanguage]["photo_attached"] || "Photo attached";

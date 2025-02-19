@@ -61,9 +61,8 @@ export class EventManager {
     // Очищаем контейнер дневника
     this.diaryContainer.innerHTML = "";
 
-    // Получаем из localStorage ID последней анимированной записи (по умолчанию 0)
-    const lastAnimatedId = parseInt(localStorage.getItem("lastAnimatedId") || "0", 10);
-    let newLastAnimatedId = lastAnimatedId;
+    // Получаем из localStorage массив ID записей, для которых уже запущена анимация
+    const animatedIds = JSON.parse(localStorage.getItem("animatedDiaryIds") || "[]");
 
     // Получаем записи из базы данных
     const entries = this.databaseManager.getDiaryEntries();
@@ -126,18 +125,15 @@ export class EventManager {
       // Используем глобальный экземпляр визуальных эффектов (переданный в конструкторе EventManager)
       const effectsManager = this.visualEffectsManager;
       // Если для этой записи ещё не запускалась анимация и запись новая
-      if (!articleElem.hasAttribute('data-animated') && entryObj.id > lastAnimatedId) {
-          // Помечаем запись, чтобы анимация запускалась только один раз
-          articleElem.setAttribute('data-animated', 'true');
-          newLastAnimatedId = entryObj.id;
-          // Разбиваем итоговый текст на две части: основное сообщение и дату.
-          // Предполагается, что дата всегда в скобках в конце.
+      if (!animatedIds.includes(entryObj.id)) {
+          // Отмечаем, что для этой записи анимация запускается впервые
+          animatedIds.push(entryObj.id);
+          // Разбиваем итоговый текст на две части: основное сообщение и дату (если дата в скобках в конце)
           const dateMatch = finalText.match(/(\(\d{4}-\d{2}-\d{2}.*\))$/);
           let messageText = finalText;
           let dateText = "";
           if (dateMatch) {
               dateText = dateMatch[1];
-              // Удаляем дату из итогового текста, оставляя только сообщение
               messageText = finalText.replace(dateText, "").trim();
           }
           // Создаем два span: один для анимированного текста, другой – для даты (без анимации)
@@ -148,14 +144,13 @@ export class EventManager {
           textContainer.textContent = "";
           textContainer.appendChild(animatedSpan);
           textContainer.appendChild(staticSpan);
-          // Запускаем анимацию только для основного текста (без даты)
           if (entryObj.postClass === "ghost-post") {
               effectsManager.triggerGhostTextEffect(animatedSpan, messageText);
           } else {
               effectsManager.triggerUserTextEffect(animatedSpan, messageText);
           }
       } else {
-          // Если анимация уже была, просто устанавливаем полный текст
+          // Если анимация уже была для этой записи, устанавливаем полный текст без анимации
           textContainer.textContent = finalText;
       }
 
@@ -163,7 +158,7 @@ export class EventManager {
       this.diaryContainer.appendChild(articleElem);
     });
     // Сохраняем новый последний анимированный ID
-    localStorage.setItem("lastAnimatedId", newLastAnimatedId.toString());
+    localStorage.setItem("animatedDiaryIds", JSON.stringify(animatedIds));
     console.log("📖 Diary updated.");
   }
 

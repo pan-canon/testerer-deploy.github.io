@@ -46,6 +46,7 @@ export class ProfileManager {
     localStorage.removeItem("mirrorQuestReady");
     localStorage.removeItem("mirrorQuestActive");
     localStorage.removeItem("lastAnimatedId");
+    localStorage.removeItem("animatedDiaryIds");
 
     // Восстанавливаем сохранённый язык (если он был)
     if (language !== null) {

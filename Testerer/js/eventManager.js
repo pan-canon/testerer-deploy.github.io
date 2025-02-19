@@ -140,25 +140,19 @@ export class EventManager {
           const animatedSpan = document.createElement('span');
           const staticSpan = document.createElement('span');
           staticSpan.textContent = dateText;
-          staticSpan.style.opacity = "0"; // Изначально скрываем дату
-          staticSpan.style.transition = "opacity 0.5s ease-in-out"; // Плавный переход
           // Очищаем контейнер и вставляем оба элемента
           textContainer.textContent = "";
-          // Устанавливаем для даты начальное состояние скрытым с плавным переходом
-          staticSpan.style.opacity = "0";
-          staticSpan.style.transition = "opacity 0.5s ease-in-out";
           textContainer.appendChild(animatedSpan);
-          textContainer.appendChild(staticSpan);
-          if (entryObj.postClass === "ghost-post") {
-              effectsManager.triggerGhostTextEffect(animatedSpan, messageText, () => {
-                  // После завершения анимации основного текста делаем дату видимой
-                  setTimeout(() => { staticSpan.style.opacity = "1"; }, 100);
-              });
-          } else {
-              effectsManager.triggerUserTextEffect(animatedSpan, messageText, () => {
-                  setTimeout(() => { staticSpan.style.opacity = "1"; }, 100);
-              });
-          }
+
+if (entryObj.postClass === "ghost-post") {
+    effectsManager.triggerGhostTextEffect(animatedSpan, messageText, () => {
+        textContainer.appendChild(staticSpan);
+    });
+} else {
+    effectsManager.triggerUserTextEffect(animatedSpan, messageText, () => {
+        textContainer.appendChild(staticSpan);
+    });
+}
       } else {
           // Если анимация уже была для этой записи, устанавливаем полный текст без анимации
           textContainer.textContent = finalText;

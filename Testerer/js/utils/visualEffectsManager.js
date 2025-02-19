@@ -113,7 +113,7 @@ export class VisualEffectsManager {
     pencilIcon.style.position = "absolute";
     pencilIcon.style.top = "-30px";
     // Блокируем элементы управления, если контейнер с id "controls" существует
-    const controls = document.getElementById("controls");
+    const controls = document.getElementById("controls-panel");
     if (controls) {
       controls.style.pointerEvents = "none";
     }

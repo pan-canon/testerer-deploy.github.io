@@ -49,11 +49,6 @@ export class EventManager {
   /**
    * updateDiaryDisplay – обновляет содержимое контейнера дневника.
    * Получает все записи из базы, сортирует их и отображает в виде отдельных элементов <article>.
-   *
-   * Здесь дополнительно вешаются обработчики, вызывающие эффекты анимации:
-   * - Для ghost-записей (ghost-post) вызывается эффект плавного проявления текста.
-   * - Для user-записей (user-post) вызывается эффект печатания с добавлением иконки карандаша,
-   *   при этом элементы управления блокируются до завершения анимации.
    */
   updateDiaryDisplay() {
     if (!this.diaryContainer) {
@@ -105,33 +100,30 @@ export class EventManager {
       // Форматируем время: удаляем дробную часть секунд и символ "Z"
       const formattedTimestamp = entryObj.timestamp.replace(/\.\d+Z$/, '');
 
-      // Создаем контейнер для анимированного текста
-      const textContainer = document.createElement("p");
-      articleElem.appendChild(textContainer);
-
-      // Если присутствует изображение, добавляем его перед текстом
       if (imageData) {
+        // Если присутствует прикрепленное изображение, создаем и добавляем его первым
         const img = document.createElement("img");
         img.src = imageData;
         img.alt = this.languageManager.locales[currentLanguage]["photo_attached"] || "Photo attached";
         img.style.maxWidth = "100%";
-        articleElem.insertBefore(img, textContainer);
-      }
+        articleElem.appendChild(img);
 
-      // Формируем итоговый текст для анимации
-      const finalText = `${cleanedText} (${formattedTimestamp})`;
-
-      // Создаем экземпляр менеджера визуальных эффектов
-      const effectsManager = new VisualEffectsManager();
-
-      // В зависимости от типа записи вызываем соответствующий эффект анимации
-      if (entryObj.postClass === "ghost-post") {
-        // Для ghost-записей – эффект медленного появления текста с аудио
-        effectsManager.triggerGhostTextEffect(textContainer, finalText);
+        // Если запись представляет собой букву (результат квеста), выводим ее отдельным блоком под фото
+        if (/^Буква\s*/.test(cleanedText)) {
+          const letterP = document.createElement("p");
+          letterP.textContent = cleanedText;
+          articleElem.appendChild(letterP);
+        } else {
+          // Иначе выводим текст записи вместе с отформатированным временем под фото
+          const pText = document.createElement("p");
+          pText.textContent = `${cleanedText} (${formattedTimestamp})`;
+          articleElem.appendChild(pText);
+        }
       } else {
-        // Для user-записей – эффект печатания текста с иконкой карандаша и звуковым сопровождением,
-        // при этом блокируются элементы управления (например, контейнер с id "controls")
-        effectsManager.triggerUserTextEffect(textContainer, finalText);
+        // Если изображения нет, выводим текст и время в одном абзаце
+        const p = document.createElement("p");
+        p.textContent = `${cleanedText} (${formattedTimestamp})`;
+        articleElem.appendChild(p);
       }
 
       // Добавляем готовую запись в контейнер дневника

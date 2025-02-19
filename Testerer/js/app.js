@@ -9,7 +9,7 @@ import { EventManager } from './eventManager.js';
 import { QuestManager } from './questManager.js';
 import { GameEventManager } from './gameEventManager.js';
 import { GhostManager } from './ghostManager.js';
-import { VisualEffectsManager } from '../utils/visualEffectsManager.js';
+import { VisualEffectsManager } from './utils/visualEffectsManager.js';
 
 
 export class App {

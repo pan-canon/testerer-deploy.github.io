@@ -49,16 +49,20 @@ export class EventManager {
   /**
    * updateDiaryDisplay – обновляет содержимое контейнера дневника.
    * Получает все записи из базы, сортирует их и отображает в виде отдельных элементов <article>.
+   *
+   * Дополнительно, для записей от призрака (ghost-post) вызывается эффект плавного появления текста с аудио,
+   * а для записей от юзера (user-post) – эффект печатания текста с иконкой карандаша и звуковым сопровождением.
+   * При этом элементы управления блокируются до завершения анимации.
    */
   updateDiaryDisplay() {
     if (!this.diaryContainer) {
       console.error("Diary container not found!");
       return;
     }
-    
+
     // Очищаем контейнер дневника
     this.diaryContainer.innerHTML = "";
-    
+
     // Получаем записи из базы данных
     const entries = this.databaseManager.getDiaryEntries();
     const seen = new Set();
@@ -96,34 +100,36 @@ export class EventManager {
       const cleanedText = localizedText
         .replace(/^user_post_success:\s*/, '')
         .replace(/^user_post_failed:\s*/, '');
-      
+
       // Форматируем время: удаляем дробную часть секунд и символ "Z"
       const formattedTimestamp = entryObj.timestamp.replace(/\.\d+Z$/, '');
 
+      // Создаем контейнер для текста, который будет анимирован
+      const textContainer = document.createElement("p");
+      articleElem.appendChild(textContainer);
+
+      // Если присутствует прикрепленное изображение, создаем и добавляем его первым
       if (imageData) {
-        // Если присутствует прикрепленное изображение, создаем и добавляем его первым
         const img = document.createElement("img");
         img.src = imageData;
         img.alt = this.languageManager.locales[currentLanguage]["photo_attached"] || "Photo attached";
         img.style.maxWidth = "100%";
-        articleElem.appendChild(img);
+        articleElem.insertBefore(img, textContainer);
+      }
 
-        // Если запись представляет собой букву (результат квеста), выводим ее отдельным блоком под фото
-        if (/^Буква\s*/.test(cleanedText)) {
-          const letterP = document.createElement("p");
-          letterP.textContent = cleanedText;
-          articleElem.appendChild(letterP);
-        } else {
-          // Иначе выводим текст записи вместе с отформатированным временем под фото
-          const pText = document.createElement("p");
-          pText.textContent = `${cleanedText} (${formattedTimestamp})`;
-          articleElem.appendChild(pText);
-        }
+      // Формируем итоговый текст с временем
+      const finalText = `${cleanedText} (${formattedTimestamp})`;
+
+      // Создаем экземпляр менеджера визуальных эффектов
+      const effectsManager = new VisualEffectsManager();
+
+      // В зависимости от типа записи вызываем соответствующий эффект анимации
+      if (entryObj.postClass === "ghost-post") {
+        // Для записей от призрака – эффект медленного появления текста с аудио
+        effectsManager.triggerGhostTextEffect(textContainer, finalText);
       } else {
-        // Если изображения нет, выводим текст и время в одном абзаце
-        const p = document.createElement("p");
-        p.textContent = `${cleanedText} (${formattedTimestamp})`;
-        articleElem.appendChild(p);
+        // Для записей от юзера – эффект печатания текста с иконкой карандаша и звуковым сопровождением
+        effectsManager.triggerUserTextEffect(textContainer, finalText);
       }
 
       // Добавляем готовую запись в контейнер дневника

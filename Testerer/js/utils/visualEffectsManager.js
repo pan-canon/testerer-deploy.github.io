@@ -80,4 +80,69 @@ export class VisualEffectsManager {
       whisperSound.pause();
     }, 5000);
   }
+
+  /**
+   * triggerGhostTextEffect – плавно проявляет текст в targetElem, проигрывая звук эффекта.
+   * @param {HTMLElement} targetElem - элемент, в который будет анимирован текст.
+   * @param {string} text - текст для анимации.
+   * @param {Function} [callback] - функция, вызываемая после завершения анимации.
+   */
+  triggerGhostTextEffect(targetElem, text, callback) {
+    targetElem.textContent = "";
+    const sound = new Audio('audio/ghost_effect.mp3');
+    sound.play();
+    let i = 0;
+    const interval = setInterval(() => {
+      targetElem.textContent += text[i];
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+        sound.pause();
+        if (callback) callback();
+      }
+    }, 100); // 100 мс между символами
+  },
+
+  /**
+   * triggerUserTextEffect – имитирует эффект печатания текста с иконкой карандаша и звуковым сопровождением.
+   * @param {HTMLElement} targetElem - элемент, в который будет анимирован текст.
+   * @param {string} text - текст для анимации.
+   * @param {Function} [callback] - функция, вызываемая после завершения анимации.
+   */
+  triggerUserTextEffect(targetElem, text, callback) {
+    // Создаем иконку карандаша сверху
+    const pencil = document.createElement("img");
+    pencil.src = "images/pencil.png";
+    pencil.alt = "Пишется...";
+    pencil.style.width = "24px";
+    pencil.style.height = "24px";
+    pencil.style.position = "absolute";
+    pencil.style.top = "-30px";
+    targetElem.parentElement.style.position = "relative";
+    targetElem.parentElement.insertBefore(pencil, targetElem);
+    
+    // Звук печатания
+    const typeSound = new Audio('audio/type_sound.mp3');
+    typeSound.loop = true;
+    typeSound.play();
+    
+    targetElem.textContent = "";
+    let i = 0;
+    // Блокируем элементы управления (предположим, они находятся в элементе с id="controls")
+    const controls = document.getElementById("controls");
+    if (controls) controls.style.pointerEvents = "none";
+    
+    const interval = setInterval(() => {
+      targetElem.textContent += text[i];
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+        typeSound.pause();
+        // Убираем карандаш
+        pencil.remove();
+        if (controls) controls.style.pointerEvents = "auto";
+        if (callback) callback();
+      }
+    }, 100); // 100 мс между символами
+  }
 }

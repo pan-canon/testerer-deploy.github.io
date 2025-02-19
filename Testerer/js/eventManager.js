@@ -123,26 +123,28 @@ export class EventManager {
 
       // Используем глобальный экземпляр визуальных эффектов (переданный в конструкторе EventManager)
       const effectsManager = this.visualEffectsManager;
-      // Если для этой записи ещё не запускалась анимация (атрибут data-animated отсутствует)
+      // Если для этой записи ещё не запускалась анимация (и это новая запись)
       if (!articleElem.hasAttribute('data-animated') && entryObj.id > lastAnimatedId) {
-        // Помечаем запись, чтобы анимация запускалась только один раз
-        articleElem.setAttribute('data-animated', 'true');
-        if (entryObj.postClass === "ghost-post") {
-          effectsManager.triggerGhostTextEffect(textContainer, finalText);
-        } else {
-          effectsManager.triggerUserTextEffect(textContainer, finalText);
-        }
+          // Помечаем запись, чтобы анимация запускалась только один раз
+          articleElem.setAttribute('data-animated', 'true');
+          // Обновляем новый последний анимированный ID
+          newLastAnimatedId = entryObj.id;
+          if (entryObj.postClass === "ghost-post") {
+              effectsManager.triggerGhostTextEffect(textContainer, finalText);
+          } else {
+              effectsManager.triggerUserTextEffect(textContainer, finalText);
+          }
       } else {
-        // Если анимация уже была, просто устанавливаем текст
-        textContainer.textContent = finalText;
+          // Если анимация уже была, просто устанавливаем текст
+          textContainer.textContent = finalText;
       }
 
       // Добавляем готовую запись в контейнер дневника
       this.diaryContainer.appendChild(articleElem);
     });
-  // Сохраняем новый последний анимированный ID
-  localStorage.setItem("lastAnimatedId", newLastAnimatedId.toString());
-  console.log("📖 Diary updated.");
+    // Сохраняем новый последний анимированный ID
+    localStorage.setItem("lastAnimatedId", newLastAnimatedId.toString());
+    console.log("📖 Diary updated.");
   }
 
   /**

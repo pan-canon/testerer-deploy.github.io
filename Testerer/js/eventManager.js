@@ -78,10 +78,10 @@ export class EventManager {
       let mainText = entryObj.entry;
       let imageData = null;
       if (entryObj.entry.includes("[photo attached]")) {
-        const parts = entryObj.entry.split("\n[photo attached]\n");
-        mainText = parts[0];
+        const parts = entryObj.entry.split("[photo attached]");
+        mainText = parts[0].trim();
         if (parts.length >= 2) {
-          imageData = parts[1];
+          imageData = parts[1].trim();
         }
       }
       // Локализуем основной текст с помощью менеджера языков
@@ -96,12 +96,7 @@ export class EventManager {
       // Если присутствует прикрепленное изображение, добавляем его в элемент <img>
       if (imageData) {
         const img = document.createElement("img");
-        // Если префикс data:image отсутствует, добавляем его (предполагаем, что изображение в формате PNG)
-        if (!imageData.startsWith("data:image")) {
-          img.src = "data:image/png;base64," + imageData;
-        } else {
-          img.src = imageData;
-        }
+        img.src = imageData;
         img.alt = this.languageManager.locales[currentLanguage]["photo_attached"] || "Photo attached";
         img.style.maxWidth = "100%";
         articleElem.appendChild(img);

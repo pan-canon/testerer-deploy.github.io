@@ -1,7 +1,5 @@
-// Утилиты
 import { ImageUtils } from './utils/imageUtils.js';
 import { VisualEffectsManager } from './utils/visualEffectsManager.js';
-// Менеджеры
 import { DatabaseManager } from './databaseManager.js';
 import { LanguageManager } from './languageManager.js';
 import { cameraSectionManager } from './cameraSectionManager.js';
@@ -11,7 +9,6 @@ import { GhostManager } from './ghostManager.js';
 import { EventManager } from './eventManager.js';
 import { GameEventManager } from './gameEventManager.js';
 import { QuestManager } from './questManager.js';
-// Компоненты UI
 import { ShowProfileModal } from './showProfileModal.js';
 
 export class App {

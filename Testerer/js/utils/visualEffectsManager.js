@@ -66,7 +66,7 @@ export class VisualEffectsManager {
    * Воспроизводит аудио-шёпот, который можно использовать для создания атмосферы.
    */
   triggerWhisperEffect() {
-    const whisperSound = new Audio('audio/whisper.mp3');
+    const whisperSound = new Audio('audio/text.mp3');
     whisperSound.play();
     setTimeout(() => {
       whisperSound.pause();
@@ -82,7 +82,7 @@ export class VisualEffectsManager {
    */
   triggerGhostTextEffect(targetElem, text, callback) {
     targetElem.textContent = "";
-    const ghostSound = new Audio('audio/ghost_effect.mp3');
+    const ghostSound = new Audio('audio/text.mp3');
     ghostSound.play();
     let i = 0;
     const interval = setInterval(() => {
@@ -122,7 +122,7 @@ export class VisualEffectsManager {
     targetElem.parentElement.insertBefore(pencilIcon, targetElem);
 
     // Звук печатания
-    const typeSound = new Audio('audio/type_sound.mp3');
+    const typeSound = new Audio('audio/text.mp3');
     typeSound.loop = true;
     typeSound.play();
 

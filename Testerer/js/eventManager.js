@@ -82,10 +82,15 @@ export class EventManager {
         mainText = parts[0].trim();
         if (parts.length >= 2) {
           imageData = parts[1].trim();
+          // Если префикс data URL отсутствует, добавляем его
+          if (!/^data:/.test(imageData)) {
+            imageData = "data:image/png;base64," + imageData;
+          }
         }
       }
       // Локализуем основной текст с помощью менеджера языков
-      const localizedText = this.languageManager.locales[currentLanguage][mainText] || mainText;
+      const localizedText =
+        this.languageManager.locales[currentLanguage][mainText] || mainText;
 
       // Убираем префиксы, которые не должны выводиться (например, "user_post_success:" или "user_post_failed:")
       const cleanedText = localizedText
@@ -96,11 +101,7 @@ export class EventManager {
       const formattedTimestamp = entryObj.timestamp.replace(/\.\d+Z$/, '');
 
       if (imageData) {
-        // Если присутствует прикрепленное изображение, проверяем, начинается ли строка с "data:".
-        // Если нет, добавляем префикс "data:image/png;base64,".
-        if (!/^data:/.test(imageData)) {
-          imageData = "data:image/png;base64," + imageData;
-        }
+        // Если присутствует прикрепленное изображение, создаем и добавляем его первым
         const img = document.createElement("img");
         img.src = imageData;
         img.alt = this.languageManager.locales[currentLanguage]["photo_attached"] || "Photo attached";

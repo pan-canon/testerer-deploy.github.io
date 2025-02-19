@@ -104,6 +104,7 @@ export class EventManager {
 
       // Форматируем время: удаляем дробную часть секунд и символ "Z"
       const formattedTimestamp = entryObj.timestamp.replace(/\.\d+Z$/, '');
+      const finalText = `${cleanedText} (${formattedTimestamp})`;
 
       // Создаем контейнер для текста
       const textContainer = document.createElement("p");

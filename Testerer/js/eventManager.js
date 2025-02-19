@@ -4,6 +4,7 @@ export class EventManager {
    * @param {DatabaseManager} databaseManager - экземпляр менеджера базы данных.
    * @param {LanguageManager} languageManager - менеджер локализации.
    * @param {GhostManager} ghostManager - менеджер призраков (если используется).
+   * @param {VisualEffectsManager} visualEffectsManager - менеджер визуальных эффектов.
    *
    * Этот класс отвечает за работу с дневником:
    * - Добавление записей (диалогов, уведомлений, квестовых сообщений).
@@ -61,7 +62,7 @@ export class EventManager {
     // Очищаем контейнер дневника
     this.diaryContainer.innerHTML = "";
 
-    // Получаем из localStorage массив ID записей, для которых уже запущена анимация
+    // Получаем из localStorage массив ID записей, для которых уже запускалась анимация
     const animatedIds = JSON.parse(localStorage.getItem("animatedDiaryIds") || "[]");
 
     // Получаем записи из базы данных
@@ -96,14 +97,16 @@ export class EventManager {
       // Локализуем основной текст с помощью менеджера языков
       const localizedText = this.languageManager.locales[currentLanguage][mainText] || mainText;
 
-      // Убираем префиксы, которые не должны выводиться (например, "user_post_success:" или "user_post_failed:")
+      // Убираем префиксы, которые не должны выводиться
       const cleanedText = localizedText
         .replace(/^user_post_success:\s*/, '')
         .replace(/^user_post_failed:\s*/, '');
 
-      // Форматируем время: удаляем дробную часть секунд и символ "Z"
-      const formattedTimestamp = entryObj.timestamp.replace(/\.\d+Z$/, '');
-      const finalText = `${cleanedText} (${formattedTimestamp})`;
+      // Форматируем дату: получаем дату в виде слов, например "второе июня, 20:00"
+      const formattedDateText = this.formatDateToWords(entryObj.timestamp);
+
+      // Объединяем текст и дату, разделяя их символом перевода строки
+      const fullAnimatedText = `${cleanedText}\n${formattedDateText}`;
 
       // Создаем контейнер для текста
       const textContainer = document.createElement("p");
@@ -118,52 +121,69 @@ export class EventManager {
         articleElem.insertBefore(img, textContainer);
       }
 
-      // Формируем итоговый текст с временем
-      const animatedText = cleanedText;
-      const staticTimestamp = ` (${formattedTimestamp})`;
-
-      // Используем глобальный экземпляр визуальных эффектов (переданный в конструкторе EventManager)
+      // Используем глобальный экземпляр визуальных эффектов
       const effectsManager = this.visualEffectsManager;
-      // Если для этой записи ещё не запускалась анимация и запись новая
+      // Для обеспечения корректного переноса строки в анимированном тексте
+      // устанавливаем whiteSpace: pre-wrap
       if (!animatedIds.includes(entryObj.id)) {
-          // Отмечаем, что для этой записи анимация запускается впервые
           animatedIds.push(entryObj.id);
-          // Разбиваем итоговый текст на две части: основное сообщение и дату (если дата в скобках в конце)
-          const dateMatch = finalText.match(/(\(\d{4}-\d{2}-\d{2}.*\))$/);
-          let messageText = finalText;
-          let dateText = "";
-          if (dateMatch) {
-              dateText = dateMatch[1];
-              messageText = finalText.replace(dateText, "").trim();
-          }
-          // Создаем два span: один для анимированного текста, другой – для даты (без анимации)
           const animatedSpan = document.createElement('span');
-          const staticSpan = document.createElement('span');
-          staticSpan.textContent = dateText;
-          // Очищаем контейнер и вставляем оба элемента
+          animatedSpan.style.whiteSpace = "pre-wrap";
           textContainer.textContent = "";
           textContainer.appendChild(animatedSpan);
-
-if (entryObj.postClass === "ghost-post") {
-    effectsManager.triggerGhostTextEffect(animatedSpan, messageText, () => {
-        textContainer.appendChild(staticSpan);
-    });
-} else {
-    effectsManager.triggerUserTextEffect(animatedSpan, messageText, () => {
-        textContainer.appendChild(staticSpan);
-    });
-}
+          if (entryObj.postClass === "ghost-post") {
+              effectsManager.triggerGhostTextEffect(animatedSpan, fullAnimatedText);
+          } else {
+              effectsManager.triggerUserTextEffect(animatedSpan, fullAnimatedText);
+          }
       } else {
-          // Если анимация уже была для этой записи, устанавливаем полный текст без анимации
-          textContainer.textContent = finalText;
+          // Если анимация уже была, выводим полный текст сразу
+          textContainer.textContent = fullAnimatedText;
+          textContainer.style.whiteSpace = "pre-wrap";
       }
 
       // Добавляем готовую запись в контейнер дневника
       this.diaryContainer.appendChild(articleElem);
     });
-    // Сохраняем новый последний анимированный ID
+    // Сохраняем обновленный список анимированных ID
     localStorage.setItem("animatedDiaryIds", JSON.stringify(animatedIds));
     console.log("📖 Diary updated.");
+  }
+
+  /**
+   * formatDateToWords – преобразует timestamp в строку с датой в виде слов.
+   * Пример результата: "второе июня, 20:00".
+   * @param {string} timestamp - метка времени записи.
+   * @returns {string} Отформатированная дата.
+   */
+  formatDateToWords(timestamp) {
+    const date = new Date(timestamp);
+    const day = date.getDate();
+    const month = date.getMonth();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+
+    // Массив с названиями месяцев на русском языке
+    const months = [
+      "января", "февраля", "марта", "апреля", "мая", "июня",
+      "июля", "августа", "сентября", "октября", "ноября", "декабря"
+    ];
+    // Пример простого сопоставления числового дня с порядковым числом в словах
+    const ordinalDays = [
+      "первое", "второе", "третье", "четвертое", "пятое", "шестое",
+      "седьмое", "восьмое", "девятое", "десятое", "одиннадцатое",
+      "двенадцатое", "тринадцатое", "четырнадцатое", "пятнадцатое",
+      "шестнадцатое", "семнадцатое", "восемнадцатое", "девятнадцатое",
+      "двадцатое", "двадцать первое", "двадцать второе", "двадцать третье",
+      "двадцать четвертое", "двадцать пятое", "двадцать шестое",
+      "двадцать седьмое", "двадцать восьмое", "двадцать девятое",
+      "тридцатое", "тридцать первое"
+    ];
+    const ordinalDay = ordinalDays[day - 1] || day;
+    // Форматирование часов и минут с добавлением ведущего нуля
+    const formattedHours = hours < 10 ? "0" + hours : hours;
+    const formattedMinutes = minutes < 10 ? "0" + minutes : minutes;
+    return `${ordinalDay} ${months[month]}, ${formattedHours}:${formattedMinutes}`;
   }
 
   /**

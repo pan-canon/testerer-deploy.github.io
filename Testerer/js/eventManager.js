@@ -119,23 +119,42 @@ export class EventManager {
       }
 
       // Формируем итоговый текст с временем
-      const finalText = `${cleanedText} (${formattedTimestamp})`;
+      const animatedText = cleanedText;
+      const staticTimestamp = ` (${formattedTimestamp})`;
 
       // Используем глобальный экземпляр визуальных эффектов (переданный в конструкторе EventManager)
       const effectsManager = this.visualEffectsManager;
-      // Если для этой записи ещё не запускалась анимация (и это новая запись)
+      // Если для этой записи ещё не запускалась анимация и запись новая
       if (!articleElem.hasAttribute('data-animated') && entryObj.id > lastAnimatedId) {
           // Помечаем запись, чтобы анимация запускалась только один раз
           articleElem.setAttribute('data-animated', 'true');
-          // Обновляем новый последний анимированный ID
           newLastAnimatedId = entryObj.id;
+          // Разбиваем итоговый текст на две части: основное сообщение и дату.
+          // Предполагается, что дата всегда в скобках в конце.
+          const dateMatch = finalText.match(/(\(\d{4}-\d{2}-\d{2}.*\))$/);
+          let messageText = finalText;
+          let dateText = "";
+          if (dateMatch) {
+              dateText = dateMatch[1];
+              // Удаляем дату из итогового текста, оставляя только сообщение
+              messageText = finalText.replace(dateText, "").trim();
+          }
+          // Создаем два span: один для анимированного текста, другой – для даты (без анимации)
+          const animatedSpan = document.createElement('span');
+          const staticSpan = document.createElement('span');
+          staticSpan.textContent = dateText;
+          // Очищаем контейнер и вставляем оба элемента
+          textContainer.textContent = "";
+          textContainer.appendChild(animatedSpan);
+          textContainer.appendChild(staticSpan);
+          // Запускаем анимацию только для основного текста (без даты)
           if (entryObj.postClass === "ghost-post") {
-              effectsManager.triggerGhostTextEffect(textContainer, finalText);
+              effectsManager.triggerGhostTextEffect(animatedSpan, messageText);
           } else {
-              effectsManager.triggerUserTextEffect(textContainer, finalText);
+              effectsManager.triggerUserTextEffect(animatedSpan, messageText);
           }
       } else {
-          // Если анимация уже была, просто устанавливаем текст
+          // Если анимация уже была, просто устанавливаем полный текст
           textContainer.textContent = finalText;
       }
 

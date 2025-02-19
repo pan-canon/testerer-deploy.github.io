@@ -49,9 +49,6 @@ export class EventManager {
   /**
    * updateDiaryDisplay – обновляет содержимое контейнера дневника.
    * Получает все записи из базы, сортирует их и отображает в виде отдельных элементов <article>.
-   *
-   * Для самого нового (первого) поста анимация текста запускается через VisualEffectsManager.
-   * Для остальных записей текст устанавливается статически.
    */
   updateDiaryDisplay() {
     if (!this.diaryContainer) {
@@ -67,7 +64,7 @@ export class EventManager {
     const seen = new Set();
     const currentLanguage = this.languageManager.getLanguage();
 
-    entries.forEach((entryObj, index) => {
+    entries.forEach(entryObj => {
       // Предотвращаем дублирование записей (по id)
       if (seen.has(entryObj.id)) return;
       seen.add(entryObj.id);
@@ -92,7 +89,8 @@ export class EventManager {
         }
       }
       // Локализуем основной текст с помощью менеджера языков
-      const localizedText = this.languageManager.locales[currentLanguage][mainText] || mainText;
+      const localizedText =
+        this.languageManager.locales[currentLanguage][mainText] || mainText;
 
       // Убираем префиксы, которые не должны выводиться (например, "user_post_success:" или "user_post_failed:")
       const cleanedText = localizedText
@@ -102,38 +100,30 @@ export class EventManager {
       // Форматируем время: удаляем дробную часть секунд и символ "Z"
       const formattedTimestamp = entryObj.timestamp.replace(/\.\d+Z$/, '');
 
-      // Создаем контейнер для текста, который будет содержать итоговый текст
-      const textContainer = document.createElement("p");
-      // Добавляем контейнер в элемент записи
-      articleElem.appendChild(textContainer);
-
-      // Если присутствует изображение, добавляем его перед текстом
       if (imageData) {
+        // Если присутствует прикрепленное изображение, создаем и добавляем его первым
         const img = document.createElement("img");
         img.src = imageData;
         img.alt = this.languageManager.locales[currentLanguage]["photo_attached"] || "Photo attached";
         img.style.maxWidth = "100%";
-        articleElem.insertBefore(img, textContainer);
-      }
+        articleElem.appendChild(img);
 
-      // Формируем итоговый текст с временем
-      const finalText = `${cleanedText} (${formattedTimestamp})`;
-
-      // Создаем экземпляр менеджера визуальных эффектов
-      const effectsManager = new VisualEffectsManager();
-
-      // Если для записи ещё не запущена анимация (атрибут data-animated отсутствует)
-      if (!articleElem.hasAttribute('data-animated')) {
-          // Помечаем запись, чтобы анимация запустилась только один раз
-          articleElem.setAttribute('data-animated', 'true');
-          if (entryObj.postClass === "ghost-post") {
-              effectsManager.triggerGhostTextEffect(textContainer, finalText);
-          } else {
-              effectsManager.triggerUserTextEffect(textContainer, finalText);
-          }
+        // Если запись представляет собой букву (результат квеста), выводим ее отдельным блоком под фото
+        if (/^Буква\s*/.test(cleanedText)) {
+          const letterP = document.createElement("p");
+          letterP.textContent = cleanedText;
+          articleElem.appendChild(letterP);
+        } else {
+          // Иначе выводим текст записи вместе с отформатированным временем под фото
+          const pText = document.createElement("p");
+          pText.textContent = `${cleanedText} (${formattedTimestamp})`;
+          articleElem.appendChild(pText);
+        }
       } else {
-          // Если анимация уже была, просто устанавливаем текст
-          textContainer.textContent = finalText;
+        // Если изображения нет, выводим текст и время в одном абзаце
+        const p = document.createElement("p");
+        p.textContent = `${cleanedText} (${formattedTimestamp})`;
+        articleElem.appendChild(p);
       }
 
       // Добавляем готовую запись в контейнер дневника

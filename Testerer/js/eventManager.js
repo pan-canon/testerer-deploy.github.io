@@ -140,14 +140,24 @@ export class EventManager {
           const animatedSpan = document.createElement('span');
           const staticSpan = document.createElement('span');
           staticSpan.textContent = dateText;
+          staticSpan.style.opacity = "0"; // Изначально скрываем дату
+          staticSpan.style.transition = "opacity 0.5s ease-in-out"; // Плавный переход
           // Очищаем контейнер и вставляем оба элемента
           textContainer.textContent = "";
           textContainer.appendChild(animatedSpan);
           textContainer.appendChild(staticSpan);
           if (entryObj.postClass === "ghost-post") {
-              effectsManager.triggerGhostTextEffect(animatedSpan, messageText);
+              effectsManager.triggerGhostTextEffect(animatedSpan, messageText, () => {
+                  setTimeout(() => {
+                      staticSpan.style.opacity = "1"; // Плавное появление даты
+                  }, 100);
+              });
           } else {
-              effectsManager.triggerUserTextEffect(animatedSpan, messageText);
+              effectsManager.triggerUserTextEffect(animatedSpan, messageText, () => {
+                  setTimeout(() => {
+                      staticSpan.style.opacity = "1";
+                  }, 100);
+              });
           }
       } else {
           // Если анимация уже была для этой записи, устанавливаем полный текст без анимации

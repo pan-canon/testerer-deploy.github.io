@@ -11,7 +11,6 @@ import { GameEventManager } from './gameEventManager.js';
 import { GhostManager } from './ghostManager.js';
 import { VisualEffectsManager } from './utils/visualEffectsManager.js';
 
-
 export class App {
   constructor() {
     // Привязываем метод switchScreen к глобальному объекту для вызовов из других модулей.

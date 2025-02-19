@@ -61,6 +61,10 @@ export class EventManager {
     // Очищаем контейнер дневника
     this.diaryContainer.innerHTML = "";
 
+    // Получаем из localStorage ID последней анимированной записи (по умолчанию 0)
+    const lastAnimatedId = parseInt(localStorage.getItem("lastAnimatedId") || "0", 10);
+    let newLastAnimatedId = lastAnimatedId;
+
     // Получаем записи из базы данных
     const entries = this.databaseManager.getDiaryEntries();
     const seen = new Set();
@@ -120,7 +124,7 @@ export class EventManager {
       // Используем глобальный экземпляр визуальных эффектов (переданный в конструкторе EventManager)
       const effectsManager = this.visualEffectsManager;
       // Если для этой записи ещё не запускалась анимация (атрибут data-animated отсутствует)
-      if (!articleElem.hasAttribute('data-animated')) {
+      if (!articleElem.hasAttribute('data-animated') && entryObj.id > lastAnimatedId) {
         // Помечаем запись, чтобы анимация запускалась только один раз
         articleElem.setAttribute('data-animated', 'true');
         if (entryObj.postClass === "ghost-post") {
@@ -136,7 +140,9 @@ export class EventManager {
       // Добавляем готовую запись в контейнер дневника
       this.diaryContainer.appendChild(articleElem);
     });
-    console.log("📖 Diary updated.");
+  // Сохраняем новый последний анимированный ID
+  localStorage.setItem("lastAnimatedId", newLastAnimatedId.toString());
+  console.log("📖 Diary updated.");
   }
 
   /**

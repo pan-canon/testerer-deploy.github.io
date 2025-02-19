@@ -115,7 +115,7 @@ export class VisualEffectsManager {
     // Блокируем элементы управления, если контейнер с id "controls" существует
     const controls = document.getElementById("controls-panel");
     if (controls) {
-      controls.style.pointerEvents = "none";
+        controls.style.pointerEvents = "none"; // блокируем элементы управления
     }
     // Устанавливаем позиционирование родительского контейнера targetElem
     targetElem.parentElement.style.position = "relative";

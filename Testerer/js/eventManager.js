@@ -122,18 +122,18 @@ export class EventManager {
       // Создаем экземпляр менеджера визуальных эффектов
       const effectsManager = new VisualEffectsManager();
 
-      // Если это самый новый пост (index === 0), запускаем анимацию, иначе просто устанавливаем текст
-      if (index === 0) {
-        if (entryObj.postClass === "ghost-post") {
-          // Для записей от призрака – эффект медленного появления текста с аудио
-          effectsManager.triggerGhostTextEffect(textContainer, finalText);
-        } else {
-          // Для записей от юзера – эффект печатания текста с иконкой карандаша и звуковым сопровождением
-          effectsManager.triggerUserTextEffect(textContainer, finalText);
-        }
+      // Если для записи ещё не запущена анимация (атрибут data-animated отсутствует)
+      if (!articleElem.hasAttribute('data-animated')) {
+          // Помечаем запись, чтобы анимация запустилась только один раз
+          articleElem.setAttribute('data-animated', 'true');
+          if (entryObj.postClass === "ghost-post") {
+              effectsManager.triggerGhostTextEffect(textContainer, finalText);
+          } else {
+              effectsManager.triggerUserTextEffect(textContainer, finalText);
+          }
       } else {
-        // Для остальных постов просто устанавливаем текст
-        textContainer.textContent = finalText;
+          // Если анимация уже была, просто устанавливаем текст
+          textContainer.textContent = finalText;
       }
 
       // Добавляем готовую запись в контейнер дневника

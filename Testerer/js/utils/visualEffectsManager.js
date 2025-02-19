@@ -38,15 +38,12 @@ export class VisualEffectsManager {
    * @param {string} ghostId - Идентификатор призрака, используемый для выбора изображения.
    */
   triggerGhostAppearanceEffect(ghostId) {
-    // Если необходимо добавить проверку на активность камеры, можно использовать аналогичную проверку.
-    // Например, если эффект должен работать только в режиме квеста.
     const globalCamera = document.getElementById('global-camera');
     if (!globalCamera || globalCamera.style.display === "none") {
       console.log("Эффект появления призрака не запускается, камера не активна.");
       return;
     }
     
-    // Создаем элемент для визуального эффекта появления призрака.
     const ghostEffect = document.createElement("div");
     ghostEffect.style.position = "absolute";
     ghostEffect.style.top = "50%";
@@ -57,11 +54,7 @@ export class VisualEffectsManager {
     ghostEffect.style.background = `url('images/${ghostId}.png') no-repeat center center`;
     ghostEffect.style.backgroundSize = "contain";
     ghostEffect.style.opacity = "0.7";
-    
-    // Добавляем элемент эффекта на страницу.
     document.body.appendChild(ghostEffect);
-    
-    // Плавное исчезновение эффекта через 3 секунды.
     setTimeout(() => {
       ghostEffect.style.opacity = "0";
     }, 3000);
@@ -73,11 +66,82 @@ export class VisualEffectsManager {
    * Воспроизводит аудио-шёпот, который можно использовать для создания атмосферы.
    */
   triggerWhisperEffect() {
-    // Здесь можно добавить проверку на активность камеры, если требуется.
     const whisperSound = new Audio('audio/whisper.mp3');
     whisperSound.play();
     setTimeout(() => {
       whisperSound.pause();
     }, 5000);
+  }
+
+  /**
+   * triggerGhostTextEffect – плавно проявляет текст в targetElem, проигрывая звук эффекта.
+   * Этот метод используется для записей от призрака.
+   * @param {HTMLElement} targetElem - элемент, в который будет анимирован текст.
+   * @param {string} text - текст для анимации.
+   * @param {Function} [callback] - функция, вызываемая после завершения анимации.
+   */
+  triggerGhostTextEffect(targetElem, text, callback) {
+    targetElem.textContent = "";
+    const ghostSound = new Audio('audio/ghost_effect.mp3');
+    ghostSound.play();
+    let i = 0;
+    const interval = setInterval(() => {
+      targetElem.textContent += text[i];
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+        ghostSound.pause();
+        if (callback) callback();
+      }
+    }, 100); // интервал 100 мс между символами
+  }
+
+  /**
+   * triggerUserTextEffect – имитирует эффект печатания текста с иконкой карандаша и звуковым сопровождением.
+   * Блокирует элементы управления до завершения анимации.
+   * @param {HTMLElement} targetElem - элемент, в который будет анимирован текст.
+   * @param {string} text - текст для анимации.
+   * @param {Function} [callback] - функция, вызываемая после завершения анимации.
+   */
+  triggerUserTextEffect(targetElem, text, callback) {
+    // Создаем элемент для иконки карандаша и размещаем его над targetElem
+    const pencilIcon = document.createElement("img");
+    pencilIcon.src = "images/pencil.png";
+    pencilIcon.alt = "Пишется...";
+    pencilIcon.style.width = "24px";
+    pencilIcon.style.height = "24px";
+    pencilIcon.style.position = "absolute";
+    pencilIcon.style.top = "-30px";
+    // Блокируем элементы управления, если контейнер с id "controls" существует
+    const controls = document.getElementById("controls");
+    if (controls) {
+      controls.style.pointerEvents = "none";
+    }
+    // Устанавливаем позиционирование родительского контейнера targetElem
+    targetElem.parentElement.style.position = "relative";
+    targetElem.parentElement.insertBefore(pencilIcon, targetElem);
+
+    // Звук печатания
+    const typeSound = new Audio('audio/type_sound.mp3');
+    typeSound.loop = true;
+    typeSound.play();
+
+    targetElem.textContent = "";
+    let i = 0;
+    const interval = setInterval(() => {
+      targetElem.textContent += text[i];
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+        typeSound.pause();
+        // Убираем иконку карандаша
+        pencilIcon.remove();
+        // Разблокируем элементы управления
+        if (controls) {
+          controls.style.pointerEvents = "auto";
+        }
+        if (callback) callback();
+      }
+    }, 100); // интервал 100 мс между символами
   }
 }

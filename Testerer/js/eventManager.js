@@ -96,7 +96,12 @@ export class EventManager {
       // Если присутствует прикрепленное изображение, добавляем его в элемент <img>
       if (imageData) {
         const img = document.createElement("img");
-        img.src = imageData;
+        // Если префикс data:image отсутствует, добавляем его (предполагаем, что изображение в формате PNG)
+        if (!imageData.startsWith("data:image")) {
+          img.src = "data:image/png;base64," + imageData;
+        } else {
+          img.src = imageData;
+        }
         img.alt = this.languageManager.locales[currentLanguage]["photo_attached"] || "Photo attached";
         img.style.maxWidth = "100%";
         articleElem.appendChild(img);

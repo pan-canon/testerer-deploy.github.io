@@ -24,7 +24,7 @@ export class WelcomeEvent extends BaseEvent {
     // Устанавливаем уникальный ключ события "welcome".
     this.key = "welcome";
   }
-
+ 
   /**
    * activate – переопределенный метод активации события 'welcome'.
    *
@@ -41,7 +41,7 @@ export class WelcomeEvent extends BaseEvent {
       console.log("Событие 'welcome' уже зарегистрировано. Пропускаем активацию.");
       return;
     }
-
+ 
     console.log("Активируем событие 'welcome': регистрируем приглашение подойти к зеркалу");
     
     // 2) Добавляем запись 'welcome' в дневник как призрачный пост (true).

@@ -17,13 +17,45 @@ export class QuestManager {
     this.eventManager = eventManager;
     this.app = appInstance;
     this.profileManager = profileManager;
-
+ 
     // Регистрируем доступные квесты. В данном случае – базовый зеркальный квест.
     this.quests = [
       new BaseMirrorQuest(this.eventManager, this.app)
     ];
+ 
+    // Подписываемся на события камеры, чтобы автоматически запускать цикл проверки
+    // зеркального квеста при открытии камеры и останавливать его при закрытии.
+    this.initCameraListeners();
   }
-
+ 
+  /**
+   * initCameraListeners – подписывается на события готовности видеопотока и закрытия камеры.
+   * Это позволяет автоматически запускать цикл проверки зеркального квеста при открытии камеры
+   * и останавливать его при закрытии камеры.
+   */
+  initCameraListeners() {
+    const cameraManager = this.app.cameraSectionManager;
+    if (!cameraManager) return;
+ 
+    // Предполагается, что cameraSectionManager вызывает onVideoReady, когда видеопоток готов,
+    // и onCameraClosed, когда камера останавливается.
+    cameraManager.onVideoReady = () => {
+      console.log("QuestManager: видео готово.");
+      const mirrorQuest = this.quests.find(q => q.key === "mirror_quest");
+      if (mirrorQuest && localStorage.getItem("mirrorQuestActive") === "true") {
+        mirrorQuest.startCheckLoop();
+      }
+    };
+ 
+    cameraManager.onCameraClosed = () => {
+      console.log("QuestManager: камера закрыта.");
+      const mirrorQuest = this.quests.find(q => q.key === "mirror_quest");
+      if (mirrorQuest) {
+        mirrorQuest.stopCheckLoop();
+      }
+    };
+  }
+ 
   /**
    * activateQuest – активирует квест по его уникальному ключу.
    * @param {string} key - Уникальный ключ квеста (например, "mirror_quest").
@@ -33,10 +65,10 @@ export class QuestManager {
     if (quest) {
       await quest.activate();
     } else {
-      console.warn([QuestManager] Квест с ключом "${key}" не найден.);
+      console.warn(`[QuestManager] Квест с ключом "${key}" не найден.`);
     }
   }
-
+ 
   /**
    * checkQuest – проверяет и завершает квест по его ключу, вызывая finish().
    * @param {string} key - Уникальный ключ квеста.
@@ -47,7 +79,7 @@ export class QuestManager {
       await quest.finish();
     }
   }
-
+ 
   /**
    * handleShootMirrorQuest – метод для кнопки «Заснять».
    * Вызывается, когда пользователь нажимает на «Заснять» на экране камеры.
@@ -57,7 +89,7 @@ export class QuestManager {
     console.log("[QuestManager] handleShootMirrorQuest()");
     await this.checkQuest("mirror_quest");
   }
-
+ 
   /**
    * handlePostButtonClick – обрабатывает нажатие на кнопку "Запостить":
    *   1) Если флаг mirrorQuestReady равен true, сбрасываем его, обновляем состояние кнопки,
@@ -71,22 +103,22 @@ export class QuestManager {
       // Сбрасываем флаг, чтобы избежать повторной активации
       localStorage.removeItem("mirrorQuestReady");
       this.updatePostButtonState();
-
+ 
       console.log("Запуск зеркального квеста (пост от пользователя)");
-
+ 
       // Подсвечиваем кнопку "toggle-camera" (если необходимо)
       const cameraBtn = document.getElementById("toggle-camera");
       if (cameraBtn) {
         cameraBtn.classList.add("glowing");
       }
-
+ 
       // Активируем зеркальный квест
       await this.activateQuest("mirror_quest");
     } else {
       alert("Ждите приглашения от призрака для начала квеста.");
     }
   }
-
+ 
   /**
    * updatePostButtonState – обновляет состояние кнопки "Запостить"
    * в зависимости от того, установлен ли флаг mirrorQuestReady.
@@ -94,13 +126,13 @@ export class QuestManager {
   updatePostButtonState() {
     const isReady = localStorage.getItem("mirrorQuestReady") === "true";
     console.log("[QuestManager] updatePostButtonState:", isReady);
-
+ 
     const postBtn = this.app.postBtn;
     if (postBtn) {
       postBtn.disabled = !isReady;
     }
   }
-
+ 
   /**
    * updateCameraButtonState – обновляет состояние кнопки "toggle-camera"
    * в зависимости от того, активен ли зеркальный квест.
@@ -114,7 +146,7 @@ export class QuestManager {
       cameraBtn.classList.remove("glowing");
     }
   }
-
+ 
   /**
    * triggerMirrorQuestIfActive – при включении камеры проверяет localStorage,
    * и если флаг mirrorQuestActive установлен, запускает проверку квеста.
@@ -125,7 +157,7 @@ export class QuestManager {
       await this.checkQuest("mirror_quest");
     }
   }
-
+ 
   /**
    * checkMirrorQuestOnCamera – удобный метод для проверки зеркального квеста на камере.
    * Вызывает checkQuest с ключом "mirror_quest".
@@ -133,7 +165,7 @@ export class QuestManager {
   async checkMirrorQuestOnCamera() {
     await this.checkQuest("mirror_quest");
   }
-
+ 
   /**
    * checkAvailablePhenomena – пример логики проверки доступных феноменов
    * на основе типа локации и разрешённых явлений для текущего призрака.
@@ -141,7 +173,7 @@ export class QuestManager {
   async checkAvailablePhenomena() {
     const locationType = this.profileManager?.getLocationType?.();
     if (locationType) {
-      console.log(Текущая локация: ${locationType});
+      console.log(`Текущая локация: ${locationType}`);
       const locationAllowedPhenomena = {
         "Кухня": ["call", "randomCall"],
         "Спальня": ["call", "randomCall"],
@@ -152,7 +184,7 @@ export class QuestManager {
       if (ghost && ghost.allowedPhenomena) {
         const intersection = ghost.allowedPhenomena.filter(p => locationPhenomena.includes(p));
         if (intersection.length > 0) {
-          console.log(Доступные явления: ${intersection});
+          console.log(`Доступные явления: ${intersection}`);
           // Здесь можно запустить дополнительную логику (например, эффект или уведомление)
         }
       }

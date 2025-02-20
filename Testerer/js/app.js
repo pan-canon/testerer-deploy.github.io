@@ -381,6 +381,8 @@ export class App {
    * При закрытии камеры:
    *   - Возвращаемся в блог, скрываем global-camera.
    *   - Показываем "Запостить", прячем "Заснять".
+   *
+   * Обратите внимание: логика, специфичная для зеркального квеста, вынесена в соответствующие модули.
    */
   async toggleCameraView() {
     // Получаем необходимые DOM-элементы
@@ -406,7 +408,7 @@ export class App {
       if (toggleCameraBtn) toggleCameraBtn.style.display = "none";
       if (toggleDiaryBtn)  toggleDiaryBtn.style.display = "inline-block";
       buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
-      if (postBtn) postBtn.style.display = "none";     // «Запостить» должно быть скрыто в режиме камеры
+      if (postBtn) postBtn.style.display = "none";     // «Запостить» скрываем в режиме камеры
 
       // Показываем кнопку «Заснять» и делаем её неактивной до выполнения условия
       if (shootBtn) {
@@ -435,7 +437,7 @@ export class App {
         this.cameraSectionManager.videoElement.videoHeight
       );
 
-      // Здесь ранее был запуск цикла проверки зеркального квеста, теперь он вынесен в соответствующий класс
+      // Здесь ранее был запуск цикла проверки зеркального квеста, теперь он вынесен в соответствующие модули
 
       this.isCameraOpen = true;
     } else {

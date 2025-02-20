@@ -20,24 +20,24 @@ export class BaseMirrorQuest extends BaseEvent {
     this.app = appInstance;
     this.key = "mirror_quest";
     this.doneKey = "mirror_done";
-
+ 
     // Интервал, используемый в методе startCheckLoop
     this.checkInterval = null;
-
+ 
     // Локальная канва и контекст для сравнения кадров (не зависят от app.tempCanvas)
     this.tempCanvas = document.createElement("canvas");
     this.tempCtx = this.tempCanvas.getContext("2d");
-
+ 
     // Флаг, предотвращающий повторное завершение квеста
     this.finished = false;
-
+ 
     // Конфигурация UI-элементов, используемых в квесте
     this.statusElementId = config.statusElementId || "mirror-quest-status";
     this.shootButtonId = config.shootButtonId || "btn_shoot";
-
+ 
     this.registerEvents();
   }
-
+ 
   /**
    * registerEvents – регистрирует обработчики для UI элементов, если потребуется.
    * Здесь можно добавить обработку дополнительных событий, связанных с квестом.
@@ -45,7 +45,7 @@ export class BaseMirrorQuest extends BaseEvent {
   registerEvents() {
     // Дополнительные обработчики можно добавить здесь
   }
-
+ 
   /**
    * activate – запускает зеркальный квест:
    * 1) Регистрирует событие в дневнике, если оно ещё не зарегистрировано.
@@ -54,13 +54,13 @@ export class BaseMirrorQuest extends BaseEvent {
    */
   async activate() {
     if (!this.eventManager.isEventLogged(this.key)) {
-      console.log(Активируем событие: ${this.key});
+      console.log(`Активируем событие: ${this.key}`);
       await this.eventManager.addDiaryEntry(this.key);
     }
     console.log("[BaseMirrorQuest] Зеркальный квест запущен.");
     localStorage.setItem("mirrorQuestActive", "true");
   }
-
+ 
   /**
    * startCheckLoop – запускает цикл проверки состояния квеста каждые 2 секунды.
    * Обновляет UI: статус в элементе с ID this.statusElementId и состояние кнопки "Заснять"
@@ -68,13 +68,13 @@ export class BaseMirrorQuest extends BaseEvent {
    */
   startCheckLoop() {
     if (this.checkInterval) return;
-
+ 
     const statusDiv = document.getElementById(this.statusElementId);
     if (statusDiv) {
       statusDiv.style.display = "block";
       statusDiv.textContent = "Нет совпадения...";
     }
-
+ 
     const shootBtn = document.getElementById(this.shootButtonId);
     if (shootBtn) {
       shootBtn.style.display = "inline-block";
@@ -82,7 +82,7 @@ export class BaseMirrorQuest extends BaseEvent {
       // Обработчик кнопки "Заснять" срабатывает однократно для завершения квеста
       shootBtn.addEventListener("click", () => this.finish(), { once: true });
     }
-
+ 
     this.checkInterval = setInterval(async () => {
       const success = await this.checkStatus();
       if (statusDiv) {
@@ -93,7 +93,7 @@ export class BaseMirrorQuest extends BaseEvent {
       }
     }, 2000);
   }
-
+ 
   /**
    * stopCheckLoop – останавливает цикл проверки (интервал) и скрывает UI элементы, связанные с квестом.
    */
@@ -111,7 +111,7 @@ export class BaseMirrorQuest extends BaseEvent {
       shootBtn.style.display = "none";
     }
   }
-
+ 
   /**
    * checkStatus – проверяет, находится ли игрок "перед зеркалом"
    * посредством сравнения текущего кадра с сохранёнными данными селфи.
@@ -121,7 +121,7 @@ export class BaseMirrorQuest extends BaseEvent {
     console.log("[BaseMirrorQuest] checkStatus() -> compareFrameInternally()");
     return await this.compareFrameInternally();
   }
-
+ 
   /**
    * compareFrameInternally – захватывает текущий кадр с камеры, преобразует его в оттенки серого и сравнивает с сохранёнными данными селфи.
    * @returns {boolean} Результат сравнения (true, если сходство по пикселям и гистограмме выше порога).
@@ -132,27 +132,27 @@ export class BaseMirrorQuest extends BaseEvent {
       console.warn("[BaseMirrorQuest] ❌ Нет сохранённого селфи (app.selfieData)");
       return false;
     }
-
+ 
     // Проверяем, активна ли камера
     const videoEl = this.app.cameraSectionManager?.videoElement;
     if (!videoEl || !videoEl.srcObject) {
       console.warn("[BaseMirrorQuest] ❌ Камера не активна!");
       return false;
     }
-
+ 
     // Настраиваем размеры локальной канвы
     this.tempCanvas.width = videoEl.videoWidth || 640;
     this.tempCanvas.height = videoEl.videoHeight || 480;
     this.tempCtx.drawImage(videoEl, 0, 0, this.tempCanvas.width, this.tempCanvas.height);
-
+ 
     // Преобразуем полученный кадр в оттенки серого
     const currentFrameData = ImageUtils.convertToGrayscale(this.tempCanvas);
-
+ 
     // Выполняем сравнение по пикселям и гистограмме
     const matchPixel = ImageUtils.pixelWiseComparison(this.app.selfieData, currentFrameData);
     const matchHist = ImageUtils.histogramComparison(this.app.selfieData, currentFrameData);
-    console.log([BaseMirrorQuest] pixel=${matchPixel.toFixed(2)}, hist=${matchHist.toFixed(2)});
-
+    console.log(`[BaseMirrorQuest] pixel=${matchPixel.toFixed(2)}, hist=${matchHist.toFixed(2)}`);
+ 
     const success = (matchPixel > 0.6 && matchHist > 0.7);
     if (success) {
       // Сохраняем последний успешно сравнившийся кадр (для записи в дневник)
@@ -160,7 +160,7 @@ export class BaseMirrorQuest extends BaseEvent {
     }
     return success;
   }
-
+ 
   /**
    * finish – завершает зеркальный квест:
    * 1) Останавливает цикл проверки.
@@ -170,42 +170,42 @@ export class BaseMirrorQuest extends BaseEvent {
   async finish() {
     if (this.finished) return;
     this.finished = true;
-
+ 
     this.stopCheckLoop();
     const success = await this.checkStatus();
-
+ 
     const ghost = this.app.ghostManager.getCurrentGhost();
     const randomLetter = this.getRandomLetter(ghost.name);
-
+ 
     if (success) {
       const photoData = this.app.lastMirrorPhoto
-        ?  [photo attached]\n${this.app.lastMirrorPhoto}
+        ? ` [photo attached]\n${this.app.lastMirrorPhoto}`
         : "";
-      await this.eventManager.addDiaryEntry(user_post_success: ${randomLetter}${photoData}, false);
+      await this.eventManager.addDiaryEntry(`user_post_success: ${randomLetter}${photoData}`, false);
       const statusDiv = document.getElementById(this.statusElementId);
       if (statusDiv) {
         statusDiv.textContent = "✅ Задание «подойти к зеркалу» выполнено!";
         setTimeout(() => statusDiv.style.display = "none", 2000);
       }
     } else {
-      await this.eventManager.addDiaryEntry(user_post_failed: ${randomLetter}, false);
+      await this.eventManager.addDiaryEntry(`user_post_failed: ${randomLetter}`, false);
       const statusDiv = document.getElementById(this.statusElementId);
       if (statusDiv) {
         statusDiv.textContent = "❌ Квест проигнорирован!";
         setTimeout(() => statusDiv.style.display = "none", 2000);
       }
     }
-
+ 
     localStorage.removeItem("mirrorQuestActive");
     this.app.questManager.updatePostButtonState();
-
+ 
     // Убираем эффект подсветки с кнопки камеры
     const cameraBtn = document.getElementById("toggle-camera");
     if (cameraBtn) {
       cameraBtn.classList.remove("glowing");
     }
   }
-
+ 
   /**
    * getRandomLetter – возвращает случайную букву из имени призрака,
    * удаляя из строки все символы, кроме латинских и кириллических.

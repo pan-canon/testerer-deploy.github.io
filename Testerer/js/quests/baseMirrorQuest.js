@@ -54,7 +54,6 @@ export class BaseMirrorQuest extends BaseEvent {
     console.log("[BaseMirrorQuest] Зеркальный квест запущен.");
 
     localStorage.setItem("mirrorQuestActive", "true");
-    this.startCheckLoop();
   }
 
   /**

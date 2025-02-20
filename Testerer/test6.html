@@ -21,7 +21,7 @@
   </div>
   <!-- Подключаем Three.js -->
   <script src="./js/libs/three.js"></script>
-  <!-- Подключаем DeviceOrientationControls -->
+  <!-- Подключаем DeviceOrientationControls (версия из gist) -->
   <script src="./js/libs/DeviceOrientationControls.js"></script>
   <script>
     let scene, camera, renderer;
@@ -106,9 +106,15 @@
       camera.lookAt(new THREE.Vector3(0, 0, -1));
       inRoom = true;
       document.getElementById('info').innerText = "Вы внутри. Поверните смартфон, чтобы осмотреться. Используйте стрелки для перемещения.";
+
+      // Проверка поддержки DeviceOrientationEvent
+      if (!window.DeviceOrientationEvent) {
+        alert("Ваш браузер не поддерживает DeviceOrientationEvent. Управление ориентацией не работает.");
+        return;
+      }
       
-      // Инициализация DeviceOrientationControls с проверкой поддержки API
-      if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      // Инициализация DeviceOrientationControls с проверкой поддержки запроса разрешения
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
         // Если устройство требует разрешения (например, iOS 13+), запрашиваем его
         DeviceOrientationEvent.requestPermission()
           .then(permissionState => {

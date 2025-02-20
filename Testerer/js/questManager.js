@@ -2,7 +2,7 @@ import { BaseMirrorQuest } from './quests/baseMirrorQuest.js';
 
 /**
  * QuestManager – класс для управления квестами в приложении.
- * 
+ *
  * Логика нажатия на кнопку «Запостить» (handlePostButtonClick)
  * и обновления её состояния (updatePostButtonState) вынесена сюда, чтобы
  * обеспечить универсальное управление запуском квестов без прямой зависимости от App.
@@ -16,7 +16,7 @@ export class QuestManager {
   constructor(eventManager, appInstance, profileManager) {
     this.eventManager = eventManager;
     this.app = appInstance;
-    this.profileManager = profileManager;  // Может использоваться для проверки типа локации и т.п.
+    this.profileManager = profileManager;
 
     // Регистрируем доступные квесты. В данном случае – базовый зеркальный квест.
     this.quests = [
@@ -55,9 +55,7 @@ export class QuestManager {
    */
   async handleShootMirrorQuest() {
     console.log("[QuestManager] handleShootMirrorQuest()");
-    // Завершаем зеркальный квест
     await this.checkQuest("mirror_quest");
-    // После завершения UI внутри BaseMirrorQuest сам обновится (stopCheckLoop и т.д.)
   }
 
   /**
@@ -94,13 +92,26 @@ export class QuestManager {
    * в зависимости от того, установлен ли флаг mirrorQuestReady.
    */
   updatePostButtonState() {
-    const isReady = (localStorage.getItem("mirrorQuestReady") === "true");
+    const isReady = localStorage.getItem("mirrorQuestReady") === "true";
     console.log("[QuestManager] updatePostButtonState:", isReady);
 
-    // Доступаемся к кнопке "Запостить" через app
     const postBtn = this.app.postBtn;
     if (postBtn) {
       postBtn.disabled = !isReady;
+    }
+  }
+
+  /**
+   * updateCameraButtonState – обновляет состояние кнопки "toggle-camera"
+   * в зависимости от того, активен ли зеркальный квест.
+   */
+  updateCameraButtonState() {
+    const cameraBtn = document.getElementById("toggle-camera");
+    if (!cameraBtn) return;
+    if (localStorage.getItem("mirrorQuestActive") === "true") {
+      cameraBtn.classList.add("glowing");
+    } else {
+      cameraBtn.classList.remove("glowing");
     }
   }
 

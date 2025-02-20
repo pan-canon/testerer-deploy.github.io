@@ -125,19 +125,15 @@ export class App {
       console.log("Profile found:", profile);
       this.showMainScreen();
 
-      // Если регистрация завершена, через 5 секунд запускаем welcomeEvent
+      // Если регистрация завершена, через 5 секунд запускаем welcomeEvent через gameEventManager
       if (localStorage.getItem("registrationCompleted") === "true") {
         setTimeout(() => {
           this.gameEventManager.activateEvent("welcome");
         }, 5000);
       }
 
-      // Подсвечиваем toggle-camera, если зеркальный квест активен
-      if (localStorage.getItem("mirrorQuestActive") === "true") {
-        cameraBtn.classList.add("glowing");
-      } else {
-        cameraBtn.classList.remove("glowing");
-      }
+      // Обновляем состояние кнопки камеры в зависимости от активности зеркального квеста
+      this.questManager.updateCameraButtonState();
     } else {
       console.log("Profile not found, showing registration screen.");
       this.showRegistrationScreen();

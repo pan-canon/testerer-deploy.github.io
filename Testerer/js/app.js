@@ -439,11 +439,13 @@ export class App {
         this.cameraSectionManager.videoElement.videoHeight
       );
 
-      // Если в localStorage установлен флаг зеркального квеста,
-      // можно (по желанию) инициировать проверку через QuestManager
+      // Вставьте здесь проверку и запуск цикла квеста:
       if (localStorage.getItem("mirrorQuestActive") === "true") {
-        console.log("🔁 mirrorQuestActive=true, просим QuestManager запустить проверку...");
-        // Например: this.questManager.startMirrorQuestCheckLoop();
+        console.log("🔁 mirrorQuestActive=true, запускаем цикл проверки зеркального квеста...");
+        const mirrorQuest = this.questManager.quests.find(q => q.key === "mirror_quest");
+        if (mirrorQuest) {
+          mirrorQuest.startCheckLoop();
+        }
       }
 
       this.isCameraOpen = true;

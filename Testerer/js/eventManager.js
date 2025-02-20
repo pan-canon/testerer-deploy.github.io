@@ -105,7 +105,7 @@ export class EventManager {
       const formattedTimestamp = entryObj.timestamp.replace(/\.\d+Z$/, '');
 
       // Собираем "сырой" вариант текста: "ТЕКСТ (2025-02-20T15:34:12)" и т.д.
-      const fullText = ${cleanedText} (${formattedTimestamp});
+      const fullText = `${cleanedText} (${formattedTimestamp})`;
 
       // Если присутствует изображение, добавляем <img> перед текстом
       const textContainer = document.createElement("p");
@@ -191,7 +191,7 @@ export class EventManager {
     setTimeout(() => {
       button.style.display = 'none';
     }, 5000);
-
+ 
     buttonContainer.appendChild(button);
     this.diaryContainer.appendChild(buttonContainer);
   }
@@ -228,9 +228,9 @@ export class EventManager {
   async startGhostQuest() {
     const ghost = this.ghostManager.getCurrentGhost();
     if (ghost) {
-      const questKey = ghost_${ghost.id}_quest;
+      const questKey = `ghost_${ghost.id}_quest`;
       await this.addDiaryEntry(questKey, true);
-      console.log(👻 Starting quest for ${ghost.name}...);
+      console.log(`👻 Starting quest for ${ghost.name}...`);
     } else {
       console.error("⚠️ No active ghost found.");
     }

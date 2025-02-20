@@ -1,5 +1,5 @@
 export class VisualEffectsManager {
-    /** 
+    /**
      * @param {App} appInstance – ссылка на основной объект приложения (содержит флаг isCameraOpen).
      * @param {HTMLElement} controlsPanel – элемент с кнопками управления (для блокировки).
      */
@@ -25,7 +25,7 @@ export class VisualEffectsManager {
     }
 
     /**
-     * Блокируем или разблокируем elements управления, только если камера закрыта.
+     * Блокируем или разблокируем элементы управления, только если камера закрыта.
      * Если камера открыта, мы ничего не блокируем.
      * @param {boolean} shouldBlock - true=блокировать, false=разблокировать
      */
@@ -53,7 +53,7 @@ export class VisualEffectsManager {
         let currentHTML = "";
         let isTag = false;
         let tagBuffer = "";
-
+ 
         const intervalId = setInterval(() => {
             const char = text[pos];
             if (!char) {
@@ -62,7 +62,7 @@ export class VisualEffectsManager {
                 if (callback) callback();
                 return;
             }
-
+ 
             // Логика разбора тегов
             if (char === "<") {
                 isTag = true;
@@ -77,10 +77,10 @@ export class VisualEffectsManager {
             } else {
                 currentHTML += char;
             }
-
+ 
             targetElem.innerHTML = currentHTML;
             pos++;
-
+ 
             // Если есть onChar, вызываем его после вставки символа/тега
             if (typeof onChar === "function") {
                 onChar(targetElem, currentHTML);
@@ -103,7 +103,7 @@ export class VisualEffectsManager {
         setTimeout(() => {
             document.body.style.background = "";
         }, 1000);
-
+ 
         // Воспроизводим аудио-звонок (3 секунды)
         this.playAudioWithStop('audio/phone_ringtone.mp3', 3000);
     }
@@ -126,7 +126,7 @@ export class VisualEffectsManager {
             transform: "translate(-50%, -50%)",
             width: "200px",
             height: "200px",
-            background: url('images/${ghostId}.png') no-repeat center center,
+            background: `url('images/${ghostId}.png') no-repeat center center`,
             backgroundSize: "contain",
             opacity: "0.7",
             transition: "opacity 2s"
@@ -153,11 +153,11 @@ export class VisualEffectsManager {
     triggerGhostTextEffect(targetElem, text, callback) {
         // Блокируем кнопки (если камера закрыта)
         this.setControlsBlocked(true);
-
+ 
         // Звук призрака
         const ghostSound = new Audio('audio/ghost_effect.mp3');
         ghostSound.play();
-
+ 
         this.animateHTMLText(
             targetElem,
             text,
@@ -169,10 +169,13 @@ export class VisualEffectsManager {
             }
         );
     }
-
+ 
     /**
      * triggerUserTextEffect – имитирует печать пользователя. 
      * Карандаш двигается за последним символом. Блокируем управление, если камера закрыта.
+     * @param {HTMLElement} targetElem 
+     * @param {string} text 
+     * @param {Function} callback 
      */
     triggerUserTextEffect(targetElem, text, callback) {
         // Создаём карандаш
@@ -184,35 +187,35 @@ export class VisualEffectsManager {
             height: "24px",
             position: "absolute"
         });
-
-        // Размещаем
+ 
+        // Размещаем карандаш в родительском элементе targetElem
         const parentElem = targetElem.parentElement;
         parentElem.style.position = "relative";
         parentElem.insertBefore(pencilIcon, targetElem);
-
+ 
         // Блокируем кнопки (если камера закрыта)
         this.setControlsBlocked(true);
-
+ 
         // Звук печатания
         const typeSound = new Audio('audio/type_sound.mp3');
         typeSound.loop = true;
         typeSound.play();
-
+ 
         const onChar = () => {
             // Перемещаем карандаш к последнему символу
             const dummySpan = document.createElement("span");
             dummySpan.innerHTML = "&nbsp;"; // чтобы было, к чему привязаться
             targetElem.appendChild(dummySpan);
-
+ 
             const rectDummy = dummySpan.getBoundingClientRect();
             const rectParent = parentElem.getBoundingClientRect();
             // Смещение карандаша
             pencilIcon.style.left = (rectDummy.left - rectParent.left) + "px";
-            pencilIcon.style.top  = (rectDummy.top  - rectParent.top ) + "px";
-
+            pencilIcon.style.top  = (rectDummy.top - rectParent.top) + "px";
+ 
             dummySpan.remove();
         };
-
+ 
         this.animateHTMLText(
             targetElem,
             text,

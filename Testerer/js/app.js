@@ -10,7 +10,7 @@ import { EventManager } from './eventManager.js';
 import { GameEventManager } from './gameEventManager.js';
 import { QuestManager } from './questManager.js';
 import { ShowProfileModal } from './showProfileModal.js';
-
+ 
 /**
  * Класс App – основная точка входа приложения.
  * Он управляет экранами (регистрация, селфи, блог), инициализацией менеджеров

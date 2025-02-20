@@ -1,5 +1,5 @@
 export class EventManager {
-  /**
+  /** 
    * Конструктор EventManager.
    * @param {DatabaseManager} databaseManager - экземпляр менеджера базы данных.
    * @param {LanguageManager} languageManager - менеджер локализации.

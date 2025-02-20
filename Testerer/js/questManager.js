@@ -1,5 +1,5 @@
 import { BaseMirrorQuest } from './quests/baseMirrorQuest.js';
-
+ 
 /**
  * QuestManager – класс для управления квестами в приложении.
  *

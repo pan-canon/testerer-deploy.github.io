@@ -1,5 +1,5 @@
 export class VisualEffectsManager {
-    /**
+    /** 
      * @param {App} appInstance – ссылка на основной объект приложения (содержит флаг isCameraOpen).
      * @param {HTMLElement} controlsPanel – элемент с кнопками управления (для блокировки).
      */

@@ -39,7 +39,7 @@ export class App {
     this.controlsPanel = document.getElementById("controls-panel"); // Привязываем панель управления
 
     // Создаем глобальный экземпляр визуальных эффектов.
-    this.visualEffectsManager = new VisualEffectsManager(this.controlsPanel);
+    this.visualEffectsManager = new VisualEffectsManager(this, this.controlsPanel);
 
     // Инициализируем менеджеры приложения.
     this.languageManager = new LanguageManager('language-selector');

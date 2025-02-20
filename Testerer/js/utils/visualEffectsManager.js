@@ -1,5 +1,14 @@
 export class VisualEffectsManager {
     /**
+     * @param {App} appInstance – ссылка на основной объект приложения (содержит флаг isCameraOpen).
+     * @param {HTMLElement} controlsPanel – элемент с кнопками управления (для блокировки).
+     */
+    constructor(appInstance, controlsPanel) {
+        this.app = appInstance;
+        this.controlsPanel = controlsPanel;
+    }
+
+    /**
      * Универсальная функция воспроизведения аудио с автоматической остановкой.
      * @param {string} audioSrc - путь к аудиофайлу.
      * @param {number} stopDelay - время в мс через которое остановить воспроизведение.
@@ -16,94 +25,99 @@ export class VisualEffectsManager {
     }
 
     /**
+     * Блокируем или разблокируем elements управления, только если камера закрыта.
+     * Если камера открыта, мы ничего не блокируем.
+     * @param {boolean} shouldBlock - true=блокировать, false=разблокировать
+     */
+    setControlsBlocked(shouldBlock) {
+        if (!this.controlsPanel) return;
+        // Если камера ОТКРЫТА, то не блокируем управление (можно "уйти и посмотреть")
+        if (this.app.isCameraOpen) {
+            shouldBlock = false;
+        }
+        this.controlsPanel.style.pointerEvents = shouldBlock ? "none" : "auto";
+    }
+
+    /**
      * Универсальная функция анимации текста с разбором HTML-тегов.
      * @param {HTMLElement} targetElem - элемент, в который анимируем текст.
      * @param {string} text - текст (включая теги) для анимации.
      * @param {number} speed - скорость "печатания" в мс.
      * @param {HTMLAudioElement} [audioObj] - объект аудио, который воспроизводится во время анимации.
      * @param {Function} [callback] - функция, вызываемая после завершения анимации.
+     * @param {Function} [onChar] - вызывается после каждого вставленного символа (targetElem, currentHTML).
      */
-    animateHTMLText(targetElem, text, speed, audioObj, callback) {
-        // Подготовка: очищаем элемент, обнуляем счётчики
+    animateHTMLText(targetElem, text, speed, audioObj, callback, onChar) {
         targetElem.innerHTML = "";
-        let pos = 0;          // позиция в строке
-        let currentHTML = ""; // то, что уже выведено
-        let isTag = false;    // флаг "внутри тега"
-        let tagBuffer = "";   // накапливаем строку тега
+        let pos = 0;
+        let currentHTML = "";
+        let isTag = false;
+        let tagBuffer = "";
 
         const intervalId = setInterval(() => {
             const char = text[pos];
             if (!char) {
-                // Если вышли за пределы текста, завершаем анимацию
                 clearInterval(intervalId);
                 if (audioObj) audioObj.pause();
                 if (callback) callback();
                 return;
             }
 
-            // Логика разбора: если видим '<', значит начинаем считывать тег
+            // Логика разбора тегов
             if (char === "<") {
                 isTag = true;
             }
             if (isTag) {
                 tagBuffer += char;
                 if (char === ">") {
-                    // тег закончился
                     currentHTML += tagBuffer;
                     tagBuffer = "";
                     isTag = false;
                 }
             } else {
-                // обычный текст
                 currentHTML += char;
             }
 
             targetElem.innerHTML = currentHTML;
             pos++;
+
+            // Если есть onChar, вызываем его после вставки символа/тега
+            if (typeof onChar === "function") {
+                onChar(targetElem, currentHTML);
+            }
         }, speed);
     }
 
     /**
      * triggerMirrorEffect – запускает визуальный эффект для зеркального квеста.
-     *
-     * Эффект затемняет фон страницы и воспроизводит аудио (например, звук звонка).
-     * Эффект выполняется только если глобальный контейнер камеры (global-camera) виден,
-     * что указывает на активный режим квеста.
+     * Срабатывает только если камера открыта (app.isCameraOpen == true).
      */
     triggerMirrorEffect() {
-        const globalCamera = document.getElementById('global-camera');
-        if (!globalCamera || globalCamera.style.display === "none") {
-            console.log("Эффект зеркального квеста не запускается, камера не активна.");
+        if (!this.app.isCameraOpen) {
+            console.log("Зеркальный эффект не запускается: камера закрыта.");
             return;
         }
-
-        // Плавное затемнение на 1 секунду
+        // Плавное затемнение фона
         document.body.style.transition = "background 1s";
         document.body.style.background = "black";
         setTimeout(() => {
             document.body.style.background = "";
         }, 1000);
 
-        // Воспроизводим аудио-звонок и останавливаем через 3 секунды
+        // Воспроизводим аудио-звонок (3 секунды)
         this.playAudioWithStop('audio/phone_ringtone.mp3', 3000);
     }
 
     /**
-     * triggerGhostAppearanceEffect – запускает визуальный эффект появления призрака.
-     *
-     * Создает элемент, представляющий призрачное изображение, который появляется по центру экрана.
-     * Эффект предназначен для вызова, когда квест с призраком активен.
-     *
-     * @param {string} ghostId - Идентификатор призрака, используемый для выбора изображения.
+     * triggerGhostAppearanceEffect – эффект появления призрака. 
+     * Тоже проверяем, что камера открыта, иначе не показываем.
+     * @param {string} ghostId
      */
     triggerGhostAppearanceEffect(ghostId) {
-        const globalCamera = document.getElementById('global-camera');
-        if (!globalCamera || globalCamera.style.display === "none") {
-            console.log("Эффект появления призрака не запускается, камера не активна.");
+        if (!this.app.isCameraOpen) {
+            console.log("Эффект появления призрака не запускается: камера закрыта.");
             return;
         }
-        
-        // Создаём элемент призрачного эффекта
         const ghostEffect = document.createElement("div");
         Object.assign(ghostEffect.style, {
             position: "absolute",
@@ -115,87 +129,101 @@ export class VisualEffectsManager {
             background: `url('images/${ghostId}.png') no-repeat center center`,
             backgroundSize: "contain",
             opacity: "0.7",
-            transition: "opacity 2s" // немного плавного исчезновения
+            transition: "opacity 2s"
         });
-
-        // Добавляем эффект на страницу
         document.body.appendChild(ghostEffect);
-        // Спустя 3 секунды — плавное исчезновение
-        setTimeout(() => {
-            ghostEffect.style.opacity = "0";
-        }, 3000);
-        // И ещё через 2 секунды — удаляем элемент из DOM
-        setTimeout(() => {
-            ghostEffect.remove();
-        }, 5000);
+        setTimeout(() => { ghostEffect.style.opacity = "0"; }, 3000);
+        setTimeout(() => { ghostEffect.remove(); }, 5000);
     }
 
     /**
-     * triggerWhisperEffect – запускает эффект шёпота.
-     *
-     * Воспроизводит аудио-шёпот для создания атмосферы.
+     * triggerWhisperEffect – эффект шёпота (5 секунд).
      */
     triggerWhisperEffect() {
-        // Воспроизводим шёпот и останавливаем через 5 секунд
         this.playAudioWithStop('audio/whisper.mp3', 5000);
     }
 
     /**
-     * triggerGhostTextEffect – плавно проявляет текст в targetElem, проигрывая звук эффекта.
-     * @param {HTMLElement} targetElem - элемент, в который будет анимирован текст.
-     * @param {string} text - текст (с возможными HTML-тегами).
-     * @param {Function} [callback] - функция, вызываемая после завершения анимации.
+     * triggerGhostTextEffect – печатает "призрачный" текст. 
+     * Блокировка управления, если камера закрыта.
+     * @param {HTMLElement} targetElem 
+     * @param {string} text 
+     * @param {Function} callback 
      */
     triggerGhostTextEffect(targetElem, text, callback) {
-        // Запускаем звук призрака (без ручной остановки — остановим сами при завершении)
+        // Блокируем кнопки (если камера закрыта)
+        this.setControlsBlocked(true);
+
+        // Звук призрака
         const ghostSound = new Audio('audio/ghost_effect.mp3');
         ghostSound.play();
 
-        // Анимируем текст за 100 мс на символ
-        this.animateHTMLText(targetElem, text, 100, ghostSound, callback);
+        this.animateHTMLText(
+            targetElem,
+            text,
+            100,
+            ghostSound,
+            () => {
+                this.setControlsBlocked(false);
+                if (callback) callback();
+            }
+        );
     }
 
     /**
-     * triggerUserTextEffect – имитирует эффект печатания текста с иконкой карандаша и звуковым сопровождением.
-     * Блокирует элементы управления до завершения анимации.
-     *
-     * @param {HTMLElement} targetElem - элемент, в который будет анимирован текст.
-     * @param {string} text - текст (с возможными HTML-тегами).
-     * @param {Function} [callback] - функция, вызываемая после завершения анимации.
+     * triggerUserTextEffect – имитирует печать пользователя. 
+     * Карандаш двигается за последним символом. Блокируем управление, если камера закрыта.
      */
     triggerUserTextEffect(targetElem, text, callback) {
-        // Добавляем иконку карандаша
+        // Создаём карандаш
         const pencilIcon = document.createElement("img");
         pencilIcon.src = "images/pencil.png";
         pencilIcon.alt = "Пишется...";
         Object.assign(pencilIcon.style, {
             width: "24px",
             height: "24px",
-            position: "absolute",
-            top: "-30px"
+            position: "absolute"
         });
 
-        // Блокируем панель управления
-        const controls = document.getElementById("controls-panel");
-        if (controls) {
-            controls.style.pointerEvents = "none";
-        }
+        // Размещаем
+        const parentElem = targetElem.parentElement;
+        parentElem.style.position = "relative";
+        parentElem.insertBefore(pencilIcon, targetElem);
 
-        // Размещаем иконку над targetElem
-        targetElem.parentElement.style.position = "relative";
-        targetElem.parentElement.insertBefore(pencilIcon, targetElem);
+        // Блокируем кнопки (если камера закрыта)
+        this.setControlsBlocked(true);
 
-        // Воспроизводим звук печатания (без автопаузы — останавливаем сами)
+        // Звук печатания
         const typeSound = new Audio('audio/type_sound.mp3');
         typeSound.loop = true;
         typeSound.play();
 
-        // Анимация "печатания" (100 мс на символ)
-        this.animateHTMLText(targetElem, text, 100, typeSound, () => {
-            // По завершении
-            pencilIcon.remove(); // убираем иконку
-            if (controls) controls.style.pointerEvents = "auto"; // снимаем блокировку
-            if (callback) callback();
-        });
+        const onChar = () => {
+            // Перемещаем карандаш к последнему символу
+            const dummySpan = document.createElement("span");
+            dummySpan.innerHTML = "&nbsp;"; // чтобы было, к чему привязаться
+            targetElem.appendChild(dummySpan);
+
+            const rectDummy = dummySpan.getBoundingClientRect();
+            const rectParent = parentElem.getBoundingClientRect();
+            // Смещение карандаша
+            pencilIcon.style.left = (rectDummy.left - rectParent.left) + "px";
+            pencilIcon.style.top  = (rectDummy.top  - rectParent.top ) + "px";
+
+            dummySpan.remove();
+        };
+
+        this.animateHTMLText(
+            targetElem,
+            text,
+            100,
+            typeSound,
+            () => {
+                pencilIcon.remove();
+                this.setControlsBlocked(false);
+                if (callback) callback();
+            },
+            onChar
+        );
     }
 }

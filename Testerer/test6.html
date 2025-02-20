@@ -100,34 +100,41 @@
     }
 
     function enterRoom() {
+      console.log("Входим в комнату");
       // Перемещаем камеру внутрь комнаты
       camera.position.set(0, 0, 0);
       camera.lookAt(new THREE.Vector3(0, 0, -1));
       inRoom = true;
       document.getElementById('info').innerText = "Вы внутри. Поверните смартфон, чтобы осмотреться. Используйте стрелки для перемещения.";
       
-      // Активируем DeviceOrientationControls
-      controls = new THREE.DeviceOrientationControls(camera);
-      // Для iOS 13+ требуется запрос разрешения
-      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      // Инициализация DeviceOrientationControls с проверкой поддержки API
+      if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        // Если устройство требует разрешения (например, iOS 13+), запрашиваем его
         DeviceOrientationEvent.requestPermission()
           .then(permissionState => {
             if (permissionState === 'granted') {
-              window.addEventListener('deviceorientation', function(event) {}, false);
+              controls = new THREE.DeviceOrientationControls(camera);
+              console.log("DeviceOrientationControls активированы (iOS).");
+            } else {
+              console.warn("Разрешение на использование датчиков не получено.");
             }
           })
-          .catch(console.error);
+          .catch(err => {
+            console.error("Ошибка запроса разрешения: ", err);
+            controls = new THREE.DeviceOrientationControls(camera);
+          });
+      } else {
+        // Если API не требует разрешения (например, на ПК или Android)
+        controls = new THREE.DeviceOrientationControls(camera);
+        console.log("DeviceOrientationControls активированы (без запроса разрешения).");
       }
     }
 
     // Функция выхода из комнаты
     function exitRoom() {
       inRoom = false;
-      // Отключаем управление ориентацией
-      controls = null;
-      // Обновляем сообщение
+      controls = null; // отключаем управление ориентацией
       document.getElementById('info').innerText = "Вы вышли из домика. Нажмите на домик, чтобы войти.";
-      // Можно оставить камеру в текущей позиции (снаружи) или плавно анимировать переход
       console.log("Вы вышли за пределы комнаты!");
     }
 
@@ -178,7 +185,6 @@
       let delta = clock.getDelta();
       const speed = 10;
 
-      // Перемещение камеры по глобальным осям (в комнате)
       if (inRoom) {
         let moveX = 0, moveZ = 0;
         if (moveForward) moveZ -= speed * delta;
@@ -196,7 +202,6 @@
         }
       }
 
-      // Обновляем DeviceOrientationControls, если активны
       if (controls && inRoom) {
         controls.update();
       }

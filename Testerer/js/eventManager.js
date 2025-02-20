@@ -61,7 +61,7 @@ export class EventManager {
     // Очищаем контейнер дневника
     this.diaryContainer.innerHTML = "";
 
-    // Получаем из localStorage массив ID записей, для которых уже запущена анимация
+    // Получаем из localStorage массив ID записей, для которых уже запускалась анимация
     const animatedIds = JSON.parse(localStorage.getItem("animatedDiaryIds") || "[]");
 
     // Получаем записи из базы данных
@@ -74,12 +74,11 @@ export class EventManager {
       if (seen.has(entryObj.id)) return;
       seen.add(entryObj.id);
 
-      // Создаем обертку для записи в виде элемента <article>
+      // Создаем обёртку для записи <article>
       const articleElem = document.createElement("article");
-      // Добавляем класс оформления (например, "ghost-post" или "user-post")
       articleElem.classList.add(entryObj.postClass);
 
-      // Разбиваем запись на основной текст и, если есть, изображение
+      // Разбиваем запись на основной текст и изображение (если оно есть)
       let mainText = entryObj.entry;
       let imageData = null;
       if (entryObj.entry.includes("[photo attached]")) {
@@ -87,82 +86,75 @@ export class EventManager {
         mainText = parts[0].trim();
         if (parts.length >= 2) {
           imageData = parts[1].trim();
-          // Если префикс data URL отсутствует, добавляем его
           if (!/^data:/.test(imageData)) {
             imageData = "data:image/png;base64," + imageData;
           }
         }
       }
-      // Локализуем основной текст с помощью менеджера языков
-      const localizedText = this.languageManager.locales[currentLanguage][mainText] || mainText;
 
-      // Убираем префиксы, которые не должны выводиться (например, "user_post_success:" или "user_post_failed:")
+      // Локализуем основной текст (если есть такой ключ)
+      const localizedText =
+        this.languageManager.locales[currentLanguage][mainText] || mainText;
+
+      // Убираем специальные префиксы
       const cleanedText = localizedText
         .replace(/^user_post_success:\s*/, '')
         .replace(/^user_post_failed:\s*/, '');
 
-      // Форматируем время: удаляем дробную часть секунд и символ "Z"
+      // Удаляем дробную часть секунд и символ "Z" у timestamp
       const formattedTimestamp = entryObj.timestamp.replace(/\.\d+Z$/, '');
-      const finalText = `${cleanedText} (${formattedTimestamp})`;
 
-      // Создаем контейнер для текста
+      // Собираем "сырой" вариант текста: "ТЕКСТ (2025-02-20T15:34:12)" и т.д.
+      const fullText = `${cleanedText} (${formattedTimestamp})`;
+
+      // Если присутствует изображение, добавляем <img> перед текстом
       const textContainer = document.createElement("p");
-      articleElem.appendChild(textContainer);
-
-      // Если присутствует изображение, добавляем его перед текстом
       if (imageData) {
         const img = document.createElement("img");
         img.src = imageData;
         img.alt = this.languageManager.locales[currentLanguage]["photo_attached"] || "Photo attached";
         img.style.maxWidth = "100%";
-        articleElem.insertBefore(img, textContainer);
+        articleElem.appendChild(img);
+      }
+      articleElem.appendChild(textContainer);
+
+      // Готовим текст с <br> перед датой, если дата распознана в конце
+      let messageText = fullText; // То, что реально будет анимироваться или отображаться
+      const dateMatch = fullText.match(/(\(\d{4}-\d{2}-\d{2}.*\))$/);
+      if (dateMatch) {
+        const dateText = dateMatch[1].trim();
+        messageText = fullText.replace(dateText, "").trim() + "<br>" + dateText;
       }
 
-      // Формируем итоговый текст с временем
-      const animatedText = cleanedText;
-      const staticTimestamp = ` (${formattedTimestamp})`;
-
-      // Используем глобальный экземпляр визуальных эффектов (переданный в конструкторе EventManager)
+      // Проверяем, была ли уже анимация для этой записи
+      const isAlreadyAnimated = animatedIds.includes(entryObj.id);
       const effectsManager = this.visualEffectsManager;
-      // Если для этой записи ещё не запускалась анимация и запись новая
-      if (!animatedIds.includes(entryObj.id)) {
-          // Отмечаем, что для этой записи анимация запускается впервые
-          animatedIds.push(entryObj.id);
-          // Разбиваем итоговый текст на основное сообщение и дату (если дата в скобках в конце)
-          const dateMatch = finalText.match(/(\(\d{4}-\d{2}-\d{2}.*\))$/);
-          let messageText = finalText;
-          if (dateMatch) {
-              const dateText = dateMatch[1].trim();
-              // Формируем строку с тегом <br> перед датой
-              messageText = finalText.replace(dateText, "").trim() + "<br>" + dateText;
-          }
-          // Если для этой записи анимация не запускается (уже анимировано ранее),
-          // выводим текст через innerHTML, чтобы <br> корректно отрендерился.
-          if (animatedIds.includes(entryObj.id)) {
-              textContainer.innerHTML = messageText;
-          } else {
-              // Отмечаем, что для этой записи анимация запускается впервые
-              animatedIds.push(entryObj.id);
-              // Создаем span для анимации и используем innerHTML
-              const animatedSpan = document.createElement('span');
-              animatedSpan.innerHTML = "";
-              textContainer.innerHTML = "";
-              textContainer.appendChild(animatedSpan);
-              if (entryObj.postClass === "ghost-post") {
-                  effectsManager.triggerGhostTextEffect(animatedSpan, messageText);
-              } else {
-                  effectsManager.triggerUserTextEffect(animatedSpan, messageText);
-              }
-          }
+
+      if (isAlreadyAnimated) {
+        // Если запись уже анимировалась, просто выводим результат как HTML
+        textContainer.innerHTML = messageText;
       } else {
-          // Если анимация уже была для этой записи, устанавливаем полный текст без анимации
-          textContainer.textContent = finalText;
+        // Запись новая: анимируем
+        const animatedSpan = document.createElement("span");
+        textContainer.innerHTML = ""; // Очищаем <p>, чтобы положить туда анимированный span
+        textContainer.appendChild(animatedSpan);
+
+        // Запускаем эффект (ghost или user)
+        if (entryObj.postClass === "ghost-post") {
+          effectsManager.triggerGhostTextEffect(animatedSpan, messageText);
+        } else {
+          effectsManager.triggerUserTextEffect(animatedSpan, messageText);
+        }
+
+        // Помечаем эту запись как анимированную
+        animatedIds.push(entryObj.id);
       }
 
-      // Добавляем готовую запись в контейнер дневника
+      // Добавляем готовую запись в контейнер
       this.diaryContainer.appendChild(articleElem);
     });
-    // Сохраняем новый последний анимированный ID
+
+    // Сохраняем обновлённый список animatedIds
     localStorage.setItem("animatedDiaryIds", JSON.stringify(animatedIds));
     console.log("📖 Diary updated.");
   }

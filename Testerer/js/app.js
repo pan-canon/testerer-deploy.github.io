@@ -397,86 +397,86 @@ export class App {
    *  При открытии камеры делаем "Заснять" видимой, но disabled,
    *  при закрытии – скрываем.
    */
-  async toggleCameraView() {
-    const diary           = document.getElementById("diary");
-    const globalCamera    = document.getElementById("global-camera");
-    const toggleCameraBtn = document.getElementById("toggle-camera");
-    const toggleDiaryBtn  = document.getElementById("toggle-diary");
-    const shootBtn        = document.getElementById("btn_shoot");
-    const buttonsToHide = [
-      document.getElementById("reset-data"),
-      document.getElementById("export-profile-btn"),
-      document.getElementById("import-profile-container")
-    ];
+async toggleCameraView() {
+  const diary           = document.getElementById("diary");
+  const globalCamera    = document.getElementById("global-camera");
+  const toggleCameraBtn = document.getElementById("toggle-camera");
+  const toggleDiaryBtn  = document.getElementById("toggle-diary");
+  const shootBtn        = document.getElementById("btn_shoot");
+  const buttonsToHide = [
+    document.getElementById("reset-data"),
+    document.getElementById("export-profile-btn"),
+    document.getElementById("import-profile-container")
+  ];
 
-    if (!this.isCameraOpen) {
-      // === Открываем камеру ===
-      console.log("📸 Переключаемся на камеру...");
-      diary.style.display = "none";
-      globalCamera.style.display = "flex";
+  if (!this.isCameraOpen) {
+    // === Открываем камеру ===
+    console.log("📸 Переключаемся на камеру...");
+    diary.style.display = "none";
+    globalCamera.style.display = "flex";
 
-      if (toggleCameraBtn) toggleCameraBtn.style.display = "none";
-      if (toggleDiaryBtn)  toggleDiaryBtn.style.display = "inline-block";
-      buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
+    if (toggleCameraBtn) toggleCameraBtn.style.display = "none";
+    if (toggleDiaryBtn)  toggleDiaryBtn.style.display = "inline-block";
+    buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
 
-      // Всегда показываем кнопку «Заснять» (но отключаем)
-      if (shootBtn) {
-        shootBtn.style.display = "inline-block";
-        shootBtn.disabled = true;
-      }
-
-      // Привязываем камеру
-      this.cameraSectionManager.attachTo('global-camera', {
-        width: "100%",
-        height: "100%"
-      });
-      await this.cameraSectionManager.startCamera();
-
-      // Ждём, пока камера "готова"
-      await new Promise(resolve => {
-        const vid = this.cameraSectionManager.videoElement;
-        if (vid.readyState >= 2) {
-          resolve();
-        } else {
-          vid.onloadedmetadata = () => resolve();
-        }
-      });
-      console.log("Видео готово:", 
-        this.cameraSectionManager.videoElement.videoWidth,
-        this.cameraSectionManager.videoElement.videoHeight
-      );
-
-      // Если mirrorQuestActive -> можем попросить QuestManager (или сам квест)
-      // начать проверку (startMirrorQuestCheckLoop).
-      if (localStorage.getItem("mirrorQuestActive") === "true") {
-        console.log("🔁 mirrorQuestActive=true, просим QuestManager запустить проверку...");
-        // this.questManager.startMirrorQuestCheckLoop(); (пример)
-      }
-
-      this.isCameraOpen = true;
-
-    } else {
-      // === Закрываем камеру ===
-      console.log("📓 Возвращаемся в блог...");
-      diary.style.display = "block";
-      globalCamera.style.display = "none";
-
-      if (toggleCameraBtn) toggleCameraBtn.style.display = "inline-block";
-      if (toggleDiaryBtn)  toggleDiaryBtn.style.display = "none";
-      buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
-
-      // Прячем «Заснять»
-      if (shootBtn) {
-        shootBtn.style.display = "none";
-      }
-
-      this.cameraSectionManager.stopCamera();
-      this.isCameraOpen = false;
-
-      // Сообщаем QuestManager, что камера закрыта (если нужно)
-      // this.questManager.stopMirrorQuestCheckLoop();
+    // Делаем «Заснять» видимой, но выключенной
+    if (shootBtn) {
+      shootBtn.style.display = "inline-block";
+      shootBtn.disabled = true;  // по умолчанию неактивна
     }
+
+    // Запускаем камеру
+    this.cameraSectionManager.attachTo('global-camera', {
+      width: "100%",
+      height: "100%"
+    });
+    await this.cameraSectionManager.startCamera();
+
+    // Ждём readiness
+    await new Promise(resolve => {
+      const vid = this.cameraSectionManager.videoElement;
+      if (vid.readyState >= 2) {
+        resolve();
+      } else {
+        vid.onloadedmetadata = () => resolve();
+      }
+    });
+    console.log("Видео готово:", 
+      this.cameraSectionManager.videoElement.videoWidth,
+      this.cameraSectionManager.videoElement.videoHeight
+    );
+
+    // Если mirrorQuestActive -> сообщаем QuestManager (или BaseMirrorQuest),
+    // чтобы начать свою проверку (startCheckLoop).
+    if (localStorage.getItem("mirrorQuestActive") === "true") {
+      console.log("🔁 mirrorQuestActive=true, просим QuestManager запустить проверку...");
+      // this.questManager.startMirrorQuestCheckLoop(); // Пример
+    }
+
+    this.isCameraOpen = true;
+
+  } else {
+    // === Закрываем камеру ===
+    console.log("📓 Возвращаемся в блог...");
+    diary.style.display = "block";
+    globalCamera.style.display = "none";
+
+    if (toggleCameraBtn) toggleCameraBtn.style.display = "inline-block";
+    if (toggleDiaryBtn)  toggleDiaryBtn.style.display = "none";
+    buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
+
+    // Прячем «Заснять»
+    if (shootBtn) {
+      shootBtn.style.display = "none";
+    }
+
+    this.cameraSectionManager.stopCamera();
+    this.isCameraOpen = false;
+
+    // Сообщаем QuestManager, что камера закрыта (если нужно)
+    // this.questManager.stopMirrorQuestCheckLoop();
   }
+}
 
   /**
    * showMainScreen – переключает на основной экран (main-screen) и кнопки (main-buttons),

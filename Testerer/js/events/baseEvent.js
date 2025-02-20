@@ -12,6 +12,7 @@ export class BaseEvent {
    * @property {string} key - Уникальный идентификатор события, который должен быть установлен в наследниках.
    */
   constructor(eventManager) {
+    /** @type {EventManager} */
     this.eventManager = eventManager;
     // Ключ события; должен быть определен в классах-наследниках.
     this.key = "";
@@ -21,14 +22,14 @@ export class BaseEvent {
    * activate – метод активации события.
    * Если событие с данным ключом ещё не зарегистрировано (не добавлено в дневник),
    * то событие логируется (записывается в дневник) через eventManager.
-   * 
+   *
    * @returns {Promise<void>} Асинхронное выполнение метода.
    */
   async activate() {
-    // Если событие с таким ключом еще не зарегистрировано в дневнике...
+    // Если событие с таким ключом ещё не зарегистрировано в дневнике...
     if (!this.eventManager.isEventLogged(this.key)) {
       console.log(`Активируем событие: ${this.key}`);
-      // Регистрируем событие в дневнике.
+      // Регистрируем событие в дневнике (запись без флага "призрак" – пусть будет как пользовательское).
       await this.eventManager.addDiaryEntry(this.key);
     }
   }
@@ -36,11 +37,12 @@ export class BaseEvent {
   /**
    * addDiaryEntry – удобный метод для добавления произвольной записи в дневник.
    * Использует eventManager для добавления записи.
-   * 
+   *
    * @param {string} text - Текст записи, который будет добавлен в дневник.
+   * @param {boolean} [isGhostPost=false] - Пометка, является ли это призрачным постом.
    * @returns {Promise<void>} Асинхронное выполнение метода.
    */
-  async addDiaryEntry(text) {
-    await this.eventManager.addDiaryEntry(text);
+  async addDiaryEntry(text, isGhostPost = false) {
+    await this.eventManager.addDiaryEntry(text, isGhostPost);
   }
 }

@@ -60,9 +60,9 @@ export class QuestManager {
 
   /**
    * handlePostButtonClick – обрабатывает нажатие на кнопку "Запостить":
-   *   1) Если флаг mirrorQuestReady равен true, сбрасываем его, обновляем состояние кнопки,
-   *      подсвечиваем камеру и активируем зеркальный квест.
-   *   2) Если флаг не установлен, выводим предупреждение.
+   * 1) Если флаг mirrorQuestReady равен true, сбрасываем его, обновляем состояние кнопки,
+   *    подсвечиваем камеру и активируем зеркальный квест.
+   * 2) Если флаг не установлен, выводим предупреждение.
    */
   async handlePostButtonClick() {
     console.log("[QuestManager] handlePostButtonClick()");
@@ -72,9 +72,9 @@ export class QuestManager {
       localStorage.removeItem("mirrorQuestReady");
       this.updatePostButtonState();
 
-      console.log("Запуск зеркального квеста (пост от пользователя)");
+      console.log("Запуск зеркального квест по приглашению призрака (пост от пользователя)");
 
-      // Подсвечиваем кнопку "toggle-camera" (если необходимо)
+      // Подсвечиваем кнопку "toggle-camera", чтобы привлечь внимание
       const cameraBtn = document.getElementById("toggle-camera");
       if (cameraBtn) {
         cameraBtn.classList.add("glowing");
@@ -102,7 +102,7 @@ export class QuestManager {
   }
 
   /**
-   * updateCameraButtonState – обновляет состояние кнопки "toggle-camera"
+   * updateCameraButtonState – обновляет визуальное состояние кнопки "toggle-camera"
    * в зависимости от того, активен ли зеркальный квест.
    */
   updateCameraButtonState() {

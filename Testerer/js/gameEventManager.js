@@ -1,6 +1,5 @@
 import { WelcomeEvent } from './events/welcomeEvent.js';
-import { BaseMirrorQuest } from './quests/baseMirrorQuest.js';  // Новый квест с зеркалом
-// import { GhostEvent1 } from './events/ghostEvent1.js';
+import { FinalEvent } from './events/finalEvent.js';
 
 export class GameEventManager {
   /**
@@ -18,23 +17,19 @@ export class GameEventManager {
     this.languageManager = languageManager;
     
     // Массив событий, которые будут активированы последовательно.
-    // По умолчанию включаем приветственное событие. В будущем можно добавить другие события.
+    // Здесь по умолчанию включены приветственное событие и финальное событие.
     this.events = [
-      new WelcomeEvent(this.eventManager, this.app, this.languageManager)
-      // Можно добавить другие события, например:
-      // new BaseMirrorQuest(this.eventManager, this.app)
-      // Активировать новую логику поверх текущей по готовности
-      // new GhostEvent1(this.eventManager, this.app)
+      new WelcomeEvent(this.eventManager, this.app, this.languageManager),
+      new FinalEvent(this.eventManager, this.app, this.languageManager)
     ];
     
-    // Индекс текущего события, который будет использоваться для последовательного запуска.
+    // Индекс текущего события для последовательного запуска.
     this.currentEventIndex = 0;
   }
 
   /**
    * activateEvent – активирует событие по его ключу.
    * @param {string} key - Идентификатор события.
-   * 
    * Если событие найдено в массиве, вызывается его метод activate(). После завершения 
    * текущего события автоматически запускается следующее (если оно есть).
    */
@@ -59,24 +54,27 @@ export class GameEventManager {
     const nextEvent = this.events[this.currentEventIndex];
     if (nextEvent) {
       await nextEvent.activate();
+      this.currentEventIndex++;
     }
   }
 
   /**
    * startQuest – запускает квест для текущего призрака.
-   * 
-   * Получает текущего призрака из ghostManager, формирует ключ квеста 
+   * Получает текущего призрака из ghostManager, формирует ключ квеста
    * (например, "ghost_1_quest") и активирует соответствующее событие.
-   * После завершения квеста, если есть еще события, автоматически запускается следующее.
+   * Если событие не найдено в массиве, запускается квест через QuestManager.
+   * После завершения квеста, если есть ещё события, автоматически запускается следующее.
    */
   async startQuest() {
     const ghost = this.app.ghostManager.getCurrentGhost();
     const questKey = `ghost_${ghost.id}_quest`;
-
-    // Активируем событие, связанное с квестом для текущего призрака.
-    await this.activateEvent(questKey);
-
-    // Если есть ещё события, активируем следующее.
+    const event = this.events.find(e => e.key === questKey);
+    if (event) {
+      await this.activateEvent(questKey);
+    } else {
+      console.log(`Пытаемся запустить квест "${questKey}" через QuestManager...`);
+      await this.app.questManager.activateQuest(questKey);
+    }
     if (this.currentEventIndex < this.events.length) {
       await this.activateNextEvent();
     }
@@ -84,7 +82,6 @@ export class GameEventManager {
 
   /**
    * startMirrorQuest – запускает зеркальный квест.
-   * 
    * Этот метод активирует событие с ключом "mirror_quest". После активации выводится сообщение,
    * что зеркальный квест запущен.
    */

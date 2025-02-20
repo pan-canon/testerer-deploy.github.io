@@ -10,9 +10,9 @@ export class GhostManager {
    * и сохраняя/загружая состояние призраков в localStorage.
    */
   constructor(eventManager, profileManager, app) {
-    this.eventManager = eventManager;
-    this.profileManager = profileManager;
-    this.app = app;
+    this.eventManager       = eventManager;
+    this.profileManager     = profileManager;
+    this.app                = app;
 
     // Массив призраков, который будет генерироваться динамически.
     this.ghosts = [];
@@ -29,7 +29,8 @@ export class GhostManager {
     // Загружаем сохраненное состояние призраков из localStorage, если оно имеется.
     this.loadState();
 
-    console.log(`Текущий активный призрак: ${this.getCurrentGhost().name}`);
+    const currentGhost = this.getCurrentGhost();
+    console.log(`Текущий активный призрак: ${currentGhost ? currentGhost.name : 'не найден'}`);
   }
 
   /**
@@ -55,7 +56,7 @@ export class GhostManager {
 
     // Генерируем объект для каждого призрака с ID, именем и количеством явлений.
     this.ghosts = ghostNames.map((name, index) => {
-      // Количество явлений определяется как длина имени минус 2.
+      // Количество явлений определяется как длина имени минус 2 (пример).
       const phenomenaCount = name.length - 2;
       return {
         id: index + 1,
@@ -69,7 +70,7 @@ export class GhostManager {
 
   /**
    * getCurrentGhost – возвращает объект активного призрака на основе currentGhostId.
-   * @returns {object} Объект призрака или undefined, если не найден.
+   * @returns {object|undefined} Объект призрака или undefined, если не найден.
    */
   getCurrentGhost() {
     return this.ghosts.find(g => g.id === this.currentGhostId);
@@ -82,7 +83,12 @@ export class GhostManager {
    */
   setCurrentGhost(ghostId) {
     this.currentGhostId = ghostId;
-    console.log(`Призрак ${this.getCurrentGhost().name} активирован.`);
+    const ghost = this.getCurrentGhost();
+    if (ghost) {
+      console.log(`Призрак ${ghost.name} активирован.`);
+    } else {
+      console.warn(`Призрак с ID=${ghostId} не найден!`);
+    }
     this.saveState();
   }
 
@@ -112,15 +118,23 @@ export class GhostManager {
    * triggerNextPhenomenon – инициирует следующее явление (шаг квеста) для текущего призрака.
    * Если индекс явления меньше, чем общее количество явлений для призрака,
    * добавляет запись в дневник и обновляет прогресс в профиле.
-   * Если все явления пройдены, регистрирует финальное событие.
+   * Если все явления пройдены, регистрирует финальное событие (например, "ghost_final_event").
    */
   async triggerNextPhenomenon() {
     const ghost = this.getCurrentGhost();
     if (!ghost) return;
 
+    // Проверяем, не завершён ли призрак заранее
+    if (ghost.isFinished) {
+      console.warn(`Призрак "${ghost.name}" уже завершён, явления недоступны.`);
+      return;
+    }
+
+    // Сравниваем currentPhenomenonIndex с phenomenaCount
     if (this.currentPhenomenonIndex < ghost.phenomenaCount) {
       // Формируем текст записи для текущего явления.
-      const phenomenonEntry = `${ghost.name}: Явление ${this.currentPhenomenonIndex + 1} - Подойти к зеркалу`;
+      const phenomenonNumber = this.currentPhenomenonIndex + 1;
+      const phenomenonEntry  = `${ghost.name}: Явление ${phenomenonNumber} - Подойти к зеркалу`;
       await this.eventManager.addDiaryEntry(phenomenonEntry);
 
       console.log(`Триггер явления для ${ghost.name}: ${phenomenonEntry}`);
@@ -128,18 +142,26 @@ export class GhostManager {
       // Увеличиваем индекс явления.
       this.currentPhenomenonIndex++;
 
-      // Сохраняем прогресс призрака через ProfileManager.
+      // Сохраняем прогресс призрака через ProfileManager, если нужно
       this.profileManager.saveGhostProgress({
         ghostId: this.currentGhostId,
         phenomenonIndex: this.currentPhenomenonIndex
       });
 
-      // Если достигнут конец явлений для призрака, добавляем финальную запись.
+      // Если достигнут конец явлений, публикуем "финальный пост" и запускаем финальное событие
       if (this.currentPhenomenonIndex === ghost.phenomenaCount) {
         const finalEntry = `${ghost.name}: Финальное явление – призрак завершен!`;
         await this.eventManager.addDiaryEntry(finalEntry);
         console.log(finalEntry);
+
+        // Запускаем событие, отвечающее за финальную логику. 
+        // Например, "ghost_final_event" – короткое событие, которое при activate()
+        // вызывает QuestManager для активации final_quest (или делает что-то ещё).
+        console.log(`Запускаем финальное событие для призрака "${ghost.name}"...`);
+        this.app.gameEventManager.activateEvent("ghost_final_event");
       }
+    } else {
+      console.warn(`У призрака ${ghost.name} явления уже закончились (index=${this.currentPhenomenonIndex}).`);
     }
   }
 

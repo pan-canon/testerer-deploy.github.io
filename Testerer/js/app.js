@@ -439,14 +439,7 @@ export class App {
         this.cameraSectionManager.videoElement.videoHeight
       );
 
-      // Вставьте здесь проверку и запуск цикла квеста:
-      if (localStorage.getItem("mirrorQuestActive") === "true") {
-        console.log("🔁 mirrorQuestActive=true, запускаем цикл проверки зеркального квеста...");
-        const mirrorQuest = this.questManager.quests.find(q => q.key === "mirror_quest");
-        if (mirrorQuest) {
-          mirrorQuest.startCheckLoop();
-        }
-      }
+      // Здесь ранее был запуск цикла проверки зеркального квеста, теперь он вынесен в соответствующий класс
 
       this.isCameraOpen = true;
     } else {
@@ -471,8 +464,8 @@ export class App {
       this.cameraSectionManager.stopCamera();
       this.isCameraOpen = false;
 
-      // По необходимости можно сообщить QuestManager, что камера закрыта:
-      // this.questManager.stopMirrorQuestCheckLoop();
+      // Если нужно, можно добавить вызов метода для уведомления QuestManager о закрытии камеры
+      // Например: this.questManager.handleCameraClosed();
     }
   }
 

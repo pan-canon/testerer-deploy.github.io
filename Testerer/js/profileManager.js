@@ -1,5 +1,5 @@
 export class ProfileManager {
-  /** 
+  /**
    * Проверяет, сохранён ли профиль в localStorage.
    * @returns {boolean} true, если профиль найден, иначе false.
    */

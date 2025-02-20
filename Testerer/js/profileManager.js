@@ -25,21 +25,20 @@ export class ProfileManager {
 
   /**
    * Сбрасывает профиль и связанные с ним данные.
-   * Удаляются данные регистрации, базы данных дневника, прогресс призраков, тип локации и состояние квестов.
+   * Удаляются данные регистрации, базы данных дневника, прогресс призраков,
+   * тип локации, состояние квестов и анимированные записи.
    * После сброса страница перезагружается.
    */
   resetProfile() {
-    // Сохраняем значение языка
+    // Сохраняем значение языка, чтобы его не потерять при сбросе
     const language = localStorage.getItem("language");
 
-    // Удаляем все данные профиля и связанные с ними ключи
+    // Удаляем все данные профиля и связанные ключи:
     localStorage.removeItem("registrationCompleted");
     localStorage.removeItem("profile");
     localStorage.removeItem("regData");
     localStorage.removeItem("diaryDB");
     localStorage.removeItem("ghostState");
-    // Удаляем устаревшие данные, связанные с звонками – в новой логике они не используются
-    // localStorage.removeItem("callHandled");
     localStorage.removeItem("ghostProgress");
     localStorage.removeItem("locationType");
     localStorage.removeItem("questProgress");
@@ -52,6 +51,7 @@ export class ProfileManager {
       localStorage.setItem("language", language);
     }
 
+    // Перезагружаем страницу
     window.location.reload();
   }
 
@@ -73,8 +73,8 @@ export class ProfileManager {
     // Получаем данные плана квартиры, если они существуют.
     const apartmentPlanData = apartmentPlanManager ? apartmentPlanManager.rooms : [];
     
-    // Получаем данные прогресса квестов. Так как метод getQuestProgress требует ключ, 
-    // вместо этого мы выполняем SQL-запрос для получения всех записей из таблицы quest_progress.
+    // Получаем данные прогресса квестов. Поскольку метод getQuestProgress требует ключ,
+    // выполняем SQL-запрос для получения всех записей из таблицы quest_progress.
     let questProgressData = [];
     const result = databaseManager.db.exec("SELECT * FROM quest_progress ORDER BY id DESC");
     if (result.length > 0) {
@@ -93,7 +93,7 @@ export class ProfileManager {
       quests: questProgressData
     };
 
-    // Создаем Blob из JSON-строки с отступами для читабельности.
+    // Создаем Blob из JSON-строки с отступами для удобного чтения.
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -107,7 +107,8 @@ export class ProfileManager {
 
   /**
    * Импортирует данные профиля из выбранного файла.
-   * После импорта обновляет профиль, дневник, план квартиры и прогресс квестов, затем перезагружает страницу.
+   * После импорта обновляются профиль, дневник, план квартиры и прогресс квестов,
+   * затем страница перезагружается.
    * @param {File} file – файл с данными профиля.
    * @param {Object} databaseManager – менеджер базы данных.
    * @param {Object} apartmentPlanManager – менеджер плана квартиры.

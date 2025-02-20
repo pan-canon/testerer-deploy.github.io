@@ -293,6 +293,7 @@ export class App {
     const globalCamera = document.getElementById("global-camera");
     const toggleCameraBtn = document.getElementById("toggle-camera");
     const toggleDiaryBtn  = document.getElementById("toggle-diary");
+    const shootBtn        = document.getElementById("btn_shoot");   // Добавили для наглядности
     const buttonsToHide = [
       document.getElementById("reset-data"),
       document.getElementById("export-profile-btn"),
@@ -307,6 +308,12 @@ export class App {
       if (toggleCameraBtn) toggleCameraBtn.style.display = "none";
       if (toggleDiaryBtn)  toggleDiaryBtn.style.display = "inline-block";
       buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
+
+      // Показываем «Заснять», но, например, сразу делаем неактивной
+      if (shootBtn) {
+        shootBtn.style.display = "inline-block";
+        shootBtn.disabled = true;
+      }
 
       this.cameraSectionManager.attachTo('global-camera', {
         width: "100%",
@@ -327,13 +334,15 @@ export class App {
         this.cameraSectionManager.videoElement.videoHeight
       );
 
-      // Если mirrorQuestActive, можно дернуть QuestManager
+      // Если mirrorQuestActive, передаём управление QuestManager
       if (localStorage.getItem("mirrorQuestActive") === "true") {
         console.log("🔁 mirrorQuestActive=true, просим QuestManager запустить проверку...");
-        // например: this.questManager.startMirrorQuestCheckLoop();
+        // Пример:
+        // this.questManager.startMirrorQuestCheckLoop();
       }
 
       this.isCameraOpen = true;
+
     } else {
       console.log("📓 Возвращаемся в блог...");
       diary.style.display = "block";
@@ -343,11 +352,16 @@ export class App {
       if (toggleDiaryBtn)  toggleDiaryBtn.style.display = "none";
       buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
 
+      // Скрываем «Заснять»
+      if (shootBtn) {
+        shootBtn.style.display = "none";
+      }
+
       this.cameraSectionManager.stopCamera();
       this.isCameraOpen = false;
 
-      // Сообщаем QuestManager, что камера закрыта
-      // например: this.questManager.stopMirrorQuestCheckLoop();
+      // Сообщаем QuestManager, что камера закрыта (если надо)
+      // this.questManager.stopMirrorQuestCheckLoop();
     }
   }
 

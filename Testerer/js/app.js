@@ -380,53 +380,55 @@ export class App {
   /**
    * toggleCameraView – переключает отображение между камерой и блогом.
    * При открытии камеры:
-   *  - Скрываем блог и показываем глобальный контейнер камеры.
-   *  - Скрываем кнопку "Запостить" (она должна быть видна только в блоге).
-   *  - Показываем кнопку "Заснять", но делаем её неактивной.
+   *   - Прячем блог (diary), показываем global-camera.
+   *   - Скрываем кнопку "Запостить" (postBtn), показываем "Заснять" (shootBtn), но делаем её disabled.
    * При закрытии камеры:
-   *  - Показываем блог и скрываем камеру.
-   *  - Кнопка "Запостить" становится видимой.
+   *   - Возвращаемся в блог, скрываем global-camera.
+   *   - Показываем "Запостить", прячем "Заснять".
    */
   async toggleCameraView() {
-    // Получаем необходимые DOM-элементы
-    const diary = document.getElementById("diary");
-    const globalCamera = document.getElementById("global-camera");
+    const diary           = document.getElementById("diary");
+    const globalCamera    = document.getElementById("global-camera");
     const toggleCameraBtn = document.getElementById("toggle-camera");
-    const toggleDiaryBtn = document.getElementById("toggle-diary");
-    const shootBtn = document.getElementById("btn_shoot"); // кнопка "Заснять"
-    const buttonsToHide = [
+    const toggleDiaryBtn  = document.getElementById("toggle-diary");
+    const shootBtn        = document.getElementById("btn_shoot");     // Кнопка «Заснять»
+    const postBtn         = this.postBtn;                             // Кнопка «Запостить»
+    const buttonsToHide   = [
       document.getElementById("reset-data"),
       document.getElementById("export-profile-btn"),
       document.getElementById("import-profile-container")
     ];
-    const postBtn = this.postBtn; // кнопка "Запостить"
 
     if (!this.isCameraOpen) {
-      // === Переходим в режим камеры ===
+      // === Переход в режим камеры ===
       console.log("📸 Переключаемся на камеру...");
       diary.style.display = "none";
       globalCamera.style.display = "flex";
 
-      // Скрываем кнопки блога: "Опен камера" и "Запостить"
+      // Прячем "toggle-camera" и кнопки блога, показываем "toggle-diary"
       if (toggleCameraBtn) toggleCameraBtn.style.display = "none";
-      if (toggleDiaryBtn) toggleDiaryBtn.style.display = "inline-block";
+      if (toggleDiaryBtn)  toggleDiaryBtn.style.display = "inline-block";
       buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
-      if (postBtn) postBtn.style.display = "none";
 
-      // Показываем кнопку "Заснять" только на экране камеры и делаем её неактивной
+      // Прячем "Запостить" (видна только в блоге)
+      if (postBtn) {
+        postBtn.style.display = "none";
+      }
+
+      // Показываем «Заснять» (неактивна, пока MirrorQuest не разрешит)
       if (shootBtn) {
         shootBtn.style.display = "inline-block";
         shootBtn.disabled = true;
       }
 
-      // Привязываем камеру к глобальному контейнеру и запускаем камеру
+      // Подключаем камеру
       this.cameraSectionManager.attachTo('global-camera', {
         width: "100%",
         height: "100%"
       });
       await this.cameraSectionManager.startCamera();
 
-      // Ждем, пока камера будет готова
+      // Ждем readiness
       await new Promise(resolve => {
         const vid = this.cameraSectionManager.videoElement;
         if (vid.readyState >= 2) {
@@ -435,17 +437,23 @@ export class App {
           vid.onloadedmetadata = () => resolve();
         }
       });
-      console.log("Видео готово:", 
+      console.log("Видео готово:",
         this.cameraSectionManager.videoElement.videoWidth,
         this.cameraSectionManager.videoElement.videoHeight
       );
 
-      // Если установлен флаг зеркального квеста, можем вызвать проверку в QuestManager
+      // Если mirrorQuestActive – просим QuestManager (или сам MirrorQuest)
+      // запустить проверку (startCheckLoop) для разблокировки «Заснять»
       if (localStorage.getItem("mirrorQuestActive") === "true") {
-        console.log("🔁 mirrorQuestActive=true, просим QuestManager запустить проверку...");
-        // Например, если реализован метод: this.questManager.startMirrorQuestCheckLoop();
+        console.log("🔁 mirrorQuestActive=true, просим QuestManager/MirrorQuest запустить проверку...");
+        // Пример:
+        // this.questManager.startMirrorQuestCheckLoop();
+        // Или, если всё хранится в BaseMirrorQuest.activate():
+        //   - Это уже вызвано? Или можно force-вызвать questManager.activateQuest("mirror_quest");
       }
+
       this.isCameraOpen = true;
+
     } else {
       // === Выходим из режима камеры, возвращаемся к блогу ===
       console.log("📓 Возвращаемся в блог...");
@@ -454,21 +462,26 @@ export class App {
 
       // Показываем кнопки блога
       if (toggleCameraBtn) toggleCameraBtn.style.display = "inline-block";
-      if (toggleDiaryBtn) toggleDiaryBtn.style.display = "none";
+      if (toggleDiaryBtn)  toggleDiaryBtn.style.display = "none";
       buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
-      if (postBtn) postBtn.style.display = "inline-block"; // "Запостить" видна только на блоге
 
-      // Скрываем кнопку "Заснять" и сбрасываем её состояние
-      if (shootBtn) {
-        shootBtn.style.display = "none";
-        shootBtn.disabled = true;
+      // Показываем "Запостить" (видна только в блоге)
+      if (postBtn) {
+        postBtn.style.display = "inline-block";
       }
 
+      // Прячем «Заснять»
+      if (shootBtn) {
+        shootBtn.style.display = "none";
+        shootBtn.disabled = true; // Сбросить
+      }
+
+      // Останавливаем камеру
       this.cameraSectionManager.stopCamera();
       this.isCameraOpen = false;
 
-      // При необходимости сообщаем QuestManager, что камера закрыта
-      // Например: this.questManager.stopMirrorQuestCheckLoop();
+      // По желанию сообщаем QuestManager, что камера закрыта
+      // this.questManager.stopMirrorQuestCheckLoop(); // если это реализовано
     }
   }
 

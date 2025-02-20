@@ -3,9 +3,9 @@ import { BaseMirrorQuest } from './quests/baseMirrorQuest.js';
 /**
  * QuestManager – класс для управления квестами в приложении.
  * 
- * Перенесена логика "нажатия на кнопку «Запостить»" (handlePostButtonClick)
- * и "обновления кнопки «Запостить»" (updatePostButtonState), чтобы универсально
- * управлять запуском квестов без привязки к App.
+ * Логика нажатия на кнопку «Запостить» (handlePostButtonClick)
+ * и обновления её состояния (updatePostButtonState) вынесена сюда, чтобы
+ * обеспечить универсальное управление запуском квестов без прямой зависимости от App.
  */
 export class QuestManager {
   /**
@@ -16,9 +16,9 @@ export class QuestManager {
   constructor(eventManager, appInstance, profileManager) {
     this.eventManager = eventManager;
     this.app = appInstance;
-    this.profileManager = profileManager;  // может быть не нужен
+    this.profileManager = profileManager;  // Может использоваться для проверки типа локации и т.п.
 
-    // Регистрируем доступные квесты:
+    // Регистрируем доступные квесты. В данном случае – базовый зеркальный квест.
     this.quests = [
       new BaseMirrorQuest(this.eventManager, this.app)
     ];
@@ -38,7 +38,7 @@ export class QuestManager {
   }
 
   /**
-   * checkQuest – проверяет и завершает квест по его ключу (finish()).
+   * checkQuest – проверяет и завершает квест по его ключу, вызывая finish().
    * @param {string} key - Уникальный ключ квеста.
    */
   async checkQuest(key) {
@@ -49,35 +49,34 @@ export class QuestManager {
   }
 
   /**
-   * handleShootMirrorQuest – метод для кнопки «Заснять»
-   * (если пользователь нажимает на неё — завершаем mirror_quest).
+   * handleShootMirrorQuest – метод для кнопки «Заснять».
+   * Вызывается, когда пользователь нажимает на «Заснять» на экране камеры.
+   * Завершается зеркальный квест (через finish()).
    */
   async handleShootMirrorQuest() {
     console.log("[QuestManager] handleShootMirrorQuest()");
-
-    // Завершаем зеркальный квест (если есть)
+    // Завершаем зеркальный квест
     await this.checkQuest("mirror_quest");
-
-    // После завершения, UI в BaseMirrorQuest сам закрывается (stopCheckLoop)
-    // Если нужна дополнительная логика – добавляйте здесь.
+    // После завершения UI внутри BaseMirrorQuest сам обновится (stopCheckLoop и т.д.)
   }
 
   /**
    * handlePostButtonClick – обрабатывает нажатие на кнопку "Запостить":
-   *   1) Если mirrorQuestReady == true, активируем зеркальный квест.
-   *   2) Иначе – предупреждаем, что нужно дождаться призрака.
+   *   1) Если флаг mirrorQuestReady равен true, сбрасываем его, обновляем состояние кнопки,
+   *      подсвечиваем камеру и активируем зеркальный квест.
+   *   2) Если флаг не установлен, выводим предупреждение.
    */
   async handlePostButtonClick() {
     console.log("[QuestManager] handlePostButtonClick()");
     const isReady = localStorage.getItem("mirrorQuestReady") === "true";
     if (isReady) {
-      // Сбрасываем флаг
+      // Сбрасываем флаг, чтобы избежать повторной активации
       localStorage.removeItem("mirrorQuestReady");
       this.updatePostButtonState();
 
-      console.log("Добавляем пост от пользователя (логика, если нужна)");
+      console.log("Запуск зеркального квеста (пост от пользователя)");
 
-      // Подсвечиваем камеру, если хотим
+      // Подсвечиваем кнопку "toggle-camera" (если необходимо)
       const cameraBtn = document.getElementById("toggle-camera");
       if (cameraBtn) {
         cameraBtn.classList.add("glowing");
@@ -91,14 +90,14 @@ export class QuestManager {
   }
 
   /**
-   * updatePostButtonState – универсально меняет состояние кнопки "Запостить"
-   * (например, когда mirrorQuestReady = true/false).
+   * updatePostButtonState – обновляет состояние кнопки "Запостить"
+   * в зависимости от того, установлен ли флаг mirrorQuestReady.
    */
   updatePostButtonState() {
     const isReady = (localStorage.getItem("mirrorQuestReady") === "true");
     console.log("[QuestManager] updatePostButtonState:", isReady);
 
-    // Доступаемся к postBtn из app
+    // Доступаемся к кнопке "Запостить" через app
     const postBtn = this.app.postBtn;
     if (postBtn) {
       postBtn.disabled = !isReady;
@@ -106,8 +105,8 @@ export class QuestManager {
   }
 
   /**
-   * triggerMirrorQuestIfActive – например, при включении камеры, 
-   * проверяем localStorage и, если квест активен, проводим проверку / запускаем цикл.
+   * triggerMirrorQuestIfActive – при включении камеры проверяет localStorage,
+   * и если флаг mirrorQuestActive установлен, запускает проверку квеста.
    */
   async triggerMirrorQuestIfActive() {
     if (localStorage.getItem("mirrorQuestActive") === "true") {
@@ -117,15 +116,16 @@ export class QuestManager {
   }
 
   /**
-   * checkMirrorQuestOnCamera – пример удобного метода 
-   * (вызывает checkQuest("mirror_quest")).
+   * checkMirrorQuestOnCamera – удобный метод для проверки зеркального квеста на камере.
+   * Вызывает checkQuest с ключом "mirror_quest".
    */
   async checkMirrorQuestOnCamera() {
     await this.checkQuest("mirror_quest");
   }
 
   /**
-   * checkAvailablePhenomena – пример логики проверки доступных феноменов (из вашего кода).
+   * checkAvailablePhenomena – пример логики проверки доступных феноменов
+   * на основе типа локации и разрешённых явлений для текущего призрака.
    */
   async checkAvailablePhenomena() {
     const locationType = this.profileManager?.getLocationType?.();
@@ -134,7 +134,7 @@ export class QuestManager {
       const locationAllowedPhenomena = {
         "Кухня": ["call", "randomCall"],
         "Спальня": ["call", "randomCall"],
-        // ...
+        // Дополнительные локации и явления можно добавить здесь
       };
       const locationPhenomena = locationAllowedPhenomena[locationType] || [];
       const ghost = this.app.ghostManager.getCurrentGhost();
@@ -142,7 +142,7 @@ export class QuestManager {
         const intersection = ghost.allowedPhenomena.filter(p => locationPhenomena.includes(p));
         if (intersection.length > 0) {
           console.log(`Доступные явления: ${intersection}`);
-          // Запустить...
+          // Здесь можно запустить дополнительную логику (например, эффект или уведомление)
         }
       }
     }

@@ -1,108 +1,194 @@
-import { WelcomeEvent } from './events/welcomeEvent.js';
-// Сюда же можно импортировать другие события (FinalEvent и т.д.), если нужны
-// import { FinalEvent } from './events/finalEvent.js';
-
-/**
- * GameEventManager – класс, отвечающий за последовательное выполнение игровых (коротких) событий.
- * Сюда можно добавить события, которые НЕ являются квестами. 
- * Квесты (MirrorQuest, RepeatingQuest, FinalQuest) лежат в QuestManager.
- */
-export class GameEventManager {
+export class GhostManager {
   /**
-   * Конструктор GameEventManager.
-   * @param {EventManager} eventManager - Менеджер дневника, ответственный за работу с записями.
-   * @param {App} appInstance - Ссылка на основной объект приложения.
-   * @param {LanguageManager} languageManager - Менеджер локализации для перевода сообщений.
+   * Конструктор GhostManager.
+   * @param {EventManager} eventManager - Менеджер событий для работы с дневником.
+   * @param {ProfileManager} profileManager - Менеджер профиля для сохранения прогресса.
+   * @param {App} app - Основной объект приложения.
    *
-   * Данный класс отвечает за последовательное выполнение игровых событий, перечисленных в this.events.
-   * После завершения одного события автоматически запускается следующее (если оно есть).
+   * Класс отвечает за управление призраками, генерируя список призраков,
+   * переключая активного призрака, отслеживая прогресс явлений (шагов квеста)
+   * и сохраняя/загружая состояние призраков в localStorage.
    */
-  constructor(eventManager, appInstance, languageManager) {
-    this.eventManager    = eventManager;
-    this.app             = appInstance;
-    this.languageManager = languageManager;
-    
-    // Массив "коротких" событий, которые идут последовательно.
-    // По умолчанию включаем приветственное событие (WelcomeEvent).
-    // При желании добавьте другие события, например FinalEvent.
-    this.events = [
-      new WelcomeEvent(this.eventManager, this.app, this.languageManager),
-      new GhostFinalEvent(this.eventManager, this.app, this.languageManager)
-    ];
-    
-    // Индекс текущего события (для последовательного запуска).
-    this.currentEventIndex = 0;
+  constructor(eventManager, profileManager, app) {
+    this.eventManager = eventManager;
+    this.profileManager = profileManager;
+    this.app = app;
+
+    // Массив призраков, который будет генерироваться динамически.
+    this.ghosts = [];
+
+    // Инициализируем список призраков на основе предопределённых имен.
+    this.setupGhosts();
+
+    // Устанавливаем начальный активный призрак (ID = 1).
+    this.currentGhostId = 1;
+
+    // Индекс текущего явления (шага квеста) для активного призрака.
+    this.currentPhenomenonIndex = 0;
+
+    // Загружаем сохраненное состояние призраков из localStorage, если оно имеется.
+    this.loadState();
+
+    const currentGhost = this.getCurrentGhost();
+    console.log(`Текущий активный призрак: ${currentGhost ? currentGhost.name : 'не найден'}`);
   }
 
   /**
-   * activateEvent – активирует событие по его ключу (this.events[i].key).
-   * Если событие найдено, вызываем его activate(). После завершения
-   * текущего события увеличиваем currentEventIndex и можем активировать следующее.
-   *
-   * @param {string} key - Идентификатор (this.events[i].key).
+   * setupGhosts – генерирует список призраков на основе заранее заданных имен.
+   * Количество явлений (steps) для каждого призрака рассчитывается как длина имени минус 2.
    */
-  async activateEvent(key) {
-    const event = this.events.find(e => e.key === key);
-    if (event) {
-      // Активируем событие
-      await event.activate();
+  setupGhosts() {
+    const ghostNames = [
+      "призрак 1",
+      "призрак 2",
+      "призрак 3",
+      "призрак 4",
+      "призрак 5",
+      "призрак 6",
+      "призрак 7",
+      "призрак 8",
+      "призрак 9",
+      "призрак 10",
+      "призрак 11",
+      "призрак 12",
+      "призрак 13"
+    ];
 
-      // Переходим к следующему событию в массиве
-      this.currentEventIndex++;
-      // Если есть следующее событие, активируем
-      if (this.currentEventIndex < this.events.length) {
-        await this.activateNextEvent();
+    // Генерируем объект для каждого призрака с ID, именем и количеством явлений.
+    this.ghosts = ghostNames.map((name, index) => {
+      // Количество явлений определяется как длина имени минус 2 (пример).
+      const phenomenaCount = name.length - 2;
+      return {
+        id: index + 1,
+        name: name,
+        phenomenaCount: phenomenaCount,
+        // Дополнительное свойство для отметки завершения квеста призрака.
+        isFinished: false
+      };
+    });
+  }
+
+  /**
+   * getCurrentGhost – возвращает объект активного призрака на основе currentGhostId.
+   * @returns {object|undefined} Объект призрака или undefined, если не найден.
+   */
+  getCurrentGhost() {
+    return this.ghosts.find(g => g.id === this.currentGhostId);
+  }
+
+  /**
+   * setCurrentGhost – устанавливает активного призрака по заданному ID.
+   * Сохраняет состояние призраков в localStorage.
+   * @param {number} ghostId - ID призрака, который нужно сделать активным.
+   */
+  setCurrentGhost(ghostId) {
+    this.currentGhostId = ghostId;
+    const ghost = this.getCurrentGhost();
+    if (ghost) {
+      console.log(`Призрак ${ghost.name} активирован.`);
+    } else {
+      console.warn(`Призрак с ID=${ghostId} не найден!`);
+    }
+    this.saveState();
+  }
+
+  /**
+   * finishCurrentGhost – помечает текущего призрака как завершенного.
+   * Вызывает сохранение состояния после обновления.
+   */
+  finishCurrentGhost() {
+    const ghost = this.getCurrentGhost();
+    if (ghost) {
+      ghost.isFinished = true;
+      console.log(`Призрак ${ghost.name} завершен.`);
+      this.saveState();
+    }
+  }
+
+  /**
+   * isCurrentGhostFinished – проверяет, завершен ли текущий активный призрак.
+   * @returns {boolean} true, если текущий призрак помечен как завершенный, иначе false.
+   */
+  isCurrentGhostFinished() {
+    const ghost = this.getCurrentGhost();
+    return ghost ? ghost.isFinished : false;
+  }
+
+  /**
+   * triggerNextPhenomenon – инициирует следующее явление (шаг квеста) для текущего призрака.
+   * Если индекс явления меньше, чем общее количество явлений для призрака,
+   * добавляет запись в дневник и обновляет прогресс в профиле.
+   * Если все явления пройдены, публикует финальное сообщение и запускает финальное событие.
+   */
+  async triggerNextPhenomenon() {
+    const ghost = this.getCurrentGhost();
+    if (!ghost) return;
+
+    // Проверяем, не завершён ли призрак заранее
+    if (ghost.isFinished) {
+      console.warn(`Призрак "${ghost.name}" уже завершён, явления недоступны.`);
+      return;
+    }
+
+    if (this.currentPhenomenonIndex < ghost.phenomenaCount) {
+      // Формируем текст записи для текущего явления.
+      const phenomenonNumber = this.currentPhenomenonIndex + 1;
+      const phenomenonEntry  = `${ghost.name}: Явление ${phenomenonNumber} - Подойти к зеркалу`;
+      await this.eventManager.addDiaryEntry(phenomenonEntry);
+
+      console.log(`Триггер явления для ${ghost.name}: ${phenomenonEntry}`);
+
+      // Увеличиваем индекс явления.
+      this.currentPhenomenonIndex++;
+
+      // Сохраняем прогресс призрака через ProfileManager, если нужно.
+      this.profileManager.saveGhostProgress({
+        ghostId: this.currentGhostId,
+        phenomenonIndex: this.currentPhenomenonIndex
+      });
+
+      // Если достигнут конец явлений для призрака, публикуем финальное сообщение и запускаем финальное событие.
+      if (this.currentPhenomenonIndex === ghost.phenomenaCount) {
+        const finalEntry = `${ghost.name}: Финальное явление – призрак завершен!`;
+        await this.eventManager.addDiaryEntry(finalEntry);
+        console.log(finalEntry);
+        // Запускаем финальное событие (например, FinalEvent) через GameEventManager.
+        console.log(`Запускаем финальное событие для призрака "${ghost.name}"...`);
+        this.app.gameEventManager.activateEvent("final_event");
       }
     } else {
-      console.warn(`Событие с ключом "${key}" не найдено в this.events.`);
+      console.warn(`У призрака ${ghost.name} явления уже закончились (index=${this.currentPhenomenonIndex}).`);
     }
   }
 
   /**
-   * activateNextEvent – активирует следующее событие из списка this.events,
-   * исходя из currentEventIndex.
+   * resetGhostChain – сбрасывает цепочку призраков.
+   * Устанавливает активный призрак на первый и сбрасывает индекс явлений.
+   * Также сбрасывает сохраненный прогресс призраков через ProfileManager.
    */
-  async activateNextEvent() {
-    const nextEvent = this.events[this.currentEventIndex];
-    if (nextEvent) {
-      await nextEvent.activate();
-      this.currentEventIndex++;
-    }
+  resetGhostChain() {
+    this.currentGhostId = 1;
+    this.currentPhenomenonIndex = 0;
+    this.profileManager.resetGhostProgress();
+    console.log("Цепочка призраков сброшена.");
   }
 
   /**
-   * startQuest – пример метода для запуска квеста текущего призрака.
-   * Изначально тут предполагалась логика "ghost_{id}_quest" как событие.
-   * Но теперь квесты обслуживаются QuestManager. 
-   * Можно либо убрать этот метод, либо адаптировать под:
-   *   this.app.questManager.activateQuest(`ghost_${ghost.id}_quest`);
+   * saveState – сохраняет текущее состояние призраков (массив this.ghosts) в localStorage.
    */
-  async startQuest() {
-    const ghost = this.app.ghostManager.getCurrentGhost();
-    const questKey = `ghost_${ghost.id}_quest`;
-
-    // Если у вас действительно есть событие c таким key в this.events – активируем как событие:
-    const event = this.events.find(e => e.key === questKey);
-    if (event) {
-      await this.activateEvent(questKey);
-    } else {
-      // ИЛИ: если это квест в QuestManager:
-      console.log(`Пытаемся запустить квест "${questKey}" через QuestManager...`);
-      await this.app.questManager.activateQuest(questKey);
-    }
-
-    // При желании активируем следующее событие
-    if (this.currentEventIndex < this.events.length) {
-      await this.activateNextEvent();
-    }
+  saveState() {
+    localStorage.setItem('ghostState', JSON.stringify(this.ghosts));
   }
 
   /**
-   * startMirrorQuest – запускает зеркальный квест. Раньше это делали как событие,
-   * но теперь MirrorQuest лежит в QuestManager. Поэтому просто дергаем questManager.
+   * loadState – загружает сохраненное состояние призраков из localStorage.
+   * Если состояние найдено, обновляет массив this.ghosts.
    */
-  async startMirrorQuest() {
-    await this.app.questManager.activateQuest("mirror_quest");
-    console.log("🪞 Mirror Quest started (via QuestManager).");
+  loadState() {
+    const savedState = localStorage.getItem('ghostState');
+    if (savedState) {
+      this.ghosts = JSON.parse(savedState);
+      console.log('Загружено состояние призраков:', this.ghosts);
+    }
   }
 }

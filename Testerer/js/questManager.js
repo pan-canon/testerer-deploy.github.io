@@ -22,38 +22,6 @@ export class QuestManager {
     this.quests = [
       new BaseMirrorQuest(this.eventManager, this.app)
     ];
-
-    // Подписываемся на события камеры, чтобы автоматически запускать цикл проверки
-    // зеркального квеста при открытии камеры и останавливать его при закрытии.
-    this.initCameraListeners();
-  }
-
-  /**
-   * initCameraListeners – подписывается на события готовности видеопотока и закрытия камеры.
-   * Это позволяет автоматически запускать цикл проверки зеркального квеста при открытии камеры
-   * и останавливать его при закрытии камеры.
-   */
-  initCameraListeners() {
-    const cameraManager = this.app.cameraSectionManager;
-    if (!cameraManager) return;
-
-    // Предполагается, что cameraSectionManager вызывает onVideoReady, когда видеопоток готов,
-    // и onCameraClosed, когда камера останавливается.
-    cameraManager.onVideoReady = () => {
-      console.log("QuestManager: видео готово.");
-      const mirrorQuest = this.quests.find(q => q.key === "mirror_quest");
-      if (mirrorQuest && localStorage.getItem("mirrorQuestActive") === "true") {
-        mirrorQuest.startCheckLoop();
-      }
-    };
-
-    cameraManager.onCameraClosed = () => {
-      console.log("QuestManager: камера закрыта.");
-      const mirrorQuest = this.quests.find(q => q.key === "mirror_quest");
-      if (mirrorQuest) {
-        mirrorQuest.stopCheckLoop();
-      }
-    };
   }
 
   /**
@@ -65,7 +33,7 @@ export class QuestManager {
     if (quest) {
       await quest.activate();
     } else {
-      console.warn(`[QuestManager] Квест с ключом "${key}" не найден.`);
+      console.warn([QuestManager] Квест с ключом "${key}" не найден.);
     }
   }
 
@@ -173,7 +141,7 @@ export class QuestManager {
   async checkAvailablePhenomena() {
     const locationType = this.profileManager?.getLocationType?.();
     if (locationType) {
-      console.log(`Текущая локация: ${locationType}`);
+      console.log(Текущая локация: ${locationType});
       const locationAllowedPhenomena = {
         "Кухня": ["call", "randomCall"],
         "Спальня": ["call", "randomCall"],
@@ -184,7 +152,7 @@ export class QuestManager {
       if (ghost && ghost.allowedPhenomena) {
         const intersection = ghost.allowedPhenomena.filter(p => locationPhenomena.includes(p));
         if (intersection.length > 0) {
-          console.log(`Доступные явления: ${intersection}`);
+          console.log(Доступные явления: ${intersection});
           // Здесь можно запустить дополнительную логику (например, эффект или уведомление)
         }
       }

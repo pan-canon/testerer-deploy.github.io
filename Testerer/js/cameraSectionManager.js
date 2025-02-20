@@ -4,10 +4,14 @@ export class cameraSectionManager {
    * Инициализирует поля:
    * - videoElement: будет создан динамически при первом вызове attachTo().
    * - stream: хранит объект MediaStream, полученный из getUserMedia().
+   * - onVideoReady: callback, вызываемый, когда видеопоток готов (метаданные загружены).
+   * - onCameraClosed: callback, вызываемый при остановке камеры.
    */
   constructor() {
     this.videoElement = null;
     this.stream = null;
+    this.onVideoReady = null;
+    this.onCameraClosed = null;
   }
 
   /**
@@ -53,6 +57,7 @@ export class cameraSectionManager {
    * startCamera – запускает камеру, запрашивая доступ через getUserMedia.
    * Если поток уже запущен, функция ничего не делает.
    * При успешном получении потока, он устанавливается в качестве источника для видеоэлемента.
+   * После загрузки метаданных видеопотока вызывается onVideoReady, если он определён.
    */
   async startCamera() {
     // Если поток уже запущен, выводим сообщение и выходим.
@@ -74,6 +79,14 @@ export class cameraSectionManager {
       }
       // Устанавливаем полученный поток как источник для видеоэлемента.
       this.videoElement.srcObject = this.stream;
+      
+      // Добавляем обработчик события, чтобы вызвать onVideoReady, когда метаданные загружены.
+      this.videoElement.addEventListener("loadedmetadata", () => {
+        console.log("loadedmetadata: видеопоток готов");
+        if (typeof this.onVideoReady === "function") {
+          this.onVideoReady();
+        }
+      }, { once: true });
     } catch (error) {
       console.error("❌ Ошибка при доступе к камере:", error);
     }
@@ -83,11 +96,15 @@ export class cameraSectionManager {
    * stopCamera – останавливает текущий поток камеры.
    * Проходит по всем дорожкам (tracks) потока и останавливает их.
    * После остановки сбрасывает поле stream в null.
+   * Вызывает onCameraClosed, если он определён.
    */
   stopCamera() {
     if (this.stream) {
       this.stream.getTracks().forEach(track => track.stop());
       this.stream = null;
+      if (typeof this.onCameraClosed === "function") {
+        this.onCameraClosed();
+      }
     }
   }
 }

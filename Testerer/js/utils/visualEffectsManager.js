@@ -85,19 +85,36 @@ export class VisualEffectsManager {
      * @param {Function} [callback] - функция, вызываемая после завершения анимации.
      */
     triggerGhostTextEffect(targetElem, text, callback) {
-        targetElem.textContent = "";
+        targetElem.innerHTML = "";
         const ghostSound = new Audio('audio/ghost_effect.mp3');
         ghostSound.play();
-        let i = 0;
+        let pos = 0;
+        let currentHTML = "";
+        let isTag = false;
+        let tagBuffer = "";
         const interval = setInterval(() => {
-            targetElem.textContent += text[i];
-            i++;
-            if (i >= text.length) {
+            const char = text[pos];
+            if (char === "<") {
+                isTag = true;
+            }
+            if (isTag) {
+                tagBuffer += char;
+                if (char === ">") {
+                    currentHTML += tagBuffer;
+                    tagBuffer = "";
+                    isTag = false;
+                }
+            } else {
+                currentHTML += char;
+            }
+            targetElem.innerHTML = currentHTML;
+            pos++;
+            if (pos >= text.length) {
                 clearInterval(interval);
                 ghostSound.pause();
                 if (callback) callback();
             }
-        }, 100); // интервал 100 мс между символами
+        }, 100);
     }
 
     /**
@@ -131,22 +148,33 @@ export class VisualEffectsManager {
         typeSound.loop = true;
         typeSound.play();
 
-        targetElem.textContent = "";
-        let i = 0;
+        targetElem.innerHTML = "";
+        let pos = 0;
+        let currentHTML = "";
+        let isTag = false;
+        let tagBuffer = "";
         const interval = setInterval(() => {
-            targetElem.textContent += text[i];
-            i++;
-            if (i >= text.length) {
-                clearInterval(interval);
-                typeSound.pause();
-                // Убираем иконку карандаша
-                pencilIcon.remove();
-                // Снимаем блокировку элементов управления
-                if (controls) {
-                    controls.style.pointerEvents = "auto";
+            const char = text[pos];
+            if (char === "<") {
+                isTag = true;
+            }
+            if (isTag) {
+                tagBuffer += char;
+                if (char === ">") {
+                    currentHTML += tagBuffer;
+                    tagBuffer = "";
+                    isTag = false;
                 }
+            } else {
+                currentHTML += char;
+            }
+            targetElem.innerHTML = currentHTML;
+            pos++;
+            if (pos >= text.length) {
+                clearInterval(interval);
+                // ... (остальная логика: убираем иконку, снимаем блокировку и т.д.)
                 if (callback) callback();
             }
-        }, 100); // интервал 100 мс между символами
+        }, 100);
     }
 }

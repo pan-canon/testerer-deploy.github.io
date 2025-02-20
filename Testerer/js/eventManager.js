@@ -128,23 +128,31 @@ export class EventManager {
       if (!animatedIds.includes(entryObj.id)) {
           // Отмечаем, что для этой записи анимация запускается впервые
           animatedIds.push(entryObj.id);
-          // Разбиваем итоговый текст на две части: основное сообщение и дату (если дата в скобках в конце)
+          // Разбиваем итоговый текст на основное сообщение и дату (если дата в скобках в конце)
           const dateMatch = finalText.match(/(\(\d{4}-\d{2}-\d{2}.*\))$/);
           let messageText = finalText;
           if (dateMatch) {
               const dateText = dateMatch[1].trim();
-              // Вместо переноса строки \n вставляем тег <br> перед датой
+              // Формируем строку с тегом <br> перед датой
               messageText = finalText.replace(dateText, "").trim() + "<br>" + dateText;
           }
-          // Создаем span для анимации и работаем через innerHTML, чтобы тег <br> интерпретировался корректно
-          const animatedSpan = document.createElement('span');
-          animatedSpan.innerHTML = "";
-          textContainer.innerHTML = "";
-          textContainer.appendChild(animatedSpan);
-          if (entryObj.postClass === "ghost-post") {
-              effectsManager.triggerGhostTextEffect(animatedSpan, messageText);
+          // Если для этой записи анимация не запускается (уже анимировано ранее),
+          // выводим текст через innerHTML, чтобы <br> корректно отрендерился.
+          if (animatedIds.includes(entryObj.id)) {
+              textContainer.innerHTML = messageText;
           } else {
-              effectsManager.triggerUserTextEffect(animatedSpan, messageText);
+              // Отмечаем, что для этой записи анимация запускается впервые
+              animatedIds.push(entryObj.id);
+              // Создаем span для анимации и используем innerHTML
+              const animatedSpan = document.createElement('span');
+              animatedSpan.innerHTML = "";
+              textContainer.innerHTML = "";
+              textContainer.appendChild(animatedSpan);
+              if (entryObj.postClass === "ghost-post") {
+                  effectsManager.triggerGhostTextEffect(animatedSpan, messageText);
+              } else {
+                  effectsManager.triggerUserTextEffect(animatedSpan, messageText);
+              }
           }
       } else {
           // Если анимация уже была для этой записи, устанавливаем полный текст без анимации

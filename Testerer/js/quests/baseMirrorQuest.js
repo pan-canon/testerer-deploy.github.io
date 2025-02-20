@@ -1,4 +1,4 @@
-import { BaseEvent } from './baseEvent.js';
+import { BaseEvent } from '../events/baseEvent.js';
 import { ImageUtils } from '../utils/imageUtils.js'; // Подключаем ImageUtils для работы с изображениями
 
 /**

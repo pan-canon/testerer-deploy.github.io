@@ -1,5 +1,69 @@
 export class VisualEffectsManager {
     /**
+     * Универсальная функция воспроизведения аудио с автоматической остановкой.
+     * @param {string} audioSrc - путь к аудиофайлу.
+     * @param {number} stopDelay - время в мс через которое остановить воспроизведение.
+     */
+    playAudioWithStop(audioSrc, stopDelay) {
+        const audio = new Audio(audioSrc);
+        audio.play();
+        if (stopDelay && stopDelay > 0) {
+            setTimeout(() => {
+                audio.pause();
+            }, stopDelay);
+        }
+        return audio; // Возвращаем, если нужно ручное управление
+    }
+
+    /**
+     * Универсальная функция анимации текста с разбором HTML-тегов.
+     * @param {HTMLElement} targetElem - элемент, в который анимируем текст.
+     * @param {string} text - текст (включая теги) для анимации.
+     * @param {number} speed - скорость "печатания" в мс.
+     * @param {HTMLAudioElement} [audioObj] - объект аудио, который воспроизводится во время анимации.
+     * @param {Function} [callback] - функция, вызываемая после завершения анимации.
+     */
+    animateHTMLText(targetElem, text, speed, audioObj, callback) {
+        // Подготовка: очищаем элемент, обнуляем счётчики
+        targetElem.innerHTML = "";
+        let pos = 0;          // позиция в строке
+        let currentHTML = ""; // то, что уже выведено
+        let isTag = false;    // флаг "внутри тега"
+        let tagBuffer = "";   // накапливаем строку тега
+
+        const intervalId = setInterval(() => {
+            const char = text[pos];
+            if (!char) {
+                // Если вышли за пределы текста, завершаем анимацию
+                clearInterval(intervalId);
+                if (audioObj) audioObj.pause();
+                if (callback) callback();
+                return;
+            }
+
+            // Логика разбора: если видим '<', значит начинаем считывать тег
+            if (char === "<") {
+                isTag = true;
+            }
+            if (isTag) {
+                tagBuffer += char;
+                if (char === ">") {
+                    // тег закончился
+                    currentHTML += tagBuffer;
+                    tagBuffer = "";
+                    isTag = false;
+                }
+            } else {
+                // обычный текст
+                currentHTML += char;
+            }
+
+            targetElem.innerHTML = currentHTML;
+            pos++;
+        }, speed);
+    }
+
+    /**
      * triggerMirrorEffect – запускает визуальный эффект для зеркального квеста.
      *
      * Эффект затемняет фон страницы и воспроизводит аудио (например, звук звонка).
@@ -7,26 +71,21 @@ export class VisualEffectsManager {
      * что указывает на активный режим квеста.
      */
     triggerMirrorEffect() {
-        // Проверяем, открыт ли глобальный контейнер камеры.
         const globalCamera = document.getElementById('global-camera');
         if (!globalCamera || globalCamera.style.display === "none") {
             console.log("Эффект зеркального квеста не запускается, камера не активна.");
             return;
         }
 
-        // Эффект затемнения фона: плавное затемнение на 1 секунду.
+        // Плавное затемнение на 1 секунду
         document.body.style.transition = "background 1s";
         document.body.style.background = "black";
         setTimeout(() => {
             document.body.style.background = "";
         }, 1000);
 
-        // Воспроизводим аудио-звонок.
-        const staticNoise = new Audio('audio/phone_ringtone.mp3');
-        staticNoise.play();
-        setTimeout(() => {
-            staticNoise.pause();
-        }, 3000);
+        // Воспроизводим аудио-звонок и останавливаем через 3 секунды
+        this.playAudioWithStop('audio/phone_ringtone.mp3', 3000);
     }
 
     /**
@@ -44,23 +103,31 @@ export class VisualEffectsManager {
             return;
         }
         
-        // Создаем элемент эффекта.
+        // Создаём элемент призрачного эффекта
         const ghostEffect = document.createElement("div");
-        ghostEffect.style.position = "absolute";
-        ghostEffect.style.top = "50%";
-        ghostEffect.style.left = "50%";
-        ghostEffect.style.transform = "translate(-50%, -50%)";
-        ghostEffect.style.width = "200px";
-        ghostEffect.style.height = "200px";
-        ghostEffect.style.background = `url('images/${ghostId}.png') no-repeat center center`;
-        ghostEffect.style.backgroundSize = "contain";
-        ghostEffect.style.opacity = "0.7";
-        
-        // Добавляем эффект на страницу.
+        Object.assign(ghostEffect.style, {
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "200px",
+            height: "200px",
+            background: `url('images/${ghostId}.png') no-repeat center center`,
+            backgroundSize: "contain",
+            opacity: "0.7",
+            transition: "opacity 2s" // немного плавного исчезновения
+        });
+
+        // Добавляем эффект на страницу
         document.body.appendChild(ghostEffect);
+        // Спустя 3 секунды — плавное исчезновение
         setTimeout(() => {
             ghostEffect.style.opacity = "0";
         }, 3000);
+        // И ещё через 2 секунды — удаляем элемент из DOM
+        setTimeout(() => {
+            ghostEffect.remove();
+        }, 5000);
     }
 
     /**
@@ -69,52 +136,23 @@ export class VisualEffectsManager {
      * Воспроизводит аудио-шёпот для создания атмосферы.
      */
     triggerWhisperEffect() {
-        const whisperSound = new Audio('audio/whisper.mp3');
-        whisperSound.play();
-        setTimeout(() => {
-            whisperSound.pause();
-        }, 5000);
+        // Воспроизводим шёпот и останавливаем через 5 секунд
+        this.playAudioWithStop('audio/whisper.mp3', 5000);
     }
 
     /**
      * triggerGhostTextEffect – плавно проявляет текст в targetElem, проигрывая звук эффекта.
-     * Этот метод используется для анимации записей от призрака.
-     *
      * @param {HTMLElement} targetElem - элемент, в который будет анимирован текст.
-     * @param {string} text - текст для анимации.
+     * @param {string} text - текст (с возможными HTML-тегами).
      * @param {Function} [callback] - функция, вызываемая после завершения анимации.
      */
     triggerGhostTextEffect(targetElem, text, callback) {
-        targetElem.innerHTML = "";
+        // Запускаем звук призрака (без ручной остановки — остановим сами при завершении)
         const ghostSound = new Audio('audio/ghost_effect.mp3');
         ghostSound.play();
-        let pos = 0;
-        let currentHTML = "";
-        let isTag = false;
-        let tagBuffer = "";
-        const interval = setInterval(() => {
-            const char = text[pos];
-            if (char === "<") {
-                isTag = true;
-            }
-            if (isTag) {
-                tagBuffer += char;
-                if (char === ">") {
-                    currentHTML += tagBuffer;
-                    tagBuffer = "";
-                    isTag = false;
-                }
-            } else {
-                currentHTML += char;
-            }
-            targetElem.innerHTML = currentHTML;
-            pos++;
-            if (pos >= text.length) {
-                clearInterval(interval);
-                ghostSound.pause();
-                if (callback) callback();
-            }
-        }, 100);
+
+        // Анимируем текст за 100 мс на символ
+        this.animateHTMLText(targetElem, text, 100, ghostSound, callback);
     }
 
     /**
@@ -122,59 +160,42 @@ export class VisualEffectsManager {
      * Блокирует элементы управления до завершения анимации.
      *
      * @param {HTMLElement} targetElem - элемент, в который будет анимирован текст.
-     * @param {string} text - текст для анимации.
+     * @param {string} text - текст (с возможными HTML-тегами).
      * @param {Function} [callback] - функция, вызываемая после завершения анимации.
      */
     triggerUserTextEffect(targetElem, text, callback) {
-        // Создаем иконку карандаша и размещаем её над targetElem
+        // Добавляем иконку карандаша
         const pencilIcon = document.createElement("img");
         pencilIcon.src = "images/pencil.png";
         pencilIcon.alt = "Пишется...";
-        pencilIcon.style.width = "24px";
-        pencilIcon.style.height = "24px";
-        pencilIcon.style.position = "absolute";
-        pencilIcon.style.top = "-30px";
-        // Блокируем элементы управления через элемент с id "controls-panel"
+        Object.assign(pencilIcon.style, {
+            width: "24px",
+            height: "24px",
+            position: "absolute",
+            top: "-30px"
+        });
+
+        // Блокируем панель управления
         const controls = document.getElementById("controls-panel");
         if (controls) {
             controls.style.pointerEvents = "none";
         }
-        // Обеспечиваем относительное позиционирование родительского контейнера targetElem
+
+        // Размещаем иконку над targetElem
         targetElem.parentElement.style.position = "relative";
         targetElem.parentElement.insertBefore(pencilIcon, targetElem);
 
-        // Воспроизводим звук печатания (зацикленный)
+        // Воспроизводим звук печатания (без автопаузы — останавливаем сами)
         const typeSound = new Audio('audio/type_sound.mp3');
         typeSound.loop = true;
         typeSound.play();
 
-        targetElem.innerHTML = "";
-        let pos = 0;
-        let currentHTML = "";
-        let isTag = false;
-        let tagBuffer = "";
-        const interval = setInterval(() => {
-            const char = text[pos];
-            if (char === "<") {
-                isTag = true;
-            }
-            if (isTag) {
-                tagBuffer += char;
-                if (char === ">") {
-                    currentHTML += tagBuffer;
-                    tagBuffer = "";
-                    isTag = false;
-                }
-            } else {
-                currentHTML += char;
-            }
-            targetElem.innerHTML = currentHTML;
-            pos++;
-            if (pos >= text.length) {
-                clearInterval(interval);
-                // ... (остальная логика: убираем иконку, снимаем блокировку и т.д.)
-                if (callback) callback();
-            }
-        }, 100);
+        // Анимация "печатания" (100 мс на символ)
+        this.animateHTMLText(targetElem, text, 100, typeSound, () => {
+            // По завершении
+            pencilIcon.remove(); // убираем иконку
+            if (controls) controls.style.pointerEvents = "auto"; // снимаем блокировку
+            if (callback) callback();
+        });
     }
 }

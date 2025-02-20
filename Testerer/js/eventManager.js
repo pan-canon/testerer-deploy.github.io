@@ -128,22 +128,18 @@ export class EventManager {
       if (!animatedIds.includes(entryObj.id)) {
           // Отмечаем, что для этой записи анимация запускается впервые
           animatedIds.push(entryObj.id);
-          // Разбиваем итоговый текст на две части: основное сообщение и дату (если дата в скобках в конце)
+          // Разбиваем итоговый текст на основное сообщение и дату (если дата в скобках в конце)
           const dateMatch = finalText.match(/(\(\d{4}-\d{2}-\d{2}.*\))$/);
           let messageText = finalText;
-          let dateText = "";
           if (dateMatch) {
-              dateText = dateMatch[1];
-              messageText = finalText.replace(dateText, "").trim();
+              const dateText = dateMatch[1];
+              // Добавляем дату как последний абзац (разделённый переносом строки)
+              messageText = finalText.replace(dateText, "").trim() + "\n" + dateText;
           }
-          // Создаем два span: один для анимированного текста, другой – для даты (без анимации)
+          // Создаем один span для анимированного текста, включающий и сообщение, и дату
           const animatedSpan = document.createElement('span');
-          const staticSpan = document.createElement('span');
-          staticSpan.textContent = dateText;
-          // Очищаем контейнер и вставляем оба элемента
           textContainer.textContent = "";
           textContainer.appendChild(animatedSpan);
-          textContainer.appendChild(staticSpan);
           if (entryObj.postClass === "ghost-post") {
               effectsManager.triggerGhostTextEffect(animatedSpan, messageText);
           } else {

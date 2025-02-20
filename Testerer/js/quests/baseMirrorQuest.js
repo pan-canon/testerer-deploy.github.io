@@ -72,15 +72,37 @@ export class BaseMirrorQuest {
    */
   async checkStatus() {
     console.log("🪞 Зеркальный квест активно. Запускаем проверку...");
-    return new Promise(resolve => {
-      setTimeout(async () => {
-        console.log("⏱ Запуск сравнения текущего кадра...");
-        const success = await this.app.compareCurrentFrame();
-        console.log("⏱ Результат сравнения:", success);
-        resolve(success);
-      }, 5000);
-    });
+    console.log("⏱ Запуск сравнения текущего кадра (без задержки)...");
+    const success = await this.app.compareCurrentFrame();
+    console.log("⏱ Результат сравнения:", success);
+    return success;
   }
+
+// Внутри QuestManager
+handleShootMirrorQuest() {
+  // Завершаем зеркальный квест
+  this.checkQuest("mirror_quest")
+    .then(() => {
+      // По завершении квеста – убираем UI
+      // Останавливаем интервал, если он идёт
+      clearInterval(this.app.mirrorCheckInterval);
+      this.app.mirrorCheckInterval = null;
+
+      // Прячем статус
+      const statusDiv = document.getElementById("camera-status");
+      if (statusDiv) {
+        statusDiv.style.display = "none";
+      }
+
+      // Прячем кнопку
+      const shootBtn = document.getElementById("btn_shoot");
+      if (shootBtn) {
+        shootBtn.style.display = "none";
+      }
+    })
+    .catch(err => console.error(err));
+}
+
 
   /**
    * finish – завершает зеркальный квест.

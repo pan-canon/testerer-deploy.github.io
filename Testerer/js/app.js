@@ -206,6 +206,14 @@ export class App {
     } else {
       console.error("Элемент post-btn не найден!");
     }
+
+    const shootBtn = document.getElementById("btn_shoot");
+    if (shootBtn) {
+      shootBtn.addEventListener("click", () => {
+        // Просто вызываем некий метод "handleShootMirrorQuest()" нашего QuestManager
+        this.questManager.handleShootMirrorQuest();
+      });
+    }
   }
 
   /**
@@ -370,12 +378,49 @@ export class App {
       });
       console.log("Видео готово:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
 
-      setTimeout(async () => {
-        if (localStorage.getItem("mirrorQuestActive") === "true") {
-          console.log("Запускаем проверку зеркального квеста после включения камеры...");
-          await this.questManager.triggerMirrorQuestIfActive();
+      // Вместо одноразовой проверки - запускаем постоянный цикл каждые 2 секунды (к примеру)
+      if (localStorage.getItem("mirrorQuestActive") === "true") {
+        console.log("🔁 Запускаем постоянную проверку зеркального квеста...");
+        this.startMirrorQuestCheckLoop();
+      }
+
+      /**
+       * startMirrorQuestCheckLoop – запускает постоянную проверку совпадения с селфи,
+       * меняет статус в overlay, включает/выключает кнопку "Заснять".
+       */
+      startMirrorQuestCheckLoop() {
+        // Если уже идёт цикл, не запускаем второй раз:
+        if (this.mirrorCheckInterval) return;
+
+        // Показываем div со статусом
+        const statusDiv = document.getElementById("mirror-quest-status");
+        if (statusDiv) {
+          statusDiv.style.display = "block";
         }
-      }, 5000);
+        // Показываем кнопку "Заснять"
+        const shootBtn = document.getElementById("btn_shoot");
+        if (shootBtn) {
+          shootBtn.style.display = "inline-block"; 
+          shootBtn.disabled = true; // изначально неактивна
+        }
+
+        this.mirrorCheckInterval = setInterval(async () => {
+          // Вызываем compareCurrentFrame без alert'ов
+          const success = await this.compareCurrentFrame();
+          // Обновляем текст статуса
+          if (statusDiv) {
+            if (success) {
+              statusDiv.textContent = "Вы перед зеркалом!";
+            } else {
+              statusDiv.textContent = "Нет совпадения...";
+            }
+          }
+          // Разрешаем "Заснять", если success
+          if (shootBtn) {
+            shootBtn.disabled = !success;
+          }
+        }, 2000);
+      }
 
       this.isCameraOpen = true;
     } else {
@@ -388,6 +433,21 @@ export class App {
       buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
       this.cameraSectionManager.stopCamera();
       this.isCameraOpen = false;
+    }
+
+    if (!this.isCameraOpen && this.mirrorCheckInterval) {
+      clearInterval(this.mirrorCheckInterval);
+      this.mirrorCheckInterval = null;
+      // Прячем статус
+      const statusDiv = document.getElementById("mirror-quest-status");
+      if (statusDiv) {
+        statusDiv.style.display = "none";
+      }
+      // Прячем/отключаем кнопку "Заснять"
+      const shootBtn = document.getElementById("btn_shoot");
+      if (shootBtn) {
+        shootBtn.style.display = "none";
+      }
     }
   }
 
@@ -501,12 +561,7 @@ export class App {
     const matchPixel = ImageUtils.pixelWiseComparison(this.selfieData, currentData);
     const matchHistogram = ImageUtils.histogramComparison(this.selfieData, currentData);
     console.log(`🔎 Сравнение кадров: Pixel=${matchPixel.toFixed(2)}, Histogram=${matchHistogram.toFixed(2)}`);
-    if (matchPixel > 0.6 && matchHistogram > 0.7) {
-      alert("✅ Вы перед зеркалом!");
-      return true;
-    } else {
-      alert("❌ Нет совпадения!");
-      return false;
-    }
+    const success = (matchPixel > 0.6 && matchHistogram > 0.7);
+    return success;
   }
 }

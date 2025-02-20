@@ -153,6 +153,15 @@
   <!-- Глобальный контейнер для камеры -->
   <div id="global-camera">
     <div class="camera-inner">
+      <div id="camera-status" style="
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  padding: 10px;
+  display: none; /* изначально скрыт */
+  z-index: 1000;"></div>
       <!-- Видеоэлемент и оверлеи создаются динамически -->
       <div id="camera-controls-overlay">
         <!-- Элементы управления камерой, если нужны -->
@@ -183,6 +192,8 @@
     <!-- Кнопки для основного экрана (блог/дневник) -->
     <div id="main-buttons" class="buttons" style="display: none;">
       <button class="button" id="post-btn" disabled>Запостить</button>
+<!-- Кнопка «Заснять» рядом с postBtn -->
+<button id="btn_shoot" style="display:none;">Заснять</button>
       <button class="button" type="button" id="toggle-camera" data-i18n="open_camera">Open Camera</button>
       <button class="button" type="button" id="toggle-diary" data-i18n="open_diary">Open Diary</button>
       <button id="install-btn" style="display:none;" class="button is-primary">Добавить на рабочий стол</button>

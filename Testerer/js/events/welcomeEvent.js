@@ -10,7 +10,7 @@ import { BaseEvent } from './baseEvent.js';
  *  2) If not, logs the "welcome" entry in the diary as a ghost post.
  *  3) Sets the 'mirrorQuestReady' flag in localStorage to enable the "Post" button.
  *  4) Calls updatePostButtonState() in QuestManager to update the UI.
- *  5) Triggers the mirror visual effect.
+ *  5) If the camera is open, triggers the mirror visual effect.
  */
 export class WelcomeEvent extends BaseEvent {
   /**
@@ -34,7 +34,7 @@ export class WelcomeEvent extends BaseEvent {
    *  2) Otherwise, log the "welcome" entry in the diary as a ghost post.
    *  3) Set the 'mirrorQuestReady' flag in localStorage.
    *  4) Call updatePostButtonState() in QuestManager to update the "Post" button.
-   *  5) Trigger the mirror visual effect.
+   *  5) If the camera is open, trigger the mirror visual effect.
    *
    * @returns {Promise<void>}
    */
@@ -56,7 +56,11 @@ export class WelcomeEvent extends BaseEvent {
     // Step 4: Update the "Post" button state via QuestManager.
     this.app.questManager.updatePostButtonState();
 
-    // Step 5: Trigger the mirror visual effect.
-    this.app.visualEffectsManager.triggerMirrorEffect();
+    // Step 5: Trigger the mirror visual effect only if the camera is open.
+    if (this.app.isCameraOpen) {
+      this.app.visualEffectsManager.triggerMirrorEffect();
+    } else {
+      console.log("Mirror effect not triggered because camera is closed.");
+    }
   }
 }

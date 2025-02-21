@@ -1,9 +1,12 @@
 import { WelcomeEvent } from './events/welcomeEvent.js';
-import { FinalEvent }   from './events/finalEvent.js';
+import { FinalEvent } from './events/finalEvent.js';
+import { PostMirrorEvent } from './events/postMirrorEvent.js';
+import { PostRepeatingEvent } from './events/postRepeatingEvent.js';
 
 /**
- * GameEventManager – отвечает за короткие события (Welcome, Final...).
- * При завершении одного события может запускать следующее.
+ * GameEventManager – класс, отвечающий за “короткие” (одноразовые) события.
+ * В отличие от больших квестов (MirrorQuest, RepeatingQuest, FinalQuest),
+ * эти события лишь вызывают запуск нужного квеста или делают дополнительный пост.
  */
 export class GameEventManager {
   constructor(eventManager, appInstance, languageManager) {
@@ -11,18 +14,17 @@ export class GameEventManager {
     this.app             = appInstance;
     this.languageManager = languageManager;
     
-    // Список «коротких» событий:
+    // Последовательность коротких событий (возможна любая логика порядка)
     this.events = [
       new WelcomeEvent(this.eventManager, this.app, this.languageManager),
+      new PostMirrorEvent(this.eventManager, this.app),
+      new PostRepeatingEvent(this.eventManager, this.app),
       new FinalEvent(this.eventManager, this.app, this.languageManager)
     ];
     
     this.currentEventIndex = 0;
   }
 
-  /**
-   * activateEvent(key): ищем событие в this.events, активируем, сдвигаем currentEventIndex.
-   */
   async activateEvent(key) {
     const event = this.events.find(e => e.key === key);
     if (event) {
@@ -32,13 +34,10 @@ export class GameEventManager {
         await this.activateNextEvent();
       }
     } else {
-      console.warn(`Событие с ключом "${key}" не найдено в GameEventManager.`);
+      console.warn(`[GameEventManager] Событие "${key}" не найдено в списке.`);
     }
   }
 
-  /**
-   * activateNextEvent: запускает следующее событие по currentEventIndex, если есть.
-   */
   async activateNextEvent() {
     const nextEvent = this.events[this.currentEventIndex];
     if (nextEvent) {
@@ -47,19 +46,15 @@ export class GameEventManager {
     }
   }
 
-  /**
-   * startQuest – пример, если вдруг хотим запускать квест через события;
-   * Но фактически квесты запускает QuestManager, так что можно не использовать.
-   */
+  // Примеры вспомогательных методов
   async startQuest() {
     const ghost = this.app.ghostManager.getCurrentGhost();
     const questKey = `ghost_${ghost.id}_quest`;
-    // Пытаемся найти событие с таким ключом
     const event = this.events.find(e => e.key === questKey);
     if (event) {
       await this.activateEvent(questKey);
     } else {
-      // Если в events нет, вызываем QuestManager
+      // Либо запускаем квест напрямую
       await this.app.questManager.activateQuest(questKey);
     }
     if (this.currentEventIndex < this.events.length) {
@@ -67,12 +62,8 @@ export class GameEventManager {
     }
   }
 
-  /**
-   * startMirrorQuest – если хотите коротким событием, можно было бы через event.
-   * Но у нас уже есть квест "mirror_quest" в QuestManager.
-   */
   async startMirrorQuest() {
     await this.activateEvent('mirror_quest');
-    console.log("🪞 Mirror Quest started via GameEventManager.");
+    console.log("🪞 Mirror Quest started (event).");
   }
 }

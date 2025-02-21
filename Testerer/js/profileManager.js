@@ -1,39 +1,39 @@
 export class ProfileManager {
   /**
-   * Проверяет, сохранён ли профиль в localStorage.
-   * @returns {boolean} true, если профиль найден, иначе false.
+   * Checks if a profile is saved in localStorage.
+   * @returns {boolean} True if a profile is found, otherwise false.
    */
   isProfileSaved() {
     return !!localStorage.getItem('profile');
   }
 
   /**
-   * Получает профиль из localStorage и возвращает его в виде объекта.
-   * @returns {Object|null} Объект профиля или null, если профиль не найден.
+   * Retrieves the profile from localStorage and returns it as an object.
+   * @returns {Object|null} The profile object or null if not found.
    */
   getProfile() {
     return JSON.parse(localStorage.getItem('profile'));
   }
 
   /**
-   * Сохраняет переданный профиль в localStorage.
-   * @param {Object} profile – объект профиля.
+   * Saves the given profile object to localStorage.
+   * @param {Object} profile - The profile object.
    */
   saveProfile(profile) {
     localStorage.setItem('profile', JSON.stringify(profile));
   }
 
   /**
-   * Сбрасывает профиль и связанные с ним данные.
-   * Удаляются данные регистрации, базы данных дневника, прогресс призраков,
-   * тип локации, состояние квестов и анимированные записи.
-   * После сброса страница перезагружается.
+   * Resets the profile and all related data.
+   * Removes registration data, diary database, ghost progress,
+   * location type, quest progress, and animated entries.
+   * After reset, the page is reloaded.
    */
   resetProfile() {
-    // Сохраняем значение языка, чтобы его не потерять при сбросе
+    // Preserve the language value so it is not lost during reset
     const language = localStorage.getItem("language");
 
-    // Удаляем все данные профиля и связанные ключи:
+    // Remove all profile data and related keys:
     localStorage.removeItem("registrationCompleted");
     localStorage.removeItem("profile");
     localStorage.removeItem("regData");
@@ -46,35 +46,35 @@ export class ProfileManager {
     localStorage.removeItem("mirrorQuestActive");
     localStorage.removeItem("animatedDiaryIds");
 
-    // Восстанавливаем сохранённый язык (если он был)
+    // Restore the saved language (if any)
     if (language !== null) {
       localStorage.setItem("language", language);
     }
 
-    // Перезагружаем страницу
+    // Reload the page
     window.location.reload();
   }
 
   /**
-   * Экспортирует данные профиля вместе с дневником, планом квартиры и прогрессом квестов.
-   * Данные формируются в виде JSON и сохраняются в файл profile.json.
-   * @param {Object} databaseManager – менеджер базы данных.
-   * @param {Object} apartmentPlanManager – менеджер плана квартиры.
+   * Exports the profile along with the diary, apartment plan, and quest progress.
+   * The data is formatted as JSON and saved to a file named profile.json.
+   * @param {Object} databaseManager - The database manager.
+   * @param {Object} apartmentPlanManager - The apartment plan manager.
    */
   exportProfileData(databaseManager, apartmentPlanManager) {
-    // Получаем профиль из localStorage.
+    // Retrieve the profile from localStorage.
     const profileStr = localStorage.getItem('profile');
     if (!profileStr) {
       alert("No profile found to export.");
       return;
     }
-    // Получаем записи дневника.
+    // Retrieve diary entries.
     const diaryEntries = databaseManager.getDiaryEntries();
-    // Получаем данные плана квартиры, если они существуют.
+    // Retrieve apartment plan data if available.
     const apartmentPlanData = apartmentPlanManager ? apartmentPlanManager.rooms : [];
     
-    // Получаем данные прогресса квестов. Поскольку метод getQuestProgress требует ключ,
-    // выполняем SQL-запрос для получения всех записей из таблицы quest_progress.
+    // Retrieve quest progress data. Since getQuestProgress requires a key,
+    // execute an SQL query to get all records from the quest_progress table.
     let questProgressData = [];
     const result = databaseManager.db.exec("SELECT * FROM quest_progress ORDER BY id DESC");
     if (result.length > 0) {
@@ -85,7 +85,7 @@ export class ProfileManager {
       }));
     }
 
-    // Формируем объект экспорта, включающий профиль, дневник, данные квартиры и прогресс квестов.
+    // Form the export object including profile, diary, apartment plan, and quest progress.
     const exportData = {
       profile: JSON.parse(profileStr),
       diary: diaryEntries,
@@ -93,7 +93,7 @@ export class ProfileManager {
       quests: questProgressData
     };
 
-    // Создаем Blob из JSON-строки с отступами для удобного чтения.
+    // Create a Blob from the JSON string (formatted with indentation for readability).
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -106,28 +106,28 @@ export class ProfileManager {
   }
 
   /**
-   * Импортирует данные профиля из выбранного файла.
-   * После импорта обновляются профиль, дневник, план квартиры и прогресс квестов,
-   * затем страница перезагружается.
-   * @param {File} file – файл с данными профиля.
-   * @param {Object} databaseManager – менеджер базы данных.
-   * @param {Object} apartmentPlanManager – менеджер плана квартиры.
+   * Imports profile data from the selected file.
+   * After import, the profile, diary, apartment plan, and quest progress are updated,
+   * and then the page is reloaded.
+   * @param {File} file - The file containing the profile data.
+   * @param {Object} databaseManager - The database manager.
+   * @param {Object} apartmentPlanManager - The apartment plan manager.
    */
   importProfileData(file, databaseManager, apartmentPlanManager) {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const importedData = JSON.parse(e.target.result);
-        // Проверяем наличие основных полей профиля.
+        // Check for the presence of essential profile fields.
         if (!importedData.profile || !importedData.profile.name || !importedData.profile.gender ||
             !importedData.profile.selfie || !importedData.profile.language) {
           alert("Invalid profile file. Required profile fields are missing.");
           return;
         }
-        // Сохраняем профиль.
+        // Save the profile.
         this.saveProfile(importedData.profile);
 
-        // Импортируем записи дневника.
+        // Import diary entries.
         if (importedData.diary && Array.isArray(importedData.diary)) {
           importedData.diary.forEach(entry => {
             if (entry.entry && entry.timestamp) {
@@ -140,7 +140,7 @@ export class ProfileManager {
           databaseManager.saveDatabase();
         }
 
-        // Импортируем данные плана квартиры, если они существуют.
+        // Import apartment plan data, if available.
         if (importedData.apartment && Array.isArray(importedData.apartment)) {
           if (apartmentPlanManager) {
             apartmentPlanManager.rooms = importedData.apartment;
@@ -148,7 +148,7 @@ export class ProfileManager {
           }
         }
 
-        // Импортируем прогресс квестов.
+        // Import quest progress.
         if (importedData.quests && Array.isArray(importedData.quests)) {
           importedData.quests.forEach(progress => {
             if (progress.quest_key && progress.status) {
@@ -168,16 +168,16 @@ export class ProfileManager {
   }
 
   /**
-   * Сохраняет прогресс по призракам (например, текущий шаг квеста).
-   * @param {Object} progress – объект с данными прогресса (например, { ghostId: число, phenomenonIndex: число }).
+   * Saves ghost progress (e.g., the current quest step).
+   * @param {Object} progress - An object containing progress data (e.g., { ghostId: number, phenomenonIndex: number }).
    */
   saveGhostProgress(progress) {
     localStorage.setItem('ghostProgress', JSON.stringify(progress));
   }
 
   /**
-   * Получает сохранённый прогресс по призракам.
-   * @returns {Object|null} Объект с данными прогресса или null, если данных нет.
+   * Retrieves the saved ghost progress.
+   * @returns {Object|null} The progress object or null if no data exists.
    */
   getGhostProgress() {
     const progress = localStorage.getItem('ghostProgress');
@@ -185,23 +185,23 @@ export class ProfileManager {
   }
 
   /**
-   * Сбрасывает прогресс по призракам, удаляя соответствующий ключ из localStorage.
+   * Resets ghost progress by removing the corresponding key from localStorage.
    */
   resetGhostProgress() {
     localStorage.removeItem('ghostProgress');
   }
 
   /**
-   * Сохраняет тип локации, выбранный пользователем.
-   * @param {string} locationType – название типа локации.
+   * Saves the location type selected by the user.
+   * @param {string} locationType - The name of the location type.
    */
   saveLocationType(locationType) {
     localStorage.setItem('locationType', locationType);
   }
 
   /**
-   * Получает сохранённый тип локации.
-   * @returns {string|null} Название типа локации или null, если не задан.
+   * Retrieves the saved location type.
+   * @returns {string|null} The location type or null if not set.
    */
   getLocationType() {
     return localStorage.getItem('locationType');

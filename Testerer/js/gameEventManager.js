@@ -4,49 +4,45 @@ import { PostMirrorEvent } from './events/postMirrorEvent.js';
 import { PostRepeatingEvent } from './events/postRepeatingEvent.js';
 
 /**
- * GameEventManager – класс, отвечающий за “короткие” (одноразовые) события.
- * В отличие от больших квестов (MirrorQuest, RepeatingQuest, FinalQuest),
- * эти события лишь вызывают запуск нужного квеста или делают дополнительный пост.
+ * GameEventManager – A class responsible for handling "short" (one-time) events.
+ * Unlike larger quests (MirrorQuest, RepeatingQuest, FinalQuest),
+ * these events simply trigger the start of the required quest or post.
  */
 export class GameEventManager {
   constructor(eventManager, appInstance, languageManager) {
-    this.eventManager    = eventManager;
-    this.app             = appInstance;
+    this.eventManager = eventManager;
+    this.app = appInstance;
     this.languageManager = languageManager;
     
-    // Последовательность коротких событий (возможна любая логика порядка)
+    // Array of one-time events; the order is not automatically chained.
     this.events = [
       new WelcomeEvent(this.eventManager, this.app, this.languageManager),
       new PostMirrorEvent(this.eventManager, this.app),
       new PostRepeatingEvent(this.eventManager, this.app),
       new FinalEvent(this.eventManager, this.app, this.languageManager)
     ];
-    
-    this.currentEventIndex = 0;
   }
 
+  /**
+   * activateEvent – Activates the specified event by key.
+   * This method only activates the given event and does not automatically trigger the next event.
+   * @param {string} key - The unique key of the event to activate.
+   */
   async activateEvent(key) {
     const event = this.events.find(e => e.key === key);
     if (event) {
       await event.activate();
-      this.currentEventIndex++;
-      if (this.currentEventIndex < this.events.length) {
-        await this.activateNextEvent();
-      }
+      console.log(`Event '${key}' activated.`);
     } else {
-      console.warn(`[GameEventManager] Событие "${key}" не найдено в списке.`);
+      console.warn(`[GameEventManager] Event "${key}" not found in the list.`);
     }
   }
 
-  async activateNextEvent() {
-    const nextEvent = this.events[this.currentEventIndex];
-    if (nextEvent) {
-      await nextEvent.activate();
-      this.currentEventIndex++;
-    }
-  }
-
-  // Примеры вспомогательных методов
+  /**
+   * startQuest – Example helper method to start a ghost quest.
+   * This method explicitly activates the event for the ghost quest, if available,
+   * otherwise it starts the quest directly via QuestManager.
+   */
   async startQuest() {
     const ghost = this.app.ghostManager.getCurrentGhost();
     const questKey = `ghost_${ghost.id}_quest`;
@@ -54,14 +50,14 @@ export class GameEventManager {
     if (event) {
       await this.activateEvent(questKey);
     } else {
-      // Либо запускаем квест напрямую
+      // Alternatively, start the quest directly via QuestManager.
       await this.app.questManager.activateQuest(questKey);
-    }
-    if (this.currentEventIndex < this.events.length) {
-      await this.activateNextEvent();
     }
   }
 
+  /**
+   * startMirrorQuest – Example helper method to explicitly start the mirror quest event.
+   */
   async startMirrorQuest() {
     await this.activateEvent('mirror_quest');
     console.log("🪞 Mirror Quest started (event).");

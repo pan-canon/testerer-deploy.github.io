@@ -12,27 +12,31 @@ import { QuestManager } from './questManager.js';
 import { ShowProfileModal } from './showProfileModal.js';
 
 /**
- * Класс App – основная точка входа приложения.
- * Он управляет экранами (регистрация, селфи, блог), инициализацией менеджеров
- * (EventManager, QuestManager и т.д.) и хранит selfieData.
+ * Main application class.
+ * Manages screens (registration, selfie, main/blog), initializes managers 
+ * (EventManager, QuestManager, etc.) and holds the user's selfie data.
  *
- * Логика по активации квестов ("Запостить", "Заснять") вынесена в QuestManager.
+ * Quest activation logic (e.g., "Post" and "Shoot" buttons) is delegated to QuestManager.
+ *
+ * NOTE: Only the WelcomeEvent is triggered automatically after registration.
+ * Subsequent events (mirror quest, repeating quest, final event) must be triggered explicitly
+ * from quest finish methods.
  */
 export class App {
   constructor() {
-    // Привязываем метод switchScreen к глобальному объекту (window)
+    // Bind the switchScreen method to the global window object
     window.switchScreen = this.switchScreen.bind(this);
 
-    // Флаг, показывающий, открыт ли режим камеры.
+    // Flag indicating whether the camera mode is active
     this.isCameraOpen = false;
 
-    // === Получаем основные DOM-элементы. ===
-    // Экраны приложения
+    // === Get main DOM elements ===
+    // Application screens
     this.registrationScreen = document.getElementById('registration-screen');
     this.selfieScreen       = document.getElementById('selfie-screen');
     this.mainScreen         = document.getElementById('main-screen');
 
-    // Элементы регистрации
+    // Registration elements
     this.nameInput    = document.getElementById('player-name');
     this.genderSelect = document.getElementById('player-gender');
     this.nextStepBtn  = document.getElementById('next-step-btn');
@@ -40,30 +44,30 @@ export class App {
     this.selfiePreview= document.getElementById('selfie-preview');
     this.completeBtn  = document.getElementById('complete-registration');
 
-    // Элементы профиля
+    // Profile elements
     this.profileNameElem  = document.getElementById('profile-name');
     this.profilePhotoElem = document.getElementById('profile-photo');
 
-    // Кнопки сброса/экспорта/импорта
+    // Reset/Export/Import buttons
     this.resetBtn        = document.getElementById('reset-data');
     this.exportBtn       = document.getElementById('export-profile-btn');
     this.importFileInput = document.getElementById('import-file');
     this.importBtn       = document.getElementById('import-profile-btn');
 
-    // Кнопка "Запостить" (видна только на экране блога)
+    // "Post" button (visible only on main/blog screen)
     this.postBtn = document.getElementById('post-btn');
 
-    // Панель управления и визуальные эффекты
+    // Controls panel and visual effects manager
     this.controlsPanel = document.getElementById("controls-panel");
     this.visualEffectsManager = new VisualEffectsManager(this, this.controlsPanel);
 
-    // Инициализируем менеджеры: язык, камера, профиль, база данных
+    // Initialize managers: language, camera, profile, database
     this.languageManager      = new LanguageManager('language-selector');
     this.cameraSectionManager = new cameraSectionManager();
     this.profileManager       = new ProfileManager();
     this.databaseManager      = new DatabaseManager();
 
-    // GhostManager и EventManager (связь между ними)
+    // Initialize GhostManager and EventManager (they are interdependent)
     this.ghostManager = new GhostManager(null, this.profileManager, this);
     this.eventManager = new EventManager(
       this.databaseManager,
@@ -73,16 +77,16 @@ export class App {
     );
     this.ghostManager.eventManager = this.eventManager;
 
-    // QuestManager и другие сервисы
+    // Initialize QuestManager and GameEventManager
     this.questManager     = new QuestManager(this.eventManager, this);
     this.gameEventManager = new GameEventManager(this.eventManager, this, this.languageManager);
     this.showProfileModal = new ShowProfileModal(this);
 
-    // Временная канва для обработки селфи (при регистрации)
+    // Temporary canvas for selfie processing (during registration)
     this.tempCanvas = document.createElement("canvas");
     this.tempCtx    = this.tempCanvas.getContext("2d");
 
-    // Храним пользовательское селфи (полученное при регистрации)
+    // Store user's selfie (captured during registration)
     this.selfieData = null;
 
     this.bindEvents();
@@ -90,7 +94,7 @@ export class App {
   }
 
   /**
-   * loadAppState – загружает состояние приложения (например, текущего призрака) из localStorage.
+   * loadAppState – Loads the application state (e.g., current ghost) from localStorage.
    */
   loadAppState() {
     const savedGhostId = localStorage.getItem('currentGhostId');
@@ -102,22 +106,25 @@ export class App {
   }
 
   /**
-   * init – асинхронная инициализация приложения:
-   *  1) Загружаем состояние (loadAppState)
-   *  2) Ждём инициализацию базы данных
-   *  3) Обновляем дневник
-   *  4) В зависимости от наличия профиля переключаем экран (main или registration)
-   *  5) Если профиль зарегистрирован, запускаем welcomeEvent и подсвечиваем toggle-camera, если необходимо.
+   * init – Asynchronous initialization of the application:
+   *  1) Load application state.
+   *  2) Wait for the database to initialize.
+   *  3) Update the diary display.
+   *  4) Switch screen based on whether a profile exists (main or registration).
+   *  5) If the profile is registered, trigger the WelcomeEvent after 5 seconds.
+   * 
+   * NOTE: Only the WelcomeEvent is triggered automatically. Further events
+   * (mirror quest, repeating quest, final event) must be triggered explicitly.
    */
   async init() {
     this.loadAppState();
     await this.databaseManager.initDatabasePromise;
 
-    // Делаем кнопку "toggle-camera" видимой (на главном экране)
+    // Make the "toggle-camera" button visible on the main screen
     const cameraBtn = document.getElementById("toggle-camera");
     cameraBtn.style.display = "inline-block";
 
-    // Обновляем дневник (выводим все записи)
+    // Update the diary display (list all entries)
     this.eventManager.updateDiaryDisplay();
 
     if (this.profileManager.isProfileSaved()) {
@@ -125,14 +132,16 @@ export class App {
       console.log("Profile found:", profile);
       this.showMainScreen();
 
-      // Если регистрация завершена, через 5 секунд запускаем welcomeEvent через gameEventManager
+      // If registration is completed, trigger the WelcomeEvent after 5 seconds.
+      // This is the only automatic event trigger; subsequent events must be triggered explicitly.
       if (localStorage.getItem("registrationCompleted") === "true") {
         setTimeout(() => {
+          console.log("Triggering WelcomeEvent explicitly...");
           this.gameEventManager.activateEvent("welcome");
         }, 5000);
       }
 
-      // Обновляем состояние кнопки камеры в зависимости от активности зеркального квеста
+      // Update the camera button state based on mirror quest activity
       this.questManager.updateCameraButtonState();
     } else {
       console.log("Profile not found, showing registration screen.");
@@ -141,30 +150,30 @@ export class App {
   }
 
   /**
-   * switchScreen – универсальный метод переключения экранов (<section>)
-   * и групп кнопок (div.buttons) внутри #controls-panel.
-   * @param {string} screenId - ID экрана, который нужно показать.
-   * @param {string} buttonsGroupId - ID группы кнопок в #controls-panel.
+   * switchScreen – Universal method to switch screens (<section>)
+   * and button groups (div.buttons) within #controls-panel.
+   * @param {string} screenId - ID of the screen to display.
+   * @param {string} buttonsGroupId - ID of the buttons group in #controls-panel.
    */
   switchScreen(screenId, buttonsGroupId) {
-    // Скрываем все экраны
+    // Hide all screens
     document.querySelectorAll('section').forEach(section => {
       section.style.display = 'none';
     });
 
-    // Показываем нужный экран
+    // Show the target screen
     const targetScreen = document.getElementById(screenId);
     if (targetScreen) {
       targetScreen.style.display = 'block';
     }
 
-    // Скрываем все группы кнопок и блокируем клики
+    // Hide all button groups and disable clicks
     document.querySelectorAll('#controls-panel > .buttons').forEach(group => {
       group.style.display = 'none';
       group.style.pointerEvents = 'none';
     });
 
-    // Отображаем нужную группу кнопок (если указана)
+    // Show the target buttons group (if specified)
     if (buttonsGroupId) {
       const targetGroup = document.getElementById(buttonsGroupId);
       if (targetGroup) {
@@ -175,11 +184,11 @@ export class App {
   }
 
   /**
-   * bindEvents – привязывает обработчики событий ко всем элементам.
-   * Логику кнопок "Запостить" и "Заснять" передаём QuestManager.
+   * bindEvents – Attaches event listeners to all elements.
+   * Button logic for "Post" and "Shoot" is delegated to QuestManager.
    */
   bindEvents() {
-    // Поля регистрации
+    // Registration fields
     this.nameInput.addEventListener('input', () => {
       console.log("Name input changed:", this.nameInput.value);
       this.validateRegistration();
@@ -189,7 +198,7 @@ export class App {
       this.validateRegistration();
     });
 
-    // Кнопка "Next" (регистрация -> план квартиры)
+    // "Next" button (Registration -> Apartment Plan)
     if (this.nextStepBtn) {
       this.nextStepBtn.addEventListener('click', () => {
         console.log("Next button clicked");
@@ -197,7 +206,7 @@ export class App {
       });
     }
 
-    // Кнопки для селфи, регистрации, сброса, экспорта, импорта, и модальное окно профиля
+    // Buttons for selfie, registration, reset, export, import, and profile modal
     this.captureBtn.addEventListener('click', () => this.captureSelfie());
     this.completeBtn.addEventListener('click', () => this.completeRegistration());
     this.resetBtn.addEventListener('click', () => this.profileManager.resetProfile());
@@ -205,7 +214,7 @@ export class App {
     this.importBtn.addEventListener('click', () => this.importProfile());
     this.profilePhotoElem.addEventListener("click", () => this.showProfileModal.show());
 
-    // Переходы между экранами (план -> селфи, этажи)
+    // Screen transitions (Apartment Plan -> Selfie, Floor navigation)
     document.getElementById("apartment-plan-next-btn").addEventListener("click", () => this.goToSelfieScreen());
     document.getElementById("prev-floor-btn").addEventListener("click", () => {
       if (this.apartmentPlanManager) {
@@ -218,18 +227,18 @@ export class App {
       }
     });
 
-    // Кнопки переключения между камерой и блогом
+    // Buttons to toggle between camera and diary
     document.getElementById("toggle-camera").addEventListener("click", () => this.toggleCameraView());
     document.getElementById("toggle-diary").addEventListener("click", () => this.toggleCameraView());
 
-    // Кнопка "Запостить" – делегируем логику QuestManager
+    // "Post" button – delegate logic to QuestManager
     if (this.postBtn) {
       this.postBtn.addEventListener('click', () => {
         this.questManager.handlePostButtonClick();
       });
     }
 
-    // Кнопка "Заснять" – делегируем логику QuestManager (работает только на экране камеры)
+    // "Shoot" button – delegate logic to QuestManager (active only on camera screen)
     const shootBtn = document.getElementById("btn_shoot");
     if (shootBtn) {
       shootBtn.addEventListener("click", () => {
@@ -239,7 +248,7 @@ export class App {
   }
 
   /**
-   * validateRegistration – проверяет, заполнены ли поля "Name" и "Gender".
+   * validateRegistration – Validates that both "Name" and "Gender" fields are filled.
    */
   validateRegistration() {
     const isValid = (
@@ -251,8 +260,8 @@ export class App {
   }
 
   /**
-   * goToApartmentPlanScreen – сохраняет данные регистрации в localStorage,
-   * переключает экран на план квартиры и отображает группу "apartment-plan-buttons".
+   * goToApartmentPlanScreen – Saves registration data to localStorage,
+   * switches the screen to the apartment plan, and displays the "apartment-plan-buttons" group.
    */
   goToApartmentPlanScreen() {
     const regData = {
@@ -269,8 +278,8 @@ export class App {
   }
 
   /**
-   * goToSelfieScreen – переключает экран на "selfie-screen",
-   * открывает глобальный контейнер камеры и запускает камеру.
+   * goToSelfieScreen – Switches to the "selfie-screen",
+   * displays the global camera container, and starts the camera.
    */
   goToSelfieScreen() {
     window.switchScreen('selfie-screen', 'selfie-buttons');
@@ -283,25 +292,26 @@ export class App {
       filter: "grayscale(100%)"
     });
     this.cameraSectionManager.startCamera();
-    // Пока селфи не сделано – блокируем кнопку Complete
+    // Disable the "Complete" button until a selfie is captured
     this.completeBtn.disabled = true;
   }
 
   /**
-   * captureSelfie – делает снимок текущего кадра из камеры,
-   * переводит его в ч/б, показывает миниатюру (#selfie-thumbnail) и сохраняет результат в this.selfieData.
+   * captureSelfie – Captures a snapshot from the camera,
+   * converts it to grayscale, displays the thumbnail (#selfie-thumbnail),
+   * and saves the result in this.selfieData.
    */
   captureSelfie() {
-    console.log("📸 Попытка сделать снимок...");
+    console.log("📸 Attempting to capture selfie...");
     const video = this.cameraSectionManager.videoElement;
     if (!video || !video.srcObject) {
-      console.error("❌ Камера не активна!");
-      alert("Ошибка: Камера не включена.");
+      console.error("❌ Camera is not active!");
+      alert("Error: Camera is not active.");
       return;
     }
     if (video.readyState < 2) {
-      console.warn("⏳ Камера ещё не готова...");
-      alert("Подождите, пока камера загрузится.");
+      console.warn("⏳ Camera is not ready yet...");
+      alert("Please wait for the camera to load.");
       return;
     }
     try {
@@ -310,34 +320,34 @@ export class App {
       canvas.height = video.videoHeight || 480;
       const ctx = canvas.getContext('2d');
       if (!ctx) {
-        throw new Error("Не удалось получить 2D-контекст рисования.");
+        throw new Error("Failed to get 2D drawing context.");
       }
-      // Рисуем кадр из видео на canvas
+      // Draw the current video frame onto the canvas
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Преобразуем изображение в оттенки серого
+      // Convert the image to grayscale
       const grayscaleData = ImageUtils.convertToGrayscale(canvas);
       const thumbnail = document.getElementById('selfie-thumbnail');
       thumbnail.src = grayscaleData;
       thumbnail.style.display = 'block';
 
-      // Разблокируем кнопку Complete
+      // Enable the "Complete" button
       this.completeBtn.disabled = false;
       this.selfieData = grayscaleData;
-      console.log("✅ Снимок успешно сделан!");
+      console.log("✅ Selfie captured successfully!");
     } catch (error) {
-      console.error("❌ Ошибка при создании снимка:", error);
-      alert("Ошибка при создании снимка! Попробуйте снова.");
+      console.error("❌ Error capturing selfie:", error);
+      alert("Error capturing selfie! Please try again.");
     }
   }
 
   /**
-   * completeRegistration – завершает регистрацию:
-   *  1) Берёт сделанное селфи.
-   *  2) Сохраняет профиль (name, gender, language, selfie).
-   *  3) Останавливает камеру и скрывает глобальный контейнер.
-   *  4) Переключается на основной экран (showMainScreen).
-   *  5) Через 5 секунд активирует событие "welcome".
+   * completeRegistration – Completes the registration process:
+   *  1) Retrieves the captured selfie.
+   *  2) Saves the profile (name, gender, language, selfie).
+   *  3) Stops the camera and hides the global container.
+   *  4) Switches to the main screen (showMainScreen).
+   *  5) Explicitly triggers the WelcomeEvent after 5 seconds.
    */
   completeRegistration() {
     const selfieSrc = (this.selfiePreview?.src || document.getElementById('selfie-thumbnail').src);
@@ -360,38 +370,39 @@ export class App {
     this.profileManager.saveProfile(profile);
     localStorage.setItem("registrationCompleted", "true");
 
-    // Останавливаем камеру и скрываем глобальный контейнер камеры
+    // Stop the camera and hide the global camera container
     this.cameraSectionManager.stopCamera();
     document.getElementById('global-camera').style.display = 'none';
 
-    // Переходим на основной экран
+    // Switch to the main screen
     this.showMainScreen();
 
-    // Через 5 секунд активируем событие "welcome"
+    // Explicitly trigger the WelcomeEvent after 5 seconds.
     setTimeout(() => {
+      console.log("Explicitly triggering WelcomeEvent...");
       this.gameEventManager.activateEvent("welcome");
     }, 5000);
   }
 
   /**
-   * toggleCameraView – переключает отображение между камерой и блогом.
-   * При открытии камеры:
-   *   - Прячем блог (diary), показываем global-camera.
-   *   - Скрываем кнопку "Запостить" (postBtn), показываем "Заснять" (shootBtn), но делаем её disabled.
-   * При закрытии камеры:
-   *   - Возвращаемся в блог, скрываем global-camera.
-   *   - Показываем "Запостить", прячем "Заснять".
+   * toggleCameraView – Toggles between the camera view and the blog view.
+   * When opening the camera:
+   *   - Hides the diary, shows the global camera.
+   *   - Hides the "Post" button, shows the "Shoot" button (disabled).
+   * When closing the camera:
+   *   - Returns to the diary, hides the global camera.
+   *   - Shows the "Post" button, hides the "Shoot" button.
    *
-   * Обратите внимание: логика, специфичная для зеркального квеста, вынесена в соответствующие модули.
+   * NOTE: Mirror quest specific logic is delegated to the corresponding modules.
    */
   async toggleCameraView() {
-    // Получаем необходимые DOM-элементы
+    // Get necessary DOM elements
     const diary           = document.getElementById("diary");
     const globalCamera    = document.getElementById("global-camera");
     const toggleCameraBtn = document.getElementById("toggle-camera");
     const toggleDiaryBtn  = document.getElementById("toggle-diary");
-    const shootBtn        = document.getElementById("btn_shoot");  // Кнопка «Заснять»
-    const postBtn         = this.postBtn;                          // Кнопка «Запостить»
+    const shootBtn        = document.getElementById("btn_shoot");  // "Shoot" button
+    const postBtn         = this.postBtn;                          // "Post" button
     const buttonsToHide   = [
       document.getElementById("reset-data"),
       document.getElementById("export-profile-btn"),
@@ -399,31 +410,31 @@ export class App {
     ];
 
     if (!this.isCameraOpen) {
-      // === Переходим в режим камеры ===
-      console.log("📸 Переключаемся на камеру...");
-      diary.style.display = "none";                   // Скрываем блог
-      globalCamera.style.display = "flex";            // Показываем камеру
+      // === Switching to camera mode ===
+      console.log("📸 Switching to camera view...");
+      diary.style.display = "none";                   // Hide diary
+      globalCamera.style.display = "flex";            // Show camera
 
-      // Скрываем кнопки, относящиеся к блогу
+      // Hide blog-related buttons
       if (toggleCameraBtn) toggleCameraBtn.style.display = "none";
       if (toggleDiaryBtn)  toggleDiaryBtn.style.display = "inline-block";
       buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
-      if (postBtn) postBtn.style.display = "none";     // «Запостить» скрываем в режиме камеры
+      if (postBtn) postBtn.style.display = "none";     // Hide "Post" in camera mode
 
-      // Показываем кнопку «Заснять» и делаем её неактивной до выполнения условия
+      // Show "Shoot" button and disable it until conditions are met
       if (shootBtn) {
         shootBtn.style.display = "inline-block";
         shootBtn.disabled = true;
       }
 
-      // Подключаем камеру к глобальному контейнеру и запускаем видеопоток
+      // Attach the camera to the global container and start the video stream
       this.cameraSectionManager.attachTo('global-camera', {
         width: "100%",
         height: "100%"
       });
       await this.cameraSectionManager.startCamera();
 
-      // Ждем, пока видеопоток станет готов (readyState >= 2)
+      // Wait until the video stream is ready (readyState >= 2)
       await new Promise(resolve => {
         const vid = this.cameraSectionManager.videoElement;
         if (vid.readyState >= 2) {
@@ -432,47 +443,47 @@ export class App {
           vid.onloadedmetadata = () => resolve();
         }
       });
-      console.log("Видео готово:", 
+      console.log("Video ready:", 
         this.cameraSectionManager.videoElement.videoWidth,
         this.cameraSectionManager.videoElement.videoHeight
       );
 
-      // Здесь ранее был запуск цикла проверки зеркального квеста, теперь он вынесен в соответствующие модули
+      // Note: Mirror quest check loop is handled within the respective modules
 
       this.isCameraOpen = true;
     } else {
-      // === Выходим из режима камеры, возвращаемся к блогу ===
-      console.log("📓 Возвращаемся в блог...");
-      diary.style.display = "block";                  // Показываем блог
-      globalCamera.style.display = "none";              // Скрываем камеру
+      // === Switching back to diary view ===
+      console.log("📓 Returning to diary view...");
+      diary.style.display = "block";                  // Show diary
+      globalCamera.style.display = "none";              // Hide camera
 
-      // Отображаем кнопки блога: "toggle-camera" и "Запостить"
+      // Show diary buttons: "toggle-camera" and "Post"
       if (toggleCameraBtn) toggleCameraBtn.style.display = "inline-block";
       if (toggleDiaryBtn)  toggleDiaryBtn.style.display = "none";
       buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
-      if (postBtn) postBtn.style.display = "inline-block";  // "Запостить" видна только в блоге
+      if (postBtn) postBtn.style.display = "inline-block";  // "Post" visible only in diary view
 
-      // Скрываем кнопку «Заснять» и сбрасываем её состояние
+      // Hide "Shoot" button and reset its state
       if (shootBtn) {
         shootBtn.style.display = "none";
         shootBtn.disabled = true;
       }
 
-      // Останавливаем камеру и обновляем флаг
+      // Stop the camera and update the flag
       this.cameraSectionManager.stopCamera();
       this.isCameraOpen = false;
 
-      // Если нужно, можно добавить вызов метода для уведомления QuestManager о закрытии камеры
-      // Например: this.questManager.handleCameraClosed();
+      // Optionally, notify QuestManager about camera closure (if needed)
+      // e.g., this.questManager.handleCameraClosed();
     }
   }
 
   /**
-   * showMainScreen – переключает на основной экран (блог) и группу кнопок "main-buttons".
-   * Показывает профиль пользователя, и гарантирует, что на экране блога:
-   *  - Кнопка "Запостить" видна,
-   *  - Кнопка "Заснять" скрыта,
-   *  - Кнопка "toggle-camera" отображается.
+   * showMainScreen – Switches to the main (diary) screen and displays the "main-buttons" group.
+   * Displays the user profile and ensures that on the diary screen:
+   *  - The "Post" button is visible,
+   *  - The "Shoot" button is hidden,
+   *  - The "toggle-camera" button is displayed.
    */
   showMainScreen() {
     window.switchScreen('main-screen', 'main-buttons');
@@ -482,12 +493,12 @@ export class App {
     if (toggleCameraBtn) toggleCameraBtn.style.display = "inline-block";
     if (toggleDiaryBtn)  toggleDiaryBtn.style.display = "none";
 
-    // На экране блога должна быть видна только кнопка "Запостить"
+    // On the diary screen, only the "Post" button should be visible
     const postBtn = this.postBtn;
     if (postBtn) {
       postBtn.style.display = "inline-block";
     }
-    // Убеждаемся, что кнопка "Заснять" скрыта
+    // Ensure that the "Shoot" button is hidden
     const shootBtn = document.getElementById("btn_shoot");
     if (shootBtn) {
       shootBtn.style.display = "none";
@@ -498,30 +509,30 @@ export class App {
       this.profileNameElem.textContent = profile.name;
       this.profilePhotoElem.src = profile.selfie;
       this.profilePhotoElem.style.display = 'block';
-      // Сохраняем селфи для использования в зеркальном квесте
+      // Save the selfie for use in mirror quest
       this.selfieData = profile.selfie;
     }
 
-    // Если нужно, можно обновить состояние кнопки "Запостить" через QuestManager
+    // Optionally update the state of the "Post" button via QuestManager
     // this.questManager.updatePostButtonState();
   }
 
   /**
-   * showRegistrationScreen – переключает на экран регистрации и отображает группу "registration-buttons".
+   * showRegistrationScreen – Switches to the registration screen and displays the "registration-buttons" group.
    */
   showRegistrationScreen() {
     window.switchScreen('registration-screen', 'registration-buttons');
   }
 
   /**
-   * exportProfile – экспортирует профиль (и дневник) в файл JSON.
+   * exportProfile – Exports the profile (and diary) to a JSON file.
    */
   exportProfile() {
     this.profileManager.exportProfileData(this.databaseManager, this.apartmentPlanManager);
   }
 
   /**
-   * importProfile – импортирует профиль из файла JSON.
+   * importProfile – Imports the profile from a JSON file.
    */
   importProfile() {
     if (this.importFileInput.files.length === 0) {

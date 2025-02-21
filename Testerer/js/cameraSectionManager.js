@@ -1,11 +1,11 @@
 export class cameraSectionManager {
   /**
-   * Конструктор класса.
-   * Инициализирует поля:
-   * - videoElement: будет создан динамически при первом вызове attachTo().
-   * - stream: хранит объект MediaStream, полученный из getUserMedia().
-   * - onVideoReady: callback, вызываемый, когда видеопоток готов (после события loadedmetadata).
-   * - onCameraClosed: callback, вызываемый после остановки камеры.
+   * Constructor for the cameraSectionManager class.
+   * Initializes:
+   * - videoElement: Will be created dynamically on the first call to attachTo().
+   * - stream: Stores the MediaStream object obtained from getUserMedia().
+   * - onVideoReady: Callback invoked when the video stream is ready (after loadedmetadata event).
+   * - onCameraClosed: Callback invoked after the camera is stopped.
    */
   constructor() {
     this.videoElement = null;
@@ -16,87 +16,86 @@ export class cameraSectionManager {
 
   /**
    * attachTo(containerId, options)
-   * Прикрепляет видеоэлемент к указанному контейнеру.
-   * Если видеоэлемент ещё не создан, он создаётся с базовыми настройками.
-   * Все переданные стили из объекта options применяются к видеоэлементу.
-   * Предварительно контейнер очищается (container.innerHTML = "").
+   * Attaches the video element to the specified container.
+   * If the video element has not been created, it is created with basic settings.
+   * All provided style options are applied to the video element.
+   * The container is cleared (container.innerHTML = "") before appending.
    *
-   * @param {string} containerId - ID контейнера, куда нужно вставить видеоэлемент.
-   * @param {object} [options={}] - Объект со стилевыми свойствами для видеоэлемента (например, width, height, filter).
+   * @param {string} containerId - The ID of the container to attach the video element.
+   * @param {object} [options={}] - Object containing CSS style properties for the video element (e.g., width, height, filter).
    */
   attachTo(containerId, options = {}) {
-    // Получаем ссылку на контейнер по ID.
+    // Get the container element by its ID.
     const container = document.getElementById(containerId);
     if (!container) {
-      console.error(`Контейнер с id "${containerId}" не найден!`);
+      console.error(`Container with id "${containerId}" not found!`);
       return;
     }
 
-    // Если видеоэлемент еще не создан, создаем его и настраиваем.
+    // If the video element is not yet created, create and configure it.
     if (!this.videoElement) {
       this.videoElement = document.createElement('video');
       this.videoElement.autoplay = true;
       this.videoElement.playsInline = true;
     } else if (this.videoElement.parentNode) {
-      // Если видеоэлемент уже существует и прикреплен к какому-либо контейнеру,
-      // удаляем его оттуда, чтобы предотвратить дублирование.
+      // If the video element is already attached to a container, remove it to avoid duplication.
       this.videoElement.parentNode.removeChild(this.videoElement);
     }
 
-    // Применяем переданные стилевые опции к видеоэлементу.
+    // Apply the provided style options to the video element.
     for (const prop in options) {
       this.videoElement.style[prop] = options[prop];
     }
 
-    // Очищаем содержимое контейнера и вставляем видеоэлемент.
+    // Clear the container's content and append the video element.
     container.innerHTML = "";
     container.appendChild(this.videoElement);
   }
 
   /**
-   * startCamera – запускает камеру, запрашивая доступ через getUserMedia.
-   * Если поток уже запущен, функция ничего не делает.
-   * При успешном получении потока, он устанавливается в качестве источника для видеоэлемента.
-   * После загрузки метаданных видеопотока вызывается onVideoReady, если он определён.
+   * startCamera – Starts the camera by requesting access via getUserMedia.
+   * If the stream is already running, the function does nothing.
+   * Upon successful retrieval, sets the video element's source to the stream.
+   * Once the video metadata is loaded, calls onVideoReady (if defined).
    */
   async startCamera() {
-    // Если поток уже запущен, выводим сообщение и выходим.
+    // If the stream is already running, log a message and exit.
     if (this.stream) {
-      console.log("Камера уже запущена");
+      console.log("Camera already started");
       return;
     }
     try {
-      // Определяем, используется ли мобильное устройство, чтобы правильно задать режим камеры.
+      // Determine if a mobile device is being used to set the correct camera mode.
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       const constraints = { video: { facingMode: isMobile ? "environment" : "user" } };
-      console.log(`🎥 Запуск камеры: ${constraints.video.facingMode}`);
+      console.log(`🎥 Starting camera with facing mode: ${constraints.video.facingMode}`);
       
-      // Запрашиваем доступ к камере.
+      // Request access to the camera.
       this.stream = await navigator.mediaDevices.getUserMedia(constraints);
       if (!this.videoElement) {
-        console.error("Видеоэлемент не создан!");
+        console.error("Video element not created!");
         return;
       }
-      // Устанавливаем полученный поток как источник для видеоэлемента.
+      // Set the obtained stream as the source for the video element.
       this.videoElement.srcObject = this.stream;
       
-      // Добавляем обработчик события "loadedmetadata", чтобы уведомить о готовности видеопотока.
+      // Add a listener for the "loadedmetadata" event to notify when the video stream is ready.
       this.videoElement.addEventListener("loadedmetadata", () => {
-        console.log("loadedmetadata: видеопоток готов");
+        console.log("loadedmetadata: Video stream is ready");
         if (typeof this.onVideoReady === "function") {
           this.onVideoReady();
         }
       }, { once: true });
     } catch (error) {
-      console.error("❌ Ошибка при доступе к камере:", error);
+      console.error("❌ Error accessing the camera:", error);
     }
   }
 
   /**
-   * stopCamera – останавливает текущий поток камеры.
-   * Проходит по всем дорожкам (tracks) потока и останавливает их.
-   * После остановки сбрасывает поле stream в null.
-   * Вызывает onCameraClosed, если он определён.
+   * stopCamera – Stops the current camera stream.
+   * Iterates over all tracks in the stream and stops them.
+   * Resets the stream property to null.
+   * Calls onCameraClosed (if defined).
    */
   stopCamera() {
     if (this.stream) {

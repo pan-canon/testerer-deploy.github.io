@@ -1,30 +1,30 @@
 export class EventManager {
   /**
-   * Конструктор EventManager.
-   * @param {DatabaseManager} databaseManager - экземпляр менеджера базы данных.
-   * @param {LanguageManager} languageManager - менеджер локализации.
-   * @param {GhostManager} ghostManager - менеджер призраков (если используется).
-   * @param {VisualEffectsManager} visualEffectsManager - менеджер визуальных эффектов (если используется).
+   * Constructor for EventManager.
+   * @param {DatabaseManager} databaseManager - Instance of the database manager.
+   * @param {LanguageManager} languageManager - Localization manager.
+   * @param {GhostManager} ghostManager - Ghost manager (if used).
+   * @param {VisualEffectsManager} visualEffectsManager - Visual effects manager (if used).
    *
-   * Этот класс отвечает за работу с дневником:
-   * - Добавление записей (диалогов, уведомлений, квестовых сообщений).
-   * - Обновление и отображение записей.
-   * - Запуск коротких событий (через GameEventManager), если нужно.
+   * This class is responsible for diary operations:
+   * - Adding entries (dialogues, notifications, quest messages).
+   * - Updating and displaying entries.
+   * - Launching short events (via GameEventManager) if needed.
    */
   constructor(databaseManager, languageManager, ghostManager, visualEffectsManager) {
-    this.databaseManager       = databaseManager;
-    this.languageManager       = languageManager;
-    this.ghostManager          = ghostManager;
-    this.visualEffectsManager  = visualEffectsManager;
+    this.databaseManager = databaseManager;
+    this.languageManager = languageManager;
+    this.ghostManager = ghostManager;
+    this.visualEffectsManager = visualEffectsManager;
     
-    // Получаем контейнер дневника из DOM
+    // Get the diary container from the DOM
     this.diaryContainer = document.getElementById("diary");
   }
 
   /**
-   * isEventLogged – проверяет, была ли уже добавлена запись с данным ключом.
-   * @param {string} eventKey - ключ события.
-   * @returns {boolean} true, если запись найдена, иначе false.
+   * isEventLogged – Checks whether an entry with the given key has already been added.
+   * @param {string} eventKey - The event key.
+   * @returns {boolean} True if the entry is found, otherwise false.
    */
   isEventLogged(eventKey) {
     const entries = this.databaseManager.getDiaryEntries();
@@ -32,86 +32,86 @@ export class EventManager {
   }
 
   /**
-   * addDiaryEntry – добавляет запись в дневник с указанием, от кого она (призрак или пользователь).
-   * @param {string} entry - Текст записи (обычно в формате JSON или обычная строка).
-   * @param {boolean} [isPostFromGhost=false] - если true, запись будет оформлена как запись призрака.
+   * addDiaryEntry – Adds an entry to the diary with an indication of its source (ghost or user).
+   * @param {string} entry - The text of the entry (usually in JSON format or plain text).
+   * @param {boolean} [isPostFromGhost=false] - If true, the entry will be styled as a ghost post.
    */
   async addDiaryEntry(entry, isPostFromGhost = false) {
-    // Определяем CSS-класс для оформления записи
+    // Determine the CSS class for styling the entry
     const postClass = isPostFromGhost ? "ghost-post" : "user-post";
-    // Формируем объект записи
+    // Create the entry object
     const entryData = { entry, postClass };
-    // Сериализуем объект записи в JSON-строку
+    // Serialize the entry object into a JSON string
     const serializedEntry = JSON.stringify(entryData);
 
-    // Добавляем запись в базу данных (метод addDiaryEntry базы)
+    // Add the entry to the database (using the databaseManager's addDiaryEntry method)
     await this.databaseManager.addDiaryEntry(serializedEntry);
 
-    // Обновляем отображение дневника
+    // Update the diary display
     this.updateDiaryDisplay();
   }
 
   /**
-   * updateDiaryDisplay – обновляет содержимое контейнера дневника.
-   * Получает все записи из базы, сортирует их (при желании)
-   * и отображает в виде отдельных элементов <article>.
+   * updateDiaryDisplay – Updates the content of the diary container.
+   * Retrieves all entries from the database, sorts them if necessary,
+   * and displays them as individual <article> elements.
    */
   updateDiaryDisplay() {
     if (!this.diaryContainer) {
       console.error("Diary container not found!");
       return;
     }
-    // Очищаем контейнер дневника
+    // Clear the diary container
     this.diaryContainer.innerHTML = "";
 
-    // Получаем из localStorage массив ID записей, для которых уже запускалась анимация
+    // Retrieve an array of IDs for entries that have already been animated from localStorage
     const animatedIds = JSON.parse(localStorage.getItem("animatedDiaryIds") || "[]");
 
-    // Получаем записи из базы данных
+    // Retrieve entries from the database
     const entries = this.databaseManager.getDiaryEntries();
-    const seen    = new Set();
+    const seen = new Set();
     const currentLanguage = this.languageManager.getLanguage();
 
     entries.forEach(entryObj => {
-      // Предотвращаем дублирование записей (по id)
+      // Prevent duplicate entries by id
       if (seen.has(entryObj.id)) return;
       seen.add(entryObj.id);
 
-      // Создаем обёртку для записи <article>
+      // Create an <article> wrapper for the entry
       const articleElem = document.createElement("article");
       articleElem.classList.add(entryObj.postClass);
 
-      // Разбираем поле entryObj.entry на основной текст + [photo attached]
-      let mainText  = entryObj.entry;
+      // Split entryObj.entry into main text and image data (if "[photo attached]" is present)
+      let mainText = entryObj.entry;
       let imageData = null;
       if (entryObj.entry.includes("[photo attached]")) {
         const parts = entryObj.entry.split("[photo attached]");
-        mainText    = parts[0].trim();
+        mainText = parts[0].trim();
         if (parts.length >= 2) {
-          imageData  = parts[1].trim();
+          imageData = parts[1].trim();
           if (!/^data:/.test(imageData)) {
             imageData = "data:image/png;base64," + imageData;
           }
         }
       }
 
-      // Локализуем текст (при необходимости)
+      // Localize the text if necessary
       const localizedText = this.languageManager.locales[currentLanguage][mainText] || mainText;
 
-      // Убираем специальные префиксы (user_post_success: / user_post_failed:)
+      // Remove special prefixes (user_post_success: / user_post_failed:)
       const cleanedText = localizedText
         .replace(/^user_post_success:\s*/, '')
         .replace(/^user_post_failed:\s*/, '');
 
-      // Удаляем дробную часть секунд и символ "Z" у timestamp, если есть
+      // Remove fractional seconds and the "Z" from the timestamp, if present
       const formattedTimestamp = entryObj.timestamp.replace(/\.\d+Z$/, '');
 
-      // Формируем финальный текст вида "СООБЩЕНИЕ (2025-02-20T15:34:12)"
+      // Format the final text as "MESSAGE (timestamp)"
       const fullText = `${cleanedText} (${formattedTimestamp})`;
 
-      // Блок для текста
+      // Create a text container <p>
       const textContainer = document.createElement("p");
-      // Если присутствует изображение, добавляем <img> перед текстом
+      // If an image is attached, add an <img> element before the text
       if (imageData) {
         const img = document.createElement("img");
         img.src = imageData;
@@ -121,7 +121,7 @@ export class EventManager {
       }
       articleElem.appendChild(textContainer);
 
-      // Если дата есть в конце, переносим её на новую строку
+      // If a date is at the end, move it to a new line
       let messageText = fullText;
       const dateMatch = fullText.match(/(\(\d{4}-\d{2}-\d{2}.*\))$/);
       if (dateMatch) {
@@ -129,41 +129,41 @@ export class EventManager {
         messageText = fullText.replace(dateText, "").trim() + "<br>" + dateText;
       }
 
-      // Проверяем, анимировали ли уже эту запись
+      // Check if this entry has already been animated
       const isAlreadyAnimated = animatedIds.includes(entryObj.id);
-      const effectsManager    = this.visualEffectsManager;
+      const effectsManager = this.visualEffectsManager;
       if (isAlreadyAnimated) {
-        // Запись уже анимировалась, просто выводим результат
+        // If already animated, simply display the result
         textContainer.innerHTML = messageText;
       } else {
-        // Запись новая: анимируем
+        // For new entries, animate the text
         const animatedSpan = document.createElement("span");
         textContainer.innerHTML = "";
         textContainer.appendChild(animatedSpan);
 
-        // Запускаем эффект (ghost или user)
+        // Trigger the appropriate effect (ghost or user)
         if (entryObj.postClass === "ghost-post") {
           effectsManager.triggerGhostTextEffect(animatedSpan, messageText);
         } else {
           effectsManager.triggerUserTextEffect(animatedSpan, messageText);
         }
 
-        // Помечаем эту запись как анимированную
+        // Mark this entry as animated
         animatedIds.push(entryObj.id);
       }
 
-      // Добавляем <article> в контейнер
+      // Append the <article> to the diary container
       this.diaryContainer.appendChild(articleElem);
     });
 
-    // Сохраняем обновлённый список animatedIds
+    // Save the updated list of animated IDs to localStorage
     localStorage.setItem("animatedDiaryIds", JSON.stringify(animatedIds));
     console.log("📖 Diary updated.");
   }
 
   /**
-   * startGhostQuest – пример: запускает квест для текущего призрака.
-   * Добавляет в дневник запись с ключом квеста и выводит информацию в консоль.
+   * startGhostQuest – Example method: Starts a quest for the current ghost.
+   * Adds a diary entry with the quest key and logs the information to the console.
    */
   async startGhostQuest() {
     const ghost = this.ghostManager.getCurrentGhost();
@@ -171,21 +171,20 @@ export class EventManager {
       const questKey = `ghost_${ghost.id}_quest`;
       await this.addDiaryEntry(questKey, true);
       console.log(`👻 Starting quest for ${ghost.name}...`);
-      // Здесь вы можете вызвать QuestManager.activateQuest(questKey) или другое событие.
+      // Here, you can call QuestManager.activateQuest(questKey) or trigger another event.
     } else {
       console.error("⚠️ No active ghost found.");
     }
   }
 
   /*
-   * Пример, как можно организовать логику запуска небольших событий/квестов:
-   * - Любая логика, связанная с зеркальным квестом, теперь хранится в BaseMirrorQuest и его событиях.
-   * - Если нужны короткие события (попытки напугать, стук в дверь, телефонный звонок), можно добавлять
-   *   методы или вызывать gameEventManager.activateEvent('ghost_knock') и т.д.
+   * Example of how to organize logic for triggering small events/quests:
+   * - All mirror quest-related logic is now encapsulated in BaseMirrorQuest and its events.
+   * - For short events (attempts to scare, door knocks, phone calls), you could add
+   *   methods or call gameEventManager.activateEvent('ghost_knock') etc.
    *
-   * Таким образом, EventManager остаётся "чистым" местом для работы с дневником
-   * и небольшими вспомогательными методами. Вся логика зеркального квеста уехала
-   * в BaseMirrorQuest, а специфичная логика "что это?!" - в отдельное событие,
-   * если вы хотите сохранить такой сценарий.
+   * This approach keeps the EventManager as a "clean" place for diary operations
+   * and helper methods. All mirror quest logic has been moved to BaseMirrorQuest,
+   * and any specific "what is this?!" logic to a separate event, if desired.
    */
 }

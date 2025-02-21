@@ -1,78 +1,78 @@
 import { App } from './app.js';
 
-// Ждем, пока DOM полностью загрузится, затем инициализируем приложение
+// Wait until the DOM is fully loaded, then initialize the application
 document.addEventListener("DOMContentLoaded", async () => {
-  // Создаем новый экземпляр приложения
+  // Create a new instance of the application
   const app = new App();
 
-  // Обработка события beforeinstallprompt для PWA
-  // Это событие срабатывает, когда браузер определяет, что сайт соответствует требованиям PWA
-  // и может быть установлен на рабочий стол.
+  // Handle the beforeinstallprompt event for PWA
+  // This event fires when the browser detects that the site meets PWA requirements
+  // and can be installed on the desktop.
   let deferredPrompt;
   window.addEventListener('beforeinstallprompt', (e) => {
-    // Предотвращаем автоматическое появление нативного запроса установки
+    // Prevent the native install prompt from showing automatically
     e.preventDefault();
-    // Сохраняем событие для последующего использования
+    // Save the event for later use
     deferredPrompt = e;
-    // Показываем кнопку установки приложения (убедитесь, что элемент с id "install-btn" присутствует в HTML)
+    // Show the install button (ensure that an element with id "install-btn" exists in HTML)
     const installBtn = document.getElementById("install-btn");
     if (installBtn) {
       installBtn.style.display = "block";
     }
   });
 
-  // Добавляем обработчик клика по кнопке установки
+  // Add a click event handler for the install button
   const installBtn = document.getElementById("install-btn");
   if (installBtn) {
     installBtn.addEventListener("click", async () => {
       if (deferredPrompt) {
-        // Показываем prompt установки пользователю
+        // Show the install prompt to the user
         deferredPrompt.prompt();
-        // Ждем, пока пользователь не сделает выбор
+        // Wait for the user's choice
         const { outcome } = await deferredPrompt.userChoice;
         console.log(`User response to the install prompt: ${outcome}`);
-        // После выбора скрываем кнопку установки
+        // Hide the install button after the choice is made
         installBtn.style.display = "none";
-        // Сбрасываем сохраненное событие
+        // Reset the saved event
         deferredPrompt = null;
       }
     });
   }
 
-  // Регистрируем сервис-воркер, если он поддерживается браузером
+  // Register the service worker if supported by the browser
   if ('serviceWorker' in navigator) {
     try {
-      // Определяем базовый путь в зависимости от URL.
-      // Если URL содержит "/Testerer/", то используем соответствующий BASE_PATH, иначе оставляем пустой.
+      // Determine the base path depending on the URL.
+      // If the URL contains "/Testerer/", use the corresponding BASE_PATH, otherwise leave it empty.
       const BASE_PATH = window.location.pathname.includes("/Testerer/") 
         ? "/testerer-deploy.github.io/Testerer"
         : "";
 
-      // Регистрируем сервис-воркер с указанным путем
+      // Register the service worker with the specified path
       const registration = await navigator.serviceWorker.register(`${BASE_PATH}/serviceWorker.js`);
-      console.log('✅ Service Worker зарегистрирован с областью:', registration.scope);
+      console.log('✅ Service Worker registered with scope:', registration.scope);
     } catch (error) {
-      // Если произошла ошибка при регистрации, выводим её в консоль
-      console.error('❌ Ошибка при регистрации Service Worker:', error);
+      // Log any errors during service worker registration
+      console.error('❌ Error during Service Worker registration:', error);
     }
   }
 });
 
-// Новый обработчик события load, который скрывает прелоадер после полной загрузки всех ресурсов
+// New load event handler that hides the preloader after all resources are loaded
 window.addEventListener("load", () => {
-  // Получаем элемент прелоадера из DOM (убедитесь, что в вашем index.html есть элемент с id="preloader")
+  // Get the preloader element from the DOM (ensure there is an element with id="preloader" in your index.html)
   const preloader = document.getElementById("preloader");
   if (preloader) {
-    // Добавляем плавное уменьшение прозрачности прелоадера
+    // Gradually decrease the preloader's opacity for a smooth effect
     preloader.style.opacity = 1;
     const fadeEffect = setInterval(() => {
       if (preloader.style.opacity > 0) {
         preloader.style.opacity -= 0.1;
       } else {
-        // Когда прозрачность достигнет 0, останавливаем интервал и скрываем прелоадер
+        // Once opacity reaches 0, clear the interval and hide the preloader
         clearInterval(fadeEffect);
         preloader.style.display = "none";
       }
-    }, 50); // Интервал в 50 мс для плавности эффекта
+    }, 50); // 50ms interval for a smooth fade effect
   }
 });

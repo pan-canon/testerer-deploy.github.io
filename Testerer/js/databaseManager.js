@@ -1,35 +1,35 @@
 export class DatabaseManager {
   constructor() {
-    // Объект базы данных (SQL.Database) будет храниться здесь.
+    // The database object (SQL.Database) will be stored here.
     this.db = null;
-    // Promise, который разрешается после инициализации базы данных.
+    // A Promise that resolves after the database has been initialized.
     this.initDatabasePromise = this.initDatabase();
   }
 
   /**
-   * initDatabase – асинхронно инициализирует базу данных.
-   * Если база сохранена в localStorage, загружает её; иначе создаёт новую с нужными таблицами.
+   * initDatabase – Asynchronously initializes the database.
+   * If the database is stored in localStorage, it loads it; otherwise, it creates a new one with the required tables.
    */
   async initDatabase() {
-    // Загружаем SQL.js, передавая функцию locateFile для поиска необходимых файлов.
+    // Load SQL.js, providing a locateFile function to find necessary files.
     const SQL = await initSqlJs({
       locateFile: file => `js/${file}`
     });
-    // Проверяем, сохранена ли база в localStorage под ключом "diaryDB"
+    // Check if the database is stored in localStorage under the key "diaryDB"
     const savedDb = localStorage.getItem("diaryDB");
     if (savedDb) {
-      // Если база найдена, декодируем base64-строку в Uint8Array
+      // If the database is found, decode the base64 string into a Uint8Array
       const byteStr = atob(savedDb);
       const bytes = new Uint8Array(byteStr.length);
       for (let i = 0; i < byteStr.length; i++) {
         bytes[i] = byteStr.charCodeAt(i);
       }
-      // Создаем базу из загруженных байтов
+      // Create the database from the loaded bytes
       this.db = new SQL.Database(bytes);
     } else {
-      // Если базы нет, создаем новую базу данных
+      // If no database is found, create a new database
       this.db = new SQL.Database();
-      // Создаем необходимые таблицы: diary, apartment_plan и quest_progress
+      // Create the necessary tables: diary, apartment_plan, and quest_progress
       this.db.run(`
         CREATE TABLE IF NOT EXISTS diary (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,58 +52,58 @@ export class DatabaseManager {
   }
 
   /**
-   * saveDatabase – экспортирует базу данных и сохраняет её в localStorage.
+   * saveDatabase – Exports the database and saves it to localStorage.
    */
   saveDatabase() {
     if (!this.db) return;
-    // Экспорт базы в бинарный массив
+    // Export the database to a binary array
     const binaryData = this.db.export();
     let binaryStr = "";
     for (let i = 0; i < binaryData.length; i++) {
       binaryStr += String.fromCharCode(binaryData[i]);
     }
-    // Кодируем бинарную строку в base64 и сохраняем в localStorage
+    // Encode the binary string in base64 and save it in localStorage
     const base64 = btoa(binaryStr);
     localStorage.setItem("diaryDB", base64);
   }
 
   /**
-   * addDiaryEntry – добавляет новую запись в таблицу diary.
-   * @param {string} entry - Текст записи (обычно JSON‑строка).
+   * addDiaryEntry – Adds a new entry to the diary table.
+   * @param {string} entry - The text of the entry (usually a JSON string).
    */
   async addDiaryEntry(entry) {
     if (!this.db) {
       console.error("⚠️ Database not initialized!");
       return;
     }
-    // Получаем текущую дату и время в формате ISO
+    // Get the current date and time in ISO format
     const timestamp = new Date().toISOString();
-    // Вставляем новую запись в таблицу diary
+    // Insert a new entry into the diary table
     this.db.run("INSERT INTO diary (entry, timestamp) VALUES (?, ?)", [entry, timestamp]);
     console.log("✅ Entry added:", entry);
-    // Сохраняем базу после вставки записи
+    // Save the database after inserting the entry
     this.saveDatabase();
   }
 
   /**
-   * getDiaryEntries – возвращает массив записей из таблицы diary, отсортированных по убыванию времени.
-   * @returns {Array} Массив объектов записей { id, entry, postClass, timestamp }.
+   * getDiaryEntries – Returns an array of diary entries sorted by descending timestamp.
+   * @returns {Array} An array of entry objects { id, entry, postClass, timestamp }.
    */
   getDiaryEntries() {
     if (!this.db) {
       console.error("⚠️ Database not initialized!");
       return [];
     }
-    // Выполняем запрос на выбор всех записей
+    // Execute a query to select all entries
     const result = this.db.exec("SELECT * FROM diary ORDER BY timestamp DESC");
     if (result.length > 0) {
       return result[0].values.map(row => {
         let parsed;
         try {
-          // Пробуем распарсить поле записи как JSON
+          // Attempt to parse the entry field as JSON
           parsed = JSON.parse(row[1]);
         } catch (e) {
-          // Если парсинг не удался, используем значение по умолчанию
+          // If parsing fails, use a default value
           parsed = { entry: row[1], postClass: "user-post" };
         }
         return { id: row[0], ...parsed, timestamp: row[2] };
@@ -113,9 +113,9 @@ export class DatabaseManager {
   }
 
   /**
-   * addQuestProgress – добавляет запись о прогрессе квеста в таблицу quest_progress.
-   * @param {string} questKey - Ключ квеста.
-   * @param {string} status - Статус выполнения квеста.
+   * addQuestProgress – Adds a quest progress record to the quest_progress table.
+   * @param {string} questKey - The key of the quest.
+   * @param {string} status - The status of the quest.
    */
   addQuestProgress(questKey, status) {
     if (!this.db) {
@@ -128,9 +128,9 @@ export class DatabaseManager {
   }
 
   /**
-   * getQuestProgress – возвращает массив записей о прогрессе для указанного квеста.
-   * @param {string} questKey - Ключ квеста.
-   * @returns {Array} Массив объектов прогресса { id, quest_key, status }.
+   * getQuestProgress – Returns an array of progress records for the specified quest.
+   * @param {string} questKey - The key of the quest.
+   * @returns {Array} An array of progress objects { id, quest_key, status }.
    */
   getQuestProgress(questKey) {
     if (!this.db) {
@@ -145,29 +145,29 @@ export class DatabaseManager {
   }
 
   /**
-   * addApartmentRooms – сохраняет данные плана квартиры для указанного этажа.
-   * @param {number} floor - номер этажа.
-   * @param {Array} rooms - массив объектов, описывающих помещения (например, {floor, startRow, startCol, endRow, endCol, type}).
+   * addApartmentRooms – Saves the apartment plan data for the specified floor.
+   * @param {number} floor - The floor number.
+   * @param {Array} rooms - An array of objects describing the rooms (e.g., {floor, startRow, startCol, endRow, endCol, type}).
    */
   addApartmentRooms(floor, rooms) {
     if (!this.db) {
       console.error("⚠️ Database not initialized!");
       return;
     }
-    // Преобразуем массив комнат в JSON-строку
+    // Convert the array of rooms to a JSON string
     const roomData = JSON.stringify(rooms);
-    // Удаляем старые данные для этого этажа (если есть)
+    // Delete old data for this floor (if any)
     this.db.run("DELETE FROM apartment_plan WHERE floor_number = ?", [floor]);
-    // Вставляем новые данные
+    // Insert the new data
     this.db.run("INSERT INTO apartment_plan (floor_number, room_data) VALUES (?, ?)", [floor, roomData]);
     console.log(`✅ Apartment plan for floor ${floor} saved.`);
     this.saveDatabase();
   }
 
   /**
-   * getApartmentPlan – возвращает данные плана квартиры для указанного этажа.
-   * @param {number} floor - Номер этажа.
-   * @param {function} callback - Функция обратного вызова, которая получает массив данных (план).
+   * getApartmentPlan – Returns the apartment plan data for the specified floor.
+   * @param {number} floor - The floor number.
+   * @param {function} callback - A callback function that receives the plan data array.
    */
   getApartmentPlan(floor, callback) {
     if (!this.db) {
@@ -175,10 +175,10 @@ export class DatabaseManager {
       callback([]);
       return;
     }
-    // Выполняем запрос для получения данных плана по указанному этажу
+    // Execute a query to get the apartment plan data for the specified floor
     const result = this.db.exec("SELECT room_data FROM apartment_plan WHERE floor_number = ? ORDER BY id", [floor]);
     if (result.length > 0) {
-      // Преобразуем каждую запись (room_data) из JSON, если возможно
+      // Attempt to parse each room_data entry from JSON
       const rooms = result[0].values.map(row => {
         try {
           return JSON.parse(row[0]);

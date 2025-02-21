@@ -1,59 +1,62 @@
 import { BaseEvent } from './baseEvent.js';
 
 /**
- * WelcomeEvent – событие приветствия, которое уведомляет пользователя о приглашении подойти к зеркалу.
- * Наследуется от BaseEvent и реализует логику активации через менеджер событий (EventManager).
+ * WelcomeEvent – A welcome event that notifies the user with an invitation
+ * to approach the mirror. Inherits from BaseEvent and implements activation logic
+ * via the EventManager.
  *
- * При активации события:
- *  1) Проверяем, не было ли оно ранее зарегистрировано (isEventLogged).
- *  2) Если нет, добавляем запись "welcome" в дневник (как призрачный пост).
- *  3) Устанавливаем флаг "mirrorQuestReady" в localStorage, чтобы кнопка "Запостить" разблокировалась.
- *  4) Обновляем состояние кнопки "Запостить" через QuestManager (updatePostButtonState).
- *  5) Запускаем зеркальный визуальный эффект (triggerMirrorEffect).
+ * Upon activation:
+ *  1) Checks if the "welcome" event has already been logged.
+ *  2) If not, logs the "welcome" entry in the diary as a ghost post.
+ *  3) Sets the 'mirrorQuestReady' flag in localStorage to enable the "Post" button.
+ *  4) Calls updatePostButtonState() in QuestManager to update the UI.
+ *  5) Triggers the mirror visual effect.
  */
 export class WelcomeEvent extends BaseEvent {
   /**
-   * @param {EventManager} eventManager – Менеджер для работы с дневником (EventManager).
-   * @param {App} appInstance – ссылка на основной объект приложения.
-   * @param {LanguageManager} [languageManager] – менеджер локализации для перевода сообщений (необязательно).
+   * @param {EventManager} eventManager - The event manager for diary operations.
+   * @param {App} appInstance - Reference to the main application instance.
+   * @param {LanguageManager} [languageManager] - Optional localization manager.
    */
   constructor(eventManager, appInstance, languageManager) {
     super(eventManager);
     this.app = appInstance;
     this.languageManager = languageManager;
-    // Устанавливаем уникальный ключ события "welcome".
+    // Set the unique key for the welcome event.
     this.key = "welcome";
   }
 
   /**
-   * activate – переопределенный метод активации события 'welcome'.
+   * activate – Overridden activation method for the 'welcome' event.
    *
-   * Шаги:
-   *  1) Если событие "welcome" уже есть в дневнике, завершаем без действий.
-   *  2) Иначе, добавляем запись в дневник как призрачный пост.
-   *  3) Устанавливаем 'mirrorQuestReady' = true, чтобы разрешить квест (кнопку "Запостить").
-   *  4) Вызываем this.app.questManager.updatePostButtonState(), чтобы разблокировать "Запостить".
-   *  5) Запускаем зеркальный визуальный эффект (triggerMirrorEffect).
+   * Steps:
+   *  1) If the "welcome" event is already logged, exit.
+   *  2) Otherwise, log the "welcome" entry in the diary as a ghost post.
+   *  3) Set the 'mirrorQuestReady' flag in localStorage.
+   *  4) Call updatePostButtonState() in QuestManager to update the "Post" button.
+   *  5) Trigger the mirror visual effect.
+   *
+   * @returns {Promise<void>}
    */
   async activate() {
-    // 1) Если событие "welcome" уже зарегистрировано, выходим.
+    // Step 1: Check if the "welcome" event is already logged.
     if (this.eventManager.isEventLogged(this.key)) {
-      console.log(`Событие '${this.key}' уже зарегистрировано. Пропускаем активацию.`);
+      console.log(`Event '${this.key}' is already logged. Skipping activation.`);
       return;
     }
 
-    console.log(`Активируем событие '${this.key}': регистрируем приглашение подойти к зеркалу`);
+    console.log(`Activating event '${this.key}': Logging invitation to approach the mirror`);
 
-    // 2) Добавляем запись 'welcome' в дневник как призрачный пост (true).
+    // Step 2: Log the "welcome" entry in the diary as a ghost post.
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // 3) Устанавливаем флаг готовности mirrorQuestReady в localStorage.
+    // Step 3: Set the mirrorQuestReady flag in localStorage.
     localStorage.setItem("mirrorQuestReady", "true");
 
-    // 4) Обновляем состояние кнопки "Запостить" (логика в QuestManager).
+    // Step 4: Update the "Post" button state via QuestManager.
     this.app.questManager.updatePostButtonState();
 
-    // 5) Запускаем зеркальный визуальный эффект.
+    // Step 5: Trigger the mirror visual effect.
     this.app.visualEffectsManager.triggerMirrorEffect();
   }
 }

@@ -1,46 +1,46 @@
 /**
- * BaseEvent – базовый класс для событий, реализующий общий функционал
- * активации и логирования события в дневнике. Используется в Observer Pattern,
- * где каждое событие уведомляет подписанные компоненты (например, UI дневника)
- * о произошедших изменениях.
+ * BaseEvent - Base class for events, providing common functionality
+ * for activation and logging in the diary.
+ * This class is used in an Observer Pattern where each event notifies
+ * subscribed components (e.g., diary UI) about changes.
  */
 export class BaseEvent {
   /**
-   * Конструктор базового события.
-   * @param {EventManager} eventManager - экземпляр менеджера событий, отвечающий за работу с дневником.
+   * Constructor for the BaseEvent.
+   * @param {EventManager} eventManager - Instance of the event manager responsible for diary operations.
    *
-   * @property {string} key - Уникальный идентификатор события, который должен быть установлен в наследниках.
+   * @property {string} key - Unique identifier for the event, which should be defined in subclasses.
    */
   constructor(eventManager) {
     /** @type {EventManager} */
     this.eventManager = eventManager;
-    // Ключ события; должен быть определен в классах-наследниках.
+    // Event key; should be set in subclasses.
     this.key = "";
   }
 
   /**
-   * activate – метод активации события.
-   * Если событие с данным ключом ещё не зарегистрировано (не добавлено в дневник),
-   * то событие логируется (записывается в дневник) через eventManager.
+   * activate - Activates the event.
+   * If an event with the given key has not been logged yet, the event is logged via the eventManager.
+   * This method only handles logging and notification without triggering subsequent actions.
    *
-   * @returns {Promise<void>} Асинхронное выполнение метода.
+   * @returns {Promise<void>} Asynchronous execution.
    */
   async activate() {
-    // Если событие с таким ключом ещё не зарегистрировано в дневнике...
+    // Check if the event with this key has not been logged yet
     if (!this.eventManager.isEventLogged(this.key)) {
-      console.log(`Активируем событие: ${this.key}`);
-      // Регистрируем событие в дневнике (запись без флага "призрак" – пусть будет как пользовательское).
+      console.log(`Activating event: ${this.key}`);
+      // Log the event in the diary (as a user post, without ghost flag)
       await this.eventManager.addDiaryEntry(this.key);
     }
   }
 
   /**
-   * addDiaryEntry – удобный метод для добавления произвольной записи в дневник.
-   * Использует eventManager для добавления записи.
+   * addDiaryEntry - Convenience method to add a diary entry.
+   * Delegates the addition to the eventManager.
    *
-   * @param {string} text - Текст записи, который будет добавлен в дневник.
-   * @param {boolean} [isGhostPost=false] - Пометка, является ли это призрачным постом.
-   * @returns {Promise<void>} Асинхронное выполнение метода.
+   * @param {string} text - The text of the entry to be added to the diary.
+   * @param {boolean} [isGhostPost=false] - Flag indicating if this is a ghost post.
+   * @returns {Promise<void>} Asynchronous execution.
    */
   async addDiaryEntry(text, isGhostPost = false) {
     await this.eventManager.addDiaryEntry(text, isGhostPost);

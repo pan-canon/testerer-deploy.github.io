@@ -1,41 +1,41 @@
 export class GhostManager {
   /**
-   * Конструктор GhostManager.
-   * @param {EventManager} eventManager - Менеджер событий для работы с дневником.
-   * @param {ProfileManager} profileManager - Менеджер профиля для сохранения прогресса.
-   * @param {App} app - Основной объект приложения.
+   * Constructor for GhostManager.
+   * @param {EventManager} eventManager - The event manager for diary operations.
+   * @param {ProfileManager} profileManager - The profile manager for saving progress.
+   * @param {App} app - The main application instance.
    *
-   * Класс отвечает за управление призраками, генерируя список призраков,
-   * переключая активного призрака, отслеживая прогресс явлений (шагов квеста)
-   * и сохраняя/загружая состояние призраков в localStorage.
+   * This class manages ghosts by generating a list of ghosts,
+   * switching the active ghost, tracking the progress of phenomena (quest steps),
+   * and saving/loading ghost state from localStorage.
    */
   constructor(eventManager, profileManager, app) {
-    this.eventManager       = eventManager;
-    this.profileManager     = profileManager;
-    this.app                = app;
+    this.eventManager = eventManager;
+    this.profileManager = profileManager;
+    this.app = app;
 
-    // Массив призраков, который будет генерироваться динамически.
+    // Array of ghosts that will be generated dynamically.
     this.ghosts = [];
 
-    // Инициализируем список призраков на основе предопределённых имен.
+    // Initialize the list of ghosts based on predefined names.
     this.setupGhosts();
 
-    // Устанавливаем начальный активный призрак (ID = 1).
+    // Set the initial active ghost (ID = 1).
     this.currentGhostId = 1;
 
-    // Индекс текущего явления (шага квеста) для активного призрака.
+    // Index of the current phenomenon (quest step) for the active ghost.
     this.currentPhenomenonIndex = 0;
 
-    // Загружаем сохраненное состояние призраков из localStorage, если оно имеется.
+    // Load saved ghost state from localStorage, if available.
     this.loadState();
 
     const currentGhost = this.getCurrentGhost();
-    console.log(`Текущий активный призрак: ${currentGhost ? currentGhost.name : 'не найден'}`);
+    console.log(`Current active ghost: ${currentGhost ? currentGhost.name : 'not found'}`);
   }
 
   /**
-   * setupGhosts – генерирует список призраков на основе заранее заданных имен.
-   * Количество явлений (steps) для каждого призрака рассчитывается как длина имени минус 2.
+   * setupGhosts – Generates the list of ghosts based on predefined names.
+   * The number of phenomena (steps) for each ghost is calculated as the length of the name minus 2.
    */
   setupGhosts() {
     const ghostNames = [
@@ -54,60 +54,60 @@ export class GhostManager {
       "призрак 13"
     ];
 
-    // Генерируем объект для каждого призрака с ID, именем и количеством явлений.
+    // Generate an object for each ghost with ID, name, and phenomena count.
     this.ghosts = ghostNames.map((name, index) => {
-      // Количество явлений определяется как длина имени минус 2 (пример).
+      // The phenomena count is determined as the length of the name minus 2 (example).
       const phenomenaCount = name.length - 2;
       return {
         id: index + 1,
         name: name,
         phenomenaCount: phenomenaCount,
-        // Дополнительное свойство для отметки завершения квеста призрака.
+        // Additional property to mark if the ghost's quest is finished.
         isFinished: false
       };
     });
   }
 
   /**
-   * getCurrentGhost – возвращает объект активного призрака на основе currentGhostId.
-   * @returns {object|undefined} Объект призрака или undefined, если не найден.
+   * getCurrentGhost – Returns the active ghost object based on currentGhostId.
+   * @returns {object|undefined} The ghost object or undefined if not found.
    */
   getCurrentGhost() {
     return this.ghosts.find(g => g.id === this.currentGhostId);
   }
 
   /**
-   * setCurrentGhost – устанавливает активного призрака по заданному ID.
-   * Сохраняет состояние призраков в localStorage.
-   * @param {number} ghostId - ID призрака, который нужно сделать активным.
+   * setCurrentGhost – Sets the active ghost by the given ID.
+   * Saves the ghost state to localStorage.
+   * @param {number} ghostId - The ID of the ghost to activate.
    */
   setCurrentGhost(ghostId) {
     this.currentGhostId = ghostId;
     const ghost = this.getCurrentGhost();
     if (ghost) {
-      console.log(`Призрак ${ghost.name} активирован.`);
+      console.log(`Ghost ${ghost.name} activated.`);
     } else {
-      console.warn(`Призрак с ID=${ghostId} не найден!`);
+      console.warn(`Ghost with ID=${ghostId} not found!`);
     }
     this.saveState();
   }
 
   /**
-   * finishCurrentGhost – помечает текущего призрака как завершенного.
-   * Вызывает сохранение состояния после обновления.
+   * finishCurrentGhost – Marks the current ghost as finished.
+   * Saves the state after updating.
    */
   finishCurrentGhost() {
     const ghost = this.getCurrentGhost();
     if (ghost) {
       ghost.isFinished = true;
-      console.log(`Призрак ${ghost.name} завершен.`);
+      console.log(`Ghost ${ghost.name} finished.`);
       this.saveState();
     }
   }
 
   /**
-   * isCurrentGhostFinished – проверяет, завершен ли текущий активный призрак.
-   * @returns {boolean} true, если текущий призрак помечен как завершенный, иначе false.
+   * isCurrentGhostFinished – Checks if the current active ghost is marked as finished.
+   * @returns {boolean} True if the current ghost is marked as finished, otherwise false.
    */
   isCurrentGhostFinished() {
     const ghost = this.getCurrentGhost();
@@ -115,84 +115,84 @@ export class GhostManager {
   }
 
   /**
-   * triggerNextPhenomenon – инициирует следующее явление (шаг квеста) для текущего призрака.
-   * Если индекс явления меньше, чем общее количество явлений для призрака,
-   * добавляет запись в дневник и обновляет прогресс в профиле.
-   * Если все явления пройдены, регистрирует финальное событие (например, "ghost_final_event").
+   * triggerNextPhenomenon – Initiates the next phenomenon (quest step) for the current ghost.
+   * If the phenomenon index is less than the total phenomena for the ghost,
+   * adds a diary entry and updates progress in the profile.
+   * If all phenomena are completed, publishes a "final post" and triggers the final event.
    */
   async triggerNextPhenomenon() {
     const ghost = this.getCurrentGhost();
     if (!ghost) return;
 
-    // Проверяем, не завершён ли призрак заранее
+    // Check if the ghost is already finished.
     if (ghost.isFinished) {
-      console.warn(`Призрак "${ghost.name}" уже завершён, явления недоступны.`);
+      console.warn(`Ghost "${ghost.name}" is already finished; phenomena unavailable.`);
       return;
     }
 
-    // Сравниваем currentPhenomenonIndex с phenomenaCount
+    // Compare currentPhenomenonIndex with phenomenaCount.
     if (this.currentPhenomenonIndex < ghost.phenomenaCount) {
-      // Формируем текст записи для текущего явления.
+      // Form the entry text for the current phenomenon.
       const phenomenonNumber = this.currentPhenomenonIndex + 1;
-      const phenomenonEntry  = `${ghost.name}: Явление ${phenomenonNumber} - Подойти к зеркалу`;
+      const phenomenonEntry = `${ghost.name}: Phenomenon ${phenomenonNumber} - Approach the mirror`;
       await this.eventManager.addDiaryEntry(phenomenonEntry);
 
-      console.log(`Триггер явления для ${ghost.name}: ${phenomenonEntry}`);
+      console.log(`Triggered phenomenon for ${ghost.name}: ${phenomenonEntry}`);
 
-      // Увеличиваем индекс явления.
+      // Increment the phenomenon index.
       this.currentPhenomenonIndex++;
 
-      // Сохраняем прогресс призрака через ProfileManager, если нужно
+      // Save ghost progress via ProfileManager, if needed.
       this.profileManager.saveGhostProgress({
         ghostId: this.currentGhostId,
         phenomenonIndex: this.currentPhenomenonIndex
       });
 
-      // Если достигнут конец явлений, публикуем "финальный пост" и запускаем финальное событие
+      // If the end of phenomena is reached, publish the "final post" and trigger the final event.
       if (this.currentPhenomenonIndex === ghost.phenomenaCount) {
-        const finalEntry = `${ghost.name}: Финальное явление – призрак завершен!`;
+        const finalEntry = `${ghost.name}: Final phenomenon – ghost finished!`;
         await this.eventManager.addDiaryEntry(finalEntry);
         console.log(finalEntry);
 
-        // Запускаем событие, отвечающее за финальную логику. 
-        // Например, "ghost_final_event" – короткое событие, которое при activate()
-        // вызывает QuestManager для активации final_quest (или делает что-то ещё).
-        console.log(`Запускаем финальное событие для призрака "${ghost.name}"...`);
+        // Trigger the event corresponding to final logic.
+        // For example, "ghost_final_event" – a short event that, when activated,
+        // triggers QuestManager to activate final_quest (or performs another action).
+        console.log(`Triggering final event for ghost "${ghost.name}"...`);
         this.app.gameEventManager.activateEvent("ghost_final_event");
       }
     } else {
-      console.warn(`У призрака ${ghost.name} явления уже закончились (index=${this.currentPhenomenonIndex}).`);
+      console.warn(`All phenomena for ghost ${ghost.name} have been completed (index=${this.currentPhenomenonIndex}).`);
     }
   }
 
   /**
-   * resetGhostChain – сбрасывает цепочку призраков.
-   * Устанавливает активный призрак на первый и сбрасывает индекс явлений.
-   * Также сбрасывает сохраненный прогресс призраков через ProfileManager.
+   * resetGhostChain – Resets the ghost chain.
+   * Sets the active ghost to the first one and resets the phenomenon index.
+   * Also resets the saved ghost progress via ProfileManager.
    */
   resetGhostChain() {
     this.currentGhostId = 1;
     this.currentPhenomenonIndex = 0;
     this.profileManager.resetGhostProgress();
-    console.log("Цепочка призраков сброшена.");
+    console.log("Ghost chain has been reset.");
   }
 
   /**
-   * saveState – сохраняет текущее состояние призраков (массив this.ghosts) в localStorage.
+   * saveState – Saves the current state of ghosts (the this.ghosts array) to localStorage.
    */
   saveState() {
     localStorage.setItem('ghostState', JSON.stringify(this.ghosts));
   }
 
   /**
-   * loadState – загружает сохраненное состояние призраков из localStorage.
-   * Если состояние найдено, обновляет массив this.ghosts.
+   * loadState – Loads the saved ghost state from localStorage.
+   * If a state is found, updates the this.ghosts array.
    */
   loadState() {
     const savedState = localStorage.getItem('ghostState');
     if (savedState) {
       this.ghosts = JSON.parse(savedState);
-      console.log('Загружено состояние призраков:', this.ghosts);
+      console.log("Ghost state loaded:", this.ghosts);
     }
   }
 }

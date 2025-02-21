@@ -3,134 +3,122 @@ import { BaseRepeatingQuest } from './quests/baseRepeatingQuest.js';
 import { FinalQuest } from './quests/finalQuest.js';
 
 /**
- * QuestManager – класс для управления квестами (зеркальный, повторяющийся, финальный) в приложении.
+ * QuestManager – A class for managing quests (mirror, repeating, final) in the application.
  */
 export class QuestManager {
   /**
-   * @param {EventManager} eventManager - Менеджер событий (работа с дневником).
-   * @param {App} appInstance - Основной объект приложения.
-   * @param {ProfileManager} [profileManager] - Менеджер профиля (необязательный).
+   * @param {EventManager} eventManager - The event manager for diary operations.
+   * @param {App} appInstance - The main application instance.
+   * @param {ProfileManager} [profileManager] - The profile manager (optional).
    */
   constructor(eventManager, appInstance, profileManager) {
-    this.eventManager   = eventManager;
-    this.app            = appInstance;
+    this.eventManager = eventManager;
+    this.app = appInstance;
     this.profileManager = profileManager;
 
-    // Регистрируем три квеста
+    // Initialize three quests.
     this.quests = [
-      // Зеркальный квест (как и было)
+      // Mirror quest.
       new BaseMirrorQuest(this.eventManager, this.app, {
         key: "mirror_quest"
       }),
-      // Повторяющийся квест (получаем несколько букв)
+      // Repeating quest (e.g., obtaining several letters).
       new BaseRepeatingQuest(this.eventManager, this.app, {
         key: "repeating_quest",
-        totalStages: 5, // или высчитываем по имени призрака
+        totalStages: 5, // Alternatively, calculated based on the ghost's name.
         statusElementId: "repeating-quest-status",
-        shootButtonId:   "btn_shoot"
+        shootButtonId: "btn_shoot"
       }),
-      // Финальный квест
+      // Final quest.
       new FinalQuest(this.eventManager, this.app, {
         key: "final_quest"
       })
     ];
 
-    // Подписка на события камеры
+    // Set up camera event listeners without automatically triggering quest chains.
     this.initCameraListeners();
   }
 
   /**
-   * initCameraListeners – если mirrorQuestActive=true, запускаем MirrorQuest.startCheckLoop,
-   * при закрытии камеры – stopCheckLoop и т.д.
+   * initCameraListeners – Sets up camera event listeners.
+   * Instead of automatically triggering a quest's check loop,
+   * these listeners only log the signals for external handling.
    */
   initCameraListeners() {
     const cameraManager = this.app.cameraSectionManager;
     if (!cameraManager) return;
 
     cameraManager.onVideoReady = () => {
-      console.log("[QuestManager] onVideoReady");
-      const mirrorQuest = this.quests.find(q => q.key === "mirror_quest");
-      if (mirrorQuest && localStorage.getItem("mirrorQuestActive") === "true") {
-        mirrorQuest.startCheckLoop();
-      }
+      console.log("[QuestManager] onVideoReady signal received.");
+      // External code can choose to act on this signal explicitly.
     };
 
     cameraManager.onCameraClosed = () => {
-      console.log("[QuestManager] onCameraClosed");
-      const mirrorQuest = this.quests.find(q => q.key === "mirror_quest");
-      if (mirrorQuest) {
-        mirrorQuest.stopCheckLoop();
-      }
-      // При желании также stopCheckLoop у повторяющегося квеста, если нужно
+      console.log("[QuestManager] onCameraClosed signal received.");
+      // External code can choose to act on this signal explicitly.
     };
   }
 
   /**
-   * activateQuest – ищем квест по ключу, вызываем activate().
+   * activateQuest – Finds the quest by key and calls its activate() method.
+   * Activation now occurs only via explicit calls.
+   * @param {string} key - The quest key to activate.
    */
   async activateQuest(key) {
     const quest = this.quests.find(q => q.key === key);
     if (!quest) {
-      console.warn(`[QuestManager] Квест с ключом "${key}" не найден.`);
+      console.warn(`[QuestManager] Quest with key "${key}" not found.`);
       return;
     }
     await quest.activate();
-
-    // Если это зеркальный квест – можем startCheckLoop (или startCheckLoop внутри activate())
-    if (key === "mirror_quest") {
-      const mirrorQuest = quest;
-      mirrorQuest.startCheckLoop();
-    } 
-    // Если это повторяющийся квест – тоже можем запускать startCheckLoop (или внутри activate())
-    else if (key === "repeating_quest") {
-      const repeatingQuest = quest;
-      repeatingQuest.startCheckLoop();
-    }
-    // Если финальный квест – обычно нет checkLoop
+    // Do not automatically call startCheckLoop here.
+    // If a quest requires a check loop, it must be triggered explicitly.
   }
 
   /**
-   * checkQuest – проверяет квест (вызывает finish())
+   * checkQuest – Checks the quest by calling its finish() method.
+   * @param {string} key - The quest key to check.
    */
   async checkQuest(key) {
     const quest = this.quests.find(q => q.key === key);
     if (!quest) {
-      console.warn(`[QuestManager] Не могу проверить квест "${key}": не найден.`);
+      console.warn(`[QuestManager] Cannot check quest "${key}": not found.`);
       return;
     }
     await quest.finish();
   }
 
   /**
-   * handleShootMirrorQuest – вызывается при клике на «Заснять» в зеркальном квесте.
+   * handleShootMirrorQuest – Called when the "Shoot" button is clicked during the mirror quest.
    */
   async handleShootMirrorQuest() {
-    console.log("[QuestManager] handleShootMirrorQuest()");
+    console.log("[QuestManager] handleShootMirrorQuest() called.");
     await this.checkQuest("mirror_quest");
   }
 
   /**
-   * handlePostButtonClick – если mirrorQuestReady=true, запускаем зеркальный квест.
+   * handlePostButtonClick – Called when the "Post" button is clicked.
+   * If mirrorQuestReady is true, explicitly triggers the mirror quest.
    */
   async handlePostButtonClick() {
     const isReady = localStorage.getItem("mirrorQuestReady") === "true";
     if (isReady) {
       localStorage.removeItem("mirrorQuestReady");
       this.updatePostButtonState();
-      console.log("[QuestManager] Запуск зеркального квеста из handlePostButtonClick()");
+      console.log("[QuestManager] Triggering mirror quest from handlePostButtonClick.");
       
-      // Подсвечиваем камеру
+      // Highlight the camera button.
       const cameraBtn = document.getElementById("toggle-camera");
       if (cameraBtn) cameraBtn.classList.add("glowing");
 
       await this.activateQuest("mirror_quest");
     } else {
-      alert("Ждите приглашения от призрака для начала квеста.");
+      alert("Please wait for a ghost invitation to start the quest.");
     }
   }
 
   /**
-   * updatePostButtonState – включает/выключает кнопку «Запостить» в зависимости от mirrorQuestReady.
+   * updatePostButtonState – Enables or disables the "Post" button based on mirrorQuestReady.
    */
   updatePostButtonState() {
     const isReady = localStorage.getItem("mirrorQuestReady") === "true";
@@ -142,7 +130,7 @@ export class QuestManager {
   }
 
   /**
-   * updateCameraButtonState – подсвечивает камеру, если mirrorQuestActive=true.
+   * updateCameraButtonState – Highlights the camera button if mirrorQuestActive is true.
    */
   updateCameraButtonState() {
     const cameraBtn = document.getElementById("toggle-camera");
@@ -155,17 +143,17 @@ export class QuestManager {
   }
 
   /**
-   * triggerMirrorQuestIfActive – если mirrorQuestActive=true, checkQuest("mirror_quest")
+   * triggerMirrorQuestIfActive – If mirrorQuestActive is true, explicitly check the mirror quest.
    */
   async triggerMirrorQuestIfActive() {
     if (localStorage.getItem("mirrorQuestActive") === "true") {
-      console.log("[QuestManager] triggerMirrorQuestIfActive => finish mirror_quest");
+      console.log("[QuestManager] triggerMirrorQuestIfActive: finishing mirror_quest");
       await this.checkQuest("mirror_quest");
     }
   }
 
   /**
-   * checkMirrorQuestOnCamera – shortcut для checkQuest("mirror_quest")
+   * checkMirrorQuestOnCamera – A shortcut to check the mirror quest.
    */
   async checkMirrorQuestOnCamera() {
     await this.checkQuest("mirror_quest");

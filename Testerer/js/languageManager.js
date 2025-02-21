@@ -1,38 +1,38 @@
-// LanguageManager отвечает за управление языковой локализацией в приложении.
-// Он подгружает словари переводов (locales), следит за изменениями в селекторе языка
-// и обновляет все элементы страницы, у которых задан атрибут data-i18n.
-// Этот класс сохраняет выбранный язык в localStorage, чтобы сохранить выбор между сессиями.
-
+/**
+ * LanguageManager is responsible for managing localization in the application.
+ * It loads the translation dictionaries (locales), listens for changes on the language selector,
+ * and updates all page elements that have the data-i18n attribute.
+ * This class also saves the selected language in localStorage to preserve the choice between sessions.
+ */
 export class LanguageManager {
   /**
-   * Конструктор LanguageManager.
-   * @param {string} selectorId - ID элемента <select>, через который пользователь выбирает язык.
+   * Constructor for LanguageManager.
+   * @param {string} selectorId - The ID of the <select> element used for language selection.
    *
-   * При инициализации:
-   * - Загружается объект переводов (locales).
-   * - Устанавливается текущий язык из localStorage (или по умолчанию 'en').
-   * - Значение селектора обновляется, и вызывается метод applyLanguage() для обновления интерфейса.
-   * - Добавляется обработчик события change на селектор для смены языка.
+   * During initialization:
+   * - The translation dictionary (locales) is loaded.
+   * - The current language is set from localStorage (or defaults to 'en').
+   * - The selector's value is updated, and applyLanguage() is called to update the UI.
+   * - A change event listener is added to the selector to handle language switching.
    */
   constructor(selectorId) {
-    // Подключаем словари локализации (переводов).
-    // Предполагается, что переменная locales определена глобально или импортирована.
+    // Load the localization dictionaries (translations).
+    // It is assumed that the variable 'locales' is defined globally or imported.
     this.locales = locales;
 
-    // Получаем элемент селектора языка по его ID.
+    // Get the language selector element by its ID.
     this.selector = document.getElementById(selectorId);
 
-    // Устанавливаем текущий язык: либо из localStorage, либо по умолчанию 'en'.
+    // Set the current language from localStorage, defaulting to 'en'.
     this.currentLanguage = localStorage.getItem('language') || 'en';
 
-    // Обновляем значение селектора, чтобы отразить выбранный язык.
+    // Update the selector to reflect the current language.
     this.selector.value = this.currentLanguage;
 
-    // Применяем выбранный язык ко всем элементам с атрибутом data-i18n.
+    // Apply the selected language to all elements with the data-i18n attribute.
     this.applyLanguage();
 
-    // Добавляем обработчик события change для селектора языка.
-    // При изменении языка обновляем текущее значение, сохраняем его в localStorage и заново применяем переводы.
+    // Add an event listener to update the language when the selector's value changes.
     this.selector.addEventListener('change', () => {
       this.currentLanguage = this.selector.value;
       localStorage.setItem('language', this.currentLanguage);
@@ -41,17 +41,16 @@ export class LanguageManager {
   }
 
   /**
-   * applyLanguage – обновляет текстовое содержимое всех элементов,
-   * у которых задан атрибут data-i18n, на основе выбранного языка.
+   * applyLanguage – Updates the text content of all elements with the data-i18n attribute
+   * based on the selected language.
    *
-   * Метод проходит по всем элементам страницы с атрибутом data-i18n,
-   * получает ключ перевода из этого атрибута и заменяет текстовое содержимое элемента на
-   * соответствующий перевод из словаря.
+   * This method iterates over all elements with data-i18n, retrieves the translation key,
+   * and replaces the element's text content with the corresponding translation from the dictionary.
    */
   applyLanguage() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.getAttribute('data-i18n');
-      // Если в текущем языке существует перевод для данного ключа, обновляем текст.
+      // If a translation exists for the key in the current language, update the text.
       if (this.locales[this.currentLanguage] && this.locales[this.currentLanguage][key]) {
         el.textContent = this.locales[this.currentLanguage][key];
       }
@@ -59,8 +58,8 @@ export class LanguageManager {
   }
 
   /**
-   * getLanguage – возвращает текущий выбранный язык.
-   * @returns {string} Текущий язык (например, 'en', 'ru', 'uk').
+   * getLanguage – Returns the currently selected language.
+   * @returns {string} The current language (e.g., 'en', 'ru', 'uk').
    */
   getLanguage() {
     return this.currentLanguage;

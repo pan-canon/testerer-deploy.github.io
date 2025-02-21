@@ -23,7 +23,7 @@ const locales = {
     "open_diary": "Open Diary",
     "mirror_quest": "They are asking me to come to the mirror...",
     "ignored_call": "I didn't answer, I don't know who it was. Hm.... Text. “З”. What would that mean...",
-    "what_was_it": "Что это было?"
+    "what_was_it": "What was that?"
   },
   "ru": {
     "welcome": "Добро пожаловать!",
@@ -75,6 +75,8 @@ const locales = {
     "open_diary": "Відкрити щоденник",
     "mirror_quest": "Вони просять підійти мене до дзеркала.",
     "ignored_call": "Я не відповів(ла), я не знаю, хто це. Хм.... Смс. «З». Що б це означало...",
-    "what_was_it": "Что это было?"
+    "what_was_it": "What was that?"
   }
 };
+
+export default locales;

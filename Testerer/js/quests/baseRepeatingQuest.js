@@ -1,87 +1,169 @@
 import { BaseEvent } from '../events/baseEvent.js';
 
 /**
- * BaseRepeatingQuest – базовый класс для повторяющихся этапов квеста.
- * Пример: нужно несколько раз «сделать фото», «отправить пост» и т.д.
- * до того, как квест будет считаться завершённым.
+ * BaseRepeatingQuest – базовый класс для повторяющегося квеста,
+ * где N раз нужно сделать снимок (или отправить пост), без проверки схожести.
  */
 export class BaseRepeatingQuest extends BaseEvent {
   /**
-   * @param {EventManager} eventManager
-   * @param {App} appInstance
+   * @param {EventManager} eventManager - Менеджер дневника
+   * @param {App} appInstance - Основной объект приложения
    * @param {Object} config - Например: { key: 'repeating_quest', totalStages: 3, ... }
    */
   constructor(eventManager, appInstance, config = {}) {
     super(eventManager);
 
-    this.app      = appInstance;
-    // Если передан key в config, используем его, иначе "repeating_quest".
-    this.key      = config.key || "repeating_quest";
-    // doneKey – для логирования окончания (если понадобится).
-    this.doneKey  = this.key + "_done";
+    this.app       = appInstance;
+    this.key       = config.key || "repeating_quest";
+    this.doneKey   = config.doneKey || (this.key + "_done");
 
-    // Количество этапов (например, количество букв, которые нужно собрать)
-    this.totalStages   = config.totalStages || 3;
-    this.currentStage  = 1;
-    this.finished      = false;
+    // UI
+    // Вы можете указать другие ID, если хотите отдельные кнопки/статусы для повторяющегося квеста
+    this.statusElementId = config.statusElementId || "repeating-quest-status";
+    this.shootButtonId   = config.shootButtonId   || "btn_shoot"; 
+
+    // Количество раз (этапов), которые надо выполнить
+    this.totalStages      = config.totalStages || 3;
+    this.currentStage     = 1;
+    this.finished         = false;
+
+    // Если квест нужно «активировать» (пост в дневник), 
+    // то при activate() можем поставить флаг repeatingQuestActive (необязательно)
+    this.registerEvents();
   }
 
   /**
-   * activate – активирует повторяющийся квест.
-   * Если событие (квест) ещё не в дневнике, логируем
-   * и при желании ставим флаг (например, repeatingQuestActive) в localStorage.
+   * registerEvents – при желании навесить обработчики для UI здесь.
+   */
+  registerEvents() {
+    // Пусто — можно обрабатывать UI в QuestManager
+  }
+
+  /**
+   * activate – логируем начало (если не логировалось).
    */
   async activate() {
     if (!this.eventManager.isEventLogged(this.key)) {
       console.log(`Активируем повторяющийся квест: ${this.key}`);
       await this.eventManager.addDiaryEntry(this.key, true);
     }
-    // localStorage.setItem("repeatingQuestActive", "true");
+    console.log(`[BaseRepeatingQuest] Запущен квест с ${this.totalStages} этапами`);
+    // localStorage.setItem("repeatingQuestActive", "true"); // опционально
   }
 
   /**
-   * checkStatus – проверка, готов ли квест перейти на следующий этап.
-   * Здесь может быть любая логика (например, снимок, пост, поиск буквы и т.д.).
-   * Пока заглушка => true (всегда успешно).
+   * startCheckLoop – для единообразия с зеркальным квестом можем сделать «псевдо»-проверку,
+   * но здесь нет сравнения изображения. Просто включаем UI (statusDiv и shootBtn).
    */
-  async checkStatus() {
-    console.log(`[BaseRepeatingQuest] Проверяем этап ${this.currentStage}/${this.totalStages}`);
-    return true;
+  startCheckLoop() {
+    // Можно имитировать логику, схожую с зеркальным квестом
+    const statusDiv = document.getElementById(this.statusElementId);
+    if (statusDiv) {
+      statusDiv.style.display = "block";
+      statusDiv.textContent = `Повторяющийся квест — этап ${this.currentStage} из ${this.totalStages}`;
+    }
+
+    const shootBtn = document.getElementById(this.shootButtonId);
+    if (shootBtn) {
+      shootBtn.style.display = "inline-block";
+      shootBtn.disabled = false; // в отличие от зеркального
+      // Вешаем обработчик клика для снимка
+      // Каждое нажатие «Заснять» будет завершать текущий этап
+      shootBtn.addEventListener("click", () => this.finishStage(), { once: true });
+    }
   }
 
   /**
-   * finish – завершает ОДИН этап квеста.
-   * Если currentStage < totalStages, переходим к следующему. Иначе квест закончен (finished = true).
+   * stopCheckLoop – скрываем UI, убираем обработчики.
    */
-  async finish() {
+  stopCheckLoop() {
+    const statusDiv = document.getElementById(this.statusElementId);
+    if (statusDiv) {
+      statusDiv.style.display = "none";
+    }
+    const shootBtn = document.getElementById(this.shootButtonId);
+    if (shootBtn) {
+      shootBtn.style.display = "none";
+      // Удалим обработчик «once» не нужно, т.к. он самоуничтожается
+    }
+  }
+
+  /**
+   * finishStage – завершает один этап:
+   * 1) Делаем снимок (cam) или создаём «пост», без проверки сравнения
+   * 2) Публикуем запись в дневник
+   * 3) Если текущий этап < totalStages, переходим к следующему
+   * 4) Если текущий этап == totalStages, квест завершён
+   */
+  async finishStage() {
     if (this.finished) return;
 
-    const success = await this.checkStatus();
-    if (!success) {
-      alert("❌ Этап не пройден, повторите попытку!");
-      return;
-    }
+    // 1) «Снимок» — в данном случае не нужно ничего сравнивать;
+    //    Просто берём текущий кадр (app.cameraSectionManager.videoElement) и делаем фото
+    const photoData = this.captureSimplePhoto();
 
-    // Допустим, на каждом этапе публикуем запись в дневник
-    await this.eventManager.addDiaryEntry(`repeating_stage_${this.currentStage}`, false);
+    // 2) Публикуем в дневник
+    await this.eventManager.addDiaryEntry(
+      `repeating_stage_${this.currentStage} [photo attached]\n${photoData}`,
+      false
+    );
     console.log(`[BaseRepeatingQuest] Завершён этап: ${this.currentStage}`);
 
+    // Переходим к следующему этапу
     this.currentStage++;
-    if (this.currentStage > this.totalStages) {
-      // Все этапы пройдены, считаем квест завершённым
-      this.finished = true;
-      console.log(`[BaseRepeatingQuest] Все ${this.totalStages} этапов пройдены!`);
-      // Добавляем запись о завершении (если нужно)
-      await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
 
-      // После успешного завершения запускаем финальный квест/событие (при желании)
-      // Например:
-      // this.app.questManager.activateQuest("final_quest");
-      // или 
-      // this.app.gameEventManager.activateEvent("final_event");
-
+    // Если не достигли конца — обновляем UI и ждём следующий снимок
+    if (this.currentStage <= this.totalStages) {
+      const statusDiv = document.getElementById(this.statusElementId);
+      if (statusDiv) {
+        statusDiv.textContent = `Повторяющийся квест — этап ${this.currentStage} из ${this.totalStages}`;
+      }
+      // Повторно вешаем обработчик на shootBtn
+      const shootBtn = document.getElementById(this.shootButtonId);
+      if (shootBtn) {
+        shootBtn.addEventListener("click", () => this.finishStage(), { once: true });
+      }
     } else {
-      alert(`Этап ${this.currentStage - 1} завершён. Переход к этапу ${this.currentStage}.`);
+      // Иначе завершаем квест полностью
+      await this.finish();
     }
+  }
+
+  /**
+   * finish – полное завершение повторяющегося квеста.
+   */
+  async finish() {
+    this.stopCheckLoop();
+    this.finished = true;
+    console.log(`[BaseRepeatingQuest] Все ${this.totalStages} этапов пройдены!`);
+
+    // Логируем результат
+    await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
+
+    // При желании запускаем финальный квест
+    // this.app.questManager.activateQuest("final_quest");
+    // Или финальное событие:
+    // this.app.gameEventManager.activateEvent("final_event");
+  }
+
+  /**
+   * captureSimplePhoto – упрощённый снимок без проверки схожести.
+   * @returns {string} dataURL полученного снимка
+   */
+  captureSimplePhoto() {
+    const video = this.app.cameraSectionManager?.videoElement;
+    if (!video || !video.srcObject) {
+      console.warn("[BaseRepeatingQuest] ❌ Камера не активна — возвращаем пустую строку");
+      return "";
+    }
+    // Создаём временный canvas
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Возвращаем base64
+    return canvas.toDataURL("image/png");
   }
 }

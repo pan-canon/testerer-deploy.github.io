@@ -4,6 +4,8 @@
  * and updates all page elements that have the data-i18n attribute.
  * This class also saves the selected language in localStorage to preserve the choice between sessions.
  */
+import locales from './locales.js';
+
 export class LanguageManager {
   /**
    * Constructor for LanguageManager.

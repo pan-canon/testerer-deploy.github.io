@@ -85,6 +85,9 @@ export class cameraSectionManager {
         if (typeof this.onVideoReady === "function") {
           this.onVideoReady();
         }
+        // Dispatch custom event to notify that camera is ready
+        const event = new CustomEvent("cameraReady");
+        document.dispatchEvent(event);  // Notify any listeners of the camera readiness
       }, { once: true });
     } catch (error) {
       console.error("❌ Error accessing the camera:", error);

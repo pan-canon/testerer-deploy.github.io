@@ -39,7 +39,12 @@ export class BaseMirrorQuest extends BaseEvent {
    * (Optional: Can be extended to attach handlers directly here or via QuestManager.)
    */
   registerEvents() {
-    // No default registration; implementation can be added if needed.
+    // Listen to camera ready event
+    document.addEventListener('cameraReady', () => {
+      if (localStorage.getItem("mirrorQuestActive") === "true") {
+        this.startCheckLoop(); // Start the check loop if the quest is active
+      }
+    });
   }
 
   /**

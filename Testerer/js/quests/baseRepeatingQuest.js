@@ -141,9 +141,7 @@ export class BaseRepeatingQuest extends BaseEvent {
     await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
 
     // При желании запускаем финальный квест
-    // this.app.questManager.activateQuest("final_quest");
-    // Или финальное событие:
-    // this.app.gameEventManager.activateEvent("final_event");
+    this.app.gameEventManager.activateEvent("post_repeating_event");
   }
 
   /**

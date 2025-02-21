@@ -199,9 +199,10 @@ export class BaseMirrorQuest extends BaseEvent {
       cameraBtn.classList.remove("glowing");
     }
 
-    // --- При желании можно автоматом запустить следующий квест:
-    this.app.questManager.activateQuest("repeating_quest"); 
-    // Или финальный: this.app.questManager.activateQuest("final_quest");
+    // Теперь: вызываем событие "post_mirror_event" при успехе
+    if (success) {
+      this.app.gameEventManager.activateEvent("post_mirror_event");
+    }
   }
 
   /**

@@ -13,7 +13,7 @@ export class GameEventManager {
     this.eventManager = eventManager;
     this.app = appInstance;
     this.languageManager = languageManager;
-    
+
     // Array of one-time events; the order is not automatically chained.
     this.events = [
       new WelcomeEvent(this.eventManager, this.app, this.languageManager),
@@ -21,6 +21,9 @@ export class GameEventManager {
       new PostRepeatingEvent(this.eventManager, this.app),
       new FinalEvent(this.eventManager, this.app, this.languageManager)
     ];
+    
+    // Initialize a state to track the progress of repeating quests
+    this.repeatingQuestCompleted = false;
   }
 
   /**
@@ -33,9 +36,27 @@ export class GameEventManager {
     if (event) {
       await event.activate();
       console.log(`Event '${key}' activated.`);
+      
+      // Check if this is the last repeating event and trigger the final quest if so
+      if (key === 'post_repeating_event' && this.repeatingQuestCompleted) {
+        console.log('All repeating quests completed, triggering final quest.');
+        await this.activateEvent('final_quest');
+      }
     } else {
       console.warn(`[GameEventManager] Event "${key}" not found in the list.`);
     }
+  }
+
+  /**
+   * handleRepeatingQuestCompletion – Handles the completion of the repeating quest cycle.
+   * Marks repeating quests as completed and checks if the final quest should be triggered.
+   */
+  async handleRepeatingQuestCompletion() {
+    this.repeatingQuestCompleted = true;
+    console.log("Repeating quest completed. Preparing for final quest.");
+    
+    // Manually trigger post_repeating_event to start the next cycle, if any
+    await this.activateEvent('post_repeating_event');
   }
 
   /**

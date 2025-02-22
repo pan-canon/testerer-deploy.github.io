@@ -48,8 +48,13 @@ export class BaseRepeatingQuest extends BaseEvent {
       await this.eventManager.addDiaryEntry(this.key, true);
     }
     console.log(`[BaseRepeatingQuest] Квест с ${this.totalStages} этапами начат.`);
+    
     // Устанавливаем флаг активности квеста
     localStorage.setItem("repeatingQuestActive", "true");
+
+    // Обновляем кнопку "Запостить" и добавляем эффект на камеру
+    this.app.questManager.updatePostButtonState();  // Обновление состояния кнопки "Запостить"
+    this.app.visualEffectsManager.setControlsBlocked(false); // Камера теперь активна
   }
 
   /**

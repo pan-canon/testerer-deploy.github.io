@@ -29,12 +29,12 @@ export class PostMirrorEvent extends BaseEvent {
     // Логируем событие в дневник как пост от призрака.
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Явно запускаем повторяющийся квест через QuestManager.
-    console.log("[PostMirrorEvent] Явная активация 'repeating_quest'...");
-    await this.app.questManager.activateQuest("repeating_quest");
-
     // Обновляем кнопку "Запостить" и добавляем эффект на камеру
     this.app.questManager.updatePostButtonState();  // Обновление состояния кнопки "Запостить"
     this.app.visualEffectsManager.setControlsBlocked(false); // Камера теперь активна
+
+    // Явно запускаем повторяющийся квест через QuestManager.
+    console.log("[PostMirrorEvent] Явная активация 'repeating_quest'...");
+    await this.app.questManager.activateQuest("repeating_quest");
   }
 }

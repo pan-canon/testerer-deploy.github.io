@@ -161,14 +161,13 @@ export class BaseMirrorQuest extends BaseEvent {
 
   /**
    * updateUIAfterFinish – Separates the UI updates after quest completion.
-   * Displays appropriate messages and hides the status display after a delay.
+   * Displays appropriate messages and leaves the "Shoot" button visible but disabled.
    *
    * @param {boolean} success - Indicates whether the quest was successful.
-   * New version of updateUIAfterFinish() that leaves the shoot button visible but disabled.
    */
   updateUIAfterFinish(success) {
     // Update status display with a message indicating success or failure.
-    const statusDiv = document.getElementById("mirror-quest-status"); // Замените на ваш ID, если другой
+    const statusDiv = document.getElementById("mirror-quest-status"); // Replace with your ID if different
     if (statusDiv) {
       statusDiv.textContent = success
         ? "✅ Mirror quest completed!"
@@ -239,7 +238,7 @@ export class BaseMirrorQuest extends BaseEvent {
     if (success) {
       this.app.gameEventManager.activateEvent("post_mirror_event");
     }
-  }  // <-- добавлена закрывающая фигурная скобка для finish()
+  }
 
   /**
    * getRandomLetter – Returns a random letter from the ghost's name.

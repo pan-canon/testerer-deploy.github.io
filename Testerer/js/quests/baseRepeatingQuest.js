@@ -55,11 +55,12 @@ export class BaseRepeatingQuest extends BaseEvent {
     const shootBtn = document.getElementById(this.shootButtonId);
     if (shootBtn) {
       shootBtn.style.display = "inline-block";
-      shootBtn.disabled = false; // Enable the button immediately
-      // Attach a click handler to finish the current stage
+      shootBtn.disabled = false; // Enable the shoot button for repeating quest
+      // Attach the click handler for capturing the snapshot (finishing the stage)
       shootBtn.addEventListener("click", () => this.finishStage(), { once: true });
+      console.log(`[BaseRepeatingQuest] Shoot button enabled for stage ${this.currentStage}.`);
     }
-    console.log("[BaseRepeatingQuest] UI updated for repeating quest. Waiting for user to capture a snapshot.");
+    console.log("[BaseRepeatingQuest] Repeating quest UI updated. Waiting for user to capture a snapshot.");
   }
 
   /**

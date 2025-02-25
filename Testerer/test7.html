@@ -34,130 +34,134 @@
   <button id="stopButton">Остановить камеру</button>
 
   <script>
-    class cameraSectionManager {
-      constructor() {
-        this.videoElement = null;
-        this.stream = null;
-        this.onVideoReady = null;
-        this.onCameraClosed = null;
-        this.model = null;
-        this.isDetecting = false;
-        this.onObjectDetected = null;
-      }
+    document.addEventListener("DOMContentLoaded", () => {
+      class cameraSectionManager {
+        constructor() {
+          this.videoElement = null;
+          this.stream = null;
+          this.onVideoReady = null;
+          this.onCameraClosed = null;
+          this.model = null;
+          this.isDetecting = false;
+          this.onObjectDetected = null;
+        }
 
-      attachTo(containerId, options = {}) {
-        const container = document.getElementById(containerId);
-        if (!container) {
-          console.error(`Контейнер с id "${containerId}" не найден!`);
-          return;
-        }
-        if (!this.videoElement) {
-          this.videoElement = document.createElement('video');
-          this.videoElement.autoplay = true;
-          this.videoElement.playsInline = true;
-        } else if (this.videoElement.parentNode) {
-          this.videoElement.parentNode.removeChild(this.videoElement);
-        }
-        for (const prop in options) {
-          this.videoElement.style[prop] = options[prop];
-        }
-        container.innerHTML = "";
-        container.appendChild(this.videoElement);
-      }
-
-      async startCamera() {
-        if (this.stream) {
-          console.log("Камера уже запущена");
-          return;
-        }
-        try {
-          const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-          const constraints = { video: { facingMode: isMobile ? "environment" : "user" } };
-          console.log(`🎥 Запуск камеры с режимом: ${constraints.video.facingMode}`);
-          this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-          if (!this.videoElement) {
-            console.error("Video элемент не создан!");
+        attachTo(containerId, options = {}) {
+          const container = document.getElementById(containerId);
+          if (!container) {
+            console.error(`Контейнер с id "${containerId}" не найден!`);
             return;
           }
-          this.videoElement.srcObject = this.stream;
-          this.videoElement.addEventListener("loadedmetadata", async () => {
-            console.log("loadedmetadata: Видео готово");
-            if (typeof this.onVideoReady === "function") {
-              this.onVideoReady();
-            }
-            await this.loadModel();
-            this.startDetection();
-            const event = new CustomEvent("cameraReady");
-            document.dispatchEvent(event);
-          }, { once: true });
-        } catch (error) {
-          console.error("❌ Ошибка доступа к камере:", error);
-        }
-      }
-
-      stopCamera() {
-        if (this.stream) {
-          this.stream.getTracks().forEach(track => track.stop());
-          this.stream = null;
-          if (typeof this.onCameraClosed === "function") {
-            this.onCameraClosed();
+          if (!this.videoElement) {
+            this.videoElement = document.createElement('video');
+            this.videoElement.autoplay = true;
+            this.videoElement.playsInline = true;
+          } else if (this.videoElement.parentNode) {
+            this.videoElement.parentNode.removeChild(this.videoElement);
           }
+          for (const prop in options) {
+            this.videoElement.style[prop] = options[prop];
+          }
+          container.innerHTML = "";
+          container.appendChild(this.videoElement);
         }
-        this.isDetecting = false;
-      }
 
-      async loadModel() {
-        if (!this.model) {
-          console.log("Загрузка модели COCO-SSD...");
+        async startCamera() {
+          if (this.stream) {
+            console.log("Камера уже запущена");
+            return;
+          }
           try {
-            this.model = await cocoSsd.load();
-            console.log("Модель успешно загружена");
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const constraints = { video: { facingMode: isMobile ? "environment" : "user" } };
+            console.log(`🎥 Запуск камеры с режимом: ${constraints.video.facingMode}`);
+            this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+            if (!this.videoElement) {
+              console.error("Video элемент не создан!");
+              return;
+            }
+            this.videoElement.srcObject = this.stream;
+            this.videoElement.addEventListener("loadedmetadata", async () => {
+              console.log("loadedmetadata: Видео готово");
+              if (typeof this.onVideoReady === "function") {
+                this.onVideoReady();
+              }
+              await this.loadModel();
+              this.startDetection();
+              const event = new CustomEvent("cameraReady");
+              document.dispatchEvent(event);
+            }, { once: true });
           } catch (error) {
-            console.error("❌ Ошибка загрузки модели:", error);
+            console.error("❌ Ошибка доступа к камере:", error);
           }
         }
-      }
 
-      startDetection() {
-        if (!this.model) {
-          console.error("Модель не загружена. Запустите loadModel() перед startDetection().");
-          return;
-        }
-        this.isDetecting = true;
-        const detectFrame = async () => {
-          if (!this.isDetecting) return;
-          const predictions = await this.model.detect(this.videoElement);
-          if (predictions && predictions.length > 0) {
-            const detectedObject = predictions[0];
-            console.log("Объект обнаружен:", detectedObject);
-            if (typeof this.onObjectDetected === "function") {
-              this.onObjectDetected(detectedObject);
+        stopCamera() {
+          if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+            this.stream = null;
+            if (typeof this.onCameraClosed === "function") {
+              this.onCameraClosed();
             }
           }
-          requestAnimationFrame(detectFrame);
-        };
-        detectFrame();
+          this.isDetecting = false;
+        }
+
+        async loadModel() {
+          if (!this.model) {
+            console.log("Загрузка модели COCO-SSD...");
+            try {
+              this.model = await cocoSsd.load();
+              console.log("Модель успешно загружена");
+            } catch (error) {
+              console.error("❌ Ошибка загрузки модели:", error);
+            }
+          }
+        }
+
+        startDetection() {
+          if (!this.model) {
+            console.error("Модель не загружена. Запустите loadModel() перед startDetection().");
+            return;
+          }
+          this.isDetecting = true;
+          const detectFrame = async () => {
+            if (!this.isDetecting) return;
+            const predictions = await this.model.detect(this.videoElement);
+            if (predictions && predictions.length > 0) {
+              const detectedObject = predictions[0];
+              console.log("Объект обнаружен:", detectedObject);
+              if (typeof this.onObjectDetected === "function") {
+                this.onObjectDetected(detectedObject);
+              }
+            }
+            requestAnimationFrame(detectFrame);
+          };
+          detectFrame();
+        }
       }
-    }
 
-    // Инициализация камеры и оверлея
-    const cameraManager = new cameraSectionManager();
-    cameraManager.attachTo("videoContainer", { width: "640px", height: "480px" });
+      const cameraManager = new cameraSectionManager();
+      cameraManager.attachTo("videoContainer", { width: "640px", height: "480px" });
 
-    // Получаем элемент оверлея
-    const overlay = document.getElementById("overlay");
+      // Получаем элемент overlay после полной загрузки DOM
+      const overlay = document.getElementById("overlay");
 
-    // Callback, обновляющий оверлей именем обнаруженного объекта
-    cameraManager.onObjectDetected = (detectedObject) => {
-      overlay.innerHTML = `Обнаружено: ${detectedObject.class}`;
-    };
+      cameraManager.onObjectDetected = (detectedObject) => {
+        if (overlay) {
+          overlay.innerHTML = `Обнаружено: ${detectedObject.class}`;
+        }
+      };
 
-    document.getElementById("startButton").addEventListener("click", () => {
-      cameraManager.startCamera();
-    });
-    document.getElementById("stopButton").addEventListener("click", () => {
-      cameraManager.stopCamera();
-      overlay.innerHTML = "";
+      document.getElementById("startButton").addEventListener("click", () => {
+        cameraManager.startCamera();
+      });
+      document.getElementById("stopButton").addEventListener("click", () => {
+        cameraManager.stopCamera();
+        if (overlay) {
+          overlay.innerHTML = "";
+        }
+      });
     });
   </script>
 </body>

@@ -45,6 +45,8 @@ export class BaseRepeatingQuest extends BaseEvent {
       await this.eventManager.addDiaryEntry(this.key, true);
     }
     console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
+
+    // Check if the camera is open. If yes, start the quest UI immediately.
     if (this.app.isCameraOpen) {
       console.log("[BaseRepeatingQuest] Camera is already open; starting quest UI.");
       this.startCheckLoop();
@@ -89,6 +91,12 @@ export class BaseRepeatingQuest extends BaseEvent {
    */
   async finishStage() {
     if (this.finished) return;
+    // Immediately disable the shoot button to prevent repeated clicks.
+    const shootBtn = document.getElementById(this.shootButtonId);
+    if (shootBtn) {
+      shootBtn.setAttribute("disabled", "true");
+      shootBtn.style.pointerEvents = "none";
+    }
     const photoData = this.captureSimplePhoto();
     console.log(`[BaseRepeatingQuest] Captured snapshot for stage ${this.currentStage}.`);
     await this.eventManager.addDiaryEntry(
@@ -104,6 +112,10 @@ export class BaseRepeatingQuest extends BaseEvent {
       }
       const shootBtn = document.getElementById(this.shootButtonId);
       if (shootBtn) {
+        // Re-enable the shoot button for the next stage
+        shootBtn.disabled = false;
+        shootBtn.style.pointerEvents = "auto";
+        // Remove previous listeners by cloning and replacing the button
         const newShootBtn = shootBtn.cloneNode(true);
         shootBtn.parentNode.replaceChild(newShootBtn, shootBtn);
         newShootBtn.addEventListener("click", () => this.finishStage(), { once: true });
@@ -124,6 +136,7 @@ export class BaseRepeatingQuest extends BaseEvent {
     if (shootBtn) {
       // Instead of hiding the shoot button, disable it so it remains visible.
       shootBtn.disabled = true;
+      shootBtn.style.pointerEvents = "none";
     }
     this.finished = true;
     console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);

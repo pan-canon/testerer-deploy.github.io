@@ -8,11 +8,6 @@ import { ImageUtils } from '../utils/imageUtils.js';
  * (status display, "Shoot" button) related to the mirror quest.
  */
 export class BaseMirrorQuest extends BaseEvent {
-  /**
-   * @param {EventManager} eventManager - The diary/event manager.
-   * @param {App} appInstance - The main application instance.
-   * @param {Object} [config] - Optional configuration (e.g., UI element IDs).
-   */
   constructor(eventManager, appInstance, config = {}) {
     super(eventManager);
     this.app = appInstance;
@@ -34,10 +29,6 @@ export class BaseMirrorQuest extends BaseEvent {
     this.registerEvents();
   }
 
-  /**
-   * registerEvents – Registers any event listeners for UI elements.
-   * (Optional: Can be extended to attach handlers directly here or via QuestManager.)
-   */
   registerEvents() {
     // Listen to camera ready event
     document.addEventListener('cameraReady', () => {
@@ -47,12 +38,6 @@ export class BaseMirrorQuest extends BaseEvent {
     });
   }
 
-  /**
-   * activate – Activates the mirror quest.
-   * Logs the event in the diary (if not already logged) and sets the mirrorQuestActive flag.
-   *
-   * @returns {Promise<void>}
-   */
   async activate() {
     if (!this.eventManager.isEventLogged(this.key)) {
       console.log(`Activating event: ${this.key}`);
@@ -62,10 +47,6 @@ export class BaseMirrorQuest extends BaseEvent {
     localStorage.setItem("mirrorQuestActive", "true");
   }
 
-  /**
-   * startCheckLoop – Starts an interval that checks every 2 seconds if the player is "in front of the mirror."
-   * Updates the UI (status display and "Shoot" button) accordingly.
-   */
   startCheckLoop() {
     if (this.checkInterval) return; // Already running
     const statusDiv = document.getElementById(this.statusElementId);
@@ -94,9 +75,6 @@ export class BaseMirrorQuest extends BaseEvent {
     }, 2000);
   }
 
-  /**
-   * stopCheckLoop – Stops the check loop and hides related UI elements.
-   */
   stopCheckLoop() {
     if (this.checkInterval) {
       clearInterval(this.checkInterval);
@@ -106,64 +84,42 @@ export class BaseMirrorQuest extends BaseEvent {
     if (statusDiv) {
       statusDiv.style.display = "none";
     }
-    const shootBtn = document.getElementById(this.shootButtonId);
-    if (shootBtn) {
-      shootBtn.style.display = "none";
-    }
+    // Не изменяем display shootBtn здесь – его состояние обновляется в updateUIAfterFinish()
   }
 
-  /**
-   * checkStatus – Checks if the player is "in front of the mirror" using frame comparison.
-   * @returns {Promise<boolean>} True if similarity exceeds threshold, otherwise false.
-   */
   async checkStatus() {
     console.log("[BaseMirrorQuest] checkStatus() -> compareFrameInternally()");
     return await this.compareFrameInternally();
   }
 
-  /**
-   * compareFrameInternally – Compares the current camera frame with the saved selfie.
-   * @returns {Promise<boolean>} True if the similarity is above the threshold, else false.
-   */
   async compareFrameInternally() {
-    // If no selfie is saved, return false.
     if (!this.app.selfieData) {
       console.warn("[BaseMirrorQuest] ❌ No saved selfie (app.selfieData)");
       return false;
     }
-    // Verify the camera is active.
     const videoEl = this.app.cameraSectionManager?.videoElement;
     if (!videoEl || !videoEl.srcObject) {
       console.warn("[BaseMirrorQuest] ❌ Camera is not active!");
       return false;
     }
 
-    // Configure the canvas
     this.tempCanvas.width = videoEl.videoWidth || 640;
     this.tempCanvas.height = videoEl.videoHeight || 480;
     this.tempCtx.drawImage(videoEl, 0, 0, this.tempCanvas.width, this.tempCanvas.height);
-
-    // Convert the image to grayscale
     const currentFrameData = ImageUtils.convertToGrayscale(this.tempCanvas);
-
-    // Perform comparison using pixel-wise and histogram methods
     const matchPixel = ImageUtils.pixelWiseComparison(this.app.selfieData, currentFrameData);
     const matchHist = ImageUtils.histogramComparison(this.app.selfieData, currentFrameData);
     console.log(`[BaseMirrorQuest] pixel=${matchPixel.toFixed(2)}, hist=${matchHist.toFixed(2)}`);
-
     const success = (matchPixel > 0.6 && matchHist > 0.7);
     if (success) {
-      // Save for diary reporting
       this.app.lastMirrorPhoto = currentFrameData;
     }
     return success;
   }
 
   /**
-   * updateUIAfterFinish – Separates the UI updates after quest completion.
-   * Displays appropriate messages and leaves the "Shoot" button visible but disabled.
-   *
-   * @param {boolean} success - Indicates whether the quest was successful.
+   * updateUIAfterFinish – Updates the UI after finishing the mirror quest.
+   * Leaves the "Shoot" button visible but disabled.
    */
   updateUIAfterFinish(success) {
     const statusDiv = document.getElementById("mirror-quest-status");
@@ -177,9 +133,10 @@ export class BaseMirrorQuest extends BaseEvent {
     }
     const shootBtn = document.getElementById("btn_shoot");
     if (shootBtn) {
-      // Force the shoot button to remain visible
+      // Force the shoot button to remain visible but disable it.
       shootBtn.style.display = "inline-block";
-      shootBtn.disabled = true;
+      shootBtn.setAttribute("disabled", "true");
+      shootBtn.style.pointerEvents = "none";
       console.log("Mirror quest: Shoot button disabled after finishing quest.");
     }
     const cameraBtn = document.getElementById("toggle-camera");
@@ -188,31 +145,13 @@ export class BaseMirrorQuest extends BaseEvent {
     }
   }
 
-  /**
-   * finish – Completes the mirror quest:
-   *  1) Stops the check loop.
-   *  2) Checks the status and logs the result.
-   *  3) Removes the mirrorQuestActive flag and updates UI.
-   *  4) On success, explicitly triggers the "post_mirror_event" via GameEventManager.
-   *
-   * @returns {Promise<void>}
-   */
   async finish() {
     if (this.finished) return;
     this.finished = true;
-
-    // Stop the mirror quest's check loop (e.g. frame comparison loop)
     this.stopCheckLoop();
-
-    // Perform a final check to determine if the mirror quest succeeded
     const success = await this.checkStatus();
-
-    // Get the current ghost and a random letter from its name (used in the diary entry)
     const ghost = this.app.ghostManager.getCurrentGhost();
     const randomLetter = ghost ? this.getRandomLetter(ghost.name) : "";
-
-    // Log the result in the diary:
-    // If success, include photo data if available; otherwise log failure message.
     if (success) {
       const photoData = this.app.lastMirrorPhoto
         ? ` [photo attached]\n${this.app.lastMirrorPhoto}`
@@ -221,26 +160,14 @@ export class BaseMirrorQuest extends BaseEvent {
     } else {
       await this.eventManager.addDiaryEntry(`user_post_failed: ${randomLetter}`, false);
     }
-
-    // Update the UI after finishing the quest:
-    // Instead of hiding the shoot button, we disable it so it remains visible.
     this.updateUIAfterFinish(success);
-
-    // Remove the mirrorQuestActive flag and update the "Post" button state accordingly.
     localStorage.removeItem("mirrorQuestActive");
     this.app.questManager.updatePostButtonState();
-
-    // If the quest was successful, explicitly trigger the next event (e.g. "post_mirror_event")
     if (success) {
       this.app.gameEventManager.activateEvent("post_mirror_event");
     }
   }
 
-  /**
-   * getRandomLetter – Returns a random letter from the ghost's name.
-   * @param {string} name - The ghost's name.
-   * @returns {string} A random letter, or an empty string if none available.
-   */
   getRandomLetter(name) {
     if (!name) return "";
     const letters = name.replace(/[^A-Za-zА-Яа-яЁё]/g, '').split('');

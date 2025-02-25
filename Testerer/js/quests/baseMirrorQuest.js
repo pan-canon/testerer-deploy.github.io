@@ -166,26 +166,22 @@ export class BaseMirrorQuest extends BaseEvent {
    * @param {boolean} success - Indicates whether the quest was successful.
    */
   updateUIAfterFinish(success) {
-    // Update status display with a message indicating success or failure.
-    const statusDiv = document.getElementById("mirror-quest-status"); // Replace with your ID if different
+    const statusDiv = document.getElementById("mirror-quest-status");
     if (statusDiv) {
       statusDiv.textContent = success
         ? "✅ Mirror quest completed!"
         : "❌ Quest ignored!";
-      // Optionally, fade out the status message after 2 seconds:
       setTimeout(() => {
         statusDiv.style.opacity = "0";
       }, 2000);
     }
-
-    // Instead of hiding the shoot button, disable it so it remains visible.
     const shootBtn = document.getElementById("btn_shoot");
     if (shootBtn) {
+      // Force the shoot button to remain visible
+      shootBtn.style.display = "inline-block";
       shootBtn.disabled = true;
       console.log("Mirror quest: Shoot button disabled after finishing quest.");
     }
-
-    // Remove any glowing effect from the camera button.
     const cameraBtn = document.getElementById("toggle-camera");
     if (cameraBtn) {
       cameraBtn.classList.remove("glowing");

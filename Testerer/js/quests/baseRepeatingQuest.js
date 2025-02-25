@@ -45,8 +45,6 @@ export class BaseRepeatingQuest extends BaseEvent {
       await this.eventManager.addDiaryEntry(this.key, true);
     }
     console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
-
-    // Check if the camera is open. If yes, start the quest UI immediately.
     if (this.app.isCameraOpen) {
       console.log("[BaseRepeatingQuest] Camera is already open; starting quest UI.");
       this.startCheckLoop();

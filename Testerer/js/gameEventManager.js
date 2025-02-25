@@ -80,11 +80,15 @@ export class GameEventManager {
 
   /**
    * updatePostButtonState – Updates the "Post" button state.
-   * The button is enabled only if mirrorQuestReady is present and the user has not yet submitted a post.
+   * The button is enabled only if mirrorQuestReady is set and userPostSubmitted is not set.
    */
   updatePostButtonState() {
-    const awaitingUserPost = localStorage.getItem("mirrorQuestReady") === "true" &&
-                             localStorage.getItem("userPostSubmitted") !== "true";
+    const mirrorReady = localStorage.getItem("mirrorQuestReady") === "true";
+    const repeatingActive = localStorage.getItem("repeatingQuestActive") === "true";
+    const userSubmitted = localStorage.getItem("userPostSubmitted") === "true";
+    // The button should be enabled if mirrorQuestReady is true or repeating quest is active,
+    // and userPostSubmitted is not set.
+    const awaitingUserPost = (mirrorReady || repeatingActive) && !userSubmitted;
     const postBtn = this.app.postBtn;
     if (postBtn) {
       postBtn.disabled = !awaitingUserPost;
@@ -94,9 +98,8 @@ export class GameEventManager {
 
   /**
    * handlePostButtonClick – Called when the "Post" button is clicked.
-   * If mirrorQuestReady is true, it triggers the mirror quest.
-   * Otherwise, it triggers the repeating quest.
-   * Upon clicking, the button is immediately disabled.
+   * On click, the button is immediately disabled, mirrorQuestReady is removed,
+   * and the flag userPostSubmitted is set. Then, the mirror quest is triggered.
    */
   async handlePostButtonClick() {
     const postBtn = this.app.postBtn;
@@ -104,7 +107,7 @@ export class GameEventManager {
       // Disable the button immediately to prevent multiple clicks.
       postBtn.disabled = true;
     }
-    // Remove mirrorQuestReady and mark that the user has submitted a post.
+    // Remove mirrorQuestReady and set userPostSubmitted flag.
     localStorage.removeItem("mirrorQuestReady");
     localStorage.setItem("userPostSubmitted", "true");
     this.updatePostButtonState();
@@ -115,5 +118,35 @@ export class GameEventManager {
     if (cameraBtn) cameraBtn.classList.add("glowing");
 
     await this.activateEvent("mirror_quest");
+  }
+
+  /**
+   * updateCameraButtonState – Highlights the camera button if mirrorQuestActive is true.
+   */
+  updateCameraButtonState() {
+    const cameraBtn = document.getElementById("toggle-camera");
+    if (!cameraBtn) return;
+    if (localStorage.getItem("mirrorQuestActive") === "true") {
+      cameraBtn.classList.add("glowing");
+    } else {
+      cameraBtn.classList.remove("glowing");
+    }
+  }
+
+  /**
+   * triggerMirrorQuestIfActive – If mirrorQuestActive is true, explicitly check the mirror quest.
+   */
+  async triggerMirrorQuestIfActive() {
+    if (localStorage.getItem("mirrorQuestActive") === "true") {
+      console.log("[QuestManager] triggerMirrorQuestIfActive: finishing mirror_quest");
+      await this.checkQuest("mirror_quest");
+    }
+  }
+
+  /**
+   * checkMirrorQuestOnCamera – A shortcut to check the mirror quest.
+   */
+  async checkMirrorQuestOnCamera() {
+    await this.checkQuest("mirror_quest");
   }
 }

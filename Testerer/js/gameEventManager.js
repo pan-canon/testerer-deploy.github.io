@@ -14,7 +14,7 @@ export class GameEventManager {
     this.app = appInstance;
     this.languageManager = languageManager;
 
-    // Array of one-time events; the order is not automatically chained.
+    // Array of one-time events; their activation is not chained automatically.
     this.events = [
       new WelcomeEvent(this.eventManager, this.app, this.languageManager),
       new PostMirrorEvent(this.eventManager, this.app),
@@ -22,13 +22,14 @@ export class GameEventManager {
       new FinalEvent(this.eventManager, this.app, this.languageManager)
     ];
     
-    // Initialize a state to track the progress of repeating quests
+    // State to track the completion of the repeating quest cycle.
+    // Final quest will now be triggered only by explicit user action.
     this.repeatingQuestCompleted = false;
   }
 
   /**
    * activateEvent – Activates the specified event by key.
-   * This method only activates the given event and does not automatically trigger the next event.
+   * This method only activates the given event and does not automatically trigger any subsequent event.
    * @param {string} key - The unique key of the event to activate.
    */
   async activateEvent(key) {
@@ -36,12 +37,7 @@ export class GameEventManager {
     if (event) {
       await event.activate();
       console.log(`Event '${key}' activated.`);
-      
-      // Check if this is the last repeating event and trigger the final quest if so
-      if (key === 'post_repeating_event' && this.repeatingQuestCompleted) {
-        console.log('All repeating quests completed, triggering final quest.');
-        await this.activateEvent('final_quest');
-      }
+      // Automatic chaining removed – subsequent events must be triggered explicitly.
     } else {
       console.warn(`[GameEventManager] Event "${key}" not found in the list.`);
     }
@@ -49,14 +45,12 @@ export class GameEventManager {
 
   /**
    * handleRepeatingQuestCompletion – Handles the completion of the repeating quest cycle.
-   * Marks repeating quests as completed and checks if the final quest should be triggered.
+   * Marks repeating quests as completed. Final quest should be triggered explicitly by the user.
    */
   async handleRepeatingQuestCompletion() {
     this.repeatingQuestCompleted = true;
-    console.log("Repeating quest completed. Preparing for final quest.");
-    
-    // Manually trigger post_repeating_event to start the next cycle, if any
-    await this.activateEvent('post_repeating_event');
+    console.log("Repeating quest completed. Final quest can now be triggered manually.");
+    // Here you could notify the user that the final quest is available.
   }
 
   /**

@@ -98,11 +98,12 @@ export class QuestManager {
 
   /**
    * handlePostButtonClick – Called when the "Post" button is clicked.
-   * If mirrorQuestReady is true, explicitly triggers the mirror quest.
+   * If mirrorQuestReady is true, it triggers the mirror quest.
+   * Otherwise, it triggers the repeating quest.
    */
   async handlePostButtonClick() {
-    const isReady = localStorage.getItem("mirrorQuestReady") === "true";
-    if (isReady) {
+    const mirrorReady = localStorage.getItem("mirrorQuestReady") === "true";
+    if (mirrorReady) {
       localStorage.removeItem("mirrorQuestReady");
       this.updatePostButtonState();
       console.log("[QuestManager] Triggering mirror quest from handlePostButtonClick.");
@@ -113,7 +114,8 @@ export class QuestManager {
 
       await this.activateQuest("mirror_quest");
     } else {
-      alert("Please wait for a ghost invitation to start the quest.");
+      console.log("[QuestManager] Triggering repeating quest from handlePostButtonClick.");
+      await this.activateQuest("repeating_quest");
     }
   }
 

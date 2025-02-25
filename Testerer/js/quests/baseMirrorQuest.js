@@ -239,6 +239,7 @@ export class BaseMirrorQuest extends BaseEvent {
     if (success) {
       this.app.gameEventManager.activateEvent("post_mirror_event");
     }
+  }  // <-- добавлена закрывающая фигурная скобка для finish()
 
   /**
    * getRandomLetter – Returns a random letter from the ghost's name.

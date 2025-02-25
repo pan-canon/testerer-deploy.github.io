@@ -122,17 +122,19 @@ export class QuestManager {
 
   /**
    * updatePostButtonState – Updates the "Post" button state.
-   * The button is enabled only if mirrorQuestReady is true and userPostSubmitted is not set.
+   * The button is enabled only if either mirrorQuestReady or repeatingQuestActive is set
+   * and the user has not yet submitted a post.
    */
   updatePostButtonState() {
     const mirrorReady = localStorage.getItem("mirrorQuestReady") === "true";
+    const repeatingActive = localStorage.getItem("repeatingQuestActive") === "true";
     const userSubmitted = localStorage.getItem("userPostSubmitted") === "true";
+    const awaitingUserPost = (mirrorReady || repeatingActive) && !userSubmitted;
     const postBtn = this.app.postBtn;
     if (postBtn) {
-      // Enable button only if mirrorQuestReady is true and user hasn't submitted yet.
-      postBtn.disabled = !(mirrorReady && !userSubmitted);
+      postBtn.disabled = !awaitingUserPost;
     }
-    console.log("[QuestManager] updatePostButtonState =>", mirrorReady, userSubmitted);
+    console.log("[QuestManager] updatePostButtonState => awaitingUserPost:", awaitingUserPost);
   }
 
   /**

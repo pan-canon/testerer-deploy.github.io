@@ -396,39 +396,45 @@ export class App {
    * NOTE: Mirror quest specific logic is delegated to the corresponding modules.
    */
   async toggleCameraView() {
-    const diary = document.getElementById("diary");
-    const globalCamera = document.getElementById("global-camera");
+    // Get necessary DOM elements
+    const diary           = document.getElementById("diary");
+    const globalCamera    = document.getElementById("global-camera");
     const toggleCameraBtn = document.getElementById("toggle-camera");
-    const toggleDiaryBtn = document.getElementById("toggle-diary");
-    const shootBtn = document.getElementById("btn_shoot");
-    const postBtn = this.postBtn;
-    const buttonsToHide = [
+    const toggleDiaryBtn  = document.getElementById("toggle-diary");
+    const shootBtn        = document.getElementById("btn_shoot");  // "Shoot" button
+    const postBtn         = this.postBtn;                          // "Post" button
+    const buttonsToHide   = [
       document.getElementById("reset-data"),
       document.getElementById("export-profile-btn"),
       document.getElementById("import-profile-container")
     ];
 
     if (!this.isCameraOpen) {
+      // === Switching to camera mode ===
       console.log("📸 Switching to camera view...");
-      diary.style.display = "none";
-      globalCamera.style.display = "flex";
-      if (toggleCameraBtn) toggleCameraBtn.style.display = "none";
-      if (toggleDiaryBtn) toggleDiaryBtn.style.display = "inline-block";
-      buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
-      if (postBtn) postBtn.style.display = "none";
+      diary.style.display = "none";                   // Hide diary
+      globalCamera.style.display = "flex";            // Show camera
 
-      // Always disable shoot button by default
+      // Hide blog-related buttons
+      if (toggleCameraBtn) toggleCameraBtn.style.display = "none";
+      if (toggleDiaryBtn)  toggleDiaryBtn.style.display = "inline-block";
+      buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
+      if (postBtn) postBtn.style.display = "none";     // Hide "Post" in camera mode
+
+      // Show "Shoot" button and disable it until conditions are met
       if (shootBtn) {
         shootBtn.style.display = "inline-block";
         shootBtn.disabled = true;
-        console.log("Shoot button set to disabled by default.");
       }
 
+      // Attach the camera to the global container and start the video stream
       this.cameraSectionManager.attachTo('global-camera', {
         width: "100%",
         height: "100%"
       });
       await this.cameraSectionManager.startCamera();
+
+      // Wait until the video stream is ready (readyState >= 2)
       await new Promise(resolve => {
         const vid = this.cameraSectionManager.videoElement;
         if (vid.readyState >= 2) {
@@ -441,21 +447,34 @@ export class App {
         this.cameraSectionManager.videoElement.videoWidth,
         this.cameraSectionManager.videoElement.videoHeight
       );
+
+      // Note: Mirror quest check loop is handled within the respective modules
+
       this.isCameraOpen = true;
     } else {
+      // === Switching back to diary view ===
       console.log("📓 Returning to diary view...");
-      diary.style.display = "block";
-      globalCamera.style.display = "none";
+      diary.style.display = "block";                  // Show diary
+      globalCamera.style.display = "none";              // Hide camera
+
+      // Show diary buttons: "toggle-camera" and "Post"
       if (toggleCameraBtn) toggleCameraBtn.style.display = "inline-block";
-      if (toggleDiaryBtn) toggleDiaryBtn.style.display = "none";
+      if (toggleDiaryBtn)  toggleDiaryBtn.style.display = "none";
       buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
-      if (postBtn) postBtn.style.display = "inline-block";
+      if (postBtn) postBtn.style.display = "inline-block";  // "Post" visible only in diary view
+
+      // Hide "Shoot" button and reset its state
       if (shootBtn) {
         shootBtn.style.display = "none";
         shootBtn.disabled = true;
       }
+
+      // Stop the camera and update the flag
       this.cameraSectionManager.stopCamera();
       this.isCameraOpen = false;
+
+      // Optionally, notify QuestManager about camera closure (if needed)
+      // e.g., this.questManager.handleCameraClosed();
     }
   }
 

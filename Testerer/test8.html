@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Сегментация + композитинг: дополнительное изображение за человеком</title>
+  <title>Сегментация + композитинг: изображение справа от человека</title>
   <!-- Подключаем TensorFlow.js и BodyPix -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@latest"></script>
@@ -35,7 +35,7 @@
       height: 480px;
       z-index: 3;
     }
-    /* Дополнительное оформление (опционально) */
+    /* Дополнительное информационное окно (опционально) */
     #overlayInfo {
       position: absolute;
       top: 10px;
@@ -66,7 +66,7 @@
     const ctx = canvasOverlay.getContext("2d");
     const overlayInfo = document.getElementById("overlayInfo");
 
-    // Offscreen canvas для обработки дополнительного изображения
+    // Offscreen canvas для дополнительного изображения
     const offCanvas = document.createElement("canvas");
     const offCtx = offCanvas.getContext("2d");
 
@@ -84,8 +84,7 @@
 
     // Загружаем дополнительное изображение (например, декоративный элемент)
     const extraImg = new Image();
-    // Укажите корректный путь к изображению
-    extraImg.src = "images/static-image.webp";
+    extraImg.src = "images/static-image.webp"; // корректный путь к изображению
     extraImg.onload = () => {
       console.log("Дополнительное изображение загружено");
     };
@@ -140,43 +139,57 @@
         internalResolution: 'medium',
         segmentationThreshold: 0.7
       });
-      // Преобразуем сегментацию в бинарную маску (объект, содержащий data, width, height)
-      // Здесь data содержит 1 для пикселей, принадлежащих человеку, 0 - для остальных.
+      // Маска в виде массива (1 – принадлежит человеку)
       const maskData = segmentation.data;
       const segWidth = segmentation.width;
       const segHeight = segmentation.height;
 
-      // Вычисляем bounding box для человека по маске
+      // Вычисляем bounding box для человека в координатах маски
       const bbox = getBoundingBox(maskData, segWidth, segHeight);
-      // Отображаем информацию (опционально)
-      overlayInfo.innerHTML = `Человек: (${bbox.minX}, ${bbox.minY}) - (${bbox.maxX}, ${bbox.maxY})`;
+      // Вычисляем коэффициенты масштабирования для перехода к координатам канваса
+      const scaleX = canvasOverlay.width / segWidth;
+      const scaleY = canvasOverlay.height / segHeight;
+      // Переводим bounding box в координаты канваса
+      const personX = bbox.minX * scaleX;
+      const personY = bbox.minY * scaleY;
+      const personWidth = (bbox.maxX - bbox.minX) * scaleX;
+      const personHeight = (bbox.maxY - bbox.minY) * scaleY;
+      overlayInfo.innerHTML = `Человек: (${Math.round(personX)}, ${Math.round(personY)}) - (${Math.round(personX + personWidth)}, ${Math.round(personY + personHeight)})`;
 
       // Подготовка offscreen canvas для дополнительного изображения:
-      // 1. Рисуем дополнительное изображение на offCanvas (оно полноразмерное)
       offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
       offCtx.drawImage(extraImg, 0, 0, offCanvas.width, offCanvas.height);
 
-      // 2. Создаем маску на основе сегментации.
-      // Для этого используем bodyPix.toMask, чтобы получить ImageData с белой областью для человека.
+      // Создаем маску из сегментации с помощью bodyPix.toMask
       const maskImage = bodyPix.toMask(segmentation, {r:255, g:255, b:255, a:255}, {r:0, g:0, b:0, a:0});
-      // Применяем маску для вырезания части дополнительного изображения.
-      // Устанавливаем режим "destination-out": пиксели, где маска белая, будут вырезаны.
+      // Применяем маску: режим destination-out вырезает область, где маска белая
       offCtx.globalCompositeOperation = "destination-out";
       offCtx.putImageData(new ImageData(maskImage.data, maskImage.width, maskImage.height), 0, 0);
       offCtx.globalCompositeOperation = "source-over";
       
-      // Теперь дополнительное изображение в offCanvas содержит вырезанную область (то есть, там, где был человек, изображение отсутствует).
-
       // Композитинг на основном canvas:
       ctx.clearRect(0, 0, canvasOverlay.width, canvasOverlay.height);
       // Сначала рисуем видео
       ctx.drawImage(videoElement, 0, 0, canvasOverlay.width, canvasOverlay.height);
-      // Затем рисуем обработанное дополнительное изображение.
-      // Для размещения "вплотную" рядом с человеком используем bounding box.
-      // Например, разместим его так, чтобы его левый край совпадал с правым краем bounding box человека.
-      const offsetX = bbox.maxX; // в координатах исходного видео/маски
-      // В данном примере изображение рисуется без масштабирования (можно доработать для точного соответствия).
-      ctx.drawImage(offCanvas, offsetX, 0, offCanvas.width - offsetX, offCanvas.height, offsetX, 0, offCanvas.width - offsetX, offCanvas.height);
+      
+      // Теперь разместим дополнительное изображение справа от человека, так чтобы его вертикальный размер равнялся personHeight.
+      // Вычисляем желаемые размеры с учетом сохранения соотношения сторон:
+      const extraAspect = extraImg.width / extraImg.height;
+      const extraHeight = personHeight;
+      const extraWidth = extraHeight * extraAspect;
+      // Выбираем позицию: x – сразу после правого края bounding box, y – равен personY (чтобы изображение шло от головы до ног)
+      const extraX = personX + personWidth;
+      const extraY = personY;
+
+      // Опционально: можно задать clip, чтобы гарантировать, что изображение не выйдет в область человека.
+      ctx.save();
+      // Область, куда будем рисовать extraImage (слева ограничивается extraX)
+      ctx.beginPath();
+      ctx.rect(extraX, extraY, extraWidth, extraHeight);
+      ctx.clip();
+      // Рисуем обработанное дополнительное изображение с offCanvas, масштабируя его до размера extraWidth x extraHeight
+      ctx.drawImage(offCanvas, 0, 0, offCanvas.width, offCanvas.height, extraX, extraY, extraWidth, extraHeight);
+      ctx.restore();
 
       requestAnimationFrame(compositeFrame);
     }

@@ -123,12 +123,15 @@ export class QuestManager {
    * updatePostButtonState – Enables or disables the "Post" button based on mirrorQuestReady.
    */
   updatePostButtonState() {
-    const isReady = localStorage.getItem("mirrorQuestReady") === "true";
+    // Check if either mirror quest is ready or repeating quest is active.
+    const mirrorReady = localStorage.getItem("mirrorQuestReady") === "true";
+    const repeatingActive = localStorage.getItem("repeatingQuestActive") === "true";
     const postBtn = this.app.postBtn;
     if (postBtn) {
-      postBtn.disabled = !isReady;
+      // Enable the "Post" button if either flag is true.
+      postBtn.disabled = !(mirrorReady || repeatingActive);
     }
-    console.log("[QuestManager] updatePostButtonState =>", isReady);
+    console.log("[QuestManager] updatePostButtonState =>", mirrorReady || repeatingActive);
   }
 
   /**

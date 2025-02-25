@@ -77,4 +77,43 @@ export class GameEventManager {
     await this.activateEvent('mirror_quest');
     console.log("🪞 Mirror Quest started (event).");
   }
+
+  /**
+   * updatePostButtonState – Updates the "Post" button state.
+   * The button is enabled only if mirrorQuestReady is present and the user has not yet submitted a post.
+   */
+  updatePostButtonState() {
+    const awaitingUserPost = localStorage.getItem("mirrorQuestReady") === "true" &&
+                             localStorage.getItem("userPostSubmitted") !== "true";
+    const postBtn = this.app.postBtn;
+    if (postBtn) {
+      postBtn.disabled = !awaitingUserPost;
+    }
+    console.log("[QuestManager] updatePostButtonState => awaitingUserPost:", awaitingUserPost);
+  }
+
+  /**
+   * handlePostButtonClick – Called when the "Post" button is clicked.
+   * If mirrorQuestReady is true, it triggers the mirror quest.
+   * Otherwise, it triggers the repeating quest.
+   * Upon clicking, the button is immediately disabled.
+   */
+  async handlePostButtonClick() {
+    const postBtn = this.app.postBtn;
+    if (postBtn) {
+      // Disable the button immediately to prevent multiple clicks.
+      postBtn.disabled = true;
+    }
+    // Remove mirrorQuestReady and mark that the user has submitted a post.
+    localStorage.removeItem("mirrorQuestReady");
+    localStorage.setItem("userPostSubmitted", "true");
+    this.updatePostButtonState();
+    console.log("[QuestManager] Triggering mirror quest from handlePostButtonClick.");
+      
+    // Highlight the camera button.
+    const cameraBtn = document.getElementById("toggle-camera");
+    if (cameraBtn) cameraBtn.classList.add("glowing");
+
+    await this.activateEvent("mirror_quest");
+  }
 }

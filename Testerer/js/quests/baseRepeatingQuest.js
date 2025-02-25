@@ -132,28 +132,49 @@ export class BaseRepeatingQuest extends BaseEvent {
   }
 
   /**
-   * finish – Fully completes the repeating quest.
-   * Logs its completion, updates the UI, and (instead of automatically triggering the next event)
-   * relies on user action to progress further.
+   * finish – Completes the mirror quest:
+   * 1) Stops the check loop.
+   * 2) Checks the status and logs the result.
+   * 3) Removes the mirrorQuestActive flag and updates the UI.
+   * 4) On success, explicitly triggers the "post_mirror_event" via GameEventManager.
    *
    * @returns {Promise<void>}
    */
   async finish() {
-    this.stopCheckLoop();
+    if (this.finished) return;
     this.finished = true;
-    console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
 
-    // Log the quest completion in the diary.
-    await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
+    this.stopCheckLoop();
+    const success = await this.checkStatus();
 
-    // Clear the repeating quest active flag.
-    localStorage.removeItem("repeatingQuestActive");
+    // Log the result and update the diary.
+    const ghost = this.app.ghostManager.getCurrentGhost();
+    const randomLetter = ghost ? this.getRandomLetter(ghost.name) : "";
+    if (success) {
+      const photoData = this.app.lastMirrorPhoto
+        ? ` [photo attached]\n${this.app.lastMirrorPhoto}`
+        : "";
+      await this.eventManager.addDiaryEntry(`user_post_success: ${randomLetter}${photoData}`, false);
+    } else {
+      await this.eventManager.addDiaryEntry(`user_post_failed: ${randomLetter}`, false);
+    }
+
+    // Update the UI after finishing the quest.
+    this.updateUIAfterFinish(success);
+
+    // Remove the mirrorQuestActive flag.
+    localStorage.removeItem("mirrorQuestActive");
+
+    // Also clear the userPostSubmitted flag so that the "Post" button can be enabled again in the next cycle.
+    localStorage.removeItem("userPostSubmitted");
 
     // Update the "Post" button state.
     this.app.questManager.updatePostButtonState();
 
-    // Do not automatically trigger "post_repeating_event"; 
-    // the user must trigger the next step explicitly.
+    // Explicitly trigger the "post_mirror_event" if the quest was successful.
+    if (success) {
+      this.app.gameEventManager.activateEvent("post_mirror_event");
+    }
   }
 
   /**

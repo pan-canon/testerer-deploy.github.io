@@ -164,17 +164,29 @@ export class BaseMirrorQuest extends BaseEvent {
    * Displays appropriate messages and hides the status display after a delay.
    *
    * @param {boolean} success - Indicates whether the quest was successful.
+   * New version of updateUIAfterFinish() that leaves the shoot button visible but disabled.
    */
   updateUIAfterFinish(success) {
-    const statusDiv = document.getElementById(this.statusElementId);
+    // Update status display with a message indicating success or failure.
+    const statusDiv = document.getElementById("mirror-quest-status"); // Замените на ваш ID, если другой
     if (statusDiv) {
       statusDiv.textContent = success
         ? "✅ Mirror quest completed!"
         : "❌ Quest ignored!";
-      // Hide the status display after 2 seconds.
-      setTimeout(() => statusDiv.style.display = "none", 2000);
+      // Optionally, fade out the status message after 2 seconds:
+      setTimeout(() => {
+        statusDiv.style.opacity = "0";
+      }, 2000);
     }
-    // Remove glow effect from the camera button.
+
+    // Instead of hiding the shoot button, disable it so it remains visible.
+    const shootBtn = document.getElementById("btn_shoot");
+    if (shootBtn) {
+      shootBtn.disabled = true;
+      console.log("Mirror quest: Shoot button disabled after finishing quest.");
+    }
+
+    // Remove any glowing effect from the camera button.
     const cameraBtn = document.getElementById("toggle-camera");
     if (cameraBtn) {
       cameraBtn.classList.remove("glowing");
@@ -194,12 +206,18 @@ export class BaseMirrorQuest extends BaseEvent {
     if (this.finished) return;
     this.finished = true;
 
+    // Stop the mirror quest's check loop (e.g. frame comparison loop)
     this.stopCheckLoop();
+
+    // Perform a final check to determine if the mirror quest succeeded
     const success = await this.checkStatus();
 
-    // Log the result and update the diary.
+    // Get the current ghost and a random letter from its name (used in the diary entry)
     const ghost = this.app.ghostManager.getCurrentGhost();
     const randomLetter = ghost ? this.getRandomLetter(ghost.name) : "";
+
+    // Log the result in the diary:
+    // If success, include photo data if available; otherwise log failure message.
     if (success) {
       const photoData = this.app.lastMirrorPhoto
         ? ` [photo attached]\n${this.app.lastMirrorPhoto}`
@@ -209,18 +227,18 @@ export class BaseMirrorQuest extends BaseEvent {
       await this.eventManager.addDiaryEntry(`user_post_failed: ${randomLetter}`, false);
     }
 
-    // Update the UI after finishing the quest.
+    // Update the UI after finishing the quest:
+    // Instead of hiding the shoot button, we disable it so it remains visible.
     this.updateUIAfterFinish(success);
 
-    // Remove the mirrorQuestActive flag and update the "Post" button state.
+    // Remove the mirrorQuestActive flag and update the "Post" button state accordingly.
     localStorage.removeItem("mirrorQuestActive");
     this.app.questManager.updatePostButtonState();
 
-    // Explicitly trigger the "post_mirror_event" if the quest was successful.
+    // If the quest was successful, explicitly trigger the next event (e.g. "post_mirror_event")
     if (success) {
       this.app.gameEventManager.activateEvent("post_mirror_event");
     }
-  }
 
   /**
    * getRandomLetter – Returns a random letter from the ghost's name.

@@ -45,6 +45,8 @@ export class ProfileManager {
     localStorage.removeItem("mirrorQuestReady");
     localStorage.removeItem("mirrorQuestActive");
     localStorage.removeItem("animatedDiaryIds");
+    // New key from repeating quest:
+    localStorage.removeItem("isRepeatingCycle");
 
     // Restore the saved language (if any)
     if (language !== null) {

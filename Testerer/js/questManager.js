@@ -101,19 +101,32 @@ export class QuestManager {
    * If mirrorQuestReady is true, explicitly triggers the mirror quest.
    */
   async handlePostButtonClick() {
+    // Check if the "mirrorQuestReady" flag is set to allow quest start
     const isReady = localStorage.getItem("mirrorQuestReady") === "true";
-    if (isReady) {
-      localStorage.removeItem("mirrorQuestReady");
-      this.updatePostButtonState();
-      console.log("[QuestManager] Triggering mirror quest from handlePostButtonClick.");
-      
-      // Highlight the camera button.
-      const cameraBtn = document.getElementById("toggle-camera");
-      if (cameraBtn) cameraBtn.classList.add("glowing");
-
-      await this.activateQuest("mirror_quest");
-    } else {
+    if (!isReady) {
       alert("Please wait for a ghost invitation to start the quest.");
+      return;
+    }
+    
+    // Remove the flag since the button was pressed to initiate the quest
+    localStorage.removeItem("mirrorQuestReady");
+    this.updatePostButtonState();
+
+    // Determine if we are in repeating cycle mode based on the "isRepeatingCycle" flag
+    const isRepeating = localStorage.getItem("isRepeatingCycle") === "true";
+
+    // Highlight the camera button to indicate activation
+    const cameraBtn = document.getElementById("toggle-camera");
+    if (cameraBtn) {
+      cameraBtn.classList.add("glowing");
+    }
+
+    if (isRepeating) {
+      console.log("[QuestManager] Triggering repeating quest from handlePostButtonClick.");
+      await this.activateQuest("repeating_quest");
+    } else {
+      console.log("[QuestManager] Triggering mirror quest from handlePostButtonClick.");
+      await this.activateQuest("mirror_quest");
     }
   }
 

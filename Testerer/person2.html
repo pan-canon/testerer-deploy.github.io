@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Сегментация и композитинг с BodyPix</title>
+  <!-- Подключаем TensorFlow.js и модель BodyPix -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@latest"></script>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #container {
+      position: relative;
+      width: 640px;
+      height: 480px;
+      background: #000;
+      margin: auto;
+      top: 50px;
+    }
+    /* Видео располагается под canvas */
+    #videoElement {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 640px;
+      height: 480px;
+      z-index: 1;
+      object-fit: cover;
+    }
+    /* Canvas для композитинга (маска и эффекты) */
+    #canvasOverlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 640px;
+      height: 480px;
+      z-index: 2;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <video id="videoElement" autoplay playsinline muted></video>
+    <canvas id="canvasOverlay"></canvas>
+  </div>
+  <button id="startButton">Запустить камеру</button>
+  <button id="stopButton">Остановить камеру</button>
+
+  <script>
+    const videoElement = document.getElementById("videoElement");
+    const canvasOverlay = document.getElementById("canvasOverlay");
+    const ctx = canvasOverlay.getContext("2d");
+
+    let stream = null;
+    let segmentationModel = null;
+    let isRunning = false;
+
+    // Настройки для оптимальной работы BodyPix (лёгкая конфигурация)
+    const bodyPixConfig = {
+      architecture: 'MobileNetV1',
+      outputStride: 16,
+      multiplier: 0.75,   // меньшее значение - легче модель
+      quantBytes: 2       // 2-байтная квантизация для уменьшения веса
+    };
+
+    // Запуск камеры
+    async function startCamera() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        videoElement.srcObject = stream;
+        videoElement.onloadedmetadata = () => {
+          videoElement.play();
+          canvasOverlay.width = videoElement.videoWidth;
+          canvasOverlay.height = videoElement.videoHeight;
+        };
+      } catch (err) {
+        console.error("Ошибка доступа к камере:", err);
+      }
+    }
+
+    // Загрузка модели BodyPix
+    async function loadModel() {
+      console.log("Загрузка модели BodyPix...");
+      segmentationModel = await bodyPix.load(bodyPixConfig);
+      console.log("Модель загружена");
+    }
+
+    // Функция сегментации и композитинга
+    async function segmentFrame() {
+      if (!isRunning) return;
+
+      // Параметры сегментации: выбираем минимальный порог, чтобы быстрее работать
+      const segmentation = await segmentationModel.segmentPerson(videoElement, {
+        flipHorizontal: false,
+        internalResolution: 'medium', // "low" можно попробовать для еще большей производительности
+        segmentationThreshold: 0.7
+      });
+
+      // Получаем изображение из видео
+      ctx.drawImage(videoElement, 0, 0, canvasOverlay.width, canvasOverlay.height);
+      const imageData = ctx.getImageData(0, 0, canvasOverlay.width, canvasOverlay.height);
+      const data = imageData.data;
+
+      // Применяем эффект: перекрашиваем область, принадлежащую человеку
+      for (let i = 0; i < data.length; i += 4) {
+        // Получаем индекс пикселя
+        const pixelIndex = i / 4;
+        // Если маска показывает, что пиксель принадлежит объекту (человеку), меняем цвет
+        if (segmentation.data[pixelIndex] === 1) {
+          // Пример: добавляем синий оттенок, оставляя альфа неизменным
+          data[i] = data[i] * 0.5;       // красный уменьшаем
+          data[i + 1] = data[i + 1] * 0.5; // зеленый уменьшаем
+          data[i + 2] = data[i + 2] + 100; // синий усиливаем
+        }
+      }
+      // Отображаем модифицированное изображение на canvas
+      ctx.putImageData(imageData, 0, 0);
+
+      requestAnimationFrame(segmentFrame);
+    }
+
+    // Старт модели и сегментации
+    async function startSegmentation() {
+      isRunning = true;
+      await loadModel();
+      segmentFrame();
+    }
+
+    // Остановка камеры и сегментации
+    function stop() {
+      isRunning = false;
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      ctx.clearRect(0, 0, canvasOverlay.width, canvasOverlay.height);
+    }
+
+    document.getElementById("startButton").addEventListener("click", async () => {
+      await startCamera();
+      startSegmentation();
+    });
+    document.getElementById("stopButton").addEventListener("click", stop);
+  </script>
+</body>
+</html>

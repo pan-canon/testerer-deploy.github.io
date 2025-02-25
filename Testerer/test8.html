@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Сегментация и композитинг: статичное изображение за человеком</title>
+  <title>Сегментация + композитинг: дополнительное изображение за человеком</title>
   <!-- Подключаем TensorFlow.js и BodyPix -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@latest"></script>
@@ -16,7 +16,7 @@
       margin: auto;
       top: 50px;
     }
-    /* Видео располагается под canvas */
+    /* Видео занимает задний план */
     #videoElement {
       position: absolute;
       top: 0;
@@ -26,14 +26,27 @@
       z-index: 1;
       object-fit: cover;
     }
-    /* Основной canvas для композитинга */
+    /* Основной canvas для финального композитинга */
     #canvasOverlay {
       position: absolute;
       top: 0;
       left: 0;
       width: 640px;
       height: 480px;
-      z-index: 2;
+      z-index: 3;
+    }
+    /* Дополнительное оформление (опционально) */
+    #overlayInfo {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 4;
+      color: #fff;
+      background: rgba(0,0,0,0.5);
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 16px;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -41,16 +54,19 @@
   <div id="container">
     <video id="videoElement" autoplay playsinline muted></video>
     <canvas id="canvasOverlay"></canvas>
+    <div id="overlayInfo"></div>
   </div>
   <button id="startButton">Запустить камеру</button>
   <button id="stopButton">Остановить камеру</button>
 
   <script>
+    // Элементы DOM
     const videoElement = document.getElementById("videoElement");
     const canvasOverlay = document.getElementById("canvasOverlay");
     const ctx = canvasOverlay.getContext("2d");
+    const overlayInfo = document.getElementById("overlayInfo");
 
-    // Создаем вспомогательный offscreen-canvas для формирования вырезанного изображения
+    // Offscreen canvas для обработки дополнительного изображения
     const offCanvas = document.createElement("canvas");
     const offCtx = offCanvas.getContext("2d");
 
@@ -66,15 +82,15 @@
       quantBytes: 2
     };
 
-    // Загружаем статичное изображение (объект, который хотим "разместить за спиной")
-    const staticImg = new Image();
-    // Задайте корректный путь к вашему изображению
-    staticImg.src = "images/static-image.webp";
-    // Убедитесь, что изображение загружено перед использованием
-    staticImg.onload = () => {
-      console.log("Статичное изображение загружено");
+    // Загружаем дополнительное изображение (например, декоративный элемент)
+    const extraImg = new Image();
+    // Укажите корректный путь к изображению
+    extraImg.src = "extra-image.png";
+    extraImg.onload = () => {
+      console.log("Дополнительное изображение загружено");
     };
 
+    // Запуск камеры
     async function startCamera() {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
@@ -91,46 +107,77 @@
       }
     }
 
+    // Загрузка модели BodyPix
     async function loadModel() {
       console.log("Загрузка модели BodyPix...");
       segmentationModel = await bodyPix.load(bodyPixConfig);
       console.log("Модель BodyPix загружена");
     }
 
-    // Функция композитинга: создаёт вырезанное статичное изображение по контуру человека и смещает его
+    // Вычисление bounding box по бинарной маске (данные segmentation.data)
+    function getBoundingBox(segmentationData, width, height) {
+      let minX = width, minY = height, maxX = 0, maxY = 0;
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const index = y * width + x;
+          if (segmentationData[index] === 1) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+      return { minX, minY, maxX, maxY };
+    }
+
+    // Основной цикл композитинга
     async function compositeFrame() {
       if (!isRunning) return;
-      // Получаем сегментацию для человека
+      // Получаем сегментацию человека
       const segmentation = await segmentationModel.segmentPerson(videoElement, {
         flipHorizontal: false,
         internalResolution: 'medium',
         segmentationThreshold: 0.7
       });
-      // Преобразуем сегментацию в маску (с использованием bodyPix.toMask)
-      const mask = bodyPix.toMask(segmentation, {r: 0, g: 0, b: 0, a: 255}, {r: 0, g: 0, b: 0, a: 0});
-      // Теперь выполняем композитинг
-      // 1. Рисуем статичное изображение на offscreen canvas
+      // Преобразуем сегментацию в бинарную маску (объект, содержащий data, width, height)
+      // Здесь data содержит 1 для пикселей, принадлежащих человеку, 0 - для остальных.
+      const maskData = segmentation.data;
+      const segWidth = segmentation.width;
+      const segHeight = segmentation.height;
+
+      // Вычисляем bounding box для человека по маске
+      const bbox = getBoundingBox(maskData, segWidth, segHeight);
+      // Отображаем информацию (опционально)
+      overlayInfo.innerHTML = `Человек: (${bbox.minX}, ${bbox.minY}) - (${bbox.maxX}, ${bbox.maxY})`;
+
+      // Подготовка offscreen canvas для дополнительного изображения:
+      // 1. Рисуем дополнительное изображение на offCanvas (оно полноразмерное)
       offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
-      offCtx.drawImage(staticImg, 0, 0, offCanvas.width, offCanvas.height);
-      
-      // 2. Создаем маску: заливаем область, соответствующую человеку, белым цветом
-      // Для этого создадим временное изображение из mask данных
-      const maskImageData = new ImageData(mask.data, mask.width, mask.height);
-      // Рисуем маску на offscreen canvas с композитингом для вырезания
-      offCtx.globalCompositeOperation = "destination-in";
-      offCtx.putImageData(maskImageData, 0, 0);
+      offCtx.drawImage(extraImg, 0, 0, offCanvas.width, offCanvas.height);
+
+      // 2. Создаем маску на основе сегментации.
+      // Для этого используем bodyPix.toMask, чтобы получить ImageData с белой областью для человека.
+      const maskImage = bodyPix.toMask(segmentation, {r:255, g:255, b:255, a:255}, {r:0, g:0, b:0, a:0});
+      // Применяем маску для вырезания части дополнительного изображения.
+      // Устанавливаем режим "destination-out": пиксели, где маска белая, будут вырезаны.
+      offCtx.globalCompositeOperation = "destination-out";
+      offCtx.putImageData(new ImageData(maskImage.data, maskImage.width, maskImage.height), 0, 0);
       offCtx.globalCompositeOperation = "source-over";
       
-      // 3. На основном canvas: сначала рисуем видеопоток
+      // Теперь дополнительное изображение в offCanvas содержит вырезанную область (то есть, там, где был человек, изображение отсутствует).
+
+      // Композитинг на основном canvas:
       ctx.clearRect(0, 0, canvasOverlay.width, canvasOverlay.height);
+      // Сначала рисуем видео
       ctx.drawImage(videoElement, 0, 0, canvasOverlay.width, canvasOverlay.height);
-      
-      // 4. Рисуем вырезанное статичное изображение со смещением (например, сдвигаем вправо)
-      // Это создаст эффект, будто объект расположен позади человека с фигурной границей
-      const offsetX = 20; // смещение по горизонтали (настраивается по вкусу)
-      const offsetY = 20; // смещение по вертикали (настраивается по вкусу)
-      ctx.drawImage(offCanvas, offsetX, offsetY, offCanvas.width, offCanvas.height);
-      
+      // Затем рисуем обработанное дополнительное изображение.
+      // Для размещения "вплотную" рядом с человеком используем bounding box.
+      // Например, разместим его так, чтобы его левый край совпадал с правым краем bounding box человека.
+      const offsetX = bbox.maxX; // в координатах исходного видео/маски
+      // В данном примере изображение рисуется без масштабирования (можно доработать для точного соответствия).
+      ctx.drawImage(offCanvas, offsetX, 0, offCanvas.width - offsetX, offCanvas.height, offsetX, 0, offCanvas.width - offsetX, offCanvas.height);
+
       requestAnimationFrame(compositeFrame);
     }
 
@@ -146,6 +193,7 @@
         stream.getTracks().forEach(track => track.stop());
       }
       ctx.clearRect(0, 0, canvasOverlay.width, canvasOverlay.height);
+      overlayInfo.innerHTML = "";
     }
 
     document.getElementById("startButton").addEventListener("click", async () => {

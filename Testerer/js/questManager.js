@@ -98,43 +98,35 @@ export class QuestManager {
 
   /**
    * handlePostButtonClick – Called when the "Post" button is clicked.
-   * On click, the button is immediately disabled, mirrorQuestReady is removed,
-   * and the flag userPostSubmitted is set. Then, the mirror quest is triggered.
+   * If mirrorQuestReady is true, explicitly triggers the mirror quest.
    */
   async handlePostButtonClick() {
-    const postBtn = this.app.postBtn;
-    if (postBtn) {
-      // Disable the button immediately to prevent multiple clicks.
-      postBtn.disabled = true;
+    const isReady = localStorage.getItem("mirrorQuestReady") === "true";
+    if (isReady) {
+      localStorage.removeItem("mirrorQuestReady");
+      this.updatePostButtonState();
+      console.log("[QuestManager] Triggering mirror quest from handlePostButtonClick.");
+      
+      // Highlight the camera button.
+      const cameraBtn = document.getElementById("toggle-camera");
+      if (cameraBtn) cameraBtn.classList.add("glowing");
+
+      await this.activateQuest("mirror_quest");
+    } else {
+      alert("Please wait for a ghost invitation to start the quest.");
     }
-    // Remove mirrorQuestReady and set userPostSubmitted flag.
-    localStorage.removeItem("mirrorQuestReady");
-    localStorage.setItem("userPostSubmitted", "true");
-    this.updatePostButtonState();
-    console.log("[QuestManager] Triggering mirror quest from handlePostButtonClick.");
-
-    // Highlight the camera button.
-    const cameraBtn = document.getElementById("toggle-camera");
-    if (cameraBtn) cameraBtn.classList.add("glowing");
-
-    await this.activateQuest("mirror_quest");
   }
 
   /**
-   * updatePostButtonState – Updates the "Post" button state.
-   * The button is enabled only if either mirrorQuestReady or repeatingQuestActive is set
-   * and the user has not yet submitted a post.
+   * updatePostButtonState – Enables or disables the "Post" button based on mirrorQuestReady.
    */
   updatePostButtonState() {
-    const mirrorReady = localStorage.getItem("mirrorQuestReady") === "true";
-    const repeatingActive = localStorage.getItem("repeatingQuestActive") === "true";
-    const userSubmitted = localStorage.getItem("userPostSubmitted") === "true";
-    const awaitingUserPost = (mirrorReady || repeatingActive) && !userSubmitted;
+    const isReady = localStorage.getItem("mirrorQuestReady") === "true";
     const postBtn = this.app.postBtn;
     if (postBtn) {
-      postBtn.disabled = !awaitingUserPost;
+      postBtn.disabled = !isReady;
     }
-    console.log("[QuestManager] updatePostButtonState => awaitingUserPost:", awaitingUserPost);
+    console.log("[QuestManager] updatePostButtonState =>", isReady);
   }
 
   /**

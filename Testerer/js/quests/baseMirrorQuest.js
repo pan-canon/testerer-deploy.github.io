@@ -39,10 +39,10 @@ export class BaseMirrorQuest extends BaseEvent {
    * (Optional: Can be extended to attach handlers directly here or via QuestManager.)
    */
   registerEvents() {
-    // Listen to custom "cameraReady" event to start the check loop if the quest is active.
+    // Listen to camera ready event
     document.addEventListener('cameraReady', () => {
       if (localStorage.getItem("mirrorQuestActive") === "true") {
-        this.startCheckLoop();
+        this.startCheckLoop(); // Start the check loop if the quest is active
       }
     });
   }
@@ -183,10 +183,10 @@ export class BaseMirrorQuest extends BaseEvent {
 
   /**
    * finish – Completes the mirror quest:
-   * 1) Stops the check loop.
-   * 2) Checks the status and logs the result.
-   * 3) Removes the mirrorQuestActive flag, clears the userPostSubmitted flag, and updates the UI.
-   * 4) On success, explicitly triggers the "post_mirror_event" via GameEventManager.
+   *  1) Stops the check loop.
+   *  2) Checks the status and logs the result.
+   *  3) Removes the mirrorQuestActive flag and updates UI.
+   *  4) On success, explicitly triggers the "post_mirror_event" via GameEventManager.
    *
    * @returns {Promise<void>}
    */
@@ -212,12 +212,8 @@ export class BaseMirrorQuest extends BaseEvent {
     // Update the UI after finishing the quest.
     this.updateUIAfterFinish(success);
 
-    // Remove the mirrorQuestActive flag.
+    // Remove the mirrorQuestActive flag and update the "Post" button state.
     localStorage.removeItem("mirrorQuestActive");
-    // Also clear the userPostSubmitted flag so that the "Post" button can be enabled in the next cycle.
-    localStorage.removeItem("userPostSubmitted");
-
-    // Update the "Post" button state.
     this.app.questManager.updatePostButtonState();
 
     // Explicitly trigger the "post_mirror_event" if the quest was successful.

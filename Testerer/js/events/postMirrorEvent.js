@@ -1,8 +1,9 @@
 import { BaseEvent } from './baseEvent.js';
 
 /**
- * PostMirrorEvent – Event triggered AFTER the successful completion of the mirror quest.
- * Its role is to explicitly log a ghost post (from the ghost) without automatically triggering subsequent actions.
+ * PostMirrorEvent – A short event triggered AFTER the success of the mirror quest.
+ * Its role is to explicitly switch to the RepeatingQuest by calling activateQuest("repeating_quest")
+ * without automatically triggering any subsequent actions.
  */
 export class PostMirrorEvent extends BaseEvent {
   constructor(eventManager, appInstance) {
@@ -14,7 +15,7 @@ export class PostMirrorEvent extends BaseEvent {
 
   /**
    * activate – Overridden activation method for PostMirrorEvent.
-   * Logs the event as a ghost post and updates the UI (enables the "Post" button and unblocks controls).
+   * Logs the event as a ghost post and explicitly triggers the RepeatingQuest via QuestManager.
    *
    * @returns {Promise<void>}
    */
@@ -28,11 +29,8 @@ export class PostMirrorEvent extends BaseEvent {
     // Log the event in the diary as a ghost post.
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Update the "Post" button state and unblock camera controls.
-    this.app.questManager.updatePostButtonState();
-    this.app.visualEffectsManager.setControlsBlocked(false);
-
-    // NOTE: Removed automatic activation of "repeating_quest".
-    // The repeating quest will be triggered explicitly by user action (e.g., clicking the "Post" button).
+    // Explicitly trigger the RepeatingQuest via QuestManager.
+    console.log("[PostMirrorEvent] Explicitly triggering 'repeating_quest'...");
+    await this.app.questManager.activateQuest("repeating_quest");
   }
 }

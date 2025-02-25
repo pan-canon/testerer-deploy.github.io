@@ -2,16 +2,17 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Обнаружение объектов с использованием COCO-SSD</title>
+  <title>Обнаружение объектов с использованием COCO-SSD и отрисовкой рамок</title>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"></script>
-  <style> 
+  <style>
     #videoContainer {
       width: 640px;
       height: 480px;
       background: #000;
       position: relative;
     }
+    /* Элемент overlay для вывода текста (опционально) */
     #overlay {
       position: absolute;
       top: 10px;
@@ -22,13 +23,23 @@
       border-radius: 4px;
       font-size: 16px;
       pointer-events: none;
+      z-index: 2;
+    }
+    /* Элемент canvas для отрисовки bounding box */
+    #canvasOverlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
     }
   </style>
 </head>
 <body>
-  <h1>Обнаружение объектов с камерой</h1>
+  <h1>Обнаружение объектов с камерой и отрисовкой контура</h1>
   <div id="videoContainer">
     <div id="overlay"></div>
+    <!-- canvas будет располагаться поверх видео -->
+    <canvas id="canvasOverlay"></canvas>
   </div>
   <button id="startButton">Запустить камеру</button>
   <button id="stopButton">Остановить камеру</button>
@@ -44,6 +55,8 @@
           this.model = null;
           this.isDetecting = false;
           this.onObjectDetected = null;
+          this.canvas = document.getElementById("canvasOverlay");
+          this.ctx = this.canvas.getContext("2d");
         }
 
         attachTo(containerId, options = {}) {
@@ -64,6 +77,11 @@
           }
           container.innerHTML = "";
           container.appendChild(this.videoElement);
+          // Помещаем canvas поверх видео
+          container.appendChild(this.canvas);
+          // Устанавливаем размеры canvas согласно размерам контейнера
+          this.canvas.width = container.clientWidth;
+          this.canvas.height = container.clientHeight;
         }
 
         async startCamera() {
@@ -105,6 +123,8 @@
             }
           }
           this.isDetecting = false;
+          // Очистка canvas
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         }
 
         async loadModel() {
@@ -127,26 +147,45 @@
           this.isDetecting = true;
           const detectFrame = async () => {
             if (!this.isDetecting) return;
+            // Отрисовка текущего кадра: очищаем canvas
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             const predictions = await this.model.detect(this.videoElement);
+            // Обработка всех предсказаний
             if (predictions && predictions.length > 0) {
-              const detectedObject = predictions[0];
-              console.log("Объект обнаружен:", detectedObject);
-              if (typeof this.onObjectDetected === "function") {
-                this.onObjectDetected(detectedObject);
-              }
+              predictions.forEach(prediction => {
+                // Выводим текст в overlay
+                if (prediction.class === "person") {
+                  // Рисуем пунктирную рамку
+                  this.drawBoundingBox(prediction.bbox, "red");
+                }
+                // Дополнительно можно вызвать callback
+                if (typeof this.onObjectDetected === "function") {
+                  this.onObjectDetected(prediction);
+                }
+              });
             }
             requestAnimationFrame(detectFrame);
           };
           detectFrame();
+        }
+
+        drawBoundingBox(bbox, color = "red") {
+          const [x, y, width, height] = bbox;
+          this.ctx.lineWidth = 2;
+          this.ctx.strokeStyle = color;
+          // Устанавливаем пунктирную линию
+          this.ctx.setLineDash([5, 5]);
+          this.ctx.strokeRect(x, y, width, height);
+          // Сброс параметра dash, если потребуется отрисовка других элементов без него
+          this.ctx.setLineDash([]);
         }
       }
 
       const cameraManager = new cameraSectionManager();
       cameraManager.attachTo("videoContainer", { width: "640px", height: "480px" });
 
-      // Получаем элемент overlay после полной загрузки DOM
+      // Получаем элемент overlay для текста (опционально)
       const overlay = document.getElementById("overlay");
-
       cameraManager.onObjectDetected = (detectedObject) => {
         if (overlay) {
           overlay.innerHTML = `Обнаружено: ${detectedObject.class}`;

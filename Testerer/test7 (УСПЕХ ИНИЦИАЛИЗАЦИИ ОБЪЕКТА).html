@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Обнаружение объектов с использованием COCO-SSD</title>
+  <!-- Подключаем TensorFlow.js и модель COCO-SSD -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"></script>
   <style>
@@ -12,39 +13,33 @@
       background: #000;
       position: relative;
     }
-    #overlay {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      color: #fff;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 5px 10px;
-      border-radius: 4px;
-      font-size: 16px;
-      pointer-events: none;
-    }
   </style>
 </head>
 <body>
   <h1>Обнаружение объектов с камерой</h1>
-  <div id="videoContainer">
-    <div id="overlay"></div>
-  </div>
+  <div id="videoContainer"></div>
   <button id="startButton">Запустить камеру</button>
   <button id="stopButton">Остановить камеру</button>
 
   <script>
+    // Класс управления камерой с детекцией объектов
     class cameraSectionManager {
       constructor() {
         this.videoElement = null;
         this.stream = null;
         this.onVideoReady = null;
         this.onCameraClosed = null;
+        // Свойства для детекции объектов
         this.model = null;
         this.isDetecting = false;
         this.onObjectDetected = null;
       }
 
+      /**
+       * Прикрепляет video-элемент к контейнеру.
+       * @param {string} containerId - ID контейнера.
+       * @param {object} options - CSS стили для видео.
+       */
       attachTo(containerId, options = {}) {
         const container = document.getElementById(containerId);
         if (!container) {
@@ -65,6 +60,9 @@
         container.appendChild(this.videoElement);
       }
 
+      /**
+       * Запускает камеру и устанавливает поток в videoElement.
+       */
       async startCamera() {
         if (this.stream) {
           console.log("Камера уже запущена");
@@ -85,7 +83,9 @@
             if (typeof this.onVideoReady === "function") {
               this.onVideoReady();
             }
+            // Загружаем модель после подготовки видео
             await this.loadModel();
+            // Запускаем цикл детекции объектов
             this.startDetection();
             const event = new CustomEvent("cameraReady");
             document.dispatchEvent(event);
@@ -95,6 +95,9 @@
         }
       }
 
+      /**
+       * Останавливает камеру и цикл детекции.
+       */
       stopCamera() {
         if (this.stream) {
           this.stream.getTracks().forEach(track => track.stop());
@@ -106,6 +109,9 @@
         this.isDetecting = false;
       }
 
+      /**
+       * Загружает модель COCO-SSD.
+       */
       async loadModel() {
         if (!this.model) {
           console.log("Загрузка модели COCO-SSD...");
@@ -118,6 +124,9 @@
         }
       }
 
+      /**
+       * Запускает цикл детекции объектов.
+       */
       startDetection() {
         if (!this.model) {
           console.error("Модель не загружена. Запустите loadModel() перед startDetection().");
@@ -140,24 +149,22 @@
       }
     }
 
-    // Инициализация камеры и оверлея
+    // Создание экземпляра и инициализация
     const cameraManager = new cameraSectionManager();
     cameraManager.attachTo("videoContainer", { width: "640px", height: "480px" });
 
-    // Получаем элемент оверлея
-    const overlay = document.getElementById("overlay");
-
-    // Callback, обновляющий оверлей именем обнаруженного объекта
+    // Callback, вызываемый при обнаружении объекта
     cameraManager.onObjectDetected = (detectedObject) => {
-      overlay.innerHTML = `Обнаружено: ${detectedObject.class}`;
+      console.log("Callback обнаружения объекта:", detectedObject);
+      // Здесь можно реализовать дополнительную логику (например, визуализацию рамок)
     };
 
+    // Привязка кнопок для управления камерой
     document.getElementById("startButton").addEventListener("click", () => {
       cameraManager.startCamera();
     });
     document.getElementById("stopButton").addEventListener("click", () => {
       cameraManager.stopCamera();
-      overlay.innerHTML = "";
     });
   </script>
 </body>

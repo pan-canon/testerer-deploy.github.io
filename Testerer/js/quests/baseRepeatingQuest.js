@@ -12,10 +12,11 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.shootButtonId = config.shootButtonId || "btn_shoot";
 
     // Quest state
-    this.totalStages = config.totalStages || 5; // Укажите нужное число этапов
-    this.currentStage = 1;
-    this.finished = false;
-    this.isProcessingStage = false; // Флаг для предотвращения одновременного выполнения
+  this.totalStages = config.totalStages || 5; // например, 5 этапов
+  this.currentStage = 1;
+  this.finished = false;
+  this.active = false; // добавляем флаг активности квеста
+  this.isProcessingStage = false; // для защиты от параллельных вызовов
   }
 
   /**
@@ -23,56 +24,53 @@ export class BaseRepeatingQuest extends BaseEvent {
    * Если квест завершён, сбрасывает состояние.
    * Если камера не открыта, ждёт события cameraReady, после чего обновляет UI.
    */
-  async activate() {
-    if (this.finished) {
-      this.resetCycle();
-    }
-    console.log(`Activating repeating quest: ${this.key}`);
-    await this.eventManager.addDiaryEntry(this.key, true);
-    console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
-
-    if (!this.app.isCameraOpen) {
-      console.log("[BaseRepeatingQuest] Camera is not open. Waiting for cameraReady event...");
-      await new Promise(resolve => {
-        const onCameraReady = () => {
-          document.removeEventListener("cameraReady", onCameraReady);
-          resolve();
-        };
-        document.addEventListener("cameraReady", onCameraReady);
-      });
-    }
-    this.startCheckLoop();
+async activate() {
+  if (this.active) {
+    console.warn("Repeating quest уже запущен");
+    return;
   }
+  this.active = true;
+  // Если квест был завершён ранее, состояние не сбрасываем – продолжаем текущий цикл
+  if (this.finished) {
+    // Если хотите начать заново, можно здесь сбросить состояние, но лучше не делать этого,
+    // если ожидается, что пользователь продолжает один цикл
+    // this.resetCycle();
+  }
+  console.log(`Activating repeating quest: ${this.key}`);
+  await this.eventManager.addDiaryEntry(this.key, true);
+  console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
+  // … ожидаем камеру, затем:
+  this.startCheckLoop();
+}
 
   /**
    * startCheckLoop – Обновляет UI повторяющегося квеста.
    * Делает кнопку «Заснять» видимой и активной, назначая ей одноразовый обработчик.
    */
-  startCheckLoop() {
-    const statusDiv = document.getElementById(this.statusElementId);
-    if (statusDiv) {
-      statusDiv.style.display = "block";
-      statusDiv.textContent = `Repeating quest – Stage ${this.currentStage} of ${this.totalStages}`;
-    }
-    const shootBtn = document.getElementById(this.shootButtonId);
-    if (shootBtn) {
-      shootBtn.style.display = "inline-block";
-      shootBtn.disabled = false;
-      shootBtn.style.pointerEvents = "auto";
-      // Замена кнопки на клон для гарантированного удаления предыдущих обработчиков
-      const newShootBtn = shootBtn.cloneNode(true);
-      shootBtn.parentNode.replaceChild(newShootBtn, shootBtn);
-      newShootBtn.addEventListener("click", () => {
-        newShootBtn.disabled = true;
-        newShootBtn.style.pointerEvents = "none";
-        this.finishStage();
-      }, { once: true });
-      console.log(`[BaseRepeatingQuest] Shoot button enabled for stage ${this.currentStage}.`);
-    } else {
-      console.error("[BaseRepeatingQuest] Shoot button not found in the DOM.");
-    }
-    console.log("[BaseRepeatingQuest] Repeating quest UI updated. Awaiting user action to capture snapshot.");
+startCheckLoop() {
+  const statusDiv = document.getElementById(this.statusElementId);
+  if (statusDiv) {
+    statusDiv.style.display = "block";
+    statusDiv.textContent = `Repeating quest – Stage ${this.currentStage} of ${this.totalStages}`;
   }
+  const shootBtn = document.getElementById(this.shootButtonId);
+  if (shootBtn) {
+    shootBtn.style.display = "inline-block";
+    shootBtn.disabled = false;
+    shootBtn.style.pointerEvents = "auto";
+    const newShootBtn = shootBtn.cloneNode(true);
+    shootBtn.parentNode.replaceChild(newShootBtn, shootBtn);
+    newShootBtn.addEventListener("click", () => {
+      newShootBtn.disabled = true;
+      newShootBtn.style.pointerEvents = "none";
+      this.finishStage();
+    }, { once: true });
+    console.log(`[BaseRepeatingQuest] Shoot button enabled for stage ${this.currentStage}.`);
+  } else {
+    console.error("[BaseRepeatingQuest] Shoot button not found in the DOM.");
+  }
+  console.log("[BaseRepeatingQuest] Repeating quest UI updated. Awaiting user action to capture snapshot.");
+}
 
   /**
    * finishStage – Завершает один этап квеста.
@@ -96,13 +94,15 @@ async finishStage() {
     false
   );
   console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
+  
+  // Инкрементируем счетчик этапа
   this.currentStage++;
   
-  if (this.currentStage <= this.totalStages) {
-    // Если ещё остались этапы – обновляем UI для следующего этапа
+  if (this.currentStage < this.totalStages) {
+    // Если остались этапы – обновляем UI для следующего этапа
     this.startCheckLoop();
   } else {
-    // Если этапов больше нет – завершаем квест
+    // Если мы выполняем последний этап, то после его обработки завершаем квест
     await this.finish();
   }
   
@@ -113,21 +113,22 @@ async finishStage() {
    * finish – Завершает повторяющийся квест.
    * Скрывает UI, логирует завершение и активирует событие post_repeating_event.
    */
-  async finish() {
-    const statusDiv = document.getElementById(this.statusElementId);
-    if (statusDiv) {
-      statusDiv.style.display = "none";
-    }
-    const shootBtn = document.getElementById(this.shootButtonId);
-    if (shootBtn) {
-      shootBtn.disabled = true;
-      shootBtn.style.pointerEvents = "none";
-    }
-    this.finished = true;
-    console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
-    await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
-    this.app.gameEventManager.activateEvent("post_repeating_event");
+async finish() {
+  const statusDiv = document.getElementById(this.statusElementId);
+  if (statusDiv) {
+    statusDiv.style.display = "none";
   }
+  const shootBtn = document.getElementById(this.shootButtonId);
+  if (shootBtn) {
+    shootBtn.disabled = true;
+    shootBtn.style.pointerEvents = "none";
+  }
+  this.finished = true;
+  this.active = false; // теперь квест больше не активен
+  console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
+  await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
+  this.app.gameEventManager.activateEvent("post_repeating_event");
+}
 
   /**
    * captureSimplePhoto – Захватывает снимок с активной камеры и возвращает data URL изображения.

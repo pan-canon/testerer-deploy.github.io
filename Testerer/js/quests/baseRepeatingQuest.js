@@ -19,7 +19,7 @@ export class BaseRepeatingQuest extends BaseEvent {
   }
 
   /**
-   * resetCycle – Resets the repeating quest state to allow a new cycle.
+   * resetCycle – Сбрасывает состояние повторяющегося квеста для нового цикла.
    */
   resetCycle() {
     this.finished = false;
@@ -28,22 +28,20 @@ export class BaseRepeatingQuest extends BaseEvent {
   }
 
   /**
-   * activate – Activates the repeating quest.
-   * Если квест уже завершён, происходит сброс состояния.
-   * Если камера не открыта, квест ждёт события cameraReady,
-   * чтобы обновить UI (активировать кнопку «Заснять») в режиме камеры.
+   * activate – Активирует повторяющийся квест.
+   * Если квест завершён, вызывается сброс состояния.
+   * Если камера не открыта, ожидается событие cameraReady, после чего обновляется UI квеста.
    */
   async activate() {
     if (this.finished) {
       this.resetCycle();
     }
-    if (!this.eventManager.isEventLogged(this.key)) {
-      console.log(`Activating repeating quest: ${this.key}`);
-      await this.eventManager.addDiaryEntry(this.key, true);
-    }
+    // Всегда логируем активацию повторяющегося квеста
+    console.log(`Activating repeating quest: ${this.key}`);
+    await this.eventManager.addDiaryEntry(this.key, true);
     console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
 
-    // Если камера не открыта, ожидаем события cameraReady
+    // Если камера не открыта, ждём события cameraReady
     if (!this.app.isCameraOpen) {
       console.log("[BaseRepeatingQuest] Camera is not open. Waiting for cameraReady event...");
       await new Promise(resolve => {
@@ -54,13 +52,13 @@ export class BaseRepeatingQuest extends BaseEvent {
         document.addEventListener("cameraReady", onCameraReady);
       });
     }
-    // После открытия камеры обновляем UI повторяющегося квеста
+    // Обновляем UI квеста – делаем кнопку "Заснять" активной
     this.startCheckLoop();
   }
 
   /**
    * startCheckLoop – Обновляет UI повторяющегося квеста.
-   * Делает кнопку «Заснять» видимой и активной.
+   * Делает кнопку «Заснять» видимой и активной, очищая старые обработчики.
    */
   startCheckLoop() {
     const statusDiv = document.getElementById(this.statusElementId);
@@ -75,7 +73,7 @@ export class BaseRepeatingQuest extends BaseEvent {
       shootBtn.disabled = false;
       shootBtn.removeAttribute("disabled");
       shootBtn.style.pointerEvents = "auto";
-      // Удаляем старые обработчики посредством клонирования
+      // Удаляем предыдущие обработчики посредством клонирования элемента
       const newShootBtn = shootBtn.cloneNode(true);
       shootBtn.parentNode.replaceChild(newShootBtn, shootBtn);
       newShootBtn.addEventListener("click", this.finishStage.bind(this), { once: true });
@@ -88,7 +86,7 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * finishStage – Завершает один этап квеста.
-   * Снимается фото (без проверок), логируется пост, и происходит переход к следующему этапу.
+   * Снимает снимок без дополнительных проверок, логирует пост и переходит к следующему этапу.
    */
   async finishStage() {
     if (this.finished) return;
@@ -126,11 +124,13 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * finish – Завершает повторяющийся квест.
-   * Логируется завершение, обновляется UI и активируется событие post_repeating_event.
+   * Логирует завершение, обновляет UI и активирует событие post_repeating_event.
    */
   async finish() {
     const statusDiv = document.getElementById(this.statusElementId);
-    if (statusDiv) statusDiv.style.display = "none";
+    if (statusDiv) {
+      statusDiv.style.display = "none";
+    }
     const shootBtn = document.getElementById(this.shootButtonId);
     if (shootBtn) {
       shootBtn.disabled = true;
@@ -139,12 +139,12 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.finished = true;
     console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
     await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
+    // Активация нового события повторяющегося квеста
     this.app.gameEventManager.activateEvent("post_repeating_event");
   }
 
   /**
-   * captureSimplePhoto – Захватывает снимок с активной камеры.
-   * Возвращает data URL изображения.
+   * captureSimplePhoto – Захватывает снимок с активной камеры и возвращает data URL изображения.
    */
   captureSimplePhoto() {
     const video = this.app.cameraSectionManager?.videoElement;

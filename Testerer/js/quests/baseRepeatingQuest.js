@@ -118,8 +118,8 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.finished = true;
     console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
     await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
-    // Запускаем событие повторяющегося квеста (post_repeating_event)
-    this.app.gameEventManager.activateEvent("post_repeating_event");
+    // Вместо запуска события post_repeating_event, запускаем финальный квест:
+    this.app.gameEventManager.activateEvent("final_event");
   }
 
   /**

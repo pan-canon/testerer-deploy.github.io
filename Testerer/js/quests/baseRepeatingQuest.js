@@ -76,31 +76,35 @@ export class BaseRepeatingQuest extends BaseEvent {
   }
 
 /**
- * Завершает один этап квеста.
- * Снимает снимок, добавляет запись в дневник и переходит к следующему этапу.
+ * Завершает один этап повторяющегося квеста.
+ * Снимает снимок, публикует запись в дневнике и обновляет состояние UI,
+ * чтобы кнопка «Заснять» оставалась неактивной до следующего запуска.
  */
 async finishStage() {
   if (this.finished) return;
   const shootBtn = document.getElementById(this.shootButtonId);
-  // Отключаем кнопку сразу после нажатия
   if (shootBtn) {
+    // Сразу отключаем кнопку «Заснять» для предотвращения повторных нажатий
     shootBtn.disabled = true;
     shootBtn.style.pointerEvents = "none";
   }
+  
   const photoData = this.captureSimplePhoto();
   console.log(`[BaseRepeatingQuest] Captured snapshot for stage ${this.currentStage}.`);
+  
   await this.eventManager.addDiaryEntry(
     `repeating_stage_${this.currentStage} [photo attached]\n${photoData}`,
     false
   );
   console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
   this.currentStage++;
+
+  // Обновляем UI: оставляем кнопку «Заснять» неактивной
+  // и через QuestManager делаем активной кнопку «Запостить» для запуска следующего цикла.
+  this.app.questManager.updatePostButtonState();
   
-  // Если еще не достигнут лимит этапов, запускаем следующий этап
-  if (this.currentStage <= this.totalStages) {
-    this.startCheckLoop();
-  } else {
-    // Если все этапы завершены, завершаем повторяющийся квест
+  // Если лимит этапов достигнут, завершаем повторяющийся квест
+  if (this.currentStage > this.totalStages) {
     await this.finish();
   }
 }

@@ -1,10 +1,6 @@
+// File: baseRepeatingQuest.js
 import { BaseEvent } from '../events/baseEvent.js';
 
-/**
- * BaseRepeatingQuest – Base class for the repeating quest,
- * where the player must complete a number of stages (e.g., capture a snapshot)
- * without image similarity checks.
- */
 export class BaseRepeatingQuest extends BaseEvent {
   constructor(eventManager, appInstance, config = {}) {
     super(eventManager);
@@ -34,7 +30,7 @@ export class BaseRepeatingQuest extends BaseEvent {
   /**
    * activate – Activates the repeating quest.
    * If the quest is already finished, resets the cycle.
-   * Waits for the camera to be open and then starts the quest UI.
+   * При активации, если камера не открыта, она открывается автоматически.
    */
   async activate() {
     if (this.finished) {
@@ -46,9 +42,16 @@ export class BaseRepeatingQuest extends BaseEvent {
     }
     console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
 
-    // Check if the camera is open. If yes, start the quest UI immediately.
+    // Если камера не открыта, открываем её автоматически
+    if (!this.app.isCameraOpen) {
+      console.log("[BaseRepeatingQuest] Camera is not open; opening camera for repeating quest.");
+      await this.app.toggleCameraView();
+    }
+
+    // Если камера открыта, запускаем UI повторяющегося квеста,
+    // иначе ожидаем событие cameraReady
     if (this.app.isCameraOpen) {
-      console.log("[BaseRepeatingQuest] Camera is already open; starting quest UI.");
+      console.log("[BaseRepeatingQuest] Camera is open; starting quest UI.");
       this.startCheckLoop();
     } else {
       console.log("[BaseRepeatingQuest] Waiting for camera to open...");
@@ -63,7 +66,7 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * startCheckLoop – Updates the UI for the repeating quest.
-   * Enables the "Shoot" button and sets up the event handler for capturing a snapshot.
+   * Делает кнопку «Заснять» видимой и активной.
    */
   startCheckLoop() {
     const statusDiv = document.getElementById(this.statusElementId);
@@ -74,9 +77,9 @@ export class BaseRepeatingQuest extends BaseEvent {
     const shootBtn = document.getElementById(this.shootButtonId);
     if (shootBtn) {
       shootBtn.style.display = "inline-block";
-      // Enable the shoot button specifically for the repeating quest
+      // Активируем кнопку для повторяющегося квеста
       shootBtn.disabled = false;
-      // To ensure no duplicate event listeners, clone and replace the button
+      // Клонируем кнопку для удаления предыдущих обработчиков событий
       const newShootBtn = shootBtn.cloneNode(true);
       shootBtn.parentNode.replaceChild(newShootBtn, shootBtn);
       newShootBtn.addEventListener("click", () => this.finishStage(), { once: true });
@@ -87,11 +90,10 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * finishStage – Completes one stage of the repeating quest.
-   * Captures a snapshot and logs the stage completion.
+   * При нажатии, снимается фото, создаётся пост и происходит переход к следующему этапу.
    */
   async finishStage() {
     if (this.finished) return;
-    // Immediately disable the shoot button to prevent repeated clicks.
     const shootBtn = document.getElementById(this.shootButtonId);
     if (shootBtn) {
       shootBtn.setAttribute("disabled", "true");
@@ -112,10 +114,9 @@ export class BaseRepeatingQuest extends BaseEvent {
       }
       const shootBtn = document.getElementById(this.shootButtonId);
       if (shootBtn) {
-        // Re-enable the shoot button for the next stage
+        // Реактивируем кнопку для следующего этапа
         shootBtn.disabled = false;
         shootBtn.style.pointerEvents = "auto";
-        // Remove previous listeners by cloning and replacing the button
         const newShootBtn = shootBtn.cloneNode(true);
         shootBtn.parentNode.replaceChild(newShootBtn, shootBtn);
         newShootBtn.addEventListener("click", () => this.finishStage(), { once: true });
@@ -127,27 +128,25 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * finish – Completes the repeating quest.
-   * Logs quest completion, updates the UI, and triggers the "post_repeating_event".
+   * После завершения всех этапов, логируется завершение и вызывается событие post_repeating_event.
    */
   async finish() {
     const statusDiv = document.getElementById(this.statusElementId);
     if (statusDiv) statusDiv.style.display = "none";
     const shootBtn = document.getElementById(this.shootButtonId);
     if (shootBtn) {
-      // Instead of hiding the shoot button, disable it so it remains visible.
       shootBtn.disabled = true;
       shootBtn.style.pointerEvents = "none";
     }
     this.finished = true;
     console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
     await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
-    // Trigger the post repeating event to signal cycle completion
     this.app.gameEventManager.activateEvent("post_repeating_event");
   }
 
   /**
    * captureSimplePhoto – Captures a snapshot from the active camera.
-   * @returns {string} Data URL of the captured snapshot.
+   * Возвращает data URL снимка.
    */
   captureSimplePhoto() {
     const video = this.app.cameraSectionManager?.videoElement;

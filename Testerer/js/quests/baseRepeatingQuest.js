@@ -81,6 +81,12 @@ export class BaseRepeatingQuest extends BaseEvent {
    */
   async finishStage() {
     if (this.finished) return;
+    const shootBtn = document.getElementById(this.shootButtonId);
+    // Отключаем кнопку сразу после нажатия
+    if (shootBtn) {
+      shootBtn.disabled = true;
+      shootBtn.style.pointerEvents = "none";
+    }
     const photoData = this.captureSimplePhoto();
     console.log(`[BaseRepeatingQuest] Captured snapshot for stage ${this.currentStage}.`);
     await this.eventManager.addDiaryEntry(
@@ -89,16 +95,10 @@ export class BaseRepeatingQuest extends BaseEvent {
     );
     console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
     this.currentStage++;
-    if (this.currentStage <= this.totalStages) {
-      // Обновляем статус и активируем кнопку для следующего этапа
-      const statusDiv = document.getElementById(this.statusElementId);
-      if (statusDiv) {
-        statusDiv.textContent = `Repeating quest – Stage ${this.currentStage} of ${this.totalStages}`;
-      }
-      this.startCheckLoop();
-    } else {
-      await this.finish();
-    }
+    
+    // Вместо вызова startCheckLoop(), сразу завершаем квест,
+    // чтобы кнопка "Заснять" оставалась неактивной до нового цикла.
+    await this.finish();
   }
 
   /**

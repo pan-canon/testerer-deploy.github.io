@@ -58,7 +58,7 @@ export class BaseMirrorQuest extends BaseEvent {
     if (shootBtn) {
       shootBtn.style.display = "inline-block";
       shootBtn.disabled = true;
-      // При клике кнопка вызывает finish()
+      // When the shoot button is clicked, finish the quest.
       shootBtn.addEventListener("click", () => this.finish(), { once: true });
     }
 
@@ -133,9 +133,9 @@ export class BaseMirrorQuest extends BaseEvent {
     }
     const shootBtn = document.getElementById("btn_shoot");
     if (shootBtn) {
-      // Оставляем кнопку видимой, отключая ее
+      // Force the shoot button to remain visible but disable it.
       shootBtn.style.display = "inline-block";
-      shootBtn.disabled = true;
+      shootBtn.setAttribute("disabled", "true");
       shootBtn.style.pointerEvents = "none";
       console.log("Mirror quest: Shoot button disabled after finishing quest.");
     }

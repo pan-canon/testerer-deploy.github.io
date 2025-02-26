@@ -20,8 +20,6 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.totalStages = config.totalStages || 3;
     this.currentStage = 1;
     this.finished = false;
-    // Flag to prevent double-processing a stage
-    this.processingStage = false;
   }
 
   /**
@@ -48,7 +46,7 @@ export class BaseRepeatingQuest extends BaseEvent {
     }
     console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
 
-    // Если камера открыта – запускаем интерфейс квеста сразу, иначе ждём события "cameraReady"
+    // Check if the camera is open. If yes, start the quest UI immediately.
     if (this.app.isCameraOpen) {
       console.log("[BaseRepeatingQuest] Camera is already open; starting quest UI.");
       this.startCheckLoop();
@@ -73,25 +71,18 @@ export class BaseRepeatingQuest extends BaseEvent {
       statusDiv.style.display = "block";
       statusDiv.textContent = `Repeating quest – Stage ${this.currentStage} of ${this.totalStages}`;
     }
-    this.enableShootButton();
-    console.log("[BaseRepeatingQuest] Repeating quest UI updated. Awaiting user action to capture snapshot.");
-  }
-
-  /**
-   * enableShootButton – Clones and enables the shoot button with a fresh event handler.
-   */
-  enableShootButton() {
     const shootBtn = document.getElementById(this.shootButtonId);
     if (shootBtn) {
       shootBtn.style.display = "inline-block";
+      // Enable the shoot button specifically for the repeating quest
       shootBtn.disabled = false;
-      shootBtn.style.pointerEvents = "auto";
-      // Clone the button to remove old event listeners
+      // To ensure no duplicate event listeners, clone and replace the button
       const newShootBtn = shootBtn.cloneNode(true);
       shootBtn.parentNode.replaceChild(newShootBtn, shootBtn);
       newShootBtn.addEventListener("click", () => this.finishStage(), { once: true });
       console.log(`[BaseRepeatingQuest] Shoot button enabled for stage ${this.currentStage}.`);
     }
+    console.log("[BaseRepeatingQuest] Repeating quest UI updated. Awaiting user action to capture snapshot.");
   }
 
   /**
@@ -99,17 +90,13 @@ export class BaseRepeatingQuest extends BaseEvent {
    * Captures a snapshot and logs the stage completion.
    */
   async finishStage() {
-    if (this.finished || this.processingStage) return;
-    this.processingStage = true;
-    
+    if (this.finished) return;
     // Immediately disable the shoot button to prevent repeated clicks.
     const shootBtn = document.getElementById(this.shootButtonId);
     if (shootBtn) {
-      shootBtn.disabled = true;
+      shootBtn.setAttribute("disabled", "true");
       shootBtn.style.pointerEvents = "none";
-      console.log(`[BaseRepeatingQuest] Shoot button disabled for stage ${this.currentStage}.`);
     }
-    
     const photoData = this.captureSimplePhoto();
     console.log(`[BaseRepeatingQuest] Captured snapshot for stage ${this.currentStage}.`);
     await this.eventManager.addDiaryEntry(
@@ -118,14 +105,21 @@ export class BaseRepeatingQuest extends BaseEvent {
     );
     console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
     this.currentStage++;
-    this.processingStage = false;
     if (this.currentStage <= this.totalStages) {
-      // Обновляем статус и переактивируем кнопку для следующего этапа
       const statusDiv = document.getElementById(this.statusElementId);
       if (statusDiv) {
         statusDiv.textContent = `Repeating quest – Stage ${this.currentStage} of ${this.totalStages}`;
       }
-      this.enableShootButton();
+      const shootBtn = document.getElementById(this.shootButtonId);
+      if (shootBtn) {
+        // Re-enable the shoot button for the next stage
+        shootBtn.disabled = false;
+        shootBtn.style.pointerEvents = "auto";
+        // Remove previous listeners by cloning and replacing the button
+        const newShootBtn = shootBtn.cloneNode(true);
+        shootBtn.parentNode.replaceChild(newShootBtn, shootBtn);
+        newShootBtn.addEventListener("click", () => this.finishStage(), { once: true });
+      }
     } else {
       await this.finish();
     }
@@ -140,9 +134,9 @@ export class BaseRepeatingQuest extends BaseEvent {
     if (statusDiv) statusDiv.style.display = "none";
     const shootBtn = document.getElementById(this.shootButtonId);
     if (shootBtn) {
+      // Instead of hiding the shoot button, disable it so it remains visible.
       shootBtn.disabled = true;
       shootBtn.style.pointerEvents = "none";
-      console.log(`[BaseRepeatingQuest] Shoot button disabled at quest finish.`);
     }
     this.finished = true;
     console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);

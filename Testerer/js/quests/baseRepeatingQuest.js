@@ -1,4 +1,3 @@
-// File: baseRepeatingQuest.js
 import { BaseEvent } from '../events/baseEvent.js';
 
 export class BaseRepeatingQuest extends BaseEvent {
@@ -13,9 +12,10 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.shootButtonId = config.shootButtonId || "btn_shoot";
 
     // Quest state
-    this.totalStages = config.totalStages || 3;
+    this.totalStages = config.totalStages || 3; // или любое нужное число
     this.currentStage = 1;
     this.finished = false;
+    this.isProcessingStage = false; // Флаг для предотвращения конкурентного выполнения
   }
 
   /**
@@ -59,15 +59,14 @@ export class BaseRepeatingQuest extends BaseEvent {
       shootBtn.style.display = "inline-block";
       shootBtn.disabled = false;
       shootBtn.style.pointerEvents = "auto";
-      // Удаляем предыдущий обработчик, если он был назначен
-      shootBtn.onclick = null;
-      // Назначаем одноразовый обработчик клика
-      shootBtn.onclick = () => {
-        // Сразу отключаем кнопку, чтобы предотвратить повторные нажатия
-        shootBtn.disabled = true;
-        shootBtn.style.pointerEvents = "none";
+      // Заменяем кнопку на её клон для гарантированного удаления старых обработчиков
+      const newShootBtn = shootBtn.cloneNode(true);
+      shootBtn.parentNode.replaceChild(newShootBtn, shootBtn);
+      newShootBtn.addEventListener("click", () => {
+        newShootBtn.disabled = true;
+        newShootBtn.style.pointerEvents = "none";
         this.finishStage();
-      };
+      }, { once: true });
       console.log(`[BaseRepeatingQuest] Shoot button enabled for stage ${this.currentStage}.`);
     } else {
       console.error("[BaseRepeatingQuest] Shoot button not found in the DOM.");
@@ -77,10 +76,12 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * finishStage – Завершает один этап квеста.
-   * Снимает снимок (без дополнительных проверок), добавляет запись в дневник и переходит к следующему этапу.
+   * Захватывает снимок, добавляет запись в дневник и переходит к следующему этапу.
    */
   async finishStage() {
-    if (this.finished) return;
+    if (this.finished || this.isProcessingStage) return;
+    this.isProcessingStage = true;
+
     const shootBtn = document.getElementById(this.shootButtonId);
     // Отключаем кнопку сразу после нажатия
     if (shootBtn) {
@@ -97,12 +98,14 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.currentStage++;
     
     if (this.currentStage <= this.totalStages) {
-      // Остались этапы – активируем кнопку для следующего этапа
+      // Остались этапы – активируем UI для следующего этапа
       this.startCheckLoop();
     } else {
       // Все стадии пройдены – завершаем квест
       await this.finish();
     }
+    
+    this.isProcessingStage = false;
   }
 
   /**
@@ -149,6 +152,7 @@ export class BaseRepeatingQuest extends BaseEvent {
   resetCycle() {
     this.finished = false;
     this.currentStage = 1;
+    this.isProcessingStage = false;
     console.log("[BaseRepeatingQuest] Quest state has been reset for a new cycle.");
   }
 }

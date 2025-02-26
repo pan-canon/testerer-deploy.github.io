@@ -19,29 +19,18 @@ export class BaseRepeatingQuest extends BaseEvent {
   }
 
   /**
-   * resetCycle – Сбрасывает состояние повторяющегося квеста для нового цикла.
-   */
-  resetCycle() {
-    this.finished = false;
-    this.currentStage = 1;
-    console.log("[BaseRepeatingQuest] Quest state has been reset for a new cycle.");
-  }
-
-  /**
    * activate – Активирует повторяющийся квест.
-   * Если квест завершён, вызывается сброс состояния.
-   * Если камера не открыта, ожидается событие cameraReady, после чего обновляется UI квеста.
+   * Если квест завершён, сбрасывает состояние.
+   * Если камера не открыта, ждёт события cameraReady, после чего обновляет UI.
    */
   async activate() {
     if (this.finished) {
       this.resetCycle();
     }
-    // Всегда логируем активацию повторяющегося квеста
     console.log(`Activating repeating quest: ${this.key}`);
     await this.eventManager.addDiaryEntry(this.key, true);
     console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
 
-    // Если камера не открыта, ждём события cameraReady
     if (!this.app.isCameraOpen) {
       console.log("[BaseRepeatingQuest] Camera is not open. Waiting for cameraReady event...");
       await new Promise(resolve => {
@@ -52,13 +41,12 @@ export class BaseRepeatingQuest extends BaseEvent {
         document.addEventListener("cameraReady", onCameraReady);
       });
     }
-    // Обновляем UI квеста – делаем кнопку "Заснять" активной
     this.startCheckLoop();
   }
 
   /**
    * startCheckLoop – Обновляет UI повторяющегося квеста.
-   * Делает кнопку «Заснять» видимой и активной, очищая старые обработчики.
+   * Делает кнопку «Заснять» видимой и активной, назначая ей одноразовый обработчик.
    */
   startCheckLoop() {
     const statusDiv = document.getElementById(this.statusElementId);
@@ -69,14 +57,17 @@ export class BaseRepeatingQuest extends BaseEvent {
     const shootBtn = document.getElementById(this.shootButtonId);
     if (shootBtn) {
       shootBtn.style.display = "inline-block";
-      // Активируем кнопку: убираем disabled и восстанавливаем pointer events
       shootBtn.disabled = false;
-      shootBtn.removeAttribute("disabled");
       shootBtn.style.pointerEvents = "auto";
-      // Удаляем предыдущие обработчики посредством клонирования элемента
-      const newShootBtn = shootBtn.cloneNode(true);
-      shootBtn.parentNode.replaceChild(newShootBtn, shootBtn);
-      newShootBtn.addEventListener("click", this.finishStage.bind(this), { once: true });
+      // Удаляем предыдущий обработчик, если он был назначен
+      shootBtn.onclick = null;
+      // Назначаем одноразовый обработчик клика
+      shootBtn.onclick = () => {
+        // Сразу отключаем кнопку, чтобы предотвратить повторные нажатия
+        shootBtn.disabled = true;
+        shootBtn.style.pointerEvents = "none";
+        this.finishStage();
+      };
       console.log(`[BaseRepeatingQuest] Shoot button enabled for stage ${this.currentStage}.`);
     } else {
       console.error("[BaseRepeatingQuest] Shoot button not found in the DOM.");
@@ -86,15 +77,10 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * finishStage – Завершает один этап квеста.
-   * Снимает снимок без дополнительных проверок, логирует пост и переходит к следующему этапу.
+   * Снимает снимок (без дополнительных проверок), добавляет запись в дневник и переходит к следующему этапу.
    */
   async finishStage() {
     if (this.finished) return;
-    const shootBtn = document.getElementById(this.shootButtonId);
-    if (shootBtn) {
-      shootBtn.disabled = true;
-      shootBtn.style.pointerEvents = "none";
-    }
     const photoData = this.captureSimplePhoto();
     console.log(`[BaseRepeatingQuest] Captured snapshot for stage ${this.currentStage}.`);
     await this.eventManager.addDiaryEntry(
@@ -104,19 +90,12 @@ export class BaseRepeatingQuest extends BaseEvent {
     console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
     this.currentStage++;
     if (this.currentStage <= this.totalStages) {
+      // Обновляем статус и активируем кнопку для следующего этапа
       const statusDiv = document.getElementById(this.statusElementId);
       if (statusDiv) {
         statusDiv.textContent = `Repeating quest – Stage ${this.currentStage} of ${this.totalStages}`;
       }
-      // Реактивируем кнопку для следующего этапа
-      const shootBtn = document.getElementById(this.shootButtonId);
-      if (shootBtn) {
-        shootBtn.disabled = false;
-        shootBtn.style.pointerEvents = "auto";
-        const newShootBtn = shootBtn.cloneNode(true);
-        shootBtn.parentNode.replaceChild(newShootBtn, shootBtn);
-        newShootBtn.addEventListener("click", this.finishStage.bind(this), { once: true });
-      }
+      this.startCheckLoop();
     } else {
       await this.finish();
     }
@@ -124,7 +103,7 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * finish – Завершает повторяющийся квест.
-   * Логирует завершение, обновляет UI и активирует событие post_repeating_event.
+   * Скрывает UI, логирует завершение и активирует событие post_repeating_event.
    */
   async finish() {
     const statusDiv = document.getElementById(this.statusElementId);
@@ -139,7 +118,7 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.finished = true;
     console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
     await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
-    // Активация нового события повторяющегося квеста
+    // Запускаем событие повторяющегося квеста (post_repeating_event)
     this.app.gameEventManager.activateEvent("post_repeating_event");
   }
 
@@ -158,5 +137,14 @@ export class BaseRepeatingQuest extends BaseEvent {
     const ctx = canvas.getContext("2d");
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     return canvas.toDataURL("image/png");
+  }
+
+  /**
+   * resetCycle – Сбрасывает состояние повторяющегося квеста для нового цикла.
+   */
+  resetCycle() {
+    this.finished = false;
+    this.currentStage = 1;
+    console.log("[BaseRepeatingQuest] Quest state has been reset for a new cycle.");
   }
 }

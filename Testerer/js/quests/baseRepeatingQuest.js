@@ -82,9 +82,10 @@ export class BaseRepeatingQuest extends BaseEvent {
  */
 async finishStage() {
   if (this.finished) return;
+  
   const shootBtn = document.getElementById(this.shootButtonId);
   if (shootBtn) {
-    // Сразу отключаем кнопку «Заснять» для предотвращения повторных нажатий
+    // Отключаем кнопку «Заснять» сразу после нажатия
     shootBtn.disabled = true;
     shootBtn.style.pointerEvents = "none";
   }
@@ -97,14 +98,16 @@ async finishStage() {
     false
   );
   console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
-  this.currentStage++;
-
-  // Обновляем UI: оставляем кнопку «Заснять» неактивной
-  // и через QuestManager делаем активной кнопку «Запостить» для запуска следующего цикла.
-  this.app.questManager.updatePostButtonState();
   
-  // Если лимит этапов достигнут, завершаем повторяющийся квест
-  if (this.currentStage > this.totalStages) {
+  this.currentStage++;
+  
+  // Если ещё не достигнут лимит этапов, устанавливаем флаг готовности
+  // для разблокировки кнопки «Запостить» в режиме блога.
+  if (this.currentStage <= this.totalStages) {
+    localStorage.setItem("mirrorQuestReady", "true");
+    this.app.questManager.updatePostButtonState();
+  } else {
+    // Если все этапы завершены, завершаем повторяющийся квест.
     await this.finish();
   }
 }

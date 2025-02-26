@@ -29,8 +29,8 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * activate – Activates the repeating quest.
-   * If the quest is already finished, resets the cycle.
-   * При активации, если камера не открыта, она открывается автоматически.
+   * Если квест уже завершён, происходит сброс состояния.
+   * Если камера не открыта – вызывается переключение (без внесения изменений в toggleCameraView).
    */
   async activate() {
     if (this.finished) {
@@ -42,30 +42,17 @@ export class BaseRepeatingQuest extends BaseEvent {
     }
     console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
 
-    // Если камера не открыта, открываем её автоматически
+    // Если камера не открыта, предполагается, что вызов переключения производится ранее
     if (!this.app.isCameraOpen) {
-      console.log("[BaseRepeatingQuest] Camera is not open; opening camera for repeating quest.");
-      await this.app.toggleCameraView();
+      console.warn("[BaseRepeatingQuest] Camera is not open. Repeating quest activation expects camera mode to be active.");
     }
-
-    // Если камера открыта, запускаем UI повторяющегося квеста,
-    // иначе ожидаем событие cameraReady
-    if (this.app.isCameraOpen) {
-      console.log("[BaseRepeatingQuest] Camera is open; starting quest UI.");
-      this.startCheckLoop();
-    } else {
-      console.log("[BaseRepeatingQuest] Waiting for camera to open...");
-      const onCameraReady = () => {
-        console.log("[BaseRepeatingQuest] Camera is ready; starting quest UI.");
-        this.startCheckLoop();
-        document.removeEventListener("cameraReady", onCameraReady);
-      };
-      document.addEventListener("cameraReady", onCameraReady);
-    }
+    
+    // После открытия камеры обновляем UI повторяющегося квеста
+    this.startCheckLoop();
   }
 
   /**
-   * startCheckLoop – Updates the UI for the repeating quest.
+   * startCheckLoop – Обновляет UI повторяющегося квеста.
    * Делает кнопку «Заснять» видимой и активной.
    */
   startCheckLoop() {
@@ -77,26 +64,30 @@ export class BaseRepeatingQuest extends BaseEvent {
     const shootBtn = document.getElementById(this.shootButtonId);
     if (shootBtn) {
       shootBtn.style.display = "inline-block";
-      // Активируем кнопку для повторяющегося квеста
+      // Явно активируем кнопку, убирая disabled и восстанавливая pointer events
       shootBtn.disabled = false;
-      // Клонируем кнопку для удаления предыдущих обработчиков событий
+      shootBtn.removeAttribute("disabled");
+      shootBtn.style.pointerEvents = "auto";
+      // Удаляем старые обработчики через клонирование
       const newShootBtn = shootBtn.cloneNode(true);
       shootBtn.parentNode.replaceChild(newShootBtn, shootBtn);
-      newShootBtn.addEventListener("click", () => this.finishStage(), { once: true });
+      newShootBtn.addEventListener("click", this.finishStage.bind(this), { once: true });
       console.log(`[BaseRepeatingQuest] Shoot button enabled for stage ${this.currentStage}.`);
+    } else {
+      console.error("[BaseRepeatingQuest] Shoot button not found in the DOM.");
     }
     console.log("[BaseRepeatingQuest] Repeating quest UI updated. Awaiting user action to capture snapshot.");
   }
 
   /**
-   * finishStage – Completes one stage of the repeating quest.
-   * При нажатии, снимается фото, создаётся пост и происходит переход к следующему этапу.
+   * finishStage – Завершает один этап квеста.
+   * Снимается фото (без проверки качества), логируется пост, и происходит переход к следующему этапу.
    */
   async finishStage() {
     if (this.finished) return;
     const shootBtn = document.getElementById(this.shootButtonId);
     if (shootBtn) {
-      shootBtn.setAttribute("disabled", "true");
+      shootBtn.disabled = true;
       shootBtn.style.pointerEvents = "none";
     }
     const photoData = this.captureSimplePhoto();
@@ -112,14 +103,14 @@ export class BaseRepeatingQuest extends BaseEvent {
       if (statusDiv) {
         statusDiv.textContent = `Repeating quest – Stage ${this.currentStage} of ${this.totalStages}`;
       }
+      // Реактивируем кнопку для следующего этапа
       const shootBtn = document.getElementById(this.shootButtonId);
       if (shootBtn) {
-        // Реактивируем кнопку для следующего этапа
         shootBtn.disabled = false;
         shootBtn.style.pointerEvents = "auto";
         const newShootBtn = shootBtn.cloneNode(true);
         shootBtn.parentNode.replaceChild(newShootBtn, shootBtn);
-        newShootBtn.addEventListener("click", () => this.finishStage(), { once: true });
+        newShootBtn.addEventListener("click", this.finishStage.bind(this), { once: true });
       }
     } else {
       await this.finish();
@@ -127,8 +118,8 @@ export class BaseRepeatingQuest extends BaseEvent {
   }
 
   /**
-   * finish – Completes the repeating quest.
-   * После завершения всех этапов, логируется завершение и вызывается событие post_repeating_event.
+   * finish – Завершает повторяющийся квест.
+   * Логируется завершение, обновляется UI и активируется событие post_repeating_event.
    */
   async finish() {
     const statusDiv = document.getElementById(this.statusElementId);
@@ -145,8 +136,8 @@ export class BaseRepeatingQuest extends BaseEvent {
   }
 
   /**
-   * captureSimplePhoto – Captures a snapshot from the active camera.
-   * Возвращает data URL снимка.
+   * captureSimplePhoto – Захватывает снимок с активной камеры.
+   * Возвращает data URL изображения.
    */
   captureSimplePhoto() {
     const video = this.app.cameraSectionManager?.videoElement;

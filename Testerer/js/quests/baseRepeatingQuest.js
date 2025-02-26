@@ -105,25 +105,22 @@ export class BaseRepeatingQuest extends BaseEvent {
    * finish – Завершает повторяющийся квест.
    * Скрывает UI, логирует завершение и активирует событие post_repeating_event.
    */
-async finish() {
-  const statusDiv = document.getElementById(this.statusElementId);
-  if (statusDiv) {
-    statusDiv.style.display = "none";
+  async finish() {
+    const statusDiv = document.getElementById(this.statusElementId);
+    if (statusDiv) {
+      statusDiv.style.display = "none";
+    }
+    const shootBtn = document.getElementById(this.shootButtonId);
+    if (shootBtn) {
+      shootBtn.disabled = true;
+      shootBtn.style.pointerEvents = "none";
+    }
+    this.finished = true;
+    console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
+    await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
+    // Запускаем событие повторяющегося квеста (post_repeating_event)
+    this.app.gameEventManager.activateEvent("post_repeating_event");
   }
-  const shootBtn = document.getElementById(this.shootButtonId);
-  if (shootBtn) {
-    shootBtn.disabled = true;
-    shootBtn.style.pointerEvents = "none";
-  }
-  this.finished = true;
-  console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
-  await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
-  // Вместо немедленной активации повторяющегося события, 
-  // устанавливаем флаг, сигнализирующий о завершении повторяющегося квеста.
-  this.pendingFinal = true;
-  console.log("[BaseRepeatingQuest] Repeating quest finished. Waiting for 'Запостить' to trigger final event.");
-}
-
 
   /**
    * captureSimplePhoto – Захватывает снимок с активной камеры и возвращает data URL изображения.

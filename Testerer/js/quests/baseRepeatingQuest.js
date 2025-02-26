@@ -82,7 +82,7 @@ export class BaseRepeatingQuest extends BaseEvent {
   async finishStage() {
     if (this.finished) return;
     const shootBtn = document.getElementById(this.shootButtonId);
-    // Отключаем кнопку "Заснять" сразу после нажатия
+    // Отключаем кнопку сразу после нажатия
     if (shootBtn) {
       shootBtn.disabled = true;
       shootBtn.style.pointerEvents = "none";
@@ -97,15 +97,29 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.currentStage++;
     
     if (this.currentStage <= this.totalStages) {
-      // Если этапов ещё осталось, переходим к следующему этапу и активируем кнопку для нового снимка
+      // Если остались этапы – продолжаем цикл
       this.startCheckLoop();
     } else {
-      // Если достигнут последний этап, активируем финальное событие
-      console.log("[BaseRepeatingQuest] Final stage completed. Activating final event.");
-      // Вызываем активацию финального квеста (файла финиш_квест)
-      this.app.gameEventManager.activateEvent("final_event");
-      // Дополнительно можно обновить UI, чтобы отразить, что повторяющийся квест завершён
+      // Если последний этап выполнен – помечаем, что ожидается финальное событие.
+      this.markForFinalEvent();
     }
+  }
+
+  markForFinalEvent() {
+    // Скрываем UI повторяющегося квеста
+    const statusDiv = document.getElementById(this.statusElementId);
+    if (statusDiv) {
+      statusDiv.style.display = "none";
+    }
+    const shootBtn = document.getElementById(this.shootButtonId);
+    if (shootBtn) {
+      shootBtn.disabled = true;
+      shootBtn.style.pointerEvents = "none";
+    }
+    this.finished = true;
+    // Устанавливаем флаг, что финальное событие теперь ожидается.
+    this.pendingFinal = true;
+    console.log(`[BaseRepeatingQuest] Repeating quest completed. Final event is pending.`);
   }
 
   /**

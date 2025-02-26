@@ -96,9 +96,13 @@ export class BaseRepeatingQuest extends BaseEvent {
     console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
     this.currentStage++;
     
-    // Вместо вызова startCheckLoop(), сразу завершаем квест,
-    // чтобы кнопка "Заснять" оставалась неактивной до нового цикла.
-    await this.finish();
+    if (this.currentStage <= this.totalStages) {
+      // Остались этапы – активируем кнопку для следующего этапа
+      this.startCheckLoop();
+    } else {
+      // Все стадии пройдены – завершаем квест
+      await this.finish();
+    }
   }
 
   /**

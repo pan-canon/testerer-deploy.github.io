@@ -77,27 +77,50 @@ export class BaseRepeatingQuest extends BaseEvent {
    * finishStage – Завершает один этап квеста.
    * Снимает снимок (без дополнительных проверок), добавляет запись в дневник и переходит к следующему этапу.
    */
-  async finishStage() {
-    if (this.finished) return;
-    const shootBtn = document.getElementById(this.shootButtonId);
-    // Отключаем кнопку сразу после нажатия
-    if (shootBtn) {
-      shootBtn.disabled = true;
-      shootBtn.style.pointerEvents = "none";
-    }
-    const photoData = this.captureSimplePhoto();
-    console.log(`[BaseRepeatingQuest] Captured snapshot for stage ${this.currentStage}.`);
-    await this.eventManager.addDiaryEntry(
-      `repeating_stage_${this.currentStage} [photo attached]\n${photoData}`,
-      false
-    );
-    console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
-    this.currentStage++;
-    
-    // Вместо вызова startCheckLoop(), сразу завершаем квест,
-    // чтобы кнопка "Заснять" оставалась неактивной до нового цикла.
-    await this.finish();
+// ... внутри класса BaseRepeatingQuest
+
+async finishStage() {
+  if (this.finished) return;
+  const shootBtn = document.getElementById(this.shootButtonId);
+  // Отключаем кнопку сразу после нажатия
+  if (shootBtn) {
+    shootBtn.disabled = true;
+    shootBtn.style.pointerEvents = "none";
   }
+  const photoData = this.captureSimplePhoto();
+  console.log(`[BaseRepeatingQuest] Captured snapshot for stage ${this.currentStage}.`);
+  await this.eventManager.addDiaryEntry(
+    `repeating_stage_${this.currentStage} [photo attached]\n${photoData}`,
+    false
+  );
+  console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
+  this.currentStage++;
+  
+  if (this.currentStage <= this.totalStages) {
+    // Если остались этапы – продолжаем цикл
+    this.startCheckLoop();
+  } else {
+    // Если последний этап выполнен – помечаем, что ожидается финальное событие.
+    this.markForFinalEvent();
+  }
+}
+
+markForFinalEvent() {
+  // Скрываем UI повторяющегося квеста
+  const statusDiv = document.getElementById(this.statusElementId);
+  if (statusDiv) {
+    statusDiv.style.display = "none";
+  }
+  const shootBtn = document.getElementById(this.shootButtonId);
+  if (shootBtn) {
+    shootBtn.disabled = true;
+    shootBtn.style.pointerEvents = "none";
+  }
+  this.finished = true;
+  // Устанавливаем флаг, что финальное событие теперь ожидается.
+  this.pendingFinal = true;
+  console.log(`[BaseRepeatingQuest] Repeating quest completed. Final event is pending.`);
+}
 
   /**
    * finish – Завершает повторяющийся квест.

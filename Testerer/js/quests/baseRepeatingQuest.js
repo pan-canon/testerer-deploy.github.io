@@ -30,7 +30,8 @@ export class BaseRepeatingQuest extends BaseEvent {
   /**
    * activate – Activates the repeating quest.
    * Если квест уже завершён, происходит сброс состояния.
-   * Если камера не открыта – вызывается переключение (без внесения изменений в toggleCameraView).
+   * Если камера не открыта, квест ждёт события cameraReady,
+   * чтобы обновить UI (активировать кнопку «Заснять») в режиме камеры.
    */
   async activate() {
     if (this.finished) {
@@ -42,11 +43,17 @@ export class BaseRepeatingQuest extends BaseEvent {
     }
     console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
 
-    // Если камера не открыта, предполагается, что вызов переключения производится ранее
+    // Если камера не открыта, ожидаем события cameraReady
     if (!this.app.isCameraOpen) {
-      console.warn("[BaseRepeatingQuest] Camera is not open. Repeating quest activation expects camera mode to be active.");
+      console.log("[BaseRepeatingQuest] Camera is not open. Waiting for cameraReady event...");
+      await new Promise(resolve => {
+        const onCameraReady = () => {
+          document.removeEventListener("cameraReady", onCameraReady);
+          resolve();
+        };
+        document.addEventListener("cameraReady", onCameraReady);
+      });
     }
-    
     // После открытия камеры обновляем UI повторяющегося квеста
     this.startCheckLoop();
   }
@@ -64,11 +71,11 @@ export class BaseRepeatingQuest extends BaseEvent {
     const shootBtn = document.getElementById(this.shootButtonId);
     if (shootBtn) {
       shootBtn.style.display = "inline-block";
-      // Явно активируем кнопку, убирая disabled и восстанавливая pointer events
+      // Активируем кнопку: убираем disabled и восстанавливаем pointer events
       shootBtn.disabled = false;
       shootBtn.removeAttribute("disabled");
       shootBtn.style.pointerEvents = "auto";
-      // Удаляем старые обработчики через клонирование
+      // Удаляем старые обработчики посредством клонирования
       const newShootBtn = shootBtn.cloneNode(true);
       shootBtn.parentNode.replaceChild(newShootBtn, shootBtn);
       newShootBtn.addEventListener("click", this.finishStage.bind(this), { once: true });
@@ -81,7 +88,7 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * finishStage – Завершает один этап квеста.
-   * Снимается фото (без проверки качества), логируется пост, и происходит переход к следующему этапу.
+   * Снимается фото (без проверок), логируется пост, и происходит переход к следующему этапу.
    */
   async finishStage() {
     if (this.finished) return;

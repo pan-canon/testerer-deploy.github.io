@@ -24,9 +24,7 @@ export class BaseRepeatingQuest extends BaseEvent {
    * Если камера не открыта, ждёт события cameraReady, после чего обновляет UI.
    */
   async activate() {
-    if (this.finished) {
-      this.resetCycle();
-    }
+    this.resetCycle(); // Сбрасываем состояние всегда при запуске нового цикла
     console.log(`Activating repeating quest: ${this.key}`);
     await this.eventManager.addDiaryEntry(this.key, true);
     console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
@@ -96,30 +94,9 @@ export class BaseRepeatingQuest extends BaseEvent {
     console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
     this.currentStage++;
     
-    if (this.currentStage <= this.totalStages) {
-      // Если остались этапы – продолжаем цикл
-      this.startCheckLoop();
-    } else {
-      // Если последний этап выполнен – помечаем, что ожидается финальное событие.
-      this.markForFinalEvent();
-    }
-  }
-
-  markForFinalEvent() {
-    // Скрываем UI повторяющегося квеста
-    const statusDiv = document.getElementById(this.statusElementId);
-    if (statusDiv) {
-      statusDiv.style.display = "none";
-    }
-    const shootBtn = document.getElementById(this.shootButtonId);
-    if (shootBtn) {
-      shootBtn.disabled = true;
-      shootBtn.style.pointerEvents = "none";
-    }
-    this.finished = true;
-    // Устанавливаем флаг, что финальное событие теперь ожидается.
-    this.pendingFinal = true;
-    console.log(`[BaseRepeatingQuest] Repeating quest completed. Final event is pending.`);
+    // Вместо вызова startCheckLoop(), сразу завершаем квест,
+    // чтобы кнопка "Заснять" оставалась неактивной до нового цикла.
+    await this.finish();
   }
 
   /**

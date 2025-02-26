@@ -101,22 +101,28 @@ export class QuestManager {
    * If mirrorQuestReady is true, explicitly triggers the mirror quest.
    */
 async handlePostButtonClick() {
-  // Проверяем флаг готовности повторяющегося квеста
-  const isReady = localStorage.getItem("mirrorQuestReady") === "true";
+  // Предполагаем, что repeating quest хранится в this.repeatingQuest
+  // (или можно получить его из app.questManager, если их несколько)
+  const repeatingQuest = this.repeatingQuest; // или this.app.repeatingQuest, если так хранится
+
+  // Если repeating quest существует и уже завершён, то не запускаем новый цикл
+  if (repeatingQuest && repeatingQuest.finished) {
+    alert("Повторяющийся квест завершён. Финальное событие уже активировано.");
+    return;
+  }
   
-  // Если флаг не установлен, значит квест уже завершён – не запускаем новый цикл.
+  // Проверяем флаг готовности квеста (если он установлен глобально)
+  const isReady = localStorage.getItem("mirrorQuestReady") === "true";
   if (!isReady) {
     alert("Повторяющийся квест завершён.");
     return;
   }
   
-  // Снимаем флаг, чтобы избежать повторного срабатывания
+  // Снимаем флаг, чтобы предотвратить повторное срабатывание
   localStorage.removeItem("mirrorQuestReady");
-  
-  // Обновляем состояние кнопок
   this.updatePostButtonState();
   
-  // Определяем, является ли квест повторяющимся (если установлен флаг isRepeatingCycle, например)
+  // Если установлен флаг повторного цикла, запускаем repeating quest, иначе — зеркальный квест
   const isRepeating = localStorage.getItem("isRepeatingCycle") === "true";
   if (isRepeating) {
     console.log("[QuestManager] Triggering repeating quest from handlePostButtonClick.");

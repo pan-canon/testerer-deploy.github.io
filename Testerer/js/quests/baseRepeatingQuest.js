@@ -133,7 +133,7 @@ async finish() {
   // Сбрасываем флаг готовности, чтобы не запускался новый цикл
   localStorage.removeItem("mirrorQuestReady");
   
-  // Обновляем UI (например, делаем кнопку «Запостить» неактивной)
+  // Обновляем UI (например, делая кнопку «Запостить» неактивной)
   this.app.questManager.updatePostButtonState();
 }
 

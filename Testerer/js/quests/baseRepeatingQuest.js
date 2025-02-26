@@ -20,10 +20,13 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * activate – Активирует повторяющийся квест.
-   * Теперь всегда сбрасываем состояние, чтобы при повторном запуске кнопка "Заснять" была активна.
+   * Если квест завершён, сбрасывает состояние.
+   * Если камера не открыта, ждёт события cameraReady, после чего обновляет UI.
    */
   async activate() {
-    this.resetCycle(); // Всегда сбрасываем состояние нового цикла
+    if (this.finished) {
+      this.resetCycle();
+    }
     console.log(`Activating repeating quest: ${this.key}`);
     await this.eventManager.addDiaryEntry(this.key, true);
     console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
@@ -74,11 +77,12 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * finishStage – Завершает один этап квеста.
-   * Снимает снимок (без дополнительных проверок), добавляет запись в дневник и завершает цикл.
+   * Снимает снимок (без дополнительных проверок), добавляет запись в дневник и переходит к следующему этапу.
    */
   async finishStage() {
     if (this.finished) return;
     const shootBtn = document.getElementById(this.shootButtonId);
+    // Отключаем кнопку сразу после нажатия
     if (shootBtn) {
       shootBtn.disabled = true;
       shootBtn.style.pointerEvents = "none";
@@ -92,14 +96,9 @@ export class BaseRepeatingQuest extends BaseEvent {
     console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
     this.currentStage++;
     
-    if (this.currentStage <= this.totalStages) {
-      // Если повторяющийся квест состоит из нескольких этапов,
-      // можно вызвать startCheckLoop() для следующего этапа.
-      // Если же требуется завершить квест после одного цикла, вызываем finish():
-      await this.finish();
-    } else {
-      await this.finish();
-    }
+    // Вместо вызова startCheckLoop(), сразу завершаем квест,
+    // чтобы кнопка "Заснять" оставалась неактивной до нового цикла.
+    await this.finish();
   }
 
   /**
@@ -124,6 +123,7 @@ async finish() {
   this.pendingFinal = true;
   console.log("[BaseRepeatingQuest] Repeating quest finished. Waiting for 'Запостить' to trigger final event.");
 }
+
 
   /**
    * captureSimplePhoto – Захватывает снимок с активной камеры и возвращает data URL изображения.

@@ -75,31 +75,35 @@ export class BaseRepeatingQuest extends BaseEvent {
     console.log("[BaseRepeatingQuest] Repeating quest UI updated. Awaiting user action to capture snapshot.");
   }
 
-  /**
-   * finishStage – Завершает один этап квеста.
-   * Снимает снимок (без дополнительных проверок), добавляет запись в дневник и переходит к следующему этапу.
-   */
-  async finishStage() {
-    if (this.finished) return;
-    const shootBtn = document.getElementById(this.shootButtonId);
-    // Отключаем кнопку сразу после нажатия
-    if (shootBtn) {
-      shootBtn.disabled = true;
-      shootBtn.style.pointerEvents = "none";
-    }
-    const photoData = this.captureSimplePhoto();
-    console.log(`[BaseRepeatingQuest] Captured snapshot for stage ${this.currentStage}.`);
-    await this.eventManager.addDiaryEntry(
-      `repeating_stage_${this.currentStage} [photo attached]\n${photoData}`,
-      false
-    );
-    console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
-    this.currentStage++;
-    
-    // Вместо вызова startCheckLoop(), сразу завершаем квест,
-    // чтобы кнопка "Заснять" оставалась неактивной до нового цикла.
+/**
+ * Завершает один этап квеста.
+ * Снимает снимок, добавляет запись в дневник и переходит к следующему этапу.
+ */
+async finishStage() {
+  if (this.finished) return;
+  const shootBtn = document.getElementById(this.shootButtonId);
+  // Отключаем кнопку сразу после нажатия
+  if (shootBtn) {
+    shootBtn.disabled = true;
+    shootBtn.style.pointerEvents = "none";
+  }
+  const photoData = this.captureSimplePhoto();
+  console.log(`[BaseRepeatingQuest] Captured snapshot for stage ${this.currentStage}.`);
+  await this.eventManager.addDiaryEntry(
+    `repeating_stage_${this.currentStage} [photo attached]\n${photoData}`,
+    false
+  );
+  console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
+  this.currentStage++;
+  
+  // Если еще не достигнут лимит этапов, запускаем следующий этап
+  if (this.currentStage <= this.totalStages) {
+    this.startCheckLoop();
+  } else {
+    // Если все этапы завершены, завершаем повторяющийся квест
     await this.finish();
   }
+}
 
   /**
    * finish – Завершает повторяющийся квест.

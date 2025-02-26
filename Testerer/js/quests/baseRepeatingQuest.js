@@ -20,6 +20,8 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.totalStages = config.totalStages || 3;
     this.currentStage = 1;
     this.finished = false;
+    // Flag to prevent double processing of a stage
+    this.processingStage = false;
   }
 
   /**
@@ -76,7 +78,8 @@ export class BaseRepeatingQuest extends BaseEvent {
       shootBtn.style.display = "inline-block";
       // Enable the shoot button specifically for the repeating quest
       shootBtn.disabled = false;
-      // To ensure no duplicate event listeners, clone and replace the button
+      shootBtn.style.pointerEvents = "auto";
+      // Replace button to clear previous listeners
       const newShootBtn = shootBtn.cloneNode(true);
       shootBtn.parentNode.replaceChild(newShootBtn, shootBtn);
       newShootBtn.addEventListener("click", () => this.finishStage(), { once: true });
@@ -90,11 +93,13 @@ export class BaseRepeatingQuest extends BaseEvent {
    * Captures a snapshot and logs the stage completion.
    */
   async finishStage() {
-    if (this.finished) return;
+    if (this.finished || this.processingStage) return;
+    this.processingStage = true;
+
     // Immediately disable the shoot button to prevent repeated clicks.
     const shootBtn = document.getElementById(this.shootButtonId);
     if (shootBtn) {
-      shootBtn.setAttribute("disabled", "true");
+      shootBtn.disabled = true;
       shootBtn.style.pointerEvents = "none";
     }
     const photoData = this.captureSimplePhoto();
@@ -105,6 +110,8 @@ export class BaseRepeatingQuest extends BaseEvent {
     );
     console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
     this.currentStage++;
+    // Reset processing flag after stage is done.
+    this.processingStage = false;
     if (this.currentStage <= this.totalStages) {
       const statusDiv = document.getElementById(this.statusElementId);
       if (statusDiv) {

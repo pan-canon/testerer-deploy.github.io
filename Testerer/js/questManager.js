@@ -100,35 +100,32 @@ export class QuestManager {
    * handlePostButtonClick – Called when the "Post" button is clicked.
    * If mirrorQuestReady is true, explicitly triggers the mirror quest.
    */
-  async handlePostButtonClick() {
-    // Check if the "mirrorQuestReady" flag is set to allow quest start
-    const isReady = localStorage.getItem("mirrorQuestReady") === "true";
-    if (!isReady) {
-      alert("Please wait for a ghost invitation to start the quest.");
-      return;
-    }
-    
-    // Remove the flag since the button was pressed to initiate the quest
-    localStorage.removeItem("mirrorQuestReady");
-    this.updatePostButtonState();
-
-    // Determine if we are in repeating cycle mode based on the "isRepeatingCycle" flag
-    const isRepeating = localStorage.getItem("isRepeatingCycle") === "true";
-
-    // Highlight the camera button to indicate activation
-    const cameraBtn = document.getElementById("toggle-camera");
-    if (cameraBtn) {
-      cameraBtn.classList.add("glowing");
-    }
-
-    if (isRepeating) {
-      console.log("[QuestManager] Triggering repeating quest from handlePostButtonClick.");
-      await this.activateQuest("repeating_quest");
-    } else {
-      console.log("[QuestManager] Triggering mirror quest from handlePostButtonClick.");
-      await this.activateQuest("mirror_quest");
-    }
+async handlePostButtonClick() {
+  // Проверяем флаг готовности повторяющегося квеста
+  const isReady = localStorage.getItem("mirrorQuestReady") === "true";
+  
+  // Если флаг не установлен, значит квест уже завершён – не запускаем новый цикл.
+  if (!isReady) {
+    alert("Повторяющийся квест завершён.");
+    return;
   }
+  
+  // Снимаем флаг, чтобы избежать повторного срабатывания
+  localStorage.removeItem("mirrorQuestReady");
+  
+  // Обновляем состояние кнопок
+  this.updatePostButtonState();
+  
+  // Определяем, является ли квест повторяющимся (если установлен флаг isRepeatingCycle, например)
+  const isRepeating = localStorage.getItem("isRepeatingCycle") === "true";
+  if (isRepeating) {
+    console.log("[QuestManager] Triggering repeating quest from handlePostButtonClick.");
+    await this.activateQuest("repeating_quest");
+  } else {
+    console.log("[QuestManager] Triggering mirror quest from handlePostButtonClick.");
+    await this.activateQuest("mirror_quest");
+  }
+}
 
   /**
    * updatePostButtonState – Enables or disables the "Post" button based on mirrorQuestReady.

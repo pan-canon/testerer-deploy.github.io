@@ -80,58 +80,61 @@ export class BaseRepeatingQuest extends BaseEvent {
  * Снимает снимок, публикует запись в дневнике и обновляет состояние UI,
  * чтобы кнопка «Заснять» оставалась неактивной до следующего запуска.
  */
-async finishStage() {
-  if (this.finished) return;
-  
-  const shootBtn = document.getElementById(this.shootButtonId);
-  if (shootBtn) {
-    // Отключаем кнопку «Заснять» сразу после нажатия
-    shootBtn.disabled = true;
-    shootBtn.style.pointerEvents = "none";
+  async finishStage() {
+    if (this.finished) return;
+    
+    const shootBtn = document.getElementById(this.shootButtonId);
+    if (shootBtn) {
+      // Отключаем кнопку «Заснять» сразу после нажатия
+      shootBtn.disabled = true;
+      shootBtn.style.pointerEvents = "none";
+    }
+    
+    const photoData = this.captureSimplePhoto();
+    console.log(`[BaseRepeatingQuest] Captured snapshot for stage ${this.currentStage}.`);
+    
+    await this.eventManager.addDiaryEntry(
+      `repeating_stage_${this.currentStage} [photo attached]\n${photoData}`,
+      false
+    );
+    console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
+    
+    this.currentStage++;
+    
+    // Если ещё не достигнут лимит этапов, устанавливаем флаг готовности
+    // для разблокировки кнопки «Запостить» в режиме блога.
+    if (this.currentStage <= this.totalStages) {
+      localStorage.setItem("mirrorQuestReady", "true");
+      this.app.questManager.updatePostButtonState();
+    } else {
+      // Если все этапы завершены, завершаем повторяющийся квест.
+      await this.finish();
+    }
   }
-  
-  const photoData = this.captureSimplePhoto();
-  console.log(`[BaseRepeatingQuest] Captured snapshot for stage ${this.currentStage}.`);
-  
-  await this.eventManager.addDiaryEntry(
-    `repeating_stage_${this.currentStage} [photo attached]\n${photoData}`,
-    false
-  );
-  console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
-  
-  this.currentStage++;
-  
-  // Если ещё не достигнут лимит этапов, устанавливаем флаг готовности
-  // для разблокировки кнопки «Запостить» в режиме блога.
-  if (this.currentStage <= this.totalStages) {
-    localStorage.setItem("mirrorQuestReady", "true");
-    this.app.questManager.updatePostButtonState();
-  } else {
-    // Если все этапы завершены, завершаем повторяющийся квест.
-    await this.finish();
-  }
-}
 
   /**
    * finish – Завершает повторяющийся квест.
    * Скрывает UI, логирует завершение и активирует событие post_repeating_event.
    */
-  async finish() {
-    const statusDiv = document.getElementById(this.statusElementId);
-    if (statusDiv) {
-      statusDiv.style.display = "none";
-    }
-    const shootBtn = document.getElementById(this.shootButtonId);
-    if (shootBtn) {
-      shootBtn.disabled = true;
-      shootBtn.style.pointerEvents = "none";
-    }
-    this.finished = true;
-    console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
-    await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
-    // Запускаем событие повторяющегося квеста (post_repeating_event)
-    this.app.gameEventManager.activateEvent("post_repeating_event");
-  }
+async finish() {
+  if (this.finished) return;
+  
+  this.finished = true;
+  this.stopCheckLoop();
+  console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
+  
+  // Логирование финального поста в дневнике
+  await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
+  
+  // Триггер финального события повторяющегося квеста
+  await this.app.gameEventManager.activateEvent("post_repeating_event");
+  
+  // Сбросим флаг готовности, чтобы не запускался новый цикл
+  localStorage.removeItem("mirrorQuestReady");
+  
+  // Обновляем состояние кнопки «Запостить»
+  this.app.questManager.updatePostButtonState();
+}
 
   /**
    * captureSimplePhoto – Захватывает снимок с активной камеры и возвращает data URL изображения.

@@ -1,4 +1,3 @@
-// File: baseRepeatingQuest.js
 import { BaseEvent } from '../events/baseEvent.js';
 
 export class BaseRepeatingQuest extends BaseEvent {
@@ -13,7 +12,7 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.shootButtonId = config.shootButtonId || "btn_shoot";
 
     // Quest state
-    this.totalStages = config.totalStages || 3;
+    this.totalStages = config.totalStages || 5; // Указано нужное число этапов
     this.currentStage = 1;
     this.finished = false;
   }
@@ -59,15 +58,17 @@ export class BaseRepeatingQuest extends BaseEvent {
       shootBtn.style.display = "inline-block";
       shootBtn.disabled = false;
       shootBtn.style.pointerEvents = "auto";
-      // Удаляем предыдущий обработчик, если он был назначен
-      shootBtn.onclick = null;
-      // Назначаем одноразовый обработчик клика
-      shootBtn.onclick = () => {
-        // Сразу отключаем кнопку, чтобы предотвратить повторные нажатия
-        shootBtn.disabled = true;
-        shootBtn.style.pointerEvents = "none";
+      
+      // Чтобы гарантированно удалить предыдущие обработчики, заменяем кнопку на её клон
+      const newShootBtn = shootBtn.cloneNode(true);
+      shootBtn.parentNode.replaceChild(newShootBtn, shootBtn);
+      
+      newShootBtn.addEventListener("click", () => {
+        newShootBtn.disabled = true;
+        newShootBtn.style.pointerEvents = "none";
         this.finishStage();
-      };
+      }, { once: true });
+      
       console.log(`[BaseRepeatingQuest] Shoot button enabled for stage ${this.currentStage}.`);
     } else {
       console.error("[BaseRepeatingQuest] Shoot button not found in the DOM.");
@@ -77,12 +78,12 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * finishStage – Завершает один этап квеста.
-   * Снимает снимок (без дополнительных проверок), добавляет запись в дневник и переходит к следующему этапу.
+   * Захватывает снимок, добавляет запись в дневник и переходит к следующему этапу.
    */
   async finishStage() {
     if (this.finished) return;
+    
     const shootBtn = document.getElementById(this.shootButtonId);
-    // Отключаем кнопку сразу после нажатия
     if (shootBtn) {
       shootBtn.disabled = true;
       shootBtn.style.pointerEvents = "none";
@@ -97,40 +98,34 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.currentStage++;
     
     if (this.currentStage <= this.totalStages) {
-      // Остались этапы – активируем кнопку для следующего этапа
+      // Если остались этапы – активируем кнопку для следующего этапа
       this.startCheckLoop();
     } else {
-      // Все стадии пройдены – завершаем квест (и, например, запускаем финальный квест)
+      // Если все стадии пройдены – завершаем квест
       await this.finish();
     }
   }
 
   /**
    * finish – Завершает повторяющийся квест.
-   * Скрывает UI, логирует завершение и активирует событие post_repeating_event.
+   * Скрывает UI, логирует завершение и запускает событие post_repeating_event.
    */
-async finish() {
-  const statusDiv = document.getElementById(this.statusElementId);
-  if (statusDiv) {
-    statusDiv.style.display = "none";
+  async finish() {
+    const statusDiv = document.getElementById(this.statusElementId);
+    if (statusDiv) {
+      statusDiv.style.display = "none";
+    }
+    const shootBtn = document.getElementById(this.shootButtonId);
+    if (shootBtn) {
+      shootBtn.disabled = true;
+      shootBtn.style.pointerEvents = "none";
+    }
+    this.finished = true;
+    console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
+    await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
+    // Запускаем событие повторяющегося квеста (post_repeating_event)
+    this.app.gameEventManager.activateEvent("post_repeating_event");
   }
-  const shootBtn = document.getElementById(this.shootButtonId);
-  if (shootBtn) {
-    shootBtn.disabled = true;
-    shootBtn.style.pointerEvents = "none";
-  }
-  this.finished = true;
-  console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
-  await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
-  
-  // Обеспечиваем, что после завершения квеста кнопка "Запостить" станет активной,
-  // сбрасываем флаг, который контролирует её состояние.
-  localStorage.setItem("mirrorQuestReady", "true");
-  this.app.questManager.updatePostButtonState();
-  
-  // Запускаем финальное событие
-  this.app.gameEventManager.activateEvent("final_event");
-}
 
   /**
    * captureSimplePhoto – Захватывает снимок с активной камеры и возвращает data URL изображения.

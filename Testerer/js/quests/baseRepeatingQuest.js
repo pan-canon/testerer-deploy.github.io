@@ -120,20 +120,32 @@ async finish() {
   if (this.finished) return;
   
   this.finished = true;
-  this.stopCheckLoop();
+  this.stopCheckLoop();  // Останавливаем проверочный цикл
+  
   console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
   
-  // Логирование финального поста в дневнике
+  // Логируем финальный пост в дневнике
   await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
   
-  // Триггер финального события повторяющегося квеста
+  // Триггерим финальное событие повторяющегося квеста
   await this.app.gameEventManager.activateEvent("post_repeating_event");
   
-  // Сбросим флаг готовности, чтобы не запускался новый цикл
+  // Сбрасываем флаг готовности, чтобы не запускался новый цикл
   localStorage.removeItem("mirrorQuestReady");
   
-  // Обновляем состояние кнопки «Запостить»
+  // Обновляем UI (например, делаем кнопку «Запостить» неактивной)
   this.app.questManager.updatePostButtonState();
+}
+
+stopCheckLoop() {
+  if (this.checkInterval) {
+    clearInterval(this.checkInterval);
+    this.checkInterval = null;
+  }
+  const statusDiv = document.getElementById(this.statusElementId);
+  if (statusDiv) {
+    statusDiv.style.display = "none";
+  }
 }
 
   /**

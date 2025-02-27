@@ -11,6 +11,7 @@ import { GameEventManager } from './gameEventManager.js';
 import { QuestManager } from './questManager.js';
 import { ShowProfileModal } from './showProfileModal.js';
 import { ViewManager } from './viewManager.js'; // New module for UI rendering
+import { SQLiteDataManager } from './SQLiteDataManager.js'; // New DataManager using IndexedDB
 
 /**
  * Main application class.
@@ -28,6 +29,9 @@ export class App {
     // Initialize the ViewManager and bind its screen switching method globally.
     this.viewManager = new ViewManager();
     window.switchScreen = this.viewManager.switchScreen.bind(this.viewManager);
+
+    // Create an instance of SQLiteDataManager for IndexedDB persistence.
+    this.sqliteDataManager = new SQLiteDataManager();
 
     // Flag indicating whether the camera mode is active.
     this.isCameraOpen = false;
@@ -66,7 +70,8 @@ export class App {
     // Initialize managers: language, camera, profile, database
     this.languageManager      = new LanguageManager('language-selector');
     this.cameraSectionManager = new cameraSectionManager();
-    this.profileManager       = new ProfileManager();
+    // Pass the SQLiteDataManager instance to ProfileManager
+    this.profileManager       = new ProfileManager(this.sqliteDataManager);
     this.databaseManager      = new DatabaseManager();
 
     // Initialize GhostManager and EventManager (interdependent)
@@ -135,7 +140,6 @@ export class App {
       this.showMainScreen();
 
       // If registration is completed, trigger the WelcomeEvent after 5 seconds.
-      // This is the only automatic event trigger; subsequent events must be triggered explicitly.
       if (localStorage.getItem("registrationCompleted") === "true") {
         setTimeout(() => {
           console.log("Triggering WelcomeEvent explicitly...");
@@ -291,16 +295,13 @@ export class App {
       if (!ctx) {
         throw new Error("Failed to get 2D drawing context.");
       }
-      // Draw the current video frame onto the canvas.
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Convert the image to grayscale.
       const grayscaleData = ImageUtils.convertToGrayscale(canvas);
       const thumbnail = document.getElementById('selfie-thumbnail');
       thumbnail.src = grayscaleData;
       thumbnail.style.display = 'block';
 
-      // Enable the "Complete" button.
       this.completeBtn.disabled = false;
       this.selfieData = grayscaleData;
       console.log("✅ Selfie captured successfully!");
@@ -339,14 +340,11 @@ export class App {
     this.profileManager.saveProfile(profile);
     localStorage.setItem("registrationCompleted", "true");
 
-    // Stop the camera and hide the global camera container.
     this.cameraSectionManager.stopCamera();
     document.getElementById('global-camera').style.display = 'none';
 
-    // Switch to the main screen.
     this.showMainScreen();
 
-    // Explicitly trigger the WelcomeEvent after 5 seconds.
     setTimeout(() => {
       console.log("Explicitly triggering WelcomeEvent...");
       this.gameEventManager.activateEvent("welcome");
@@ -365,13 +363,12 @@ export class App {
    * NOTE: Mirror quest specific logic is delegated to the corresponding modules.
    */
   async toggleCameraView() {
-    // Get necessary DOM elements.
     const diary           = document.getElementById("diary");
     const globalCamera    = document.getElementById("global-camera");
     const toggleCameraBtn = document.getElementById("toggle-camera");
     const toggleDiaryBtn  = document.getElementById("toggle-diary");
-    const shootBtn        = document.getElementById("btn_shoot");  // "Shoot" button
-    const postBtn         = this.postBtn;                          // "Post" button
+    const shootBtn        = document.getElementById("btn_shoot");
+    const postBtn         = this.postBtn;
     const buttonsToHide   = [
       document.getElementById("reset-data"),
       document.getElementById("export-profile-btn"),
@@ -379,31 +376,26 @@ export class App {
     ];
 
     if (!this.isCameraOpen) {
-      // === Switching to camera mode ===
       console.log("📸 Switching to camera view...");
-      diary.style.display = "none";                   // Hide diary
-      globalCamera.style.display = "flex";            // Show camera
+      diary.style.display = "none";
+      globalCamera.style.display = "flex";
 
-      // Hide blog-related buttons.
       if (toggleCameraBtn) toggleCameraBtn.style.display = "none";
       if (toggleDiaryBtn)  toggleDiaryBtn.style.display = "inline-block";
       buttonsToHide.forEach(btn => { if (btn) btn.style.display = "none"; });
-      if (postBtn) postBtn.style.display = "none";     // Hide "Post" in camera mode
+      if (postBtn) postBtn.style.display = "none";
 
-      // Show "Shoot" button and disable it until conditions are met.
       if (shootBtn) {
         shootBtn.style.display = "inline-block";
         shootBtn.disabled = true;
       }
 
-      // Attach the camera to the global container and start the video stream.
       this.cameraSectionManager.attachTo('global-camera', {
         width: "100%",
         height: "100%"
       });
       await this.cameraSectionManager.startCamera();
 
-      // Wait until the video stream is ready (readyState >= 2).
       await new Promise(resolve => {
         const vid = this.cameraSectionManager.videoElement;
         if (vid.readyState >= 2) {
@@ -417,27 +409,22 @@ export class App {
         this.cameraSectionManager.videoElement.videoHeight
       );
 
-      // Mirror quest check loop is handled within respective modules.
       this.isCameraOpen = true;
     } else {
-      // === Switching back to diary view ===
       console.log("📓 Returning to diary view...");
-      diary.style.display = "block";                  // Show diary
-      globalCamera.style.display = "none";              // Hide camera
+      diary.style.display = "block";
+      globalCamera.style.display = "none";
 
-      // Show diary buttons: "toggle-camera" and "Post".
       if (toggleCameraBtn) toggleCameraBtn.style.display = "inline-block";
       if (toggleDiaryBtn)  toggleDiaryBtn.style.display = "none";
       buttonsToHide.forEach(btn => { if (btn) btn.style.display = "block"; });
-      if (postBtn) postBtn.style.display = "inline-block";  // "Post" visible only in diary view
+      if (postBtn) postBtn.style.display = "inline-block";
 
-      // Hide "Shoot" button and reset its state.
       if (shootBtn) {
         shootBtn.style.display = "none";
         shootBtn.disabled = true;
       }
 
-      // Stop the camera and update the flag.
       this.cameraSectionManager.stopCamera();
       this.isCameraOpen = false;
     }
@@ -458,12 +445,10 @@ export class App {
     if (toggleCameraBtn) toggleCameraBtn.style.display = "inline-block";
     if (toggleDiaryBtn)  toggleDiaryBtn.style.display = "none";
 
-    // On the diary screen, only the "Post" button should be visible.
     const postBtn = this.postBtn;
     if (postBtn) {
       postBtn.style.display = "inline-block";
     }
-    // Ensure that the "Shoot" button is hidden.
     const shootBtn = document.getElementById("btn_shoot");
     if (shootBtn) {
       shootBtn.style.display = "none";
@@ -474,7 +459,6 @@ export class App {
       this.profileNameElem.textContent = profile.name;
       this.profilePhotoElem.src = profile.selfie;
       this.profilePhotoElem.style.display = 'block';
-      // Save the selfie for use in mirror quest.
       this.selfieData = profile.selfie;
     }
   }

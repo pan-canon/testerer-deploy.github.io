@@ -344,7 +344,7 @@ export class App {
     this.cameraSectionManager.stopCamera();
     document.getElementById('global-camera').style.display = 'none';
 
-    this.showMainScreen();
+    await this.showMainScreen();
 
     setTimeout(() => {
       console.log("Explicitly triggering WelcomeEvent...");

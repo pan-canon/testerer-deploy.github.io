@@ -7,7 +7,7 @@ export class GhostManager {
    *
    * This class manages ghosts by maintaining a list of ghosts,
    * switching the active ghost, tracking the progress of phenomena (quest steps),
-   * and (in the future) saving/loading ghost state.
+   * and, in the future, saving/loading ghost state.
    *
    * CURRENT CHANGE: The ghost list is reset to contain only the default ghost.
    */
@@ -27,7 +27,7 @@ export class GhostManager {
     this.currentPhenomenonIndex = 0;
 
     // Do not load saved ghost state to ensure a reset.
-    // this.loadState(); // Disabled to reset ghost list for future mod support.
+    // this.loadState(); // Disabled for default ghost configuration.
 
     const currentGhost = this.getCurrentGhost();
     console.log(`Current active ghost: ${currentGhost ? currentGhost.name : 'not found'}`);
@@ -39,7 +39,6 @@ export class GhostManager {
    */
   setupGhosts() {
     // Create a default ghost with ID 1.
-    // The phenomenaCount can be set to a fixed default value (e.g., 3) or computed as needed.
     const defaultGhost = {
       id: 1,
       name: "призрак 1", // Default ghost name.
@@ -58,31 +57,30 @@ export class GhostManager {
   }
 
   /**
-   * setCurrentGhost – Sets the active ghost by the given ID.
-   * Future implementation may support state persistence via a dedicated DataManager.
+   * setCurrentGhost – Sets the active ghost by the given ID and saves state in the database.
    * @param {number} ghostId - The ID of the ghost to activate.
    */
-  setCurrentGhost(ghostId) {
+  async setCurrentGhost(ghostId) {
     this.currentGhostId = ghostId;
     const ghost = this.getCurrentGhost();
     if (ghost) {
       console.log(`Ghost ${ghost.name} activated.`);
+      // Save ghost state using the new DatabaseManager method.
+      await this.app.databaseManager.saveGhostState(ghost);
     } else {
       console.warn(`Ghost with ID=${ghostId} not found!`);
     }
-    this.saveState();
   }
 
   /**
-   * finishCurrentGhost – Marks the current ghost as finished.
-   * Future implementations may include additional cleanup.
+   * finishCurrentGhost – Marks the current ghost as finished and saves state.
    */
-  finishCurrentGhost() {
+  async finishCurrentGhost() {
     const ghost = this.getCurrentGhost();
     if (ghost) {
       ghost.isFinished = true;
       console.log(`Ghost ${ghost.name} finished.`);
-      this.saveState();
+      await this.app.databaseManager.saveGhostState(ghost);
     }
   }
 
@@ -105,22 +103,17 @@ export class GhostManager {
     const ghost = this.getCurrentGhost();
     if (!ghost) return;
 
-    // Check if the ghost is already finished.
     if (ghost.isFinished) {
       console.warn(`Ghost "${ghost.name}" is already finished; phenomena unavailable.`);
       return;
     }
 
-    // If the current phenomenon index is less than the total phenomena count.
     if (this.currentPhenomenonIndex < ghost.phenomenaCount) {
-      // Form the entry text for the current phenomenon.
       const phenomenonNumber = this.currentPhenomenonIndex + 1;
       const phenomenonEntry = `${ghost.name}: Phenomenon ${phenomenonNumber} - Approach the mirror`;
       await this.eventManager.addDiaryEntry(phenomenonEntry);
-
       console.log(`Triggered phenomenon for ${ghost.name}: ${phenomenonEntry}`);
 
-      // Increment the phenomenon index.
       this.currentPhenomenonIndex++;
 
       // Save ghost progress via ProfileManager.
@@ -129,7 +122,6 @@ export class GhostManager {
         phenomenonIndex: this.currentPhenomenonIndex
       });
 
-      // If the end of phenomena is reached, publish the "final post" and trigger the final event.
       if (this.currentPhenomenonIndex === ghost.phenomenaCount) {
         const finalEntry = `${ghost.name}: Final phenomenon – ghost finished!`;
         await this.eventManager.addDiaryEntry(finalEntry);
@@ -146,37 +138,19 @@ export class GhostManager {
   /**
    * resetGhostChain – Resets the ghost chain.
    * Sets the active ghost to the default and resets the phenomenon index.
-   * Also resets the saved ghost progress via ProfileManager.
+   * Also resets the saved ghost progress via ProfileManager and updates the database.
    */
-  resetGhostChain() {
+  async resetGhostChain() {
     this.currentGhostId = 1;
     this.currentPhenomenonIndex = 0;
     this.profileManager.resetGhostProgress();
     console.log("Ghost chain has been reset.");
+    const ghost = this.getCurrentGhost();
+    if (ghost) {
+      ghost.isFinished = false;
+      await this.app.databaseManager.saveGhostState(ghost);
+    }
   }
-
-  /**
-   * saveState – Saves the current state of ghosts.
-   * CURRENT CHANGE: State persistence is disabled to ensure a reset for the default ghost.
-   */
-  saveState() {
-    // For now, we disable saving ghost state to localStorage.
-    // In future, state persistence can be handled by a dedicated DataManager.
-    // localStorage.setItem('ghostState', JSON.stringify(this.ghosts));
-    console.log("Ghost state reset; state not persisted.");
-  }
-
-  /**
-   * loadState – Loads the saved ghost state.
-   * CURRENT CHANGE: This method is disabled to force a reset of the ghost list.
-   */
-  loadState() {
-    // Disabled: do not load ghost state from localStorage to ensure default ghost only.
-    // const savedState = localStorage.getItem('ghostState');
-    // if (savedState) {
-    //   this.ghosts = JSON.parse(savedState);
-    //   console.log("Ghost state loaded:", this.ghosts);
-    // }
-    console.log("Ghost state load skipped; using default ghost configuration.");
-  }
+  
+  // Methods saveState() and loadState() are now obsolete since state persistence is handled by DatabaseManager.
 }

@@ -83,6 +83,11 @@ export class BaseMirrorQuest extends BaseEvent {
   }
 
   async compareFrameInternally() {
+    // Добавленная проверка: выполнять сравнение только если камера активна.
+    if (!this.app.isCameraOpen) {
+      console.warn("[BaseMirrorQuest] Camera is not active (app.isCameraOpen false)");
+      return false;
+    }
     if (!this.app.selfieData) {
       console.warn("[BaseMirrorQuest] ❌ No saved selfie (app.selfieData)");
       return false;

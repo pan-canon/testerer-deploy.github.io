@@ -1,10 +1,10 @@
 export class ProfileManager {
   /**
    * Constructor for ProfileManager.
-   * @param {SQLiteDataManager} dataManager - An instance of the new DataManager responsible for profile persistence.
+   * @param {SQLiteDataManager} dataManager - An instance of the DataManager responsible for profile persistence.
    */
   constructor(dataManager) {
-    // Save reference to the data manager for profile and related data persistence.
+    // Save a reference to the DataManager for profile and related data persistence.
     this.dataManager = dataManager;
   }
 
@@ -27,7 +27,11 @@ export class ProfileManager {
 
   /**
    * saveProfile – Asynchronously saves the given profile object via the DataManager.
-   * @param {Object} profile - The profile object.
+   * 
+   * IMPORTANT: Registration data (name, gender, language, selfie, etc.) should be 
+   * integrated into the profile object. Do not store them separately (e.g. under 'regData').
+   *
+   * @param {Object} profile - The profile object (should include registration fields).
    * @returns {Promise<void>}
    */
   async saveProfile(profile) {
@@ -40,8 +44,7 @@ export class ProfileManager {
    * After reset, the page is reloaded.
    */
   resetProfile() {
-    // Reset profile and related data via DataManager.
-    // (Assuming dataManager.resetProfile() is synchronous or handles its own async logic)
+    // Call the asynchronous resetProfile method on the DataManager.
     this.dataManager.resetProfile();
     // Reload the page to reflect changes.
     window.location.reload();
@@ -54,7 +57,7 @@ export class ProfileManager {
    * @param {Object} apartmentPlanManager - The apartment plan manager.
    */
   exportProfileData(databaseManager, apartmentPlanManager) {
-    // Retrieve the profile asynchronously. For export, we assume the profile is already loaded.
+    // Retrieve the profile asynchronously.
     this.getProfile().then(profile => {
       if (!profile) {
         alert("No profile found to export.");

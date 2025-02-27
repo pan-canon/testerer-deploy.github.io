@@ -89,12 +89,10 @@ export class SQLiteDataManager {
 
   /**
    * saveProfile – Saves the profile data to IndexedDB.
-   * This method is an example and can be expanded as needed.
    * @param {Object} profile - The profile object to be saved.
    * @returns {Promise<void>}
    */
   async saveProfile(profile) {
-    // Here you can define a separate key or use a dedicated object store for profiles.
     const profileKey = 'profile';
     const db = await this.openDB();
     return new Promise((resolve, reject) => {
@@ -146,6 +144,35 @@ export class SQLiteDataManager {
     });
   }
 
-  // Similarly, additional methods such as saveGhostProgress, getGhostProgress,
-  // saveLocationType, and getLocationType can be implemented following this pattern.
+  /**
+   * resetProfile – Deletes the profile data from IndexedDB.
+   * @returns {Promise<void>} Resolves when the profile is successfully reset.
+   */
+  async resetProfile() {
+    const profileKey = 'profile';
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readwrite");
+      transaction.oncomplete = () => {
+        console.log("Profile reset successfully in IndexedDB.");
+        resolve();
+      };
+      transaction.onerror = event => {
+        console.error("Transaction error during resetProfile:", event.target.error);
+        reject(event.target.error);
+      };
+      const store = transaction.objectStore(this.storeName);
+      const deleteRequest = store.delete(profileKey);
+      deleteRequest.onerror = event => {
+        console.error("Error deleting profile:", event.target.error);
+        reject(event.target.error);
+      };
+    });
+  }
+
+  // Дополнительно можно добавить методы:
+  // async saveGhostProgress(progress) { ... }
+  // async getGhostProgress() { ... }
+  // async saveLocationType(locationType) { ... }
+  // async getLocationType() { ... }
 }

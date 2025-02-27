@@ -53,7 +53,11 @@ export class FinalQuest extends BaseEvent {
     if (this.finished) return;
     const success = await this.checkStatus();
     if (!success) {
-      alert("❌ Final quest conditions not met!");
+      if (this.app.viewManager && typeof this.app.viewManager.showNotification === 'function') {
+        this.app.viewManager.showNotification("❌ Final quest conditions not met!");
+      } else {
+        console.warn("❌ Final quest conditions not met!");
+      }
       return;
     }
 
@@ -68,7 +72,10 @@ export class FinalQuest extends BaseEvent {
       this.app.ghostManager.finishCurrentGhost();
     }
 
-    alert("🎉 Final quest completed! Scenario ended!");
-    // No further events are triggered automatically.
+    if (this.app.viewManager && typeof this.app.viewManager.showNotification === 'function') {
+      this.app.viewManager.showNotification("🎉 Final quest completed! Scenario ended!");
+    } else {
+      console.log("🎉 Final quest completed! Scenario ended!");
+    }
   }
 }

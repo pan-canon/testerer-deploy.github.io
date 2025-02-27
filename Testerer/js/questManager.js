@@ -4,6 +4,10 @@ import { FinalQuest } from './quests/finalQuest.js';
 
 /**
  * QuestManager – A class for managing quests (mirror, repeating, final) in the application.
+ * 
+ * CURRENT CHANGE:
+ * - Removed direct UI operations (e.g., updatePostButtonState, updateCameraButtonState).
+ * - Delegates UI updates to the ViewManager via methods such as setPostButtonEnabled() and setCameraButtonHighlight().
  */
 export class QuestManager {
   /**
@@ -16,7 +20,7 @@ export class QuestManager {
     this.app = appInstance;
     this.profileManager = profileManager;
 
-    // Initialize three quests.
+    // Initialize quests: mirror, repeating, and final.
     this.quests = [
       // Mirror quest.
       new BaseMirrorQuest(this.eventManager, this.app, {
@@ -50,12 +54,12 @@ export class QuestManager {
 
     cameraManager.onVideoReady = () => {
       console.log("[QuestManager] onVideoReady signal received.");
-      // External code can choose to act on this signal explicitly.
+      // External code can act on this signal explicitly via ViewManager if needed.
     };
 
     cameraManager.onCameraClosed = () => {
       console.log("[QuestManager] onCameraClosed signal received.");
-      // External code can choose to act on this signal explicitly.
+      // External code can act on this signal explicitly via ViewManager if needed.
     };
   }
 
@@ -71,8 +75,7 @@ export class QuestManager {
       return;
     }
     await quest.activate();
-    // Do not automatically call startCheckLoop here.
-    // If a quest requires a check loop, it must be triggered explicitly.
+    // Note: For quests requiring a check loop, it must be triggered explicitly.
   }
 
   /**
@@ -98,66 +101,53 @@ export class QuestManager {
 
   /**
    * handlePostButtonClick – Called when the "Post" button is clicked.
-   * If mirrorQuestReady is true, explicitly triggers the mirror quest.
+   * Determines quest readiness and triggers the appropriate quest.
+   * UI updates are delegated to the ViewManager.
    */
-async handlePostButtonClick() {
-  // Предполагаем, что repeating quest хранится в this.repeatingQuest
-  // (или можно получить его из app.questManager, если их несколько)
-  const repeatingQuest = this.repeatingQuest; // или this.app.repeatingQuest, если так хранится
+  async handlePostButtonClick() {
+    // Assuming repeating quest is stored in this.repeatingQuest.
+    const repeatingQuest = this.repeatingQuest;
 
-  // Если repeating quest существует и уже завершён, то не запускаем новый цикл
-  if (repeatingQuest && repeatingQuest.finished) {
-    alert("Повторяющийся квест завершён. Финальное событие уже активировано.");
-    return;
-  }
-  
-  // Проверяем флаг готовности квеста (если он установлен глобально)
-  const isReady = localStorage.getItem("mirrorQuestReady") === "true";
-  if (!isReady) {
-    alert("Повторяющийся квест завершён.");
-    return;
-  }
-  
-  // Снимаем флаг, чтобы предотвратить повторное срабатывание
-  localStorage.removeItem("mirrorQuestReady");
-  this.updatePostButtonState();
-  
-  // Если установлен флаг повторного цикла, запускаем repeating quest, иначе — зеркальный квест
-  const isRepeating = localStorage.getItem("isRepeatingCycle") === "true";
-  if (isRepeating) {
-    console.log("[QuestManager] Triggering repeating quest from handlePostButtonClick.");
-    await this.activateQuest("repeating_quest");
-  } else {
-    console.log("[QuestManager] Triggering mirror quest from handlePostButtonClick.");
-    await this.activateQuest("mirror_quest");
-  }
-}
-
-  /**
-   * updatePostButtonState – Enables or disables the "Post" button based on mirrorQuestReady.
-   */
-  updatePostButtonState() {
+    // If repeating quest exists and is finished, do not start a new cycle.
+    if (repeatingQuest && repeatingQuest.finished) {
+      alert("Repeating quest is finished. The final event has already been activated.");
+      return;
+    }
+    
+    // Check the readiness flag for the quest (using business logic).
     const isReady = localStorage.getItem("mirrorQuestReady") === "true";
-    const postBtn = this.app.postBtn;
-    if (postBtn) {
-      postBtn.disabled = !isReady;
+    if (!isReady) {
+      alert("Repeating quest is finished.");
+      return;
     }
-    console.log("[QuestManager] updatePostButtonState =>", isReady);
-  }
-
-  /**
-   * updateCameraButtonState – Highlights the camera button if mirrorQuestActive is true.
-   */
-  updateCameraButtonState() {
-    const cameraBtn = document.getElementById("toggle-camera");
-    if (!cameraBtn) return;
-    if (localStorage.getItem("mirrorQuestActive") === "true") {
-      cameraBtn.classList.add("glowing");
+    
+    // Remove the readiness flag to prevent repeated triggering.
+    localStorage.removeItem("mirrorQuestReady");
+    // Delegate UI update: disable the "Post" button via ViewManager.
+    this.app.viewManager.setPostButtonEnabled(false);
+    
+    // Check if repeating mode is active.
+    const isRepeating = localStorage.getItem("isRepeatingCycle") === "true";
+    if (isRepeating) {
+      console.log("[QuestManager] Triggering repeating quest from handlePostButtonClick.");
+      await this.activateQuest("repeating_quest");
     } else {
-      cameraBtn.classList.remove("glowing");
+      console.log("[QuestManager] Triggering mirror quest from handlePostButtonClick.");
+      await this.activateQuest("mirror_quest");
     }
   }
-
+  
+  /*
+   * The methods updatePostButtonState and updateCameraButtonState have been removed.
+   * All UI updates should now be handled by the ViewManager.
+   *
+   * For example, instead of directly manipulating the "Post" button, call:
+   *    this.app.viewManager.setPostButtonEnabled(isReady);
+   *
+   * Similarly, for the camera button highlight, call:
+   *    this.app.viewManager.setCameraButtonHighlight(isActive);
+   */
+  
   /**
    * triggerMirrorQuestIfActive – If mirrorQuestActive is true, explicitly check the mirror quest.
    */

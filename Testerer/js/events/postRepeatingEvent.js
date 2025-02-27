@@ -14,7 +14,7 @@ export class PostRepeatingEvent extends BaseEvent {
     }
     console.log(`[PostRepeatingEvent] Activating event '${this.key}'.`);
     
-    // Log the event in the diary as a ghost message
+    // Log the event in the diary as a ghost message.
     await this.eventManager.addDiaryEntry(this.key, true);
 
     const ghost = this.app.ghostManager.getCurrentGhost();
@@ -25,7 +25,9 @@ export class PostRepeatingEvent extends BaseEvent {
       // If the ghost is not finished, re-enable the "Post" button for the next repeating quest cycle.
       localStorage.setItem("mirrorQuestReady", "true");
       // The flag "isRepeatingCycle" remains true for repeating cycles.
-      this.app.questManager.updatePostButtonState();
+      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
+        this.app.viewManager.setPostButtonEnabled(true);
+      }
       this.app.visualEffectsManager.triggerMirrorEffect();
       console.log("[PostRepeatingEvent] Repeating quest cycle ended; waiting for user action.");
     }

@@ -7,9 +7,9 @@ import { BaseEvent } from './baseEvent.js';
  *
  * Upon activation:
  *  1) Checks if the "welcome" event has already been logged.
- *  2) If not, logs the "welcome" entry in the diary as a ghost post.
+ *  2) Logs the "welcome" entry in the diary as a ghost post.
  *  3) Sets the 'mirrorQuestReady' flag in localStorage to enable the "Post" button.
- *  4) Calls updatePostButtonState() in QuestManager to update the UI.
+ *  4) Delegates UI update for the "Post" button to the ViewManager.
  *  5) Triggers the mirror visual effect.
  */
 export class WelcomeEvent extends BaseEvent {
@@ -22,6 +22,7 @@ export class WelcomeEvent extends BaseEvent {
     super(eventManager);
     this.app = appInstance;
     this.languageManager = languageManager;
+    
     // Set the unique key for the welcome event.
     this.key = "welcome";
   }
@@ -33,7 +34,7 @@ export class WelcomeEvent extends BaseEvent {
    *  1) If the "welcome" event is already logged, exit.
    *  2) Otherwise, log the "welcome" entry in the diary as a ghost post.
    *  3) Set the 'mirrorQuestReady' flag in localStorage.
-   *  4) Call updatePostButtonState() in QuestManager to update the "Post" button.
+   *  4) Delegate the "Post" button update to the ViewManager.
    *  5) Trigger the mirror visual effect.
    *
    * @returns {Promise<void>}
@@ -53,8 +54,10 @@ export class WelcomeEvent extends BaseEvent {
     // Step 3: Set the mirrorQuestReady flag in localStorage.
     localStorage.setItem("mirrorQuestReady", "true");
 
-    // Step 4: Update the "Post" button state via QuestManager.
-    this.app.questManager.updatePostButtonState();
+    // Step 4: Delegate UI update to enable the "Post" button via ViewManager.
+    if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
+      this.app.viewManager.setPostButtonEnabled(true);
+    }
 
     // Step 5: Trigger the mirror visual effect.
     this.app.visualEffectsManager.triggerMirrorEffect();

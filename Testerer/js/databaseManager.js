@@ -1,6 +1,8 @@
+import { SQLiteDataManager } from './SQLiteDataManager.js';
+
 export class DatabaseManager {
   constructor() {
-    // The database object (SQL.Database) will be stored here.
+    // The SQL.js database instance will be stored here.
     this.db = null;
     // A Promise that resolves after the database has been initialized.
     this.initDatabasePromise = this.initDatabase();
@@ -8,63 +10,57 @@ export class DatabaseManager {
 
   /**
    * initDatabase – Asynchronously initializes the database.
-   * If the database is stored in localStorage, it loads it; otherwise, it creates a new one with the required tables.
+   * Creates a new database and sets up the required tables.
+   * 
+   * NOTE: Persistence via localStorage has been removed.
+   * TODO: Delegate database persistence to the new SQLiteDataManager (via AJAX).
    */
   async initDatabase() {
     // Load SQL.js, providing a locateFile function to find necessary files.
     const SQL = await initSqlJs({
       locateFile: file => `js/${file}`
     });
-    // Check if the database is stored in localStorage under the key "diaryDB"
-    const savedDb = localStorage.getItem("diaryDB");
-    if (savedDb) {
-      // If the database is found, decode the base64 string into a Uint8Array
-      const byteStr = atob(savedDb);
-      const bytes = new Uint8Array(byteStr.length);
-      for (let i = 0; i < byteStr.length; i++) {
-        bytes[i] = byteStr.charCodeAt(i);
-      }
-      // Create the database from the loaded bytes
-      this.db = new SQL.Database(bytes);
-    } else {
-      // If no database is found, create a new database
-      this.db = new SQL.Database();
-      // Create the necessary tables: diary, apartment_plan, and quest_progress
-      this.db.run(`
-        CREATE TABLE IF NOT EXISTS diary (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          entry TEXT,
-          timestamp TEXT
-        );
-        CREATE TABLE IF NOT EXISTS apartment_plan (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          floor_number INTEGER,
-          room_data TEXT
-        );
-        CREATE TABLE IF NOT EXISTS quest_progress (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          quest_key TEXT,
-          status TEXT
-        );
-      `);
-    }
+    
+    // Create a new database instance.
+    this.db = new SQL.Database();
+    // Create the necessary tables: diary, apartment_plan, and quest_progress.
+    this.db.run(`
+      CREATE TABLE IF NOT EXISTS diary (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entry TEXT,
+        timestamp TEXT
+      );
+      CREATE TABLE IF NOT EXISTS apartment_plan (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        floor_number INTEGER,
+        room_data TEXT
+      );
+      CREATE TABLE IF NOT EXISTS quest_progress (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        quest_key TEXT,
+        status TEXT
+      );
+    `);
     console.log("📖 Database initialized!");
   }
 
   /**
-   * saveDatabase – Exports the database and saves it to localStorage.
+   * saveDatabase – Exports the database.
+   * 
+   * NOTE: Persistence via localStorage has been removed.
+   * TODO: Implement AJAX-based persistence via SQLiteDataManager.
    */
   saveDatabase() {
     if (!this.db) return;
-    // Export the database to a binary array
+    // Export the database to a binary array.
     const binaryData = this.db.export();
     let binaryStr = "";
     for (let i = 0; i < binaryData.length; i++) {
       binaryStr += String.fromCharCode(binaryData[i]);
     }
-    // Encode the binary string in base64 and save it in localStorage
     const base64 = btoa(binaryStr);
-    localStorage.setItem("diaryDB", base64);
+    // TODO: Save the base64 string to the server using AJAX (SQLiteDataManager).
+    console.log("Database export complete (base64 data generated).");
   }
 
   /**
@@ -76,12 +72,12 @@ export class DatabaseManager {
       console.error("⚠️ Database not initialized!");
       return;
     }
-    // Get the current date and time in ISO format
+    // Get the current date and time in ISO format.
     const timestamp = new Date().toISOString();
-    // Insert a new entry into the diary table
+    // Insert a new entry into the diary table.
     this.db.run("INSERT INTO diary (entry, timestamp) VALUES (?, ?)", [entry, timestamp]);
     console.log("✅ Entry added:", entry);
-    // Save the database after inserting the entry
+    // Save the database after inserting the entry.
     this.saveDatabase();
   }
 
@@ -94,16 +90,16 @@ export class DatabaseManager {
       console.error("⚠️ Database not initialized!");
       return [];
     }
-    // Execute a query to select all entries
+    // Execute a query to select all entries.
     const result = this.db.exec("SELECT * FROM diary ORDER BY timestamp DESC");
     if (result.length > 0) {
       return result[0].values.map(row => {
         let parsed;
         try {
-          // Attempt to parse the entry field as JSON
+          // Attempt to parse the entry field as JSON.
           parsed = JSON.parse(row[1]);
         } catch (e) {
-          // If parsing fails, use a default value
+          // If parsing fails, use a default value.
           parsed = { entry: row[1], postClass: "user-post" };
         }
         return { id: row[0], ...parsed, timestamp: row[2] };
@@ -154,11 +150,11 @@ export class DatabaseManager {
       console.error("⚠️ Database not initialized!");
       return;
     }
-    // Convert the array of rooms to a JSON string
+    // Convert the array of rooms to a JSON string.
     const roomData = JSON.stringify(rooms);
-    // Delete old data for this floor (if any)
+    // Delete old data for this floor (if any).
     this.db.run("DELETE FROM apartment_plan WHERE floor_number = ?", [floor]);
-    // Insert the new data
+    // Insert the new data.
     this.db.run("INSERT INTO apartment_plan (floor_number, room_data) VALUES (?, ?)", [floor, roomData]);
     console.log(`✅ Apartment plan for floor ${floor} saved.`);
     this.saveDatabase();
@@ -175,10 +171,10 @@ export class DatabaseManager {
       callback([]);
       return;
     }
-    // Execute a query to get the apartment plan data for the specified floor
+    // Execute a query to get the apartment plan data for the specified floor.
     const result = this.db.exec("SELECT room_data FROM apartment_plan WHERE floor_number = ? ORDER BY id", [floor]);
     if (result.length > 0) {
-      // Attempt to parse each room_data entry from JSON
+      // Attempt to parse each room_data entry from JSON.
       const rooms = result[0].values.map(row => {
         try {
           return JSON.parse(row[0]);

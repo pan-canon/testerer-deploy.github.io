@@ -4,8 +4,7 @@ import { ImageUtils } from '../utils/imageUtils.js';
 /**
  * BaseMirrorQuest – Base class for the mirror quest.
  * Encapsulates the logic for comparing the current frame (canvas → grayscale → compare),
- * managing the check loop (startCheckLoop/stopCheckLoop), and updating the UI 
- * (status display, "Shoot" button) related to the mirror quest.
+ * managing the check loop, and delegating UI updates to the ViewManager.
  */
 export class BaseMirrorQuest extends BaseEvent {
   constructor(eventManager, appInstance, config = {}) {
@@ -14,7 +13,7 @@ export class BaseMirrorQuest extends BaseEvent {
     this.key = config.key || "mirror_quest"; // Allows overriding the key.
     this.doneKey = config.doneKey || "mirror_done";
 
-    // UI element IDs
+    // Configuration for UI elements (identifiers used by ViewManager)
     this.statusElementId = config.statusElementId || "mirror-quest-status";
     this.shootButtonId = config.shootButtonId || "btn_shoot";
 
@@ -30,10 +29,10 @@ export class BaseMirrorQuest extends BaseEvent {
   }
 
   registerEvents() {
-    // Listen to camera ready event
+    // Listen to the "cameraReady" event.
     document.addEventListener('cameraReady', () => {
       if (localStorage.getItem("mirrorQuestActive") === "true") {
-        this.startCheckLoop(); // Start the check loop if the quest is active
+        this.startCheckLoop(); // Start the check loop if the quest is active.
       }
     });
   }
@@ -48,29 +47,21 @@ export class BaseMirrorQuest extends BaseEvent {
   }
 
   startCheckLoop() {
-    if (this.checkInterval) return; // Already running
-    const statusDiv = document.getElementById(this.statusElementId);
-    if (statusDiv) {
-      statusDiv.style.display = "block";
-      statusDiv.textContent = "No match...";
+    if (this.checkInterval) return; // Already running.
+    // Delegate UI initialization to the ViewManager.
+    if (this.app.viewManager && typeof this.app.viewManager.startMirrorQuestUI === 'function') {
+      this.app.viewManager.startMirrorQuestUI({
+        statusElementId: this.statusElementId,
+        shootButtonId: this.shootButtonId,
+        onShoot: () => this.finish()
+      });
     }
-    const shootBtn = document.getElementById(this.shootButtonId);
-    if (shootBtn) {
-      shootBtn.style.display = "inline-block";
-      shootBtn.disabled = true;
-      // When the shoot button is clicked, finish the quest.
-      shootBtn.addEventListener("click", () => this.finish(), { once: true });
-    }
-
+    // Start the periodic check loop.
     this.checkInterval = setInterval(async () => {
       const success = await this.checkStatus();
-      if (statusDiv) {
-        statusDiv.textContent = success
-          ? "You are in front of the mirror!"
-          : "No match...";
-      }
-      if (shootBtn) {
-        shootBtn.disabled = !success;
+      // Delegate UI update for quest status.
+      if (this.app.viewManager && typeof this.app.viewManager.updateMirrorQuestStatus === 'function') {
+        this.app.viewManager.updateMirrorQuestStatus(success, this.statusElementId, this.shootButtonId);
       }
     }, 2000);
   }
@@ -80,11 +71,10 @@ export class BaseMirrorQuest extends BaseEvent {
       clearInterval(this.checkInterval);
       this.checkInterval = null;
     }
-    const statusDiv = document.getElementById(this.statusElementId);
-    if (statusDiv) {
-      statusDiv.style.display = "none";
+    // Delegate UI cleanup to the ViewManager.
+    if (this.app.viewManager && typeof this.app.viewManager.stopMirrorQuestUI === 'function') {
+      this.app.viewManager.stopMirrorQuestUI(this.statusElementId);
     }
-    // Не изменяем display shootBtn здесь – его состояние обновляется в updateUIAfterFinish()
   }
 
   async checkStatus() {
@@ -118,30 +108,16 @@ export class BaseMirrorQuest extends BaseEvent {
   }
 
   /**
-   * updateUIAfterFinish – Updates the UI after finishing the mirror quest.
-   * Leaves the "Shoot" button visible but disabled.
+   * updateUIAfterFinish – Delegates UI updates after finishing the mirror quest to the ViewManager.
+   * @param {boolean} success - Indicates whether the mirror quest was successful.
    */
   updateUIAfterFinish(success) {
-    const statusDiv = document.getElementById("mirror-quest-status");
-    if (statusDiv) {
-      statusDiv.textContent = success
-        ? "✅ Mirror quest completed!"
-        : "❌ Quest ignored!";
-      setTimeout(() => {
-        statusDiv.style.opacity = "0";
-      }, 2000);
-    }
-    const shootBtn = document.getElementById("btn_shoot");
-    if (shootBtn) {
-      // Force the shoot button to remain visible but disable it.
-      shootBtn.style.display = "inline-block";
-      shootBtn.setAttribute("disabled", "true");
-      shootBtn.style.pointerEvents = "none";
-      console.log("Mirror quest: Shoot button disabled after finishing quest.");
-    }
-    const cameraBtn = document.getElementById("toggle-camera");
-    if (cameraBtn) {
-      cameraBtn.classList.remove("glowing");
+    if (this.app.viewManager && typeof this.app.viewManager.updateMirrorQuestUIAfterFinish === 'function') {
+      this.app.viewManager.updateMirrorQuestUIAfterFinish(success, {
+        statusElementId: this.statusElementId,
+        shootButtonId: this.shootButtonId,
+        cameraButtonId: "toggle-camera" // Assuming this ID is constant.
+      });
     }
   }
 
@@ -162,7 +138,7 @@ export class BaseMirrorQuest extends BaseEvent {
     }
     this.updateUIAfterFinish(success);
     localStorage.removeItem("mirrorQuestActive");
-    this.app.questManager.updatePostButtonState();
+    // Delegate post-button update to ViewManager if necessary.
     if (success) {
       this.app.gameEventManager.activateEvent("post_mirror_event");
     }

@@ -1,72 +1,60 @@
 export class ProfileManager {
   /**
-   * Checks if a profile is saved in localStorage.
-   * @returns {boolean} True if a profile is found, otherwise false.
+   * Constructor for ProfileManager.
+   * @param {SQLiteDataManager} dataManager - An instance of the new DataManager responsible for profile persistence.
    */
-  isProfileSaved() {
-    return !!localStorage.getItem('profile');
+  constructor(dataManager) {
+    // Save reference to the data manager for profile and related data persistence.
+    this.dataManager = dataManager;
   }
 
   /**
-   * Retrieves the profile from localStorage and returns it as an object.
+   * isProfileSaved – Checks if a profile is saved via the DataManager.
+   * @returns {boolean} True if a profile exists, otherwise false.
+   */
+  isProfileSaved() {
+    return !!this.dataManager.getProfile();
+  }
+
+  /**
+   * getProfile – Retrieves the profile from the DataManager.
    * @returns {Object|null} The profile object or null if not found.
    */
   getProfile() {
-    return JSON.parse(localStorage.getItem('profile'));
+    return this.dataManager.getProfile();
   }
 
   /**
-   * Saves the given profile object to localStorage.
+   * saveProfile – Saves the given profile object via the DataManager.
    * @param {Object} profile - The profile object.
    */
   saveProfile(profile) {
-    localStorage.setItem('profile', JSON.stringify(profile));
+    this.dataManager.saveProfile(profile);
   }
 
   /**
-   * Resets the profile and all related data.
-   * Removes registration data, diary database, ghost progress,
-   * location type, quest progress, and animated entries.
+   * resetProfile – Resets the profile and all related data.
+   * This method calls the DataManager to remove profile data,
+   * along with ghost progress, quest progress, and other related keys.
    * After reset, the page is reloaded.
    */
   resetProfile() {
-    // Preserve the language value so it is not lost during reset
-    const language = localStorage.getItem("language");
-
-    // Remove all profile data and related keys:
-    localStorage.removeItem("registrationCompleted");
-    localStorage.removeItem("profile");
-    localStorage.removeItem("regData");
-    localStorage.removeItem("diaryDB");
-    localStorage.removeItem("ghostState");
-    localStorage.removeItem("ghostProgress");
-    localStorage.removeItem("locationType");
-    localStorage.removeItem("questProgress");
-    localStorage.removeItem("mirrorQuestReady");
-    localStorage.removeItem("mirrorQuestActive");
-    localStorage.removeItem("animatedDiaryIds");
-    // New key from repeating quest:
-    localStorage.removeItem("isRepeatingCycle");
-
-    // Restore the saved language (if any)
-    if (language !== null) {
-      localStorage.setItem("language", language);
-    }
-
-    // Reload the page
+    // Reset profile and related data via DataManager.
+    this.dataManager.resetProfile();
+    // Reload the page to reflect changes.
     window.location.reload();
   }
 
   /**
-   * Exports the profile along with the diary, apartment plan, and quest progress.
-   * The data is formatted as JSON and saved to a file named profile.json.
-   * @param {Object} databaseManager - The database manager.
+   * exportProfileData – Exports the profile along with diary entries, apartment plan,
+   * and quest progress to a JSON file.
+   * @param {Object} databaseManager - The database manager for retrieving diary and quest data.
    * @param {Object} apartmentPlanManager - The apartment plan manager.
    */
   exportProfileData(databaseManager, apartmentPlanManager) {
-    // Retrieve the profile from localStorage.
-    const profileStr = localStorage.getItem('profile');
-    if (!profileStr) {
+    // Retrieve the profile via DataManager.
+    const profile = this.getProfile();
+    if (!profile) {
       alert("No profile found to export.");
       return;
     }
@@ -75,8 +63,7 @@ export class ProfileManager {
     // Retrieve apartment plan data if available.
     const apartmentPlanData = apartmentPlanManager ? apartmentPlanManager.rooms : [];
     
-    // Retrieve quest progress data. Since getQuestProgress requires a key,
-    // execute an SQL query to get all records from the quest_progress table.
+    // Retrieve quest progress data from the database.
     let questProgressData = [];
     const result = databaseManager.db.exec("SELECT * FROM quest_progress ORDER BY id DESC");
     if (result.length > 0) {
@@ -87,15 +74,15 @@ export class ProfileManager {
       }));
     }
 
-    // Form the export object including profile, diary, apartment plan, and quest progress.
+    // Form the export object.
     const exportData = {
-      profile: JSON.parse(profileStr),
+      profile: profile,
       diary: diaryEntries,
       apartment: apartmentPlanData,
       quests: questProgressData
     };
 
-    // Create a Blob from the JSON string (formatted with indentation for readability).
+    // Create a Blob from the JSON string (formatted for readability).
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -108,9 +95,9 @@ export class ProfileManager {
   }
 
   /**
-   * Imports profile data from the selected file.
+   * importProfileData – Imports profile data from the selected JSON file.
    * After import, the profile, diary, apartment plan, and quest progress are updated,
-   * and then the page is reloaded.
+   * and the page is reloaded.
    * @param {File} file - The file containing the profile data.
    * @param {Object} databaseManager - The database manager.
    * @param {Object} apartmentPlanManager - The apartment plan manager.
@@ -120,13 +107,13 @@ export class ProfileManager {
     reader.onload = (e) => {
       try {
         const importedData = JSON.parse(e.target.result);
-        // Check for the presence of essential profile fields.
+        // Validate essential profile fields.
         if (!importedData.profile || !importedData.profile.name || !importedData.profile.gender ||
             !importedData.profile.selfie || !importedData.profile.language) {
           alert("Invalid profile file. Required profile fields are missing.");
           return;
         }
-        // Save the profile.
+        // Save the profile via DataManager.
         this.saveProfile(importedData.profile);
 
         // Import diary entries.
@@ -170,42 +157,41 @@ export class ProfileManager {
   }
 
   /**
-   * Saves ghost progress (e.g., the current quest step).
-   * @param {Object} progress - An object containing progress data (e.g., { ghostId: number, phenomenonIndex: number }).
+   * saveGhostProgress – Saves ghost progress data via the DataManager.
+   * @param {Object} progress - Progress data (e.g., { ghostId: number, phenomenonIndex: number }).
    */
   saveGhostProgress(progress) {
-    localStorage.setItem('ghostProgress', JSON.stringify(progress));
+    this.dataManager.saveGhostProgress(progress);
   }
 
   /**
-   * Retrieves the saved ghost progress.
-   * @returns {Object|null} The progress object or null if no data exists.
+   * getGhostProgress – Retrieves the saved ghost progress via the DataManager.
+   * @returns {Object|null} The progress object or null if not set.
    */
   getGhostProgress() {
-    const progress = localStorage.getItem('ghostProgress');
-    return progress ? JSON.parse(progress) : null;
+    return this.dataManager.getGhostProgress();
   }
 
   /**
-   * Resets ghost progress by removing the corresponding key from localStorage.
+   * resetGhostProgress – Resets ghost progress via the DataManager.
    */
   resetGhostProgress() {
-    localStorage.removeItem('ghostProgress');
+    this.dataManager.resetGhostProgress();
   }
 
   /**
-   * Saves the location type selected by the user.
-   * @param {string} locationType - The name of the location type.
+   * saveLocationType – Saves the user's selected location type via the DataManager.
+   * @param {string} locationType - The location type.
    */
   saveLocationType(locationType) {
-    localStorage.setItem('locationType', locationType);
+    this.dataManager.saveLocationType(locationType);
   }
 
   /**
-   * Retrieves the saved location type.
+   * getLocationType – Retrieves the saved location type via the DataManager.
    * @returns {string|null} The location type or null if not set.
    */
   getLocationType() {
-    return localStorage.getItem('locationType');
+    return this.dataManager.getLocationType();
   }
 }

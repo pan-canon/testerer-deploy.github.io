@@ -23,7 +23,7 @@ export class FinalEvent extends BaseEvent {
   /**
    * activate – Overridden method for activating the final event.
    * It logs the event, sets the game finalized flag, triggers a ghost fade-out effect,
-   * calls finishCurrentGhost from the GhostManager, and alerts the user.
+   * calls finishCurrentGhost from the GhostManager, and notifies the user.
    *
    * @returns {Promise<void>}
    */
@@ -47,9 +47,11 @@ export class FinalEvent extends BaseEvent {
     // Mark the current ghost as finished.
     this.app.ghostManager.finishCurrentGhost();
 
-    // Notify the user that the scenario is finished.
-    alert("🎉 Congratulations, the scenario is finished!");
-
-    // Note: No automatic triggering of subsequent events.
+    // Notify the user that the scenario is finished via ViewManager.
+    if (this.app.viewManager && typeof this.app.viewManager.showNotification === 'function') {
+      this.app.viewManager.showNotification("🎉 Congratulations, the scenario is finished!");
+    } else {
+      console.log("🎉 Congratulations, the scenario is finished!");
+    }
   }
 }

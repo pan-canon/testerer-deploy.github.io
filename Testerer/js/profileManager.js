@@ -9,37 +9,39 @@ export class ProfileManager {
   }
 
   /**
-   * isProfileSaved – Checks if a profile is saved via the DataManager.
-   * @returns {boolean} True if a profile exists, otherwise false.
+   * isProfileSaved – Asynchronously checks if a profile is saved via the DataManager.
+   * @returns {Promise<boolean>} Resolves to true if a profile exists, otherwise false.
    */
-  isProfileSaved() {
-    return !!this.dataManager.getProfile();
+  async isProfileSaved() {
+    const profile = await this.dataManager.getProfile();
+    return !!profile;
   }
 
   /**
-   * getProfile – Retrieves the profile from the DataManager.
-   * @returns {Object|null} The profile object or null if not found.
+   * getProfile – Asynchronously retrieves the profile from the DataManager.
+   * @returns {Promise<Object|null>} Resolves to the profile object or null if not found.
    */
-  getProfile() {
-    return this.dataManager.getProfile();
+  async getProfile() {
+    return await this.dataManager.getProfile();
   }
 
   /**
-   * saveProfile – Saves the given profile object via the DataManager.
+   * saveProfile – Asynchronously saves the given profile object via the DataManager.
    * @param {Object} profile - The profile object.
+   * @returns {Promise<void>}
    */
-  saveProfile(profile) {
-    this.dataManager.saveProfile(profile);
+  async saveProfile(profile) {
+    await this.dataManager.saveProfile(profile);
   }
 
   /**
    * resetProfile – Resets the profile and all related data.
-   * This method calls the DataManager to remove profile data,
-   * along with ghost progress, quest progress, and other related keys.
+   * Calls the DataManager to remove profile data along with ghost progress, quest progress, etc.
    * After reset, the page is reloaded.
    */
   resetProfile() {
     // Reset profile and related data via DataManager.
+    // (Assuming dataManager.resetProfile() is synchronous or handles its own async logic)
     this.dataManager.resetProfile();
     // Reload the page to reflect changes.
     window.location.reload();
@@ -52,52 +54,52 @@ export class ProfileManager {
    * @param {Object} apartmentPlanManager - The apartment plan manager.
    */
   exportProfileData(databaseManager, apartmentPlanManager) {
-    // Retrieve the profile via DataManager.
-    const profile = this.getProfile();
-    if (!profile) {
-      alert("No profile found to export.");
-      return;
-    }
-    // Retrieve diary entries.
-    const diaryEntries = databaseManager.getDiaryEntries();
-    // Retrieve apartment plan data if available.
-    const apartmentPlanData = apartmentPlanManager ? apartmentPlanManager.rooms : [];
-    
-    // Retrieve quest progress data from the database.
-    let questProgressData = [];
-    const result = databaseManager.db.exec("SELECT * FROM quest_progress ORDER BY id DESC");
-    if (result.length > 0) {
-      questProgressData = result[0].values.map(row => ({
-        id: row[0],
-        quest_key: row[1],
-        status: row[2]
-      }));
-    }
-
-    // Form the export object.
-    const exportData = {
-      profile: profile,
-      diary: diaryEntries,
-      apartment: apartmentPlanData,
-      quests: questProgressData
-    };
-
-    // Create a Blob from the JSON string (formatted for readability).
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'profile.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Retrieve the profile asynchronously. For export, we assume the profile is already loaded.
+    this.getProfile().then(profile => {
+      if (!profile) {
+        alert("No profile found to export.");
+        return;
+      }
+      // Retrieve diary entries.
+      const diaryEntries = databaseManager.getDiaryEntries();
+      // Retrieve apartment plan data if available.
+      const apartmentPlanData = apartmentPlanManager ? apartmentPlanManager.rooms : [];
+      
+      // Retrieve quest progress data from the database.
+      let questProgressData = [];
+      const result = databaseManager.db.exec("SELECT * FROM quest_progress ORDER BY id DESC");
+      if (result.length > 0) {
+        questProgressData = result[0].values.map(row => ({
+          id: row[0],
+          quest_key: row[1],
+          status: row[2]
+        }));
+      }
+  
+      // Form the export object.
+      const exportData = {
+        profile: profile,
+        diary: diaryEntries,
+        apartment: apartmentPlanData,
+        quests: questProgressData
+      };
+  
+      // Create a Blob from the JSON string.
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'profile.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
   }
 
   /**
    * importProfileData – Imports profile data from the selected JSON file.
-   * After import, the profile, diary, apartment plan, and quest progress are updated,
-   * and the page is reloaded.
+   * After import, updates the profile, diary, apartment plan, and quest progress, then reloads the page.
    * @param {File} file - The file containing the profile data.
    * @param {Object} databaseManager - The database manager.
    * @param {Object} apartmentPlanManager - The apartment plan manager.
@@ -115,7 +117,7 @@ export class ProfileManager {
         }
         // Save the profile via DataManager.
         this.saveProfile(importedData.profile);
-
+  
         // Import diary entries.
         if (importedData.diary && Array.isArray(importedData.diary)) {
           importedData.diary.forEach(entry => {
@@ -128,7 +130,7 @@ export class ProfileManager {
           });
           databaseManager.saveDatabase();
         }
-
+  
         // Import apartment plan data, if available.
         if (importedData.apartment && Array.isArray(importedData.apartment)) {
           if (apartmentPlanManager) {
@@ -136,7 +138,7 @@ export class ProfileManager {
             apartmentPlanManager.renderRooms();
           }
         }
-
+  
         // Import quest progress.
         if (importedData.quests && Array.isArray(importedData.quests)) {
           importedData.quests.forEach(progress => {
@@ -145,7 +147,7 @@ export class ProfileManager {
             }
           });
         }
-
+  
         alert("Profile imported successfully. Reloading page.");
         window.location.reload();
       } catch (err) {

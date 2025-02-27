@@ -455,7 +455,7 @@ export class App {
       shootBtn.style.display = "none";
     }
 
-    const profile = this.profileManager.getProfile();
+    const profile = await this.profileManager.getProfile();
     if (profile) {
       this.profileNameElem.textContent = profile.name;
       this.profilePhotoElem.src = profile.selfie;

@@ -72,7 +72,6 @@ export class App {
     this.cameraSectionManager = new cameraSectionManager();
     // Pass the SQLiteDataManager instance to ProfileManager.
     this.profileManager       = new ProfileManager(this.sqliteDataManager);
-    this.databaseManager      = new DatabaseManager();
 
     // Initialize GhostManager and EventManager (interdependent)
     this.ghostManager = new GhostManager(null, this.profileManager, this);

@@ -438,7 +438,7 @@ export class App {
    *  - The "Shoot" button is hidden.
    *  - The "toggle-camera" button is displayed.
    */
-  showMainScreen() {
+  async showMainScreen() {
     this.viewManager.switchScreen('main-screen', 'main-buttons');
 
     const toggleCameraBtn = document.getElementById("toggle-camera");

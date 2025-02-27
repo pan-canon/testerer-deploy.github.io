@@ -21,8 +21,7 @@ import { SQLiteDataManager } from './SQLiteDataManager.js'; // New DataManager u
  * Quest activation logic (e.g., "Post" and "Shoot" buttons) is delegated to QuestManager.
  *
  * NOTE: Only the WelcomeEvent is triggered automatically after registration.
- * Subsequent events (mirror quest, repeating quest, final event) must be triggered explicitly
- * from quest finish methods.
+ * Subsequent events (mirror quest, repeating quest, final event) must be triggered explicitly.
  */
 export class App {
   constructor() {
@@ -70,7 +69,7 @@ export class App {
     // Initialize managers: language, camera, profile, database
     this.languageManager      = new LanguageManager('language-selector');
     this.cameraSectionManager = new cameraSectionManager();
-    // Pass the SQLiteDataManager instance to ProfileManager
+    // Pass the SQLiteDataManager instance to ProfileManager.
     this.profileManager       = new ProfileManager(this.sqliteDataManager);
     this.databaseManager      = new DatabaseManager();
 
@@ -82,6 +81,8 @@ export class App {
       this.ghostManager,
       this.visualEffectsManager
     );
+    // Pass viewManager reference to eventManager.
+    this.eventManager.viewManager = this.viewManager;
     this.ghostManager.eventManager = this.eventManager;
 
     // Initialize QuestManager and GameEventManager
@@ -134,8 +135,9 @@ export class App {
     // Update the diary display (list all entries)
     this.eventManager.updateDiaryDisplay();
 
-    if (this.profileManager.isProfileSaved()) {
-      const profile = this.profileManager.getProfile();
+    // Check for profile existence asynchronously.
+    if (await this.profileManager.isProfileSaved()) {
+      const profile = await this.profileManager.getProfile();
       console.log("Profile found:", profile);
       this.showMainScreen();
 
@@ -147,8 +149,7 @@ export class App {
         }, 5000);
       }
 
-      // Update the camera button state based on mirror quest activity.
-      this.questManager.updateCameraButtonState();
+      // (Removed call to questManager.updateCameraButtonState)
     } else {
       console.log("Profile not found, showing registration screen.");
       this.showRegistrationScreen();

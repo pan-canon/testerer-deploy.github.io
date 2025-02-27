@@ -139,7 +139,7 @@ export class App {
     if (await this.profileManager.isProfileSaved()) {
       const profile = await this.profileManager.getProfile();
       console.log("Profile found:", profile);
-      this.showMainScreen();
+      await this.showMainScreen();
 
       // If registration is completed, trigger the WelcomeEvent after 5 seconds.
       if (localStorage.getItem("registrationCompleted") === "true") {

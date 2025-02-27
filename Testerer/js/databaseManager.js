@@ -1,7 +1,12 @@
 import { SQLiteDataManager } from './SQLiteDataManager.js';
 
 export class DatabaseManager {
-  constructor() {
+  /**
+   * Constructor for DatabaseManager.
+   * @param {SQLiteDataManager} dataManager - Instance of the DataManager for persistence.
+   */
+  constructor(dataManager) {
+    this.dataManager = dataManager; // Сохраняем ссылку на DataManager
     // The SQL.js database instance will be stored here.
     this.db = null;
     // A Promise that resolves after the database has been initialized.
@@ -63,8 +68,7 @@ export class DatabaseManager {
   }
 
   /**
-   * saveDatabase – Exports the database to a base64 string.
-   * (Persistence via IndexedDB is handled separately.)
+   * saveDatabase – Exports the database to a base64 string and persists it via the DataManager.
    */
   async saveDatabase() {
     if (!this.db) return;
@@ -90,7 +94,7 @@ export class DatabaseManager {
     const timestamp = new Date().toISOString();
     this.db.run("INSERT INTO diary (entry, timestamp) VALUES (?, ?)", [entry, timestamp]);
     console.log("✅ Entry added:", entry);
-    this.saveDatabase();
+    await this.saveDatabase();
   }
 
   /**
@@ -203,7 +207,6 @@ export class DatabaseManager {
       console.error("⚠️ Database not initialized!");
       return;
     }
-    // Use INSERT OR REPLACE to update existing record.
     this.db.run(
       `INSERT OR REPLACE INTO ghosts (id, name, status, progress)
        VALUES ((SELECT id FROM ghosts WHERE id = ?), ?, ?, ?)`,

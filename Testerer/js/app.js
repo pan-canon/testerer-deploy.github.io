@@ -31,6 +31,7 @@ export class App {
 
     // Create an instance of SQLiteDataManager for IndexedDB persistence.
     this.sqliteDataManager = new SQLiteDataManager();
+    this.databaseManager = new DatabaseManager(this.sqliteDataManager);
 
     // Flag indicating whether the camera mode is active.
     this.isCameraOpen = false;

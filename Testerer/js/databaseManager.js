@@ -66,7 +66,7 @@ export class DatabaseManager {
    * saveDatabase – Exports the database to a base64 string.
    * (Persistence via IndexedDB is handled separately.)
    */
-  saveDatabase() {
+  async saveDatabase() {
     if (!this.db) return;
     const binaryData = this.db.export();
     let binaryStr = "";
@@ -74,8 +74,8 @@ export class DatabaseManager {
       binaryStr += String.fromCharCode(binaryData[i]);
     }
     const base64 = btoa(binaryStr);
-    // TODO: Optionally, persist the base64 string via SQLiteDataManager.
-    console.log("Database export complete (base64 data generated).");
+    await this.dataManager.saveDatabase(base64);
+    console.log("Database saved (persisted) successfully.");
   }
 
   /**

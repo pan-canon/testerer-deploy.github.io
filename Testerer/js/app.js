@@ -320,7 +320,7 @@ export class App {
    *  4) Switches to the main screen.
    *  5) Explicitly triggers the WelcomeEvent after 5 seconds.
    */
-  completeRegistration() {
+  async completeRegistration() {
     const selfieSrc = (this.selfiePreview?.src || document.getElementById('selfie-thumbnail').src);
     if (!selfieSrc || selfieSrc === "") {
       alert("Please capture your selfie before completing registration.");
@@ -338,7 +338,7 @@ export class App {
       language: regData.language,
       selfie: selfieSrc
     };
-    this.profileManager.saveProfile(profile);
+    await this.profileManager.saveProfile(profile);
     localStorage.setItem("registrationCompleted", "true");
 
     this.cameraSectionManager.stopCamera();

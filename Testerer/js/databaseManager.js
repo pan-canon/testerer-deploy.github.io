@@ -6,7 +6,7 @@ export class DatabaseManager {
    * @param {SQLiteDataManager} dataManager - Instance of the DataManager for persistence.
    */
   constructor(dataManager) {
-    this.dataManager = dataManager; // Сохраняем ссылку на DataManager
+    this.dataManager = dataManager; // Save reference to DataManager
     // The SQL.js database instance will be stored here.
     this.db = null;
     // A Promise that resolves after the database has been initialized.
@@ -15,8 +15,9 @@ export class DatabaseManager {
 
   /**
    * initDatabase – Asynchronously initializes the database.
-   * Creates a new database and sets up the required tables.
-   * New tables: ghosts, events, quests.
+   * Restores the database from persistence if available;
+   * otherwise creates a new database instance and sets up the required tables.
+   * Tables: diary, apartment_plan, quest_progress, ghosts, events, quests.
    */
   async initDatabase() {
     // Load SQL.js, providing a locateFile function to find necessary files.
@@ -24,46 +25,9 @@ export class DatabaseManager {
       locateFile: file => `js/${file}`
     });
     
-    // Create a new database instance.
-    this.db = new SQL.Database();
-    // Create the necessary tables.
-    this.db.run(`
-      CREATE TABLE IF NOT EXISTS diary (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        entry TEXT,
-        timestamp TEXT
-      );
-      CREATE TABLE IF NOT EXISTS apartment_plan (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        floor_number INTEGER,
-        room_data TEXT
-      );
-      CREATE TABLE IF NOT EXISTS quest_progress (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        quest_key TEXT,
-        status TEXT
-      );
-      CREATE TABLE IF NOT EXISTS ghosts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        status TEXT,
-        progress INTEGER
-      );
-      CREATE TABLE IF NOT EXISTS events (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        event_key TEXT,
-        event_text TEXT,
-        timestamp TEXT,
-        completed INTEGER
-      );
-      CREATE TABLE IF NOT EXISTS quests (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        quest_key TEXT,
-        status TEXT,
-        current_stage INTEGER,
-        total_stages INTEGER
-      );
-    `);
+    // Restore database from IndexedDB if saved, otherwise create a new instance
+    this.db = await this.dataManager.initDatabase(SQL);
+    
     console.log("📖 Database initialized!");
   }
 

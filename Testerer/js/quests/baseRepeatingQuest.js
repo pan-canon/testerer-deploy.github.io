@@ -69,9 +69,12 @@ export class BaseRepeatingQuest extends BaseEvent {
   async finishStage() {
     if (this.finished) return;
     
-    // Delegate disabling the "Shoot" button to ViewManager.
-    if (this.app.viewManager && typeof this.app.viewManager.disableShootButton === 'function') {
-      this.app.viewManager.disableShootButton(this.shootButtonId);
+    const shootBtn = document.getElementById(this.shootButtonId);
+    if (shootBtn) {
+      // Disable the shoot button immediately to prevent multiple clicks
+      shootBtn.disabled = true;
+      shootBtn.style.pointerEvents = "none";
+      console.log("[BaseRepeatingQuest] Shoot button disabled after click.");
     }
     
     const photoData = this.captureSimplePhoto();
@@ -86,14 +89,14 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.currentStage++;
     
     if (this.currentStage <= this.totalStages) {
-      // Delegate enabling the "Post" button to ViewManager.
-      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
-        this.app.viewManager.setPostButtonEnabled(true);
+      // Do not automatically set the readiness flag; keep the post button disabled until explicitly re-enabled
+      const postBtn = this.app.postBtn;
+      if (postBtn) {
+        postBtn.disabled = true;
+        console.log("[BaseRepeatingQuest] Post button remains disabled until external trigger.");
       }
-      // Restart UI for the next stage.
-      this.startCheckLoop();
     } else {
-      // All stages completed; finish the quest.
+      // If all stages are completed, finish the repeating quest
       await this.finish();
     }
   }
@@ -107,21 +110,24 @@ export class BaseRepeatingQuest extends BaseEvent {
     if (this.finished) return;
     
     this.finished = true;
-    // Delegate UI cleanup to the ViewManager.
-    if (this.app.viewManager && typeof this.app.viewManager.stopRepeatingQuestUI === 'function') {
-      this.app.viewManager.stopRepeatingQuestUI(this.statusElementId);
-    }
+    this.stopCheckLoop();  // Stop the check loop
+    
     console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
     
-    // Log the final post in the diary.
+    // Log the final post in the diary
     await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
     
-    // Trigger the final event for the repeating quest.
+    // Trigger the final repeating event
     await this.app.gameEventManager.activateEvent("post_repeating_event");
     
-    // Delegate UI update to disable the "Post" button.
-    if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
-      this.app.viewManager.setPostButtonEnabled(false);
+    // Remove the readiness flag to avoid new cycle activation
+    localStorage.removeItem("mirrorQuestReady");
+    
+    // Ensure the post button is disabled
+    const postBtn = this.app.postBtn;
+    if (postBtn) {
+      postBtn.disabled = true;
+      console.log("[BaseRepeatingQuest] Post button disabled after finishing repeating quest.");
     }
   }
 

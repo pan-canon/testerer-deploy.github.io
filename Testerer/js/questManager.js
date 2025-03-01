@@ -80,23 +80,37 @@ export class QuestManager {
    * Triggers either the repeating quest or mirror quest based on flags.
    */
   async handlePostButtonClick() {
-    const isReady = localStorage.getItem("mirrorQuestReady") === "true";
-    if (!isReady) {
-      alert("Quest not ready.");
+    // Disable the post button immediately to prevent multiple clicks
+    const postBtn = this.app.postBtn;
+    if (postBtn) {
+      postBtn.disabled = true;
+      console.log("[QuestManager] Post button disabled immediately after click.");
+    }
+
+    // If a repeating quest exists and is already finished, do not start a new cycle
+    const repeatingQuest = this.repeatingQuest; // (if stored in this.repeatingQuest)
+    if (repeatingQuest && repeatingQuest.finished) {
+      alert("Repeating quest is finished. Final event has been activated.");
       return;
     }
+    
+    // Check readiness flag
+    const isReady = localStorage.getItem("mirrorQuestReady") === "true";
+    if (!isReady) {
+      alert("Repeating quest is not ready.");
+      return;
+    }
+    
+    // Remove the readiness flag immediately to prevent reactivation
     localStorage.removeItem("mirrorQuestReady");
+    
     const isRepeating = localStorage.getItem("isRepeatingCycle") === "true";
     if (isRepeating) {
-      console.log("[QuestManager] Triggering repeating quest.");
+      console.log("[QuestManager] Triggering repeating quest from handlePostButtonClick.");
       await this.activateQuest("repeating_quest");
-      // Example: update quest progress.
-      // this.updateQuestProgress("repeating_quest", currentStage, totalStages, "in_progress");
     } else {
-      console.log("[QuestManager] Triggering mirror quest.");
+      console.log("[QuestManager] Triggering mirror quest from handlePostButtonClick.");
       await this.activateQuest("mirror_quest");
-      // Example: update quest progress.
-      // this.updateQuestProgress("mirror_quest", 1, 1, "active");
     }
   }
 

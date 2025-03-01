@@ -44,10 +44,16 @@ export class ProfileManager {
    * After reset, the page is reloaded.
    */
   resetProfile() {
-    // Call the asynchronous resetProfile method on the DataManager.
-    this.dataManager.resetProfile();
-    // Reload the page to reflect changes.
-    window.location.reload();
+    // Reset profile and clear the saved SQL database data
+    Promise.all([
+      this.dataManager.resetProfile(),    // Deletes the 'profile' key
+      this.dataManager.resetDatabase()      // Deletes the SQL database saved under 'sqlite'
+    ]).then(() => {
+      console.log("Profile and database reset. Reloading page...");
+      window.location.reload();
+    }).catch((err) => {
+      console.error("Error resetting profile and database:", err);
+    });
   }
 
   /**

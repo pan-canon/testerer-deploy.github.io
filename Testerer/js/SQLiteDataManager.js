@@ -23,7 +23,6 @@ export class SQLiteDataManager {
         console.error("Error opening IndexedDB:", event.target.error);
         reject(event.target.error);
       };
-      // Create object store if needed.
       request.onupgradeneeded = event => {
         const db = event.target.result;
         if (!db.objectStoreNames.contains(this.storeName)) {
@@ -147,6 +146,31 @@ export class SQLiteDataManager {
       };
       getRequest.onerror = event => {
         console.error("Error loading database data:", event.target.error);
+        reject(event.target.error);
+      };
+    });
+  }
+
+  /**
+   * resetDatabase – Deletes the saved SQL database data (base64 string) from IndexedDB.
+   * @returns {Promise<void>} Resolves when the database data is successfully deleted.
+   */
+  async resetDatabase() {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readwrite");
+      transaction.oncomplete = () => {
+        console.log("SQL database reset successfully in IndexedDB.");
+        resolve();
+      };
+      transaction.onerror = event => {
+        console.error("Transaction error during resetDatabase:", event.target.error);
+        reject(event.target.error);
+      };
+      const store = transaction.objectStore(this.storeName);
+      const deleteRequest = store.delete(this.key);
+      deleteRequest.onerror = event => {
+        console.error("Error deleting SQL database data:", event.target.error);
         reject(event.target.error);
       };
     });

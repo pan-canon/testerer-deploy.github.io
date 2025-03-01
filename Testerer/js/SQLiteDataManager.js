@@ -37,6 +37,71 @@ export class SQLiteDataManager {
   }
 
   /**
+   * initDatabase – Initializes the SQL.js database.
+   * If saved database data is found in IndexedDB, restores it.
+   * Otherwise, creates a new database instance and sets up the required tables.
+   * @param {Object} SQL - The SQL.js module.
+   * @returns {Promise<SQL.Database>} Resolves to the SQL.js database instance.
+   */
+  async initDatabase(SQL) {
+    const savedDbBase64 = await this.loadDatabase();
+    let dbInstance;
+    if (savedDbBase64) {
+      // Restore database from saved base64 data.
+      const binaryStr = atob(savedDbBase64);
+      const binaryData = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) {
+        binaryData[i] = binaryStr.charCodeAt(i);
+      }
+      dbInstance = new SQL.Database(binaryData);
+      console.log("Database restored from IndexedDB.");
+    } else {
+      // Create a new database instance.
+      dbInstance = new SQL.Database();
+      // Create the required tables.
+      dbInstance.run(`
+        CREATE TABLE IF NOT EXISTS diary (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          entry TEXT,
+          timestamp TEXT
+        );
+        CREATE TABLE IF NOT EXISTS apartment_plan (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          floor_number INTEGER,
+          room_data TEXT
+        );
+        CREATE TABLE IF NOT EXISTS quest_progress (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          quest_key TEXT,
+          status TEXT
+        );
+        CREATE TABLE IF NOT EXISTS ghosts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT,
+          status TEXT,
+          progress INTEGER
+        );
+        CREATE TABLE IF NOT EXISTS events (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          event_key TEXT,
+          event_text TEXT,
+          timestamp TEXT,
+          completed INTEGER
+        );
+        CREATE TABLE IF NOT EXISTS quests (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          quest_key TEXT,
+          status TEXT,
+          current_stage INTEGER,
+          total_stages INTEGER
+        );
+      `);
+      console.log("New database created and tables initialized.");
+    }
+    return dbInstance;
+  }
+
+  /**
    * saveDatabase – Saves the provided database data (as a base64 string) to IndexedDB.
    * @param {string} base64Data - The base64-encoded database data.
    * @returns {Promise<void>} Resolves when saving is complete.
@@ -170,7 +235,7 @@ export class SQLiteDataManager {
     });
   }
 
-  // Дополнительно можно добавить методы:
+  // Additional methods for ghosts, events, quests can be added here:
   // async saveGhostProgress(progress) { ... }
   // async getGhostProgress() { ... }
   // async saveLocationType(locationType) { ... }

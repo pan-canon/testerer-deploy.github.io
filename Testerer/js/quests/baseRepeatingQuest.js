@@ -23,9 +23,6 @@ export class BaseRepeatingQuest extends BaseEvent {
    * Waits for the camera to be open if necessary, then starts the UI check loop.
    */
   async activate() {
-    if (this.finished) {
-      this.resetCycle();
-    }
     console.log(`Activating repeating quest: ${this.key}`);
     await this.eventManager.addDiaryEntry(this.key, true);
     console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
@@ -87,16 +84,17 @@ export class BaseRepeatingQuest extends BaseEvent {
     console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
     
     this.currentStage++;
-    
+
     if (this.currentStage <= this.totalStages) {
-      // Do not automatically set the readiness flag; keep the post button disabled until explicitly re-enabled
+      // Set the readiness flag and enable the post button so that the user can trigger the next stage
+      localStorage.setItem("mirrorQuestReady", "true");
       const postBtn = this.app.postBtn;
       if (postBtn) {
-        postBtn.disabled = true;
-        console.log("[BaseRepeatingQuest] Post button remains disabled until external trigger.");
+        postBtn.disabled = false;
+        console.log("[BaseRepeatingQuest] Post button enabled for next stage.");
       }
     } else {
-      // If all stages are completed, finish the repeating quest
+      // All stages have been completed; finish the quest
       await this.finish();
     }
   }

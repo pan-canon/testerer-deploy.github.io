@@ -1,30 +1,29 @@
-// Определяем BASE_PATH в зависимости от текущего URL. 
-// Если путь содержит "/Testerer/", то мы находимся в определенном окружении (например, GitHub Pages),
-// и BASE_PATH устанавливается соответствующим образом. Иначе – пустая строка.
+// Define BASE_PATH based on current URL.
+// If the URL contains "/Testerer/", assume a specific environment (e.g. GitHub Pages),
+// and set BASE_PATH accordingly; otherwise, use an empty string.
 const BASE_PATH = self.location.pathname.includes("/Testerer/") 
   ? "/testerer-deploy.github.io/Testerer" 
   : "";
 
-// Имя кэша. При необходимости при обновлении кода меняйте версию (например, game-cache-v2).
+// Define the cache name. Update the version (e.g., "game-cache-v2") when files change.
 const CACHE_NAME = "game-cache-v1";
 
-// Список URL для кэширования. Здесь включены все основные файлы, необходимые для работы приложения в офлайн-режиме.
+// List of URLs to cache. Exclude dynamic database management files to prevent issues with table updates.
 const urlsToCache = [
-  // Корневая страница и index.html
+  // Root page and index.html
   `${BASE_PATH}/`,
   `${BASE_PATH}/index.html`,
-
-  // Стили (например, bulma.css из CDN)
+  
+  // CSS from CDN
   "https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css",
-
-  // Основной скрипт приложения
+  
+  // Main application scripts
   `${BASE_PATH}/js/main.js`,
-
-  // Модули приложения
   `${BASE_PATH}/js/app.js`,
   `${BASE_PATH}/js/apartmentPlanManager.js`,
   `${BASE_PATH}/js/cameraSectionManager.js`,
-  `${BASE_PATH}/js/databaseManager.js`,
+  // Exclude databaseManager.js due to dynamic table operations:
+  // `${BASE_PATH}/js/databaseManager.js`,
   `${BASE_PATH}/js/eventManager.js`,
   `${BASE_PATH}/js/gameEventManager.js`,
   `${BASE_PATH}/js/ghostManager.js`,
@@ -32,48 +31,45 @@ const urlsToCache = [
   `${BASE_PATH}/js/profileManager.js`,
   `${BASE_PATH}/js/questManager.js`,
   `${BASE_PATH}/js/showProfileModal.js`,
-
-  // Модули, связанные с событиями и квестами
+  
+  // Modules related to events and quests
   `${BASE_PATH}/js/baseEvent.js`,
   `${BASE_PATH}/js/welcomeEvent.js`,
   `${BASE_PATH}/js/ghostEvent1.js`,
-
-  // Конфигурационные файлы для призраков и квестов
+  
+  // Configuration files for ghosts and quests
   `${BASE_PATH}/js/ghostQuestsConfig.js`,
   `${BASE_PATH}/js/ghostTextManager.js`,
   `${BASE_PATH}/js/ghostTextsConfig.js`,
-
-  // Утилиты для обработки изображений и визуальных эффектов
+  
+  // Utilities for image processing and visual effects
   `${BASE_PATH}/js/visualEffectsManager.js`,
   `${BASE_PATH}/js/imageUtils.js`,
-
-  // Файл локализации
+  
+  // Localization file
   `${BASE_PATH}/locales/locales.json`
 ];
 
-// Обработчик события "install" для установки сервис-воркера и предварительного кэширования файлов.
 self.addEventListener("install", (event) => {
-  console.log("🛠 Установка Service Worker...");
+  console.log("🛠 Installing Service Worker...");
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log("Кэширование файлов:", urlsToCache);
+        console.log("Caching files:", urlsToCache);
         return cache.addAll(urlsToCache);
       })
-      .catch((err) => console.error("❌ Ошибка кэширования:", err))
+      .catch((err) => console.error("❌ Error during caching:", err))
   );
 });
 
-// Обработчик события "activate" для активации сервис-воркера и удаления старых кэшей.
 self.addEventListener("activate", (event) => {
-  console.log("✅ Активация Service Worker...");
+  console.log("✅ Activating Service Worker...");
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          // Удаляем все кэши, имя которых отличается от текущего CACHE_NAME.
           if (cacheName !== CACHE_NAME) {
-            console.log(`🗑 Удаление старого кеша: ${cacheName}`);
+            console.log(`🗑 Deleting old cache: ${cacheName}`);
             return caches.delete(cacheName);
           }
         })
@@ -82,27 +78,37 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Обработчик события "fetch" для перехвата сетевых запросов и выдачи кэшированного ответа.
-// Если запрашиваемый ресурс не найден в кэше, выполняется сетевой запрос и ответ добавляется в кэш.
+// Listen for messages from the client (e.g., update command)
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    console.log("Service Worker skipping waiting...");
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener("fetch", (event) => {
+  // Bypass caching for dynamic database management files to avoid interfering with table updates.
+  if (event.request.url.includes("databaseManager.js")) {
+    return event.respondWith(fetch(event.request));
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Если ресурс найден в кэше, возвращаем его.
+        // Return the cached resource if found.
         if (response) {
           return response;
         }
-        // Иначе, выполняем сетевой запрос.
+        // Otherwise, perform a network request and cache the response.
         return fetch(event.request)
           .then((networkResponse) => {
-            // Открываем кэш и сохраняем ответ для будущих запросов.
             return caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, networkResponse.clone());
               return networkResponse;
             });
           });
       })
-      // Если ни кэш, ни сеть не доступны, используем index.html как фолбэк.
+      // If both cache and network fail, return the cached index.html as a fallback.
       .catch(() => caches.match(`${BASE_PATH}/index.html`))
   );
 });

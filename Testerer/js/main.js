@@ -6,34 +6,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   const app = new App();
 
   // Handle the beforeinstallprompt event for PWA
-  // This event fires when the browser detects that the site meets PWA requirements
-  // and can be installed on the desktop.
   let deferredPrompt;
   window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent the native install prompt from showing automatically
     e.preventDefault();
-    // Save the event for later use
     deferredPrompt = e;
-    // Show the install button (ensure that an element with id "install-btn" exists in HTML)
     const installBtn = document.getElementById("install-btn");
     if (installBtn) {
       installBtn.style.display = "block";
     }
   });
 
-  // Add a click event handler for the install button
   const installBtn = document.getElementById("install-btn");
   if (installBtn) {
     installBtn.addEventListener("click", async () => {
       if (deferredPrompt) {
-        // Show the install prompt to the user
         deferredPrompt.prompt();
-        // Wait for the user's choice
         const { outcome } = await deferredPrompt.userChoice;
         console.log(`User response to the install prompt: ${outcome}`);
-        // Hide the install button after the choice is made
         installBtn.style.display = "none";
-        // Reset the saved event
         deferredPrompt = null;
       }
     });
@@ -42,37 +32,58 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Register the service worker if supported by the browser
   if ('serviceWorker' in navigator) {
     try {
-      // Determine the base path depending on the URL.
-      // If the URL contains "/Testerer/", use the corresponding BASE_PATH, otherwise leave it empty.
+      // Determine BASE_PATH based on the URL.
       const BASE_PATH = window.location.pathname.includes("/Testerer/") 
         ? "/testerer-deploy.github.io/Testerer"
         : "";
-
-      // Register the service worker with the specified path
       const registration = await navigator.serviceWorker.register(`${BASE_PATH}/serviceWorker.js`);
       console.log('✅ Service Worker registered with scope:', registration.scope);
     } catch (error) {
-      // Log any errors during service worker registration
       console.error('❌ Error during Service Worker registration:', error);
     }
+  }
+
+  // Update mechanism: Attach event listener to the update button
+  const updateBtn = document.getElementById("update-btn");
+  if (updateBtn) {
+    updateBtn.addEventListener("click", async () => {
+      console.log("Update button clicked. Checking for updates...");
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.getRegistration();
+          if (registration) {
+            await registration.update();
+            if (registration.waiting) {
+              console.log("New Service Worker found. Sending skipWaiting message.");
+              registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            } else {
+              console.log("No new Service Worker waiting.");
+            }
+            // Reload page to activate new SW and updated files
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          }
+        } catch (error) {
+          console.error("Error during update check:", error);
+        }
+      }
+    });
   }
 });
 
 // New load event handler that hides the preloader after all resources are loaded
 window.addEventListener("load", () => {
-  // Get the preloader element from the DOM (ensure there is an element with id="preloader" in your index.html)
   const preloader = document.getElementById("preloader");
   if (preloader) {
-    // Gradually decrease the preloader's opacity for a smooth effect
     preloader.style.opacity = 1;
     const fadeEffect = setInterval(() => {
       if (preloader.style.opacity > 0) {
         preloader.style.opacity -= 0.1;
       } else {
-        // Once opacity reaches 0, clear the interval and hide the preloader
         clearInterval(fadeEffect);
         preloader.style.display = "none";
       }
-    }, 50); // 50ms interval for a smooth fade effect
+    }, 50);
   }
 });

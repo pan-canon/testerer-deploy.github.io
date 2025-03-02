@@ -449,6 +449,8 @@ export class App {
     const postBtn = this.postBtn;
     if (postBtn) {
       postBtn.style.display = "inline-block";
+      // Ensure the post button is enabled when the main screen is shown.
+      postBtn.disabled = false;
     }
     const shootBtn = document.getElementById("btn_shoot");
     if (shootBtn) {

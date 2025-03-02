@@ -194,12 +194,13 @@ export class ViewManager {
     const shootBtn = document.getElementById(options.shootButtonId);
     if (shootBtn) {
       shootBtn.style.display = "inline-block";
-      shootBtn.disabled = false;
+      // When starting a repeating quest stage, enable the Shoot button
+      this.setShootButtonActive(true);
       shootBtn.style.pointerEvents = "auto";
       shootBtn.onclick = null;
       shootBtn.onclick = () => {
-        shootBtn.disabled = true;
-        shootBtn.style.pointerEvents = "none";
+        // Disable the button immediately upon click.
+        this.setShootButtonActive(false);
         if (typeof options.onShoot === 'function') {
           options.onShoot();
         }

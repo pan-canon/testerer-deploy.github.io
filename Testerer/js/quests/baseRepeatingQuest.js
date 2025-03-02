@@ -15,6 +15,42 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.totalStages = config.totalStages || 3;
     this.currentStage = 1;
     this.finished = false;
+
+    // Attempt to restore saved quest state (if any)
+    this.loadState();
+  }
+
+  /**
+   * loadState – Restores the quest state from localStorage.
+   */
+  loadState() {
+    const saved = localStorage.getItem(`quest_state_${this.key}`);
+    if (saved) {
+      try {
+        const state = JSON.parse(saved);
+        this.currentStage = state.currentStage;
+        this.finished = state.finished;
+        if (state.totalStages) {
+          this.totalStages = state.totalStages;
+        }
+        console.log(`[BaseRepeatingQuest] Restored quest state: stage=${this.currentStage}, finished=${this.finished}`);
+      } catch (e) {
+        console.error("[BaseRepeatingQuest] Error parsing saved quest state:", e);
+      }
+    }
+  }
+
+  /**
+   * saveState – Saves the current quest state to localStorage.
+   */
+  saveState() {
+    const state = {
+      currentStage: this.currentStage,
+      finished: this.finished,
+      totalStages: this.totalStages
+    };
+    localStorage.setItem(`quest_state_${this.key}`, JSON.stringify(state));
+    console.log(`[BaseRepeatingQuest] Saved quest state: stage=${this.currentStage}, finished=${this.finished}`);
   }
 
   /**
@@ -98,6 +134,7 @@ export class BaseRepeatingQuest extends BaseEvent {
     console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
     
     this.currentStage++;
+    this.saveState();
 
     if (this.currentStage <= this.totalStages) {
       // Set the readiness flag and enable the post button so that the user can trigger the next stage
@@ -122,7 +159,7 @@ export class BaseRepeatingQuest extends BaseEvent {
     if (this.finished) return;
     
     this.finished = true;
-    this.stopCheckLoop();  // Stop the check loop
+    this.saveState();
     
     console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
     
@@ -141,6 +178,9 @@ export class BaseRepeatingQuest extends BaseEvent {
       postBtn.disabled = true;
       console.log("[BaseRepeatingQuest] Post button disabled after finishing repeating quest.");
     }
+    
+    // Remove saved quest state
+    localStorage.removeItem(`quest_state_${this.key}`);
   }
 
   /**
@@ -168,5 +208,6 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.finished = false;
     this.currentStage = 1;
     console.log("[BaseRepeatingQuest] Quest state has been reset for a new cycle.");
+    this.saveState();
   }
 }

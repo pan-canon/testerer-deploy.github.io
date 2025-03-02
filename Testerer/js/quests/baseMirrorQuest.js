@@ -58,6 +58,12 @@ export class BaseMirrorQuest extends BaseEvent {
     }
     // Start the periodic check loop.
     this.checkInterval = setInterval(async () => {
+      // Check if the camera is active; if not, stop the check loop.
+      if (!this.app.isCameraOpen) {
+        console.warn("[BaseMirrorQuest] Camera is not active - stopping check loop.");
+        this.stopCheckLoop();
+        return;
+      }
       const success = await this.checkStatus();
       // Delegate UI update for quest status.
       if (this.app.viewManager && typeof this.app.viewManager.updateMirrorQuestStatus === 'function') {
@@ -83,18 +89,18 @@ export class BaseMirrorQuest extends BaseEvent {
   }
 
   async compareFrameInternally() {
-    // Добавленная проверка: выполнять сравнение только если камера активна.
+    // Added check: perform comparison only if the camera is active.
     if (!this.app.isCameraOpen) {
       console.warn("[BaseMirrorQuest] Camera is not active (app.isCameraOpen false)");
       return false;
     }
     if (!this.app.selfieData) {
-      console.warn("[BaseMirrorQuest] ❌ No saved selfie (app.selfieData)");
+      console.warn("[BaseMirrorQuest] No saved selfie (app.selfieData)");
       return false;
     }
     const videoEl = this.app.cameraSectionManager?.videoElement;
     if (!videoEl || !videoEl.srcObject) {
-      console.warn("[BaseMirrorQuest] ❌ Camera is not active!");
+      console.warn("[BaseMirrorQuest] Camera is not active!");
       return false;
     }
 

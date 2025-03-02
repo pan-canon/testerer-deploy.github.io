@@ -65,6 +65,21 @@ export class ViewManager {
   }
   
   /**
+   * setCameraButtonActive – Sets the active state for the "Open Camera" button.
+   * @param {boolean} isActive - True to mark as active, false to remove the active state.
+   */
+  setCameraButtonActive(isActive) {
+    const cameraBtn = document.getElementById("toggle-camera");
+    if (cameraBtn) {
+      if (isActive) {
+        cameraBtn.classList.add("active");
+      } else {
+        cameraBtn.classList.remove("active");
+      }
+    }
+  }
+  
+  /**
    * startMirrorQuestUI – Initializes the UI for the mirror quest.
    * @param {Object} options - Contains:
    *   - statusElementId: ID of the status display element.
@@ -352,6 +367,6 @@ export class ViewManager {
     });
     
     localStorage.setItem("animatedDiaryIds", JSON.stringify(animatedIds));
-    console.log("📖 Diary updated.");
+    console.log("Diary updated.");
   }
 }

@@ -41,21 +41,24 @@ export class ProfileManager {
   /**
    * resetProfile – Resets the profile and all related data.
    * Calls the DataManager to remove profile data along with ghost progress, quest progress, etc.
-   * Also clears localStorage keys that store transient state.
+   * Also clears localStorage keys that store transient state, including new UI state keys.
    * After reset, the page is reloaded.
    */
   resetProfile() {
-    // Reset profile and clear the saved SQL database data
+    // Reset profile and clear the saved SQL database data.
     Promise.all([
-      this.dataManager.resetProfile(),    // Deletes the 'profile' key
-      this.dataManager.resetDatabase()      // Deletes the SQL database saved under 'sqlite'
+      this.dataManager.resetProfile(),    // Deletes the 'profile' key.
+      this.dataManager.resetDatabase()      // Deletes the SQL database saved under 'sqlite'.
     ]).then(() => {
-      // Clear transient state keys from localStorage
+      // Clear transient state keys from localStorage.
       localStorage.removeItem("animatedDiaryIds");
       localStorage.removeItem("isRepeatingCycle");
       localStorage.removeItem("mirrorQuestReady");
       localStorage.removeItem("regData");
       localStorage.removeItem("registrationCompleted");
+      localStorage.removeItem("cameraButtonActive");
+      localStorage.removeItem("shootButtonActive");
+      localStorage.removeItem("quest_state_repeating_quest");
       
       console.log("Profile, database, and transient state reset. Reloading page...");
       window.location.reload();
@@ -164,6 +167,11 @@ export class ProfileManager {
             }
           });
         }
+  
+        // Clear transient UI state keys to avoid conflicts.
+        localStorage.removeItem("cameraButtonActive");
+        localStorage.removeItem("shootButtonActive");
+        localStorage.removeItem("quest_state_repeating_quest");
   
         alert("Profile imported successfully. Reloading page.");
         window.location.reload();

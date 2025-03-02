@@ -24,6 +24,15 @@ export class QuestManager {
     ];
 
     this.initCameraListeners();
+    
+    // Restore UI states upon initialization.
+    if (this.app.viewManager && typeof this.app.viewManager.restoreCameraButtonState === 'function') {
+      this.app.viewManager.restoreCameraButtonState();
+    }
+    // If a repeating quest state is saved, restore its UI.
+    if (localStorage.getItem("quest_state_repeating_quest")) {
+      this.restoreRepeatingQuestUI();
+    }
   }
 
   initCameraListeners() {

@@ -19,7 +19,6 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * activate – Activates the repeating quest.
-   * If the quest is finished, resets its state.
    * Waits for the camera to be open if necessary, then starts the UI check loop.
    */
   async activate() {
@@ -57,6 +56,21 @@ export class BaseRepeatingQuest extends BaseEvent {
       console.error("[BaseRepeatingQuest] ViewManager.startRepeatingQuestUI is not available.");
     }
     console.log("[BaseRepeatingQuest] Repeating quest UI updated. Awaiting user action to capture snapshot.");
+  }
+
+  /**
+   * restoreUI – Restores the UI for the repeating quest if a repeating cycle is active.
+   * If the camera is not open, waits for the "cameraReady" event before starting the UI.
+   */
+  restoreUI() {
+    console.log("[BaseRepeatingQuest] Restoring repeating quest UI...");
+    if (!this.app.isCameraOpen) {
+      document.addEventListener("cameraReady", () => {
+        this.startCheckLoop();
+      }, { once: true });
+    } else {
+      this.startCheckLoop();
+    }
   }
 
   /**

@@ -88,7 +88,7 @@ export class QuestManager {
     }
 
     // If a repeating quest exists and is already finished, do not start a new cycle
-    const repeatingQuest = this.repeatingQuest; // (if stored in this.repeatingQuest)
+    const repeatingQuest = this.quests.find(q => q.key === "repeating_quest");
     if (repeatingQuest && repeatingQuest.finished) {
       alert("Repeating quest is finished. Final event has been activated.");
       return;
@@ -130,5 +130,16 @@ export class QuestManager {
     };
     await this.app.databaseManager.saveQuestRecord(questData);
     console.log("Quest progress updated:", questData);
+  }
+
+  /**
+   * restoreRepeatingQuestUI – Delegates UI restoration for the repeating quest to the quest instance.
+   */
+  restoreRepeatingQuestUI() {
+    const repeatingQuest = this.quests.find(q => q.key === "repeating_quest");
+    if (repeatingQuest && typeof repeatingQuest.restoreUI === "function") {
+      console.log("[QuestManager] Restoring repeating quest UI...");
+      repeatingQuest.restoreUI();
+    }
   }
 }

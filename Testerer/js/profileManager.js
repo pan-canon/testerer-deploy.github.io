@@ -41,6 +41,7 @@ export class ProfileManager {
   /**
    * resetProfile – Resets the profile and all related data.
    * Calls the DataManager to remove profile data along with ghost progress, quest progress, etc.
+   * Also clears localStorage keys that store transient state.
    * After reset, the page is reloaded.
    */
   resetProfile() {
@@ -49,7 +50,14 @@ export class ProfileManager {
       this.dataManager.resetProfile(),    // Deletes the 'profile' key
       this.dataManager.resetDatabase()      // Deletes the SQL database saved under 'sqlite'
     ]).then(() => {
-      console.log("Profile and database reset. Reloading page...");
+      // Clear transient state keys from localStorage
+      localStorage.removeItem("animatedDiaryIds");
+      localStorage.removeItem("isRepeatingCycle");
+      localStorage.removeItem("mirrorQuestReady");
+      localStorage.removeItem("regData");
+      localStorage.removeItem("registrationCompleted");
+      
+      console.log("Profile, database, and transient state reset. Reloading page...");
       window.location.reload();
     }).catch((err) => {
       console.error("Error resetting profile and database:", err);

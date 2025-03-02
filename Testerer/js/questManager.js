@@ -104,6 +104,11 @@ export class QuestManager {
     // Remove the readiness flag immediately to prevent reactivation
     localStorage.removeItem("mirrorQuestReady");
     
+    // Set Open Camera button active state via ViewManager
+    if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {
+      this.app.viewManager.setCameraButtonActive(true);
+    }
+    
     const isRepeating = localStorage.getItem("isRepeatingCycle") === "true";
     if (isRepeating) {
       console.log("[QuestManager] Triggering repeating quest from handlePostButtonClick.");

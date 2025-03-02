@@ -148,6 +148,10 @@ export class BaseMirrorQuest extends BaseEvent {
       await this.eventManager.addDiaryEntry(`user_post_failed: ${randomLetter}`, false);
     }
     this.updateUIAfterFinish(success);
+    // Remove active state from the Open Camera button.
+    if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {
+      this.app.viewManager.setCameraButtonActive(false);
+    }
     localStorage.removeItem("mirrorQuestActive");
     // Delegate post-button update to ViewManager if necessary.
     if (success) {

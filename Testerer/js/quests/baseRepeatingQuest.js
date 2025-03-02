@@ -56,11 +56,17 @@ export class BaseRepeatingQuest extends BaseEvent {
   /**
    * activate – Activates the repeating quest.
    * Waits for the camera to be open if necessary, then starts the UI check loop.
+   * Also sets the Open Camera button to active.
    */
   async activate() {
     console.log(`Activating repeating quest: ${this.key}`);
     await this.eventManager.addDiaryEntry(this.key, true);
     console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
+
+    // Set Open Camera button to active state
+    if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {
+      this.app.viewManager.setCameraButtonActive(true);
+    }
 
     if (!this.app.isCameraOpen) {
       console.log("[BaseRepeatingQuest] Camera is not open. Waiting for cameraReady event...");
@@ -181,6 +187,11 @@ export class BaseRepeatingQuest extends BaseEvent {
     
     // Remove saved quest state
     localStorage.removeItem(`quest_state_${this.key}`);
+    
+    // Reset the active state of the Open Camera button
+    if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {
+      this.app.viewManager.setCameraButtonActive(false);
+    }
   }
 
   /**

@@ -66,6 +66,7 @@ export class ViewManager {
   
   /**
    * setCameraButtonActive – Sets the active state for the "Open Camera" button.
+   * In addition to adding/removing the CSS class "active", it saves the state in localStorage.
    * @param {boolean} isActive - True to mark as active, false to remove the active state.
    */
   setCameraButtonActive(isActive) {
@@ -76,7 +77,19 @@ export class ViewManager {
       } else {
         cameraBtn.classList.remove("active");
       }
+      // Save the current state in localStorage.
+      localStorage.setItem("cameraButtonActive", JSON.stringify(isActive));
     }
+  }
+  
+  /**
+   * restoreCameraButtonState – Restores the "Open Camera" button state from localStorage.
+   * Should be called during initialization.
+   */
+  restoreCameraButtonState() {
+    const stored = localStorage.getItem("cameraButtonActive");
+    const isActive = stored ? JSON.parse(stored) : false;
+    this.setCameraButtonActive(isActive);
   }
   
   /**

@@ -93,6 +93,34 @@ export class ViewManager {
   }
   
   /**
+   * setShootButtonActive – Sets the active state for the "Shoot" button.
+   * In addition to enabling/disabling the button, it saves the state in localStorage.
+   * @param {boolean} isActive - True to mark as active (enabled), false to disable.
+   */
+  setShootButtonActive(isActive) {
+    const shootBtn = document.getElementById("btn_shoot");
+    if (shootBtn) {
+      shootBtn.disabled = !isActive;
+      if (isActive) {
+        shootBtn.classList.add("active");
+      } else {
+        shootBtn.classList.remove("active");
+      }
+      // Save the current state in localStorage.
+      localStorage.setItem("shootButtonActive", JSON.stringify(isActive));
+    }
+  }
+  
+  /**
+   * restoreShootButtonState – Restores the "Shoot" button state from localStorage.
+   */
+  restoreShootButtonState() {
+    const stored = localStorage.getItem("shootButtonActive");
+    const isActive = stored ? JSON.parse(stored) : false;
+    this.setShootButtonActive(isActive);
+  }
+  
+  /**
    * startMirrorQuestUI – Initializes the UI for the mirror quest.
    * @param {Object} options - Contains:
    *   - statusElementId: ID of the status display element.

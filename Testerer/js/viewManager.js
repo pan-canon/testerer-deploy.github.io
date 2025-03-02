@@ -254,7 +254,19 @@ export class ViewManager {
       this.controlsPanel.style.pointerEvents = shouldBlock ? "none" : "auto";
     }
   }
-  
+
+  /**
+   * clearCache – Sends a message to the Service Worker to clear all caches.
+   */
+  clearCache() {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ action: 'CLEAR_CACHE' });
+      console.log("Clear cache message sent to Service Worker.");
+    } else {
+      console.warn("No active Service Worker controller found.");
+    }
+  }
+
   /**
    * renderDiary – Renders the diary entries into the diary container.
    * @param {Array} entries - Array of diary entry objects.

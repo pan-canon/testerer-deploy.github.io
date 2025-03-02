@@ -43,31 +43,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Update mechanism: Attach event listener to the update button
+  // Update mechanism: Attach event listener to the update button.
+  // This now calls the clearCache() method from the ViewManager.
   const updateBtn = document.getElementById("update-btn");
   if (updateBtn) {
-    updateBtn.addEventListener("click", async () => {
-      console.log("Update button clicked. Checking for updates...");
-      if ('serviceWorker' in navigator) {
-        try {
-          const registration = await navigator.serviceWorker.getRegistration();
-          if (registration) {
-            await registration.update();
-            if (registration.waiting) {
-              console.log("New Service Worker found. Sending skipWaiting message.");
-              registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-            } else {
-              console.log("No new Service Worker waiting.");
-            }
-            // Reload page to activate new SW and updated files
-            setTimeout(() => {
-              window.location.reload();
-            }, 1000);
-          }
-        } catch (error) {
-          console.error("Error during update check:", error);
-        }
-      }
+    updateBtn.addEventListener("click", () => {
+      console.log("Update button clicked.");
+      app.viewManager.clearCache();
     });
   }
 });

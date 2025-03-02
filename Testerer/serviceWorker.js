@@ -58,7 +58,7 @@ self.addEventListener("install", (event) => {
         console.log("Caching files:", urlsToCache);
         return cache.addAll(urlsToCache);
       })
-      .catch((err) => console.error("❌ Error during caching:", err))
+      .catch((err) => console.error("❌ Caching error:", err))
   );
 });
 
@@ -74,20 +74,37 @@ self.addEventListener("activate", (event) => {
           }
         })
       );
+    }).then(() => {
+      // Claim clients immediately so that the new SW takes control
+      return self.clients.claim();
     })
   );
 });
 
-// Listen for messages from the client (e.g., update command)
+// Listen for messages from the client.
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     console.log("Service Worker skipping waiting...");
     self.skipWaiting();
   }
+  // Clear all caches when receiving the CLEAR_CACHE command.
+  if (event.data && event.data.action === "CLEAR_CACHE") {
+    console.log("Received CLEAR_CACHE command.");
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          console.log(`🗑 Deleting cache: ${cacheName}`);
+          return caches.delete(cacheName);
+        })
+      );
+    }).then(() => {
+      console.log("All caches cleared.");
+    });
+  }
 });
 
 self.addEventListener("fetch", (event) => {
-  // Bypass caching for dynamic database management files to avoid interfering with table updates.
+  // Bypass caching for dynamic database management files.
   if (event.request.url.includes("databaseManager.js")) {
     return event.respondWith(fetch(event.request));
   }
@@ -95,11 +112,9 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Return the cached resource if found.
         if (response) {
           return response;
         }
-        // Otherwise, perform a network request and cache the response.
         return fetch(event.request)
           .then((networkResponse) => {
             return caches.open(CACHE_NAME).then((cache) => {
@@ -108,7 +123,6 @@ self.addEventListener("fetch", (event) => {
             });
           });
       })
-      // If both cache and network fail, return the cached index.html as a fallback.
       .catch(() => caches.match(`${BASE_PATH}/index.html`))
   );
 });

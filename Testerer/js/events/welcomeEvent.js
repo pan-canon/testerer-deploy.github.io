@@ -6,11 +6,14 @@ import { BaseEvent } from './baseEvent.js';
  * via the EventManager.
  *
  * Upon activation:
- *  1) Checks if the "welcome" event has already been logged.
- *  2) Logs the "welcome" entry in the diary as a ghost post (if not already logged).
- *  3) Sets the 'mirrorQuestReady' flag in localStorage to enable the "Post" button.
- *  4) Delegates UI update for the "Post" button to the ViewManager.
- *  5) Triggers the mirror visual effect.
+ *  1) If the "welcome" event is already logged, it checks the 'mirrorQuestReady' flag.
+ *     - If the flag is "true", it updates the UI to enable the "Post" button.
+ *     - Otherwise, it leaves the UI unchanged.
+ *  2) If the event is not yet logged, it logs the "welcome" entry as a ghost post,
+ *     sets the 'mirrorQuestReady' flag, updates the UI to enable the "Post" button,
+ *     and triggers the mirror visual effect.
+ *
+ * @returns {Promise<void>}
  */
 export class WelcomeEvent extends BaseEvent {
   /**
@@ -27,43 +30,35 @@ export class WelcomeEvent extends BaseEvent {
     this.key = "welcome";
   }
 
-  /**
-   * activate – Overridden activation method for the 'welcome' event.
-   *
-   * Steps:
-   *  1) If the "welcome" event is already logged, update the UI and exit.
-   *  2) Otherwise, log the "welcome" entry in the diary as a ghost post.
-   *  3) Set the 'mirrorQuestReady' flag in localStorage.
-   *  4) Delegate the "Post" button update to the ViewManager.
-   *  5) Trigger the mirror visual effect.
-   *
-   * @returns {Promise<void>}
-   */
   async activate() {
-    // Step 1: Check if the "welcome" event is already logged.
+    // If the "welcome" event is already logged, check the mirrorQuestReady flag.
     if (this.eventManager.isEventLogged(this.key)) {
-      console.log(`Event '${this.key}' is already logged. Skipping logging, but updating UI.`);
-      // Update the UI to enable the Post button, so the user can proceed.
-      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
-        this.app.viewManager.setPostButtonEnabled(true);
+      console.log(`Event '${this.key}' is already logged.`);
+      if (localStorage.getItem("mirrorQuestReady") === "true") {
+        if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
+          this.app.viewManager.setPostButtonEnabled(true);
+          console.log("Post button enabled based on mirrorQuestReady flag.");
+        }
+      } else {
+        if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
+          this.app.viewManager.setPostButtonEnabled(false);
+          console.log("Post button remains disabled as mirrorQuestReady flag is false.");
+        }
       }
       return;
     }
 
+    // If event is not logged, proceed with activation.
     console.log(`Activating event '${this.key}': Logging invitation to approach the mirror`);
-    
-    // Step 2: Log the "welcome" entry in the diary as a ghost post.
     await this.eventManager.addDiaryEntry(this.key, true);
-    
-    // Step 3: Set the mirrorQuestReady flag in localStorage.
+
+    // Set the mirrorQuestReady flag to "true" and update the UI.
     localStorage.setItem("mirrorQuestReady", "true");
-    
-    // Step 4: Update the UI to enable the Post button.
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
       this.app.viewManager.setPostButtonEnabled(true);
     }
     
-    // Step 5: Trigger the mirror visual effect.
+    // Trigger the mirror visual effect.
     this.app.visualEffectsManager.triggerMirrorEffect();
   }
 }

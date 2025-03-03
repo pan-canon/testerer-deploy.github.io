@@ -1,19 +1,7 @@
 import { BaseEvent } from './baseEvent.js';
+import { StateManager } from './stateManager.js';
+import { ErrorManager } from './errorManager.js';
 
-/**
- * WelcomeEvent – A welcome event that notifies the user with an invitation
- * to approach the mirror. Inherits from BaseEvent and implements activation logic
- * via the EventManager.
- *
- * Upon activation:
- *  1) If the "welcome" event has already been completed (flag "welcomeDone" is set),
- *     the method returns immediately and ensures the "Post" button is enabled.
- *  2) Otherwise, it logs the "welcome" entry as a ghost post, sets the 'mirrorQuestReady'
- *     flag, updates the UI to enable the "Post" button, triggers the mirror visual effect,
- *     and finally sets the flag "welcomeDone" to prevent future auto-launches.
- *
- * @returns {Promise<void>}
- */
 export class WelcomeEvent extends BaseEvent {
   /**
    * @param {EventManager} eventManager - The event manager for diary operations.
@@ -24,14 +12,13 @@ export class WelcomeEvent extends BaseEvent {
     super(eventManager);
     this.app = appInstance;
     this.languageManager = languageManager;
-    
     // Set the unique key for the welcome event.
     this.key = "welcome";
   }
 
   async activate() {
-    // Если флаг "welcomeDone" уже установлен, значит событие выполнено.
-    if (localStorage.getItem("welcomeDone") === "true") {
+    // If the "welcomeDone" flag is already set, skip activation and enable the Post button.
+    if (StateManager.get("welcomeDone") === "true") {
       console.log("Welcome event already completed; skipping activation.");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(true);
@@ -39,10 +26,10 @@ export class WelcomeEvent extends BaseEvent {
       return;
     }
     
-    // Дополнительная проверка: если событие уже залогировано, то возвращаем.
+    // If the event is already logged, adjust the Post button based on the "mirrorQuestReady" flag.
     if (this.eventManager.isEventLogged(this.key)) {
       console.log(`Event '${this.key}' is already logged.`);
-      if (localStorage.getItem("mirrorQuestReady") === "true") {
+      if (StateManager.get("mirrorQuestReady") === "true") {
         if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
           this.app.viewManager.setPostButtonEnabled(true);
           console.log("Post button enabled based on mirrorQuestReady flag.");
@@ -59,8 +46,8 @@ export class WelcomeEvent extends BaseEvent {
     console.log(`Activating event '${this.key}': Logging invitation to approach the mirror`);
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Устанавливаем флаг mirrorQuestReady и активируем кнопку "Post".
-    localStorage.setItem("mirrorQuestReady", "true");
+    // Set the mirrorQuestReady flag and enable the Post button.
+    StateManager.set("mirrorQuestReady", "true");
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
       this.app.viewManager.setPostButtonEnabled(true);
     }
@@ -68,7 +55,7 @@ export class WelcomeEvent extends BaseEvent {
     // Trigger the mirror visual effect.
     this.app.visualEffectsManager.triggerMirrorEffect();
 
-    // Устанавливаем флаг "welcomeDone", чтобы впредь не запускать событие Welcome повторно.
-    localStorage.setItem("welcomeDone", "true");
+    // Set the welcomeDone flag to prevent future auto-launch of the event.
+    StateManager.set("welcomeDone", "true");
   }
 }

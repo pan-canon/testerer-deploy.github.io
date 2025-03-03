@@ -1,5 +1,7 @@
+import { ErrorManager } from './errorManager.js';
+
 export class VisualEffectsManager {
-  /** 
+  /**
    * @param {App} appInstance – Reference to the main application instance (contains flag isCameraOpen).
    * @param {HTMLElement} controlsPanel – The controls panel element for blocking interactions.
    */
@@ -12,16 +14,22 @@ export class VisualEffectsManager {
    * Plays an audio file and stops it automatically after the specified delay.
    * @param {string} audioSrc - Path to the audio file.
    * @param {number} stopDelay - Time in milliseconds after which to stop playback.
+   * @returns {HTMLAudioElement} The audio object.
    */
   playAudioWithStop(audioSrc, stopDelay) {
-    const audio = new Audio(audioSrc);
-    audio.play();
-    if (stopDelay && stopDelay > 0) {
-      setTimeout(() => {
-        audio.pause();
-      }, stopDelay);
+    try {
+      const audio = new Audio(audioSrc);
+      audio.play();
+      if (stopDelay && stopDelay > 0) {
+        setTimeout(() => {
+          audio.pause();
+        }, stopDelay);
+      }
+      return audio;
+    } catch (error) {
+      ErrorManager.logError(error, "playAudioWithStop");
+      return null;
     }
-    return audio; // Return the audio object for manual control if needed.
   }
 
   /**
@@ -30,14 +38,18 @@ export class VisualEffectsManager {
    * @param {boolean} shouldBlock - true to block controls, false to unblock.
    */
   setControlsBlocked(shouldBlock) {
-    // If camera is open, do not block controls.
+    // Do not block controls if camera is open.
     if (this.app.isCameraOpen) {
       shouldBlock = false;
     }
     if (this.app.viewManager && typeof this.app.viewManager.setControlsBlocked === 'function') {
       this.app.viewManager.setControlsBlocked(shouldBlock);
     } else if (this.controlsPanel) {
-      this.controlsPanel.style.pointerEvents = shouldBlock ? "none" : "auto";
+      try {
+        this.controlsPanel.style.pointerEvents = shouldBlock ? "none" : "auto";
+      } catch (error) {
+        ErrorManager.logError(error, "setControlsBlocked");
+      }
     }
   }
 
@@ -47,8 +59,8 @@ export class VisualEffectsManager {
    * @param {string} text - The text (including HTML tags) to animate.
    * @param {number} speed - Typing speed in milliseconds.
    * @param {HTMLAudioElement} [audioObj] - Audio object to play during animation.
-   * @param {Function} [callback] - Callback function invoked after animation completes.
-   * @param {Function} [onChar] - Function called after each character is inserted.
+   * @param {Function} [callback] - Callback invoked after animation completes.
+   * @param {Function} [onChar] - Callback after each character is inserted.
    */
   animateHTMLText(targetElem, text, speed, audioObj, callback, onChar) {
     targetElem.innerHTML = "";
@@ -56,7 +68,7 @@ export class VisualEffectsManager {
     let currentHTML = "";
     let isTag = false;
     let tagBuffer = "";
- 
+
     const intervalId = setInterval(() => {
       const char = text[pos];
       if (!char) {
@@ -65,8 +77,8 @@ export class VisualEffectsManager {
         if (callback) callback();
         return;
       }
- 
-      // Tag parsing logic.
+
+      // Parse HTML tags.
       if (char === "<") {
         isTag = true;
       }
@@ -80,10 +92,10 @@ export class VisualEffectsManager {
       } else {
         currentHTML += char;
       }
- 
+
       targetElem.innerHTML = currentHTML;
       pos++;
- 
+
       if (typeof onChar === "function") {
         onChar(targetElem, currentHTML);
       }
@@ -96,19 +108,23 @@ export class VisualEffectsManager {
    */
   triggerMirrorEffect() {
     if (!this.app.isCameraOpen) {
-      console.log("Mirror effect not triggered: camera is closed.");
+      ErrorManager.logError("Mirror effect not triggered: camera is closed.", "triggerMirrorEffect");
       return;
     }
     if (this.app.viewManager && typeof this.app.viewManager.applyBackgroundTransition === 'function') {
-      // Delegate background transition.
+      // Delegate background transition to ViewManager.
       this.app.viewManager.applyBackgroundTransition("black", 1000);
     } else {
-      // Fallback: Direct manipulation of document.body styles.
-      document.body.style.transition = "background 1s";
-      document.body.style.background = "black";
-      setTimeout(() => {
-        document.body.style.background = "";
-      }, 1000);
+      try {
+        // Fallback: Direct manipulation of document.body styles.
+        document.body.style.transition = "background 1s";
+        document.body.style.background = "black";
+        setTimeout(() => {
+          document.body.style.background = "";
+        }, 1000);
+      } catch (error) {
+        ErrorManager.logError(error, "triggerMirrorEffect - fallback");
+      }
     }
     // Play the ringtone audio for 3 seconds.
     this.playAudioWithStop('audio/phone_ringtone.mp3', 3000);
@@ -117,38 +133,42 @@ export class VisualEffectsManager {
   /**
    * Triggers the ghost appearance effect.
    * Delegates display to ViewManager if available.
-   * @param {string} ghostId - The identifier of the ghost effect.
+   * @param {string} ghostId - Identifier for the ghost effect.
    */
   triggerGhostAppearanceEffect(ghostId) {
     if (!this.app.isCameraOpen) {
-      console.log("Ghost appearance effect not triggered: camera is closed.");
+      ErrorManager.logError("Ghost appearance effect not triggered: camera is closed.", "triggerGhostAppearanceEffect");
       return;
     }
     if (this.app.viewManager && typeof this.app.viewManager.showGhostAppearanceEffect === 'function') {
       this.app.viewManager.showGhostAppearanceEffect(ghostId);
     } else {
-      // Fallback: Direct DOM manipulation.
-      const ghostEffect = document.createElement("div");
-      Object.assign(ghostEffect.style, {
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: "200px",
-        height: "200px",
-        background: `url('images/${ghostId}.png') no-repeat center center`,
-        backgroundSize: "contain",
-        opacity: "0.7",
-        transition: "opacity 2s"
-      });
-      document.body.appendChild(ghostEffect);
-      setTimeout(() => { ghostEffect.style.opacity = "0"; }, 3000);
-      setTimeout(() => { ghostEffect.remove(); }, 5000);
+      try {
+        // Fallback: Direct DOM manipulation.
+        const ghostEffect = document.createElement("div");
+        Object.assign(ghostEffect.style, {
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "200px",
+          height: "200px",
+          background: `url('images/${ghostId}.png') no-repeat center center`,
+          backgroundSize: "contain",
+          opacity: "0.7",
+          transition: "opacity 2s"
+        });
+        document.body.appendChild(ghostEffect);
+        setTimeout(() => { ghostEffect.style.opacity = "0"; }, 3000);
+        setTimeout(() => { ghostEffect.remove(); }, 5000);
+      } catch (error) {
+        ErrorManager.logError(error, "triggerGhostAppearanceEffect - fallback");
+      }
     }
   }
 
   /**
-   * Triggers the whisper effect (plays whisper audio for 5 seconds).
+   * Triggers the whisper effect by playing a whisper audio for 5 seconds.
    */
   triggerWhisperEffect() {
     this.playAudioWithStop('audio/whisper.mp3', 5000);
@@ -164,11 +184,11 @@ export class VisualEffectsManager {
   triggerGhostTextEffect(targetElem, text, callback) {
     // Block controls.
     this.setControlsBlocked(true);
- 
+
     // Play ghost sound.
     const ghostSound = new Audio('audio/ghost_effect.mp3');
     ghostSound.play();
- 
+
     this.animateHTMLText(
       targetElem,
       text,
@@ -180,7 +200,7 @@ export class VisualEffectsManager {
       }
     );
   }
- 
+
   /**
    * Triggers user text effect that simulates typing with a moving pencil icon.
    * Blocks controls during the animation.
@@ -198,34 +218,34 @@ export class VisualEffectsManager {
       height: "24px",
       position: "absolute"
     });
- 
+
     // Insert the pencil icon into the parent element.
     const parentElem = targetElem.parentElement;
     parentElem.style.position = "relative";
     parentElem.insertBefore(pencilIcon, targetElem);
- 
+
     // Block controls.
     this.setControlsBlocked(true);
- 
+
     // Play typing sound.
     const typeSound = new Audio('audio/type_sound.mp3');
     typeSound.loop = true;
     typeSound.play();
- 
+
     const onChar = () => {
       const dummySpan = document.createElement("span");
-      dummySpan.innerHTML = "&nbsp;"; // To get a position reference.
+      dummySpan.innerHTML = "&nbsp;"; // For positioning.
       targetElem.appendChild(dummySpan);
- 
+
       const rectDummy = dummySpan.getBoundingClientRect();
       const rectParent = parentElem.getBoundingClientRect();
       // Update pencil icon position.
       pencilIcon.style.left = (rectDummy.left - rectParent.left) + "px";
       pencilIcon.style.top  = (rectDummy.top - rectParent.top) + "px";
- 
+
       dummySpan.remove();
     };
- 
+
     this.animateHTMLText(
       targetElem,
       text,

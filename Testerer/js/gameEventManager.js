@@ -1,13 +1,6 @@
-import { WelcomeEvent } from './events/welcomeEvent.js';
-import { FinalEvent } from './events/finalEvent.js';
-import { PostMirrorEvent } from './events/postMirrorEvent.js';
-import { PostRepeatingEvent } from './events/postRepeatingEvent.js';
+import { StateManager } from './stateManager.js';
+import { ErrorManager } from './errorManager.js';
 
-/**
- * GameEventManager – A class responsible for handling "short" (one-time) events.
- * Unlike larger quests (MirrorQuest, RepeatingQuest, FinalQuest),
- * these events simply trigger the start of the required quest or post.
- */
 export class GameEventManager {
   constructor(eventManager, appInstance, languageManager) {
     this.eventManager = eventManager;
@@ -34,7 +27,7 @@ export class GameEventManager {
       await event.activate();
       console.log(`Event '${key}' activated.`);
     } else {
-      console.warn(`[GameEventManager] Event "${key}" not found in the list.`);
+      ErrorManager.logError(`Event "${key}" not found in the list.`, "activateEvent");
     }
   }
 
@@ -69,7 +62,7 @@ export class GameEventManager {
    * after a 5-second delay. Otherwise, ensures the "Post" button is enabled.
    */
   async autoLaunchWelcomeEvent() {
-    if (localStorage.getItem("welcomeDone") === "true") {
+    if (StateManager.get("welcomeDone") === "true") {
       console.log("Welcome event already completed; auto-launch skipped.");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
         this.app.viewManager.setPostButtonEnabled(true);

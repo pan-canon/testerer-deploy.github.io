@@ -1,3 +1,6 @@
+import { StateManager } from './stateManager.js';
+import { ErrorManager } from './errorManager.js';
+
 export class ViewManager {
   constructor() {
     // Reference to the diary container element.
@@ -66,7 +69,7 @@ export class ViewManager {
   
   /**
    * setCameraButtonActive – Sets the active state for the "Open Camera" button.
-   * In addition to adding/removing the CSS class "active", it saves the state in localStorage.
+   * In addition to adding/removing the CSS class "active", it saves the state using StateManager.
    * @param {boolean} isActive - True to mark as active, false to remove the active state.
    */
   setCameraButtonActive(isActive) {
@@ -77,25 +80,24 @@ export class ViewManager {
       } else {
         cameraBtn.classList.remove("active");
       }
-      // Save the current state in localStorage.
-      localStorage.setItem("cameraButtonActive", JSON.stringify(isActive));
+      // Save the current state using StateManager.
+      StateManager.set("cameraButtonActive", JSON.stringify(isActive));
     }
   }
   
   /**
-   * restoreCameraButtonState – Restores the "Open Camera" button state from localStorage.
-   * Should be called during initialization.
+   * restoreCameraButtonState – Restores the "Open Camera" button state using StateManager.
    */
   restoreCameraButtonState() {
-    const stored = localStorage.getItem("cameraButtonActive");
+    const stored = StateManager.get("cameraButtonActive");
     const isActive = stored ? JSON.parse(stored) : false;
     this.setCameraButtonActive(isActive);
   }
   
   /**
    * setShootButtonActive – Sets the active state for the "Shoot" button.
-   * In addition to enabling/disabling the button, it saves the state in localStorage.
-   * @param {boolean} isActive - True to mark as active (enabled), false to disable.
+   * Enables/disables the button and saves the state using StateManager.
+   * @param {boolean} isActive - True to enable, false to disable.
    */
   setShootButtonActive(isActive) {
     const shootBtn = document.getElementById("btn_shoot");
@@ -106,16 +108,18 @@ export class ViewManager {
       } else {
         shootBtn.classList.remove("active");
       }
-      // Save the current state in localStorage.
-      localStorage.setItem("shootButtonActive", JSON.stringify(isActive));
+      // Save the current state using StateManager.
+      StateManager.set("shootButtonActive", JSON.stringify(isActive));
+    } else {
+      ErrorManager.logError("Shoot button not found.", "setShootButtonActive");
     }
   }
   
   /**
-   * restoreShootButtonState – Restores the "Shoot" button state from localStorage.
+   * restoreShootButtonState – Restores the "Shoot" button state using StateManager.
    */
   restoreShootButtonState() {
-    const stored = localStorage.getItem("shootButtonActive");
+    const stored = StateManager.get("shootButtonActive");
     const isActive = stored ? JSON.parse(stored) : false;
     this.setShootButtonActive(isActive);
   }
@@ -125,7 +129,7 @@ export class ViewManager {
    * @param {Object} options - Contains:
    *   - statusElementId: ID of the status display element.
    *   - shootButtonId: ID of the "Shoot" button.
-   *   - onShoot: Callback function executed when the "Shoot" button is clicked.
+   *   - onShoot: Callback executed when the "Shoot" button is clicked.
    */
   startMirrorQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
@@ -136,17 +140,19 @@ export class ViewManager {
     const shootBtn = document.getElementById(options.shootButtonId);
     if (shootBtn) {
       shootBtn.style.display = "inline-block";
-      // В рамках зеркального квеста, при открытом режиме камеры, делаем кнопку "Shoot" активной.
+      // Enable the "Shoot" button.
       this.setShootButtonActive(true);
       shootBtn.style.pointerEvents = "auto";
       shootBtn.onclick = null; // Remove any existing handler.
       shootBtn.onclick = () => {
-        // При нажатии сразу отключаем активное состояние и вызываем callback.
+        // Immediately disable active state and invoke callback.
         this.setShootButtonActive(false);
         if (typeof options.onShoot === 'function') {
           options.onShoot();
         }
       };
+    } else {
+      ErrorManager.logError("Shoot button not found in the DOM.", "startMirrorQuestUI");
     }
   }
   
@@ -185,7 +191,7 @@ export class ViewManager {
    *   - shootButtonId: ID of the "Shoot" button.
    *   - stage: Current stage number.
    *   - totalStages: Total number of stages.
-   *   - onShoot: Callback function executed when the "Shoot" button is clicked.
+   *   - onShoot: Callback executed when the "Shoot" button is clicked.
    */
   startRepeatingQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
@@ -196,19 +202,19 @@ export class ViewManager {
     const shootBtn = document.getElementById(options.shootButtonId);
     if (shootBtn) {
       shootBtn.style.display = "inline-block";
-      // When starting a repeating quest stage, enable the Shoot button
+      // Enable the Shoot button.
       this.setShootButtonActive(true);
       shootBtn.style.pointerEvents = "auto";
       shootBtn.onclick = null;
       shootBtn.onclick = () => {
-        // Disable the button immediately upon click.
+        // Immediately disable the button upon click.
         this.setShootButtonActive(false);
         if (typeof options.onShoot === 'function') {
           options.onShoot();
         }
       };
     } else {
-      console.error("[ViewManager] Shoot button not found in the DOM.");
+      ErrorManager.logError("Shoot button not found in the DOM.", "startRepeatingQuestUI");
     }
   }
   
@@ -272,8 +278,7 @@ export class ViewManager {
   }
   
   /**
-   * showNotification – Displays a notification message to the user.
-   * This implementation uses a simple toast notification.
+   * showNotification – Displays a notification message to the user using a simple toast.
    * @param {string} message - The notification message.
    */
   showNotification(message) {
@@ -334,14 +339,14 @@ export class ViewManager {
    */
   renderDiary(entries, currentLanguage, effectsManager) {
     if (!this.diaryContainer) {
-      console.error("Diary container not found!");
+      ErrorManager.logError("Diary container not found!", "renderDiary");
       return;
     }
     // Clear the diary container.
     this.diaryContainer.innerHTML = "";
     
-    // Retrieve animated entry IDs from localStorage.
-    const animatedIds = JSON.parse(localStorage.getItem("animatedDiaryIds") || "[]");
+    // Retrieve animated entry IDs using StateManager.
+    const animatedIds = JSON.parse(StateManager.get("animatedDiaryIds") || "[]");
     const seen = new Set();
     
     entries.forEach(entryObj => {
@@ -410,7 +415,7 @@ export class ViewManager {
       this.diaryContainer.appendChild(articleElem);
     });
     
-    localStorage.setItem("animatedDiaryIds", JSON.stringify(animatedIds));
+    StateManager.set("animatedDiaryIds", JSON.stringify(animatedIds));
     console.log("Diary updated.");
   }
 }

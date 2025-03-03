@@ -1,4 +1,6 @@
 import { BaseEvent } from './baseEvent.js';
+import { StateManager } from './stateManager.js';
+import { ErrorManager } from './errorManager.js';
 
 export class PostRepeatingEvent extends BaseEvent {
   constructor(eventManager, appInstance) {
@@ -23,7 +25,7 @@ export class PostRepeatingEvent extends BaseEvent {
       await this.app.questManager.activateQuest("final_quest");
     } else {
       // If the ghost is not finished, re-enable the "Post" button for the next repeating quest cycle.
-      localStorage.setItem("mirrorQuestReady", "true");
+      StateManager.set("mirrorQuestReady", "true");
       // The flag "isRepeatingCycle" remains true for repeating cycles.
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(true);

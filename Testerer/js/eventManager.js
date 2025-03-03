@@ -1,3 +1,5 @@
+import { ErrorManager } from './errorManager.js';
+
 export class EventManager {
   /**
    * Constructor for EventManager.
@@ -37,15 +39,14 @@ export class EventManager {
    * @param {boolean} [isPostFromGhost=false] - If true, styles the entry as a ghost post.
    */
   async addDiaryEntry(entry, isPostFromGhost = false) {
-    // Determine CSS class.
     const postClass = isPostFromGhost ? "ghost-post" : "user-post";
     const entryData = { entry, postClass };
     const serializedEntry = JSON.stringify(entryData);
 
-    // Add diary entry.
+    // Add diary entry to the database.
     await this.databaseManager.addDiaryEntry(serializedEntry);
 
-    // If this is a system event, save it to the events table.
+    // If this is a system event, also save it to the events table.
     if (isPostFromGhost) {
       const eventData = {
         event_key: entry,
@@ -53,7 +54,6 @@ export class EventManager {
         timestamp: new Date().toISOString(),
         completed: 0
       };
-      // Save event; error handling omitted for brevity.
       this.databaseManager.saveEvent(eventData);
     }
 
@@ -70,7 +70,8 @@ export class EventManager {
       const currentLanguage = this.languageManager.getLanguage();
       this.viewManager.renderDiary(entries, currentLanguage, this.visualEffectsManager);
     } else {
-      console.error("ViewManager is not available. Cannot update diary display.");
+      ErrorManager.logError("ViewManager is not available. Cannot update diary display.", "updateDiaryDisplay");
+      ErrorManager.showError("Unable to update diary display.");
     }
   }
 
@@ -84,7 +85,8 @@ export class EventManager {
       await this.addDiaryEntry(questKey, true);
       console.log(`👻 Starting quest for ${ghost.name}...`);
     } else {
-      console.error("⚠️ No active ghost found.");
+      ErrorManager.logError("No active ghost found.", "startGhostQuest");
+      ErrorManager.showError("⚠️ No active ghost found.");
     }
   }
   

@@ -1,3 +1,6 @@
+import { ErrorManager } from './errorManager.js';
+import { StateManager } from './stateManager.js';
+
 export class GhostManager {
   /**
    * Constructor for GhostManager.
@@ -68,7 +71,7 @@ export class GhostManager {
       // Save ghost state using the new DatabaseManager method.
       await this.app.databaseManager.saveGhostState(ghost);
     } else {
-      console.warn(`Ghost with ID=${ghostId} not found!`);
+      ErrorManager.logError(`Ghost with ID=${ghostId} not found!`, "setCurrentGhost");
     }
   }
 
@@ -81,6 +84,8 @@ export class GhostManager {
       ghost.isFinished = true;
       console.log(`Ghost ${ghost.name} finished.`);
       await this.app.databaseManager.saveGhostState(ghost);
+    } else {
+      ErrorManager.logError("Cannot finish ghost: ghost not found.", "finishCurrentGhost");
     }
   }
 
@@ -101,10 +106,13 @@ export class GhostManager {
    */
   async triggerNextPhenomenon() {
     const ghost = this.getCurrentGhost();
-    if (!ghost) return;
+    if (!ghost) {
+      ErrorManager.logError("No ghost found to trigger phenomenon.", "triggerNextPhenomenon");
+      return;
+    }
 
     if (ghost.isFinished) {
-      console.warn(`Ghost "${ghost.name}" is already finished; phenomena unavailable.`);
+      ErrorManager.logError(`Ghost "${ghost.name}" is already finished; phenomena unavailable.`, "triggerNextPhenomenon");
       return;
     }
 
@@ -131,7 +139,7 @@ export class GhostManager {
         this.app.gameEventManager.activateEvent("ghost_final_event");
       }
     } else {
-      console.warn(`All phenomena for ghost ${ghost.name} have been completed (index=${this.currentPhenomenonIndex}).`);
+      ErrorManager.logError(`All phenomena for ghost ${ghost.name} have been completed (index=${this.currentPhenomenonIndex}).`, "triggerNextPhenomenon");
     }
   }
 
@@ -149,6 +157,8 @@ export class GhostManager {
     if (ghost) {
       ghost.isFinished = false;
       await this.app.databaseManager.saveGhostState(ghost);
+    } else {
+      ErrorManager.logError("Failed to reset ghost chain: default ghost not found.", "resetGhostChain");
     }
   }
   

@@ -1,4 +1,6 @@
 import { BaseEvent } from './baseEvent.js';
+import { StateManager } from './stateManager.js';
+import { ErrorManager } from './errorManager.js';
 
 export class PostMirrorEvent extends BaseEvent {
   constructor(eventManager, appInstance) {
@@ -17,9 +19,9 @@ export class PostMirrorEvent extends BaseEvent {
     // Log the event in the diary as a ghost message.
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Set the flags to mark that the mirror quest is ready and that repeating cycle mode is active.
-    localStorage.setItem("mirrorQuestReady", "true");
-    localStorage.setItem("isRepeatingCycle", "true");
+    // Set flags using StateManager.
+    StateManager.set("mirrorQuestReady", "true");
+    StateManager.set("isRepeatingCycle", "true");
 
     // Delegate UI update: enable the "Post" button via ViewManager.
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {

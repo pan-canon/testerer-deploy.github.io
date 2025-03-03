@@ -141,12 +141,9 @@ export class App {
       console.log("Profile found:", profile);
       await this.showMainScreen();
 
-      // If registration is completed, trigger the WelcomeEvent after 5 seconds.
+      // Если регистрация завершена, запускаем авто-запуск WelcomeEvent через gameEventManager.
       if (localStorage.getItem("registrationCompleted") === "true") {
-        setTimeout(() => {
-          console.log("Triggering WelcomeEvent explicitly...");
-          this.gameEventManager.activateEvent("welcome");
-        }, 5000);
+        this.gameEventManager.autoLaunchWelcomeEvent();
       }
 
       // (Removed call to questManager.updateCameraButtonState)
@@ -318,7 +315,7 @@ export class App {
    *  2) Saves the profile (name, gender, language, selfie).
    *  3) Stops the camera and hides the global container.
    *  4) Switches to the main screen.
-   *  5) Explicitly triggers the WelcomeEvent after 5 seconds.
+   *  5) Explicitly triggers the WelcomeEvent after 5 seconds using gameEventManager.
    */
   async completeRegistration() {
     const selfieSrc = (this.selfiePreview?.src || document.getElementById('selfie-thumbnail').src);
@@ -346,10 +343,8 @@ export class App {
 
     await this.showMainScreen();
 
-    setTimeout(() => {
-      console.log("Explicitly triggering WelcomeEvent...");
-      this.gameEventManager.activateEvent("welcome");
-    }, 5000);
+    // Вместо setTimeout вызываем авто-запуск WelcomeEvent через gameEventManager.
+    this.gameEventManager.autoLaunchWelcomeEvent();
   }
 
   /**

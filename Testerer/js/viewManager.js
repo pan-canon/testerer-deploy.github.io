@@ -136,11 +136,13 @@ export class ViewManager {
     const shootBtn = document.getElementById(options.shootButtonId);
     if (shootBtn) {
       shootBtn.style.display = "inline-block";
-      shootBtn.disabled = true;
+      // В рамках зеркального квеста, при открытом режиме камеры, делаем кнопку "Shoot" активной.
+      this.setShootButtonActive(true);
+      shootBtn.style.pointerEvents = "auto";
       shootBtn.onclick = null; // Remove any existing handler.
       shootBtn.onclick = () => {
-        shootBtn.disabled = true;
-        shootBtn.style.pointerEvents = "none";
+        // При нажатии сразу отключаем активное состояние и вызываем callback.
+        this.setShootButtonActive(false);
         if (typeof options.onShoot === 'function') {
           options.onShoot();
         }

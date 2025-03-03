@@ -11,7 +11,8 @@ import { BaseEvent } from './baseEvent.js';
  *     - Otherwise, it leaves the UI unchanged.
  *  2) If the event is not yet logged, it logs the "welcome" entry as a ghost post,
  *     sets the 'mirrorQuestReady' flag, updates the UI to enable the "Post" button,
- *     and triggers the mirror visual effect.
+ *     triggers the mirror visual effect, and finally sets a flag ("welcomeDone")
+ *     to prevent future auto-launches.
  *
  * @returns {Promise<void>}
  */
@@ -48,7 +49,6 @@ export class WelcomeEvent extends BaseEvent {
       return;
     }
 
-    // If event is not logged, proceed with activation.
     console.log(`Activating event '${this.key}': Logging invitation to approach the mirror`);
     await this.eventManager.addDiaryEntry(this.key, true);
 
@@ -60,5 +60,8 @@ export class WelcomeEvent extends BaseEvent {
     
     // Trigger the mirror visual effect.
     this.app.visualEffectsManager.triggerMirrorEffect();
+
+    // Устанавливаем флаг "welcomeDone", чтобы впредь не запускать событие Welcome повторно.
+    localStorage.setItem("welcomeDone", "true");
   }
 }

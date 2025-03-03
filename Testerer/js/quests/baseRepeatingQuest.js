@@ -16,6 +16,9 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.currentStage = 1;
     this.finished = false;
 
+    // Флаг завершения последней стадии повторяющегося квеста
+    this.finalRepeatingQuestCompleted = false;
+
     // Attempt to restore saved quest state (if any)
     this.loadState();
   }
@@ -102,16 +105,24 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * restoreUI – Restores the UI for the repeating quest if a repeating cycle is active.
-   * If the camera is not open, waits for the "cameraReady" event before starting the UI.
+   * Additionally, if the current stage requires an active "Shoot" button and the camera is open,
+   * restores its active state (persisted via localStorage).
    */
   restoreUI() {
     console.log("[BaseRepeatingQuest] Restoring repeating quest UI...");
-    if (!this.app.isCameraOpen) {
-      document.addEventListener("cameraReady", () => {
-        this.startCheckLoop();
-      }, { once: true });
-    } else {
+    const restoreButtonState = () => {
       this.startCheckLoop();
+      // Если квест находится на этапе, где кнопка должна быть активной, и камера открыта
+      if (this.currentStage <= this.totalStages && this.app.isCameraOpen) {
+        this.app.viewManager.setShootButtonActive(true);
+        console.log("[BaseRepeatingQuest] Shoot button state restored as active.");
+      }
+    };
+
+    if (!this.app.isCameraOpen) {
+      document.addEventListener("cameraReady", restoreButtonState, { once: true });
+    } else {
+      restoreButtonState();
     }
   }
 
@@ -158,7 +169,7 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * finish – Completes the repeating quest.
-   * Stops the UI check loop, logs the final diary entry, triggers the final repeating event,
+   * Stops the UI check loop, logs the final diary entry, triggers the final event,
    * and updates the UI accordingly.
    */
   async finish() {
@@ -172,8 +183,12 @@ export class BaseRepeatingQuest extends BaseEvent {
     // Log the final post in the diary
     await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
     
-    // Trigger the final repeating event
-    await this.app.gameEventManager.activateEvent("post_repeating_event");
+    // Вместо вызова события "post_repeating_event", если флаг финального завершения еще не установлен,
+    // устанавливаем его и активируем финальное событие.
+    if (!this.finalRepeatingQuestCompleted) {
+      this.finalRepeatingQuestCompleted = true;
+      await this.app.gameEventManager.activateEvent("final_event");
+    }
     
     // Remove the readiness flag to avoid new cycle activation
     localStorage.removeItem("mirrorQuestReady");

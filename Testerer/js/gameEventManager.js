@@ -62,4 +62,20 @@ export class GameEventManager {
     await this.activateEvent('mirror_quest');
     console.log("🪞 Mirror Quest started (event).");
   }
+  
+  /**
+   * autoLaunchWelcomeEvent – Automatically launches the welcome event after registration.
+   * Checks for the presence of the "welcomeDone" flag; if absent, launches the welcome event
+   * after a 5-second delay. Otherwise, skips auto-launch.
+   */
+  async autoLaunchWelcomeEvent() {
+    if (localStorage.getItem("welcomeDone") === "true") {
+      console.log("Welcome event already completed; auto-launch skipped.");
+      return;
+    }
+    console.log("Auto-launching welcome event in 5 seconds...");
+    setTimeout(async () => {
+      await this.activateEvent("welcome");
+    }, 5000);
+  }
 }

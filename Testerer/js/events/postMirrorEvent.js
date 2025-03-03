@@ -1,6 +1,6 @@
 import { BaseEvent } from './baseEvent.js';
-import { StateManager } from './stateManager.js';
-import { ErrorManager } from './errorManager.js';
+import { StateManager } from '../stateManager.js';
+import { ErrorManager } from '../errorManager.js';
 
 export class PostMirrorEvent extends BaseEvent {
   constructor(eventManager, appInstance) {

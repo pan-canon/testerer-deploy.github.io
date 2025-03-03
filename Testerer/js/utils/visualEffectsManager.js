@@ -1,4 +1,4 @@
-import { ErrorManager } from './errorManager.js';
+import { ErrorManager } from '../errorManager.js';
 
 export class VisualEffectsManager {
   /**

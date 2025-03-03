@@ -6,13 +6,11 @@ import { BaseEvent } from './baseEvent.js';
  * via the EventManager.
  *
  * Upon activation:
- *  1) If the "welcome" event is already logged, it checks the 'mirrorQuestReady' flag.
- *     - If the flag is "true", it updates the UI to enable the "Post" button.
- *     - Otherwise, it leaves the UI unchanged.
- *  2) If the event is not yet logged, it logs the "welcome" entry as a ghost post,
- *     sets the 'mirrorQuestReady' flag, updates the UI to enable the "Post" button,
- *     triggers the mirror visual effect, and finally sets a flag ("welcomeDone")
- *     to prevent future auto-launches.
+ *  1) If the "welcome" event has already been completed (flag "welcomeDone" is set),
+ *     the method returns immediately and ensures the "Post" button is enabled.
+ *  2) Otherwise, it logs the "welcome" entry as a ghost post, sets the 'mirrorQuestReady'
+ *     flag, updates the UI to enable the "Post" button, triggers the mirror visual effect,
+ *     and finally sets the flag "welcomeDone" to prevent future auto-launches.
  *
  * @returns {Promise<void>}
  */
@@ -32,7 +30,16 @@ export class WelcomeEvent extends BaseEvent {
   }
 
   async activate() {
-    // If the "welcome" event is already logged, check the mirrorQuestReady flag.
+    // Если флаг "welcomeDone" уже установлен, значит событие выполнено.
+    if (localStorage.getItem("welcomeDone") === "true") {
+      console.log("Welcome event already completed; skipping activation.");
+      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
+        this.app.viewManager.setPostButtonEnabled(true);
+      }
+      return;
+    }
+    
+    // Дополнительная проверка: если событие уже залогировано, то возвращаем.
     if (this.eventManager.isEventLogged(this.key)) {
       console.log(`Event '${this.key}' is already logged.`);
       if (localStorage.getItem("mirrorQuestReady") === "true") {
@@ -52,7 +59,7 @@ export class WelcomeEvent extends BaseEvent {
     console.log(`Activating event '${this.key}': Logging invitation to approach the mirror`);
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Set the mirrorQuestReady flag to "true" and update the UI.
+    // Устанавливаем флаг mirrorQuestReady и активируем кнопку "Post".
     localStorage.setItem("mirrorQuestReady", "true");
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
       this.app.viewManager.setPostButtonEnabled(true);

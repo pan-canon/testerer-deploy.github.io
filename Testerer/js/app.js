@@ -141,7 +141,14 @@ export class App {
       console.log("Profile found:", profile);
       await this.showMainScreen();
 
-      // Если регистрация завершена, запускаем авто-запуск WelcomeEvent через gameEventManager.
+      // Если регистрация завершена, проверяем флаг активности кнопки "Post"
+      if (localStorage.getItem("welcomeDone") === "true") {
+        // Если Welcome уже выполнено, активируем кнопку "Post"
+        this.viewManager.setPostButtonEnabled(true);
+        localStorage.setItem("postButtonEnabled", "true");
+      }
+      
+      // Запускаем авто-запуск WelcomeEvent через gameEventManager.
       if (localStorage.getItem("registrationCompleted") === "true") {
         this.gameEventManager.autoLaunchWelcomeEvent();
       }
@@ -342,6 +349,14 @@ export class App {
     document.getElementById('global-camera').style.display = 'none';
 
     await this.showMainScreen();
+
+    // Проверяем, если Welcome уже выполнено, активируем кнопку "Post" и сохраняем флаг
+    if (localStorage.getItem("welcomeDone") === "true") {
+      this.viewManager.setPostButtonEnabled(true);
+      localStorage.setItem("postButtonEnabled", "true");
+    } else {
+      localStorage.setItem("postButtonEnabled", "false");
+    }
 
     // Вместо setTimeout вызываем авто-запуск WelcomeEvent через gameEventManager.
     this.gameEventManager.autoLaunchWelcomeEvent();

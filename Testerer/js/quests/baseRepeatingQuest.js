@@ -162,7 +162,7 @@ export class BaseRepeatingQuest extends BaseEvent {
         console.log("[BaseRepeatingQuest] Post button enabled for next stage.");
       }
     } else {
-      // All stages have been completed; finish the quest
+      // All stages have been completed; finish the quest.
       await this.finish();
     }
   }
@@ -171,6 +171,7 @@ export class BaseRepeatingQuest extends BaseEvent {
    * finish – Completes the repeating quest.
    * Stops the UI check loop, logs the final diary entry, triggers the final event,
    * and updates the UI accordingly.
+   * Note: The active state of the "Open Camera" button is reset here only after the quest is successfully finished.
    */
   async finish() {
     if (this.finished) return;
@@ -180,32 +181,32 @@ export class BaseRepeatingQuest extends BaseEvent {
     
     console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
     
-    // Log the final post in the diary
+    // Log the final post in the diary.
     await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
     
-    // Вместо вызова события "post_repeating_event", если флаг финального завершения еще не установлен,
-    // устанавливаем его и активируем финальное событие.
+    // Если флаг финального завершения еще не установлен, устанавливаем его и активируем финальное событие.
     if (!this.finalRepeatingQuestCompleted) {
       this.finalRepeatingQuestCompleted = true;
       await this.app.gameEventManager.activateEvent("final_event");
     }
     
-    // Remove the readiness flag to avoid new cycle activation
+    // Remove the readiness flag to avoid new cycle activation.
     localStorage.removeItem("mirrorQuestReady");
     
-    // Ensure the post button is disabled
+    // Ensure the Post button is disabled.
     const postBtn = this.app.postBtn;
     if (postBtn) {
       postBtn.disabled = true;
       console.log("[BaseRepeatingQuest] Post button disabled after finishing repeating quest.");
     }
     
-    // Remove saved quest state
+    // Remove saved quest state.
     localStorage.removeItem(`quest_state_${this.key}`);
     
-    // Reset the active state of the Open Camera button
+    // Reset the active state of the Open Camera button only after successful quest completion.
     if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {
       this.app.viewManager.setCameraButtonActive(false);
+      console.log("[BaseRepeatingQuest] Camera button active state reset after quest completion.");
     }
   }
 

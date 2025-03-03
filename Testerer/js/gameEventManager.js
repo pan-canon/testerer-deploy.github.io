@@ -66,11 +66,14 @@ export class GameEventManager {
   /**
    * autoLaunchWelcomeEvent – Automatically launches the welcome event after registration.
    * Checks for the presence of the "welcomeDone" flag; if absent, launches the welcome event
-   * after a 5-second delay. Otherwise, skips auto-launch.
+   * after a 5-second delay. Otherwise, ensures the "Post" button is enabled.
    */
   async autoLaunchWelcomeEvent() {
     if (localStorage.getItem("welcomeDone") === "true") {
       console.log("Welcome event already completed; auto-launch skipped.");
+      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
+        this.app.viewManager.setPostButtonEnabled(true);
+      }
       return;
     }
     console.log("Auto-launching welcome event in 5 seconds...");

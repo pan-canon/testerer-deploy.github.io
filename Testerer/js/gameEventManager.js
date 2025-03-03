@@ -1,3 +1,7 @@
+import { WelcomeEvent } from './events/welcomeEvent.js';
+import { PostMirrorEvent } from './events/postMirrorEvent.js';
+import { PostRepeatingEvent } from './events/postRepeatingEvent.js';
+import { FinalEvent } from './events/finalEvent.js';
 import { StateManager } from './stateManager.js';
 import { ErrorManager } from './errorManager.js';
 

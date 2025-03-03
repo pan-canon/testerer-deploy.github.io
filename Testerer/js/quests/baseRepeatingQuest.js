@@ -192,6 +192,12 @@ export class BaseRepeatingQuest extends BaseEvent {
     if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {
       this.app.viewManager.setCameraButtonActive(false);
     }
+    
+    // **NEW CODE: Activate the final event after repeating quest finishes**
+    if (!localStorage.getItem("finalEventActivated")) {
+      await this.app.gameEventManager.activateEvent("final_quest");
+      localStorage.setItem("finalEventActivated", "true");
+    }
   }
 
   /**

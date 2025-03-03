@@ -1,4 +1,4 @@
-import { NotificationManager } from './NotificationManager.js';
+import { NotificationManager } from './notificationManager.js';
 
 export class ErrorManager {
   /**

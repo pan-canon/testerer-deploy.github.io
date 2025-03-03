@@ -39,7 +39,7 @@ export class App {
       this.databaseManager,
       this.languageManager,
       this.ghostManager,
-      new VisualEffectsManager(this, this.viewManager.getControlsPanel())
+      new VisualEffectsManager(this, this.viewManager.controlsPanel)
     );
     // Delegate ViewManager reference.
     this.eventManager.viewManager = this.viewManager;

@@ -3,8 +3,9 @@ import { ErrorManager } from './errorManager.js';
 
 export class ViewManager {
   constructor() {
-    // Cache common UI elements.
+    // Reference to the diary container element.
     this.diaryContainer = document.getElementById("diary");
+    // Reference to the controls panel, if needed for blocking controls.
     this.controlsPanel = document.getElementById("controls-panel");
     
     // Registration form elements.
@@ -14,7 +15,6 @@ export class ViewManager {
     this.nextStepBtn = document.getElementById('next-step-btn');
     
     // Selfie screen elements.
-    // Предполагается, что превью селфи теперь имеет id "selfie-thumbnail".
     this.selfiePreview = document.getElementById('selfie-thumbnail');
     this.captureBtn = document.getElementById('capture-btn');
     this.completeBtn = document.getElementById('complete-registration');
@@ -34,11 +34,18 @@ export class ViewManager {
   }
 
   /**
-   * Binds UI events previously размещавшиеся в App.
-   * @param {App} app - Ссылка на экземпляр главного приложения.
+   * Returns the controls panel element.
+   * @returns {HTMLElement} The controls panel.
+   */
+  getControlsPanel() {
+    return this.controlsPanel;
+  }
+
+  /**
+   * Binds UI events previously placed in App.
+   * @param {App} app - Reference to the main application instance.
    */
   bindEvents(app) {
-    // Registration fields.
     if (this.nameInput) {
       this.nameInput.addEventListener('input', () => {
         console.log("Name input changed:", this.nameInput.value);
@@ -54,19 +61,18 @@ export class ViewManager {
         app.goToApartmentPlanScreen();
       });
     }
-    // Toggle camera/diary views.
     if (this.toggleCameraBtn) {
       this.toggleCameraBtn.addEventListener("click", () => app.toggleCameraView());
     }
     if (this.toggleDiaryBtn) {
       this.toggleDiaryBtn.addEventListener("click", () => app.toggleCameraView());
     }
-    // Остальные события (например, для кнопок "Post" и "Shoot") остаются в соответствующих менеджерах.
+    // Привязку событий для других элементов можно добавить по необходимости.
   }
 
   /**
    * Retrieves registration data from the form.
-   * @returns {Object|null} Объект с полями: name, gender, language.
+   * @returns {Object|null} Registration data object.
    */
   getRegistrationData() {
     if (!this.nameInput || !this.genderSelect || !this.languageSelector) {
@@ -102,7 +108,7 @@ export class ViewManager {
 
   /**
    * Updates the selfie preview image.
-   * @param {string} imageData - Data URL of the processed selfie.
+   * @param {string} imageData - Data URL for the selfie.
    */
   updateSelfiePreview(imageData) {
     if (this.selfiePreview) {
@@ -133,15 +139,15 @@ export class ViewManager {
 
   /**
    * Returns the current selfie source.
-   * @returns {string} Data URL from the selfie preview.
+   * @returns {string} The source of the selfie.
    */
   getSelfieSource() {
     return this.selfiePreview ? this.selfiePreview.src : "";
   }
 
   /**
-   * Returns the selected file from the import input.
-   * @returns {File|null} The file if selected, or null.
+   * Returns the selected import file.
+   * @returns {File|null} The selected file or null.
    */
   getImportFile() {
     if (this.importFileInput && this.importFileInput.files.length > 0) {
@@ -195,8 +201,8 @@ export class ViewManager {
   }
 
   /**
-   * Updates the profile display with the provided profile data.
-   * @param {Object} profile - Contains at least properties: name, selfie.
+   * Updates the profile display with provided data.
+   * @param {Object} profile - Contains name and selfie.
    */
   updateProfileDisplay(profile) {
     if (this.profileNameElem) {
@@ -209,10 +215,10 @@ export class ViewManager {
   }
 
   /**
-   * Renders the diary entries into the diary container.
+   * Renders the diary entries.
    * @param {Array} entries - Array of diary entry objects.
-   * @param {string} currentLanguage - The current language code.
-   * @param {Object} effectsManager - Reference to the VisualEffectsManager.
+   * @param {string} currentLanguage - Current language code.
+   * @param {Object} effectsManager - VisualEffectsManager reference.
    */
   renderDiary(entries, currentLanguage, effectsManager) {
     if (!this.diaryContainer) {
@@ -293,9 +299,9 @@ export class ViewManager {
   }
 
   /**
-   * switchScreen – Switches between different application screens and updates button groups.
-   * @param {string} screenId - ID of the target screen to display.
-   * @param {string} buttonsGroupId - ID of the buttons group within the controls panel to display.
+   * switchScreen – Switches between screens and updates button groups.
+   * @param {string} screenId - Target screen ID.
+   * @param {string} buttonsGroupId - Buttons group ID.
    */
   switchScreen(screenId, buttonsGroupId) {
     document.querySelectorAll('section').forEach(section => {
@@ -320,7 +326,7 @@ export class ViewManager {
 
   /**
    * setPostButtonEnabled – Enables or disables the "Post" button.
-   * @param {boolean} isEnabled - True to enable, false to disable.
+   * @param {boolean} isEnabled - True to enable.
    */
   setPostButtonEnabled(isEnabled) {
     const postBtn = document.getElementById("post-btn");
@@ -330,8 +336,8 @@ export class ViewManager {
   }
 
   /**
-   * setCameraButtonHighlight – Adds or removes a highlight effect on the camera toggle button.
-   * @param {boolean} isActive - True to add highlight, false to remove.
+   * setCameraButtonHighlight – Adds/removes highlight on the camera toggle button.
+   * @param {boolean} isActive - True to add highlight.
    */
   setCameraButtonHighlight(isActive) {
     const cameraBtn = document.getElementById("toggle-camera");
@@ -345,9 +351,8 @@ export class ViewManager {
   }
 
   /**
-   * setCameraButtonActive – Sets the active state for the "Open Camera" button.
-   * In addition to adding/removing the CSS class "active", it saves the state using StateManager.
-   * @param {boolean} isActive - True to mark as active, false to remove the active state.
+   * setCameraButtonActive – Sets active state for the "Open Camera" button.
+   * @param {boolean} isActive - True to mark active.
    */
   setCameraButtonActive(isActive) {
     const cameraBtn = document.getElementById("toggle-camera");
@@ -362,7 +367,7 @@ export class ViewManager {
   }
 
   /**
-   * restoreCameraButtonState – Restores the "Open Camera" button state using StateManager.
+   * restoreCameraButtonState – Restores "Open Camera" button state.
    */
   restoreCameraButtonState() {
     const stored = StateManager.get("cameraButtonActive");
@@ -371,9 +376,8 @@ export class ViewManager {
   }
 
   /**
-   * setShootButtonActive – Sets the active state for the "Shoot" button.
-   * Enables/disables the button and saves the state using StateManager.
-   * @param {boolean} isActive - True to enable, false to disable.
+   * setShootButtonActive – Sets active state for the "Shoot" button.
+   * @param {boolean} isActive - True to enable.
    */
   setShootButtonActive(isActive) {
     const shootBtn = document.getElementById("btn_shoot");
@@ -391,7 +395,7 @@ export class ViewManager {
   }
 
   /**
-   * restoreShootButtonState – Restores the "Shoot" button state using StateManager.
+   * restoreShootButtonState – Restores the "Shoot" button state.
    */
   restoreShootButtonState() {
     const stored = StateManager.get("shootButtonActive");
@@ -401,10 +405,7 @@ export class ViewManager {
 
   /**
    * startMirrorQuestUI – Initializes the UI for the mirror quest.
-   * @param {Object} options - Contains:
-   *   - statusElementId: ID of the status display element.
-   *   - shootButtonId: ID of the "Shoot" button.
-   *   - onShoot: Callback executed when the "Shoot" button is clicked.
+   * @param {Object} options - Contains statusElementId, shootButtonId, onShoot.
    */
   startMirrorQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
@@ -431,9 +432,9 @@ export class ViewManager {
 
   /**
    * updateMirrorQuestStatus – Updates the mirror quest status UI.
-   * @param {boolean} success - True if the mirror match was successful.
-   * @param {string} statusElementId - ID of the status display element.
-   * @param {string} shootButtonId - ID of the "Shoot" button.
+   * @param {boolean} success - True if successful.
+   * @param {string} statusElementId - Status element ID.
+   * @param {string} shootButtonId - "Shoot" button ID.
    */
   updateMirrorQuestStatus(success, statusElementId, shootButtonId) {
     const statusElem = document.getElementById(statusElementId);
@@ -448,7 +449,7 @@ export class ViewManager {
 
   /**
    * stopMirrorQuestUI – Hides the mirror quest UI elements.
-   * @param {string} statusElementId - ID of the status display element.
+   * @param {string} statusElementId - Status element ID.
    */
   stopMirrorQuestUI(statusElementId) {
     const statusElem = document.getElementById(statusElementId);
@@ -459,12 +460,7 @@ export class ViewManager {
 
   /**
    * startRepeatingQuestUI – Initializes the UI for a repeating quest stage.
-   * @param {Object} options - Contains:
-   *   - statusElementId: ID of the status display element.
-   *   - shootButtonId: ID of the "Shoot" button.
-   *   - stage: Current stage number.
-   *   - totalStages: Total number of stages.
-   *   - onShoot: Callback executed when the "Shoot" button is clicked.
+   * @param {Object} options - Contains statusElementId, shootButtonId, stage, totalStages, onShoot.
    */
   startRepeatingQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
@@ -491,7 +487,7 @@ export class ViewManager {
 
   /**
    * disableShootButton – Disables the "Shoot" button.
-   * @param {string} shootButtonId - ID of the "Shoot" button.
+   * @param {string} shootButtonId - "Shoot" button ID.
    */
   disableShootButton(shootButtonId) {
     const shootBtn = document.getElementById(shootButtonId);
@@ -503,7 +499,7 @@ export class ViewManager {
 
   /**
    * stopRepeatingQuestUI – Hides the repeating quest UI.
-   * @param {string} statusElementId - ID of the status display element.
+   * @param {string} statusElementId - Status element ID.
    */
   stopRepeatingQuestUI(statusElementId) {
     const statusElem = document.getElementById(statusElementId);
@@ -514,8 +510,8 @@ export class ViewManager {
 
   /**
    * applyBackgroundTransition – Applies a background transition effect to the document body.
-   * @param {string} color - The target background color.
-   * @param {number} duration - Duration of the transition in milliseconds.
+   * @param {string} color - Target background color.
+   * @param {number} duration - Duration in ms.
    */
   applyBackgroundTransition(color, duration) {
     document.body.style.transition = `background ${duration}ms`;
@@ -549,7 +545,7 @@ export class ViewManager {
   }
 
   /**
-   * showNotification – Displays a notification message to the user using a simple toast.
+   * showNotification – Displays a toast notification to the user.
    * @param {string} message - The notification message.
    */
   showNotification(message) {
@@ -581,8 +577,8 @@ export class ViewManager {
   }
 
   /**
-   * setControlsBlocked – Blocks or unblocks user interaction with the controls.
-   * @param {boolean} shouldBlock - true to block controls, false to unblock.
+   * setControlsBlocked – Blocks or unblocks user interaction with controls.
+   * @param {boolean} shouldBlock - True to block, false to unblock.
    */
   setControlsBlocked(shouldBlock) {
     if (this.controlsPanel) {

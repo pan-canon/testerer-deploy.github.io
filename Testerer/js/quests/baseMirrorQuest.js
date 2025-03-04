@@ -1,5 +1,6 @@
 import { BaseEvent } from '../events/baseEvent.js';
 import { ImageUtils } from '../utils/imageUtils.js';
+import { StateManager } from '../stateManager.js';
 
 /**
  * BaseMirrorQuest – Base class for the mirror quest.
@@ -28,27 +29,40 @@ export class BaseMirrorQuest extends BaseEvent {
     this.registerEvents();
   }
 
+  /**
+   * registerEvents
+   * Registers a listener for the "cameraReady" event.
+   * If the "mirrorQuestActive" flag is set in the StateManager, starts the check loop.
+   */
   registerEvents() {
-    // Listen to the "cameraReady" event.
     document.addEventListener('cameraReady', () => {
-      if (localStorage.getItem("mirrorQuestActive") === "true") {
-        this.startCheckLoop(); // Start the check loop if the quest is active.
+      if (StateManager.get("mirrorQuestActive") === "true") {
+        this.startCheckLoop();
       }
     });
   }
 
+  /**
+   * activate
+   * Activates the mirror quest. If the event has not been logged,
+   * logs it in the diary and sets the "mirrorQuestActive" flag via StateManager.
+   */
   async activate() {
     if (!this.eventManager.isEventLogged(this.key)) {
       console.log(`Activating event: ${this.key}`);
       await this.eventManager.addDiaryEntry(this.key);
     }
     console.log("[BaseMirrorQuest] Mirror quest activated.");
-    localStorage.setItem("mirrorQuestActive", "true");
+    StateManager.set("mirrorQuestActive", "true");
   }
 
+  /**
+   * startCheckLoop
+   * Initializes the UI for the mirror quest via ViewManager and starts a periodic loop
+   * to check the quest status every 2 seconds.
+   */
   startCheckLoop() {
     if (this.checkInterval) return; // Already running.
-    // Delegate UI initialization to the ViewManager.
     if (this.app.viewManager && typeof this.app.viewManager.startMirrorQuestUI === 'function') {
       this.app.viewManager.startMirrorQuestUI({
         statusElementId: this.statusElementId,
@@ -56,40 +70,48 @@ export class BaseMirrorQuest extends BaseEvent {
         onShoot: () => this.finish()
       });
     }
-    // Start the periodic check loop.
     this.checkInterval = setInterval(async () => {
-      // Check if the camera is active; if not, stop the check loop.
       if (!this.app.isCameraOpen) {
         console.warn("[BaseMirrorQuest] Camera is not active - stopping check loop.");
         this.stopCheckLoop();
         return;
       }
       const success = await this.checkStatus();
-      // Delegate UI update for quest status.
       if (this.app.viewManager && typeof this.app.viewManager.updateMirrorQuestStatus === 'function') {
         this.app.viewManager.updateMirrorQuestStatus(success, this.statusElementId, this.shootButtonId);
       }
     }, 2000);
   }
 
+  /**
+   * stopCheckLoop
+   * Stops the periodic quest status check loop and delegates UI cleanup to the ViewManager.
+   */
   stopCheckLoop() {
     if (this.checkInterval) {
       clearInterval(this.checkInterval);
       this.checkInterval = null;
     }
-    // Delegate UI cleanup to the ViewManager.
     if (this.app.viewManager && typeof this.app.viewManager.stopMirrorQuestUI === 'function') {
       this.app.viewManager.stopMirrorQuestUI(this.statusElementId);
     }
   }
 
+  /**
+   * checkStatus
+   * Checks the current quest status by performing a frame comparison.
+   */
   async checkStatus() {
     console.log("[BaseMirrorQuest] checkStatus() -> compareFrameInternally()");
     return await this.compareFrameInternally();
   }
 
+  /**
+   * compareFrameInternally
+   * Captures the current video frame, converts it to grayscale,
+   * compares it with the saved selfie, and returns whether the match is sufficient.
+   */
   async compareFrameInternally() {
-    // Added check: perform comparison only if the camera is active.
     if (!this.app.isCameraOpen) {
       console.warn("[BaseMirrorQuest] Camera is not active (app.isCameraOpen false)");
       return false;
@@ -119,7 +141,9 @@ export class BaseMirrorQuest extends BaseEvent {
   }
 
   /**
-   * updateUIAfterFinish – Delegates UI updates after finishing the mirror quest to the ViewManager.
+   * updateUIAfterFinish
+   * Delegates UI updates after the mirror quest finishes to the ViewManager.
+   *
    * @param {boolean} success - Indicates whether the mirror quest was successful.
    */
   updateUIAfterFinish(success) {
@@ -132,6 +156,14 @@ export class BaseMirrorQuest extends BaseEvent {
     }
   }
 
+  /**
+   * finish
+   * Finalizes the mirror quest:
+   * - Stops the check loop.
+   * - Checks the final status and logs a corresponding diary entry.
+   * - Updates the UI and resets the active flag using StateManager.
+   * - If successful, triggers the post-mirror event.
+   */
   async finish() {
     if (this.finished) return;
     this.finished = true;
@@ -148,17 +180,25 @@ export class BaseMirrorQuest extends BaseEvent {
       await this.eventManager.addDiaryEntry(`user_post_failed: ${randomLetter}`, false);
     }
     this.updateUIAfterFinish(success);
-    // Remove active state from the Open Camera button.
+    // Remove active state from the Open Camera button via ViewManager.
     if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {
       this.app.viewManager.setCameraButtonActive(false);
     }
-    localStorage.removeItem("mirrorQuestActive");
-    // Delegate post-button update to ViewManager if necessary.
+    // Remove the "mirrorQuestActive" flag using StateManager.
+    StateManager.remove("mirrorQuestActive");
+    // If the quest was successful, trigger the post-mirror event.
     if (success) {
       this.app.gameEventManager.activateEvent("post_mirror_event");
     }
   }
 
+  /**
+   * getRandomLetter
+   * Returns a random letter from the ghost's name (only alphabetic characters).
+   *
+   * @param {string} name - The ghost's name.
+   * @returns {string} A random letter.
+   */
   getRandomLetter(name) {
     if (!name) return "";
     const letters = name.replace(/[^A-Za-zА-Яа-яЁё]/g, '').split('');

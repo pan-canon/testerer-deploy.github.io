@@ -2,7 +2,9 @@ import { BaseEvent } from '../events/baseEvent.js';
 
 /**
  * FinalQuest – The final quest signifies the complete end of the scenario
- * (e.g., no more letters/phenomena).
+ * (e.g., no more letters/phenomena). It logs the completion, updates the game
+ * state via StateManager, triggers the ghost finishing process, and notifies the user
+ * via ViewManager.
  */
 export class FinalQuest extends BaseEvent {
   /**
@@ -28,7 +30,7 @@ export class FinalQuest extends BaseEvent {
       await this.eventManager.addDiaryEntry(this.key, true);
     }
     console.log("[FinalQuest] Final quest initiated.");
-    // Optionally, a flag (e.g., finalQuestActive) can be set here.
+    // Additional flags for final quest activation can be set here if needed.
   }
 
   /**
@@ -43,17 +45,20 @@ export class FinalQuest extends BaseEvent {
 
   /**
    * finish – Completes the final quest:
-   *  1) Checks the conditions via checkStatus.
-   *  2) Logs the completion.
-   *  3) Calls finishCurrentGhost from GhostManager to mark the scenario as finished.
+   *  1) Checks the final conditions via checkStatus.
+   *  2) Logs the completion in the diary.
+   *  3) Sets the "gameFinalized" flag via StateManager.
+   *  4) Calls finishCurrentGhost from GhostManager to mark the scenario as finished.
+   *  5) Notifies the user via ViewManager.
    *
    * @returns {Promise<void>}
    */
   async finish() {
     if (this.finished) return;
+    
     const success = await this.checkStatus();
     if (!success) {
-      if (this.app.viewManager && typeof this.app.viewManager.showNotification === 'function') {
+      if (this.app.viewManager && typeof this.app.viewManager.showNotification === "function") {
         this.app.viewManager.showNotification("❌ Final quest conditions not met!");
       } else {
         console.warn("❌ Final quest conditions not met!");
@@ -64,15 +69,19 @@ export class FinalQuest extends BaseEvent {
     this.finished = true;
     console.log(`[FinalQuest] Finishing quest: ${this.key}`);
     
-    // Log the quest completion in the diary.
+    // Log the final quest completion in the diary.
     await this.eventManager.addDiaryEntry(`${this.key}_completed`, true);
 
-    // Mark the scenario as finished by calling finishCurrentGhost from GhostManager.
+    // Set the game finalized flag using StateManager.
+    window.StateManager.set("gameFinalized", "true");
+    
+    // Mark the current ghost as finished via GhostManager.
     if (this.app.ghostManager) {
-      this.app.ghostManager.finishCurrentGhost();
+      await this.app.ghostManager.finishCurrentGhost();
     }
 
-    if (this.app.viewManager && typeof this.app.viewManager.showNotification === 'function') {
+    // Notify the user that the scenario is finished via ViewManager.
+    if (this.app.viewManager && typeof this.app.viewManager.showNotification === "function") {
       this.app.viewManager.showNotification("🎉 Final quest completed! Scenario ended!");
     } else {
       console.log("🎉 Final quest completed! Scenario ended!");

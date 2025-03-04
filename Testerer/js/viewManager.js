@@ -1,44 +1,60 @@
 import { StateManager } from './stateManager.js';
 import { ErrorManager } from './errorManager.js';
 
+/**
+ * ViewManager
+ *
+ * Central UI module responsible for:
+ * - Switching screens.
+ * - Managing button states.
+ * - Updating profile display.
+ * - Rendering the diary.
+ * - Handling UI effects and notifications.
+ *
+ * All UI updates must be performed exclusively through these methods,
+ * ensuring a single source of truth for UI operations.
+ */
 export class ViewManager {
   constructor() {
-    // Cache common UI elements.
+    // --- Cache Main UI Elements ---
     this.diaryContainer = document.getElementById("diary");
     this.controlsPanel = document.getElementById("controls-panel");
     
-    // Registration form elements.
+    // --- Registration Form Elements ---
     this.nameInput = document.getElementById('player-name');
     this.genderSelect = document.getElementById('player-gender');
     this.languageSelector = document.getElementById('language-selector');
     this.nextStepBtn = document.getElementById('next-step-btn');
     
-    // Selfie screen elements.
-    // Предполагается, что превью селфи теперь имеет id "selfie-thumbnail".
+    // --- Selfie Screen Elements ---
+    // Selfie preview element is assumed to have id "selfie-thumbnail".
     this.selfiePreview = document.getElementById('selfie-thumbnail');
     this.captureBtn = document.getElementById('capture-btn');
     this.completeBtn = document.getElementById('complete-registration');
     
-    // Profile display elements.
+    // --- Profile Display Elements ---
     this.profileNameElem = document.getElementById('profile-name');
     this.profilePhotoElem = document.getElementById('profile-photo');
     
-    // Import file input.
+    // --- Import File Input ---
     this.importFileInput = document.getElementById('import-file');
     
-    // Toggle buttons and global camera.
+    // --- Toggle Buttons and Global Camera ---
     this.toggleCameraBtn = document.getElementById("toggle-camera");
     this.toggleDiaryBtn = document.getElementById("toggle-diary");
     this.globalCamera = document.getElementById("global-camera");
     this.postBtn = document.getElementById("post-btn");
   }
 
+  // ------------------ Event Binding ------------------
+
   /**
-   * Binds UI events previously размещавшиеся в App.
-   * @param {App} app - Ссылка на экземпляр главного приложения.
+   * bindEvents
+   * Binds UI events that were previously placed in App.
+   * @param {App} app - The main application instance.
    */
   bindEvents(app) {
-    // Registration fields.
+    // Registration fields events.
     if (this.nameInput) {
       this.nameInput.addEventListener('input', () => {
         console.log("Name input changed:", this.nameInput.value);
@@ -54,19 +70,22 @@ export class ViewManager {
         app.goToApartmentPlanScreen();
       });
     }
-    // Toggle camera/diary views.
+    // Toggle camera/diary view events.
     if (this.toggleCameraBtn) {
       this.toggleCameraBtn.addEventListener("click", () => app.toggleCameraView());
     }
     if (this.toggleDiaryBtn) {
       this.toggleDiaryBtn.addEventListener("click", () => app.toggleCameraView());
     }
-    // Остальные события (например, для кнопок "Post" и "Shoot") остаются в соответствующих менеджерах.
+    // Additional events for other buttons are handled in their respective managers.
   }
 
+  // ------------------ Registration Form Operations ------------------
+
   /**
+   * getRegistrationData
    * Retrieves registration data from the form.
-   * @returns {Object|null} Объект с полями: name, gender, language.
+   * @returns {Object|null} An object with { name, gender, language } or null if elements are missing.
    */
   getRegistrationData() {
     if (!this.nameInput || !this.genderSelect || !this.languageSelector) {
@@ -80,28 +99,11 @@ export class ViewManager {
     };
   }
 
-  /**
-   * Shows the global camera element.
-   */
-  showGlobalCamera() {
-    if (this.globalCamera) {
-      this.globalCamera.style.display = 'block';
-    } else {
-      ErrorManager.logError("Global camera element not found.", "showGlobalCamera");
-    }
-  }
+  // ------------------ Selfie and Profile Operations ------------------
 
   /**
-   * Hides the global camera element.
-   */
-  hideGlobalCamera() {
-    if (this.globalCamera) {
-      this.globalCamera.style.display = 'none';
-    }
-  }
-
-  /**
-   * Updates the selfie preview image.
+   * updateSelfiePreview
+   * Updates the selfie preview image using a Data URL.
    * @param {string} imageData - Data URL of the processed selfie.
    */
   updateSelfiePreview(imageData) {
@@ -114,7 +116,8 @@ export class ViewManager {
   }
 
   /**
-   * Enables the Complete Registration button.
+   * enableCompleteButton
+   * Enables the "Complete Registration" button.
    */
   enableCompleteButton() {
     if (this.completeBtn) {
@@ -123,7 +126,8 @@ export class ViewManager {
   }
 
   /**
-   * Disables the Complete Registration button.
+   * disableCompleteButton
+   * Disables the "Complete Registration" button.
    */
   disableCompleteButton() {
     if (this.completeBtn) {
@@ -132,16 +136,20 @@ export class ViewManager {
   }
 
   /**
-   * Returns the current selfie source.
-   * @returns {string} Data URL from the selfie preview.
+   * getSelfieSource
+   * Returns the current selfie source (Data URL).
+   * @returns {string} The Data URL from the selfie preview.
    */
   getSelfieSource() {
     return this.selfiePreview ? this.selfiePreview.src : "";
   }
 
+  // ------------------ File Import Operations ------------------
+
   /**
+   * getImportFile
    * Returns the selected file from the import input.
-   * @returns {File|null} The file if selected, or null.
+   * @returns {File|null} The selected file, or null if none selected.
    */
   getImportFile() {
     if (this.importFileInput && this.importFileInput.files.length > 0) {
@@ -150,8 +158,11 @@ export class ViewManager {
     return null;
   }
 
+  // ------------------ Toggle Buttons and Camera Views ------------------
+
   /**
-   * Shows the toggle-camera button.
+   * showToggleCameraButton
+   * Displays the toggle-camera button.
    */
   showToggleCameraButton() {
     if (this.toggleCameraBtn) {
@@ -160,7 +171,8 @@ export class ViewManager {
   }
 
   /**
-   * Shows the "Post" button.
+   * showPostButton
+   * Displays the "Post" button.
    */
   showPostButton() {
     if (this.postBtn) {
@@ -169,7 +181,8 @@ export class ViewManager {
   }
 
   /**
-   * Shows the diary view and hides the global camera.
+   * showDiaryView
+   * Displays the diary view and hides the global camera.
    */
   showDiaryView() {
     const diary = document.getElementById("diary");
@@ -182,7 +195,8 @@ export class ViewManager {
   }
 
   /**
-   * Shows the camera view and hides the diary.
+   * showCameraView
+   * Displays the camera view and hides the diary.
    */
   showCameraView() {
     const diary = document.getElementById("diary");
@@ -194,9 +208,12 @@ export class ViewManager {
     }
   }
 
+  // ------------------ Profile Display Operations ------------------
+
   /**
-   * Updates the profile display with the provided profile data.
-   * @param {Object} profile - Contains at least properties: name, selfie.
+   * updateProfileDisplay
+   * Updates the profile display with provided data.
+   * @param {Object} profile - An object containing at least { name, selfie }.
    */
   updateProfileDisplay(profile) {
     if (this.profileNameElem) {
@@ -208,10 +225,13 @@ export class ViewManager {
     }
   }
 
+  // ------------------ Diary Rendering Operations ------------------
+
   /**
+   * renderDiary
    * Renders the diary entries into the diary container.
    * @param {Array} entries - Array of diary entry objects.
-   * @param {string} currentLanguage - The current language code.
+   * @param {string} currentLanguage - Current language code.
    * @param {Object} effectsManager - Reference to the VisualEffectsManager.
    */
   renderDiary(entries, currentLanguage, effectsManager) {
@@ -243,7 +263,9 @@ export class ViewManager {
         }
       }
       
-      const localizedText = window.localization && window.localization[currentLanguage] && window.localization[currentLanguage][mainText]
+      const localizedText = window.localization &&
+                            window.localization[currentLanguage] &&
+                            window.localization[currentLanguage][mainText]
                             ? window.localization[currentLanguage][mainText]
                             : mainText;
       
@@ -255,7 +277,9 @@ export class ViewManager {
       if (imageData) {
         const img = document.createElement("img");
         img.src = imageData;
-        img.alt = (window.localization && window.localization[currentLanguage] && window.localization[currentLanguage]["photo_attached"]) || "Photo attached";
+        img.alt = (window.localization &&
+                   window.localization[currentLanguage] &&
+                   window.localization[currentLanguage]["photo_attached"]) || "Photo attached";
         img.style.maxWidth = "100%";
         articleElem.appendChild(img);
       }
@@ -292,10 +316,13 @@ export class ViewManager {
     console.log("Diary updated.");
   }
 
+  // ------------------ Screen Switching ------------------
+
   /**
-   * switchScreen – Switches between different application screens and updates button groups.
-   * @param {string} screenId - ID of the target screen to display.
-   * @param {string} buttonsGroupId - ID of the buttons group within the controls panel to display.
+   * switchScreen
+   * Switches between different application screens and updates button groups.
+   * @param {string} screenId - ID of the target screen.
+   * @param {string} buttonsGroupId - ID of the buttons group to display.
    */
   switchScreen(screenId, buttonsGroupId) {
     document.querySelectorAll('section').forEach(section => {
@@ -318,8 +345,11 @@ export class ViewManager {
     }
   }
 
+  // ------------------ Button State Management ------------------
+
   /**
-   * setPostButtonEnabled – Enables or disables the "Post" button.
+   * setPostButtonEnabled
+   * Enables or disables the "Post" button.
    * @param {boolean} isEnabled - True to enable, false to disable.
    */
   setPostButtonEnabled(isEnabled) {
@@ -330,7 +360,8 @@ export class ViewManager {
   }
 
   /**
-   * setCameraButtonHighlight – Adds or removes a highlight effect on the camera toggle button.
+   * setCameraButtonHighlight
+   * Adds or removes a highlight effect on the camera toggle button.
    * @param {boolean} isActive - True to add highlight, false to remove.
    */
   setCameraButtonHighlight(isActive) {
@@ -345,9 +376,10 @@ export class ViewManager {
   }
 
   /**
-   * setCameraButtonActive – Sets the active state for the "Open Camera" button.
-   * In addition to adding/removing the CSS class "active", it saves the state using StateManager.
-   * @param {boolean} isActive - True to mark as active, false to remove the active state.
+   * setCameraButtonActive
+   * Sets the active state for the "Open Camera" button.
+   * Also saves the state using StateManager.
+   * @param {boolean} isActive - True to mark as active, false to remove.
    */
   setCameraButtonActive(isActive) {
     const cameraBtn = document.getElementById("toggle-camera");
@@ -362,7 +394,8 @@ export class ViewManager {
   }
 
   /**
-   * restoreCameraButtonState – Restores the "Open Camera" button state using StateManager.
+   * restoreCameraButtonState
+   * Restores the "Open Camera" button state from StateManager.
    */
   restoreCameraButtonState() {
     const stored = StateManager.get("cameraButtonActive");
@@ -371,7 +404,8 @@ export class ViewManager {
   }
 
   /**
-   * setShootButtonActive – Sets the active state for the "Shoot" button.
+   * setShootButtonActive
+   * Sets the active state for the "Shoot" button.
    * Enables/disables the button and saves the state using StateManager.
    * @param {boolean} isActive - True to enable, false to disable.
    */
@@ -391,7 +425,8 @@ export class ViewManager {
   }
 
   /**
-   * restoreShootButtonState – Restores the "Shoot" button state using StateManager.
+   * restoreShootButtonState
+   * Restores the "Shoot" button state from StateManager.
    */
   restoreShootButtonState() {
     const stored = StateManager.get("shootButtonActive");
@@ -399,8 +434,11 @@ export class ViewManager {
     this.setShootButtonActive(isActive);
   }
 
+  // ------------------ Mirror Quest UI ------------------
+
   /**
-   * startMirrorQuestUI – Initializes the UI for the mirror quest.
+   * startMirrorQuestUI
+   * Initializes the UI for the mirror quest.
    * @param {Object} options - Contains:
    *   - statusElementId: ID of the status display element.
    *   - shootButtonId: ID of the "Shoot" button.
@@ -430,7 +468,8 @@ export class ViewManager {
   }
 
   /**
-   * updateMirrorQuestStatus – Updates the mirror quest status UI.
+   * updateMirrorQuestStatus
+   * Updates the mirror quest status UI.
    * @param {boolean} success - True if the mirror match was successful.
    * @param {string} statusElementId - ID of the status display element.
    * @param {string} shootButtonId - ID of the "Shoot" button.
@@ -447,7 +486,8 @@ export class ViewManager {
   }
 
   /**
-   * stopMirrorQuestUI – Hides the mirror quest UI elements.
+   * stopMirrorQuestUI
+   * Hides the mirror quest UI elements.
    * @param {string} statusElementId - ID of the status display element.
    */
   stopMirrorQuestUI(statusElementId) {
@@ -457,8 +497,11 @@ export class ViewManager {
     }
   }
 
+  // ------------------ Repeating Quest UI ------------------
+
   /**
-   * startRepeatingQuestUI – Initializes the UI for a repeating quest stage.
+   * startRepeatingQuestUI
+   * Initializes the UI for a repeating quest stage.
    * @param {Object} options - Contains:
    *   - statusElementId: ID of the status display element.
    *   - shootButtonId: ID of the "Shoot" button.
@@ -490,7 +533,8 @@ export class ViewManager {
   }
 
   /**
-   * disableShootButton – Disables the "Shoot" button.
+   * disableShootButton
+   * Disables the "Shoot" button.
    * @param {string} shootButtonId - ID of the "Shoot" button.
    */
   disableShootButton(shootButtonId) {
@@ -502,7 +546,8 @@ export class ViewManager {
   }
 
   /**
-   * stopRepeatingQuestUI – Hides the repeating quest UI.
+   * stopRepeatingQuestUI
+   * Hides the repeating quest UI.
    * @param {string} statusElementId - ID of the status display element.
    */
   stopRepeatingQuestUI(statusElementId) {
@@ -512,8 +557,11 @@ export class ViewManager {
     }
   }
 
+  // ------------------ Visual Effects and Notifications ------------------
+
   /**
-   * applyBackgroundTransition – Applies a background transition effect to the document body.
+   * applyBackgroundTransition
+   * Applies a background transition effect to the document body.
    * @param {string} color - The target background color.
    * @param {number} duration - Duration of the transition in milliseconds.
    */
@@ -526,7 +574,8 @@ export class ViewManager {
   }
 
   /**
-   * showGhostAppearanceEffect – Displays a ghost appearance effect.
+   * showGhostAppearanceEffect
+   * Displays a ghost appearance effect.
    * @param {string} ghostId - Identifier for the ghost effect image.
    */
   showGhostAppearanceEffect(ghostId) {
@@ -549,7 +598,8 @@ export class ViewManager {
   }
 
   /**
-   * showNotification – Displays a notification message to the user using a simple toast.
+   * showNotification
+   * Displays a notification message to the user using a simple toast.
    * @param {string} message - The notification message.
    */
   showNotification(message) {
@@ -580,9 +630,12 @@ export class ViewManager {
     }, 3000);
   }
 
+  // ------------------ Miscellaneous ------------------
+
   /**
-   * setControlsBlocked – Blocks or unblocks user interaction with the controls.
-   * @param {boolean} shouldBlock - true to block controls, false to unblock.
+   * setControlsBlocked
+   * Blocks or unblocks user interaction with the controls panel.
+   * @param {boolean} shouldBlock - True to block, false to unblock.
    */
   setControlsBlocked(shouldBlock) {
     if (this.controlsPanel) {
@@ -591,7 +644,8 @@ export class ViewManager {
   }
 
   /**
-   * clearCache – Sends a message to the Service Worker to clear all caches.
+   * clearCache
+   * Sends a message to the Service Worker to clear all caches.
    */
   clearCache() {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {

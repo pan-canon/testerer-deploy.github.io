@@ -2,11 +2,19 @@ import { BaseEvent } from './baseEvent.js';
 import { StateManager } from '../stateManager.js';
 import { ErrorManager } from '../errorManager.js';
 
+/**
+ * FinalEvent
+ *
+ * This event finalizes the scenario. It logs the final event,
+ * sets the game as finalized, triggers a ghost fade-out effect,
+ * marks the current ghost as finished, disables active UI elements,
+ * and notifies the user via the ViewManager.
+ */
 export class FinalEvent extends BaseEvent {
   /**
-   * @param {EventManager} eventManager - The diary manager (EventManager).
+   * @param {EventManager} eventManager - The diary/event manager.
    * @param {App} appInstance - The main application instance.
-   * @param {LanguageManager} [languageManager] - The localization manager (optional).
+   * @param {LanguageManager} [languageManager] - Optional localization manager.
    */
   constructor(eventManager, appInstance, languageManager) {
     super(eventManager);
@@ -18,14 +26,15 @@ export class FinalEvent extends BaseEvent {
   }
 
   /**
-   * activate – Overridden method for activating the final event.
-   * It logs the event, sets the game finalized flag, triggers a ghost fade-out effect,
-   * calls finishCurrentGhost from the GhostManager, and notifies the user.
+   * activate – Activates the final event.
+   * Logs the event in the diary, sets the finalized flag,
+   * triggers a ghost fade-out effect, finishes the current ghost,
+   * disables active buttons via ViewManager, and notifies the user.
    *
    * @returns {Promise<void>}
    */
   async activate() {
-    // Check if the final event has already been logged.
+    // Skip activation if the event has already been logged.
     if (this.eventManager.isEventLogged(this.key)) {
       console.log(`Event '${this.key}' is already logged, skipping activation.`);
       return;
@@ -35,17 +44,22 @@ export class FinalEvent extends BaseEvent {
     // Log the final event in the diary as a ghost post.
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Set a flag indicating that the game/ghost scenario is finalized.
+    // Set the game finalized flag using StateManager.
     StateManager.set("gameFinalized", "true");
 
-    // Trigger a visual effect (e.g., ghost fade-out).
+    // Trigger the ghost fade-out visual effect.
     this.app.visualEffectsManager.triggerGhostAppearanceEffect("ghost_fade_out");
 
     // Mark the current ghost as finished.
     await this.app.ghostManager.finishCurrentGhost();
 
-    // Notify the user that the scenario is finished via ViewManager.
-    if (this.app.viewManager && typeof this.app.viewManager.showNotification === 'function') {
+    // Delegate UI update: disable active buttons (e.g., Post button) via ViewManager.
+    if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
+      this.app.viewManager.setPostButtonEnabled(false);
+    }
+
+    // Notify the user that the scenario has ended via ViewManager.
+    if (this.app.viewManager && typeof this.app.viewManager.showNotification === "function") {
       this.app.viewManager.showNotification("🎉 Congratulations, the scenario is finished!");
     } else {
       console.log("🎉 Congratulations, the scenario is finished!");

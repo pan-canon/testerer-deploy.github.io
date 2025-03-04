@@ -1,3 +1,5 @@
+import { ErrorManager } from '../errorManager.js';
+
 /**
  * BaseEvent - Base class for events, providing common functionality
  * for activation and logging in the diary.
@@ -9,7 +11,7 @@ export class BaseEvent {
    * Constructor for the BaseEvent.
    * @param {EventManager} eventManager - Instance of the event manager responsible for diary operations.
    *
-   * @property {string} key - Unique identifier for the event, which should be defined in subclasses.
+   * @property {string} key - Unique identifier for the event, which should be set by subclasses.
    */
   constructor(eventManager) {
     /** @type {EventManager} */
@@ -21,16 +23,22 @@ export class BaseEvent {
   /**
    * activate - Activates the event.
    * If an event with the given key has not been logged yet, the event is logged via the eventManager.
-   * This method only handles logging and notification without triggering subsequent actions.
+   * This method handles logging and notification without triggering subsequent actions.
    *
    * @returns {Promise<void>} Asynchronous execution.
    */
   async activate() {
-    // Check if the event with this key has not been logged yet
-    if (!this.eventManager.isEventLogged(this.key)) {
-      console.log(`Activating event: ${this.key}`);
-      // Log the event in the diary (as a user post, without ghost flag)
-      await this.eventManager.addDiaryEntry(this.key);
+    try {
+      // Check if the event with this key has not been logged yet.
+      if (!this.eventManager.isEventLogged(this.key)) {
+        console.log(`Activating event: ${this.key}`);
+        // Log the event in the diary (as a user post, without ghost flag).
+        await this.eventManager.addDiaryEntry(this.key);
+      }
+    } catch (error) {
+      // Delegate error logging and user notification.
+      ErrorManager.logError(error, "BaseEvent.activate");
+      ErrorManager.showError("An error occurred during event activation.");
     }
   }
 
@@ -43,6 +51,11 @@ export class BaseEvent {
    * @returns {Promise<void>} Asynchronous execution.
    */
   async addDiaryEntry(text, isGhostPost = false) {
-    await this.eventManager.addDiaryEntry(text, isGhostPost);
+    try {
+      await this.eventManager.addDiaryEntry(text, isGhostPost);
+    } catch (error) {
+      ErrorManager.logError(error, "BaseEvent.addDiaryEntry");
+      ErrorManager.showError("An error occurred while adding a diary entry.");
+    }
   }
 }

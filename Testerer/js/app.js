@@ -121,7 +121,7 @@ export class App {
     StateManager.set('regData', JSON.stringify(regData));
     this.viewManager.switchScreen('apartment-plan-screen', 'apartment-plan-buttons');
     if (!this.apartmentPlanManager) {
-      this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', this.databaseManager);
+      this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', this.databaseManager, this);
     }
   }
 

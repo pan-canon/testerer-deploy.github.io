@@ -1,3 +1,6 @@
+import { StateManager } from './stateManager.js';
+import { ErrorManager } from './errorManager.js';
+
 export class ProfileManager {
   /**
    * Constructor for ProfileManager.
@@ -27,9 +30,9 @@ export class ProfileManager {
 
   /**
    * saveProfile – Asynchronously saves the given profile object via the DataManager.
-   * 
+   *
    * IMPORTANT: Registration data (name, gender, language, selfie, etc.) should be 
-   * integrated into the profile object. Do not store them separately (e.g. under 'regData').
+   * integrated into the profile object. Do not store them separately.
    *
    * @param {Object} profile - The profile object (should include registration fields).
    * @returns {Promise<void>}
@@ -40,30 +43,29 @@ export class ProfileManager {
 
   /**
    * resetProfile – Resets the profile and all related data.
-   * Calls the DataManager to remove profile data along with ghost progress, quest progress, etc.
-   * Also clears localStorage keys that store transient state, including new UI state keys.
+   * Calls the DataManager to remove profile data along with ghost and quest progress.
+   * Also clears transient state keys using StateManager.
    * After reset, the page is reloaded.
    */
   resetProfile() {
-    // Reset profile and clear the saved SQL database data.
     Promise.all([
       this.dataManager.resetProfile(),    // Deletes the 'profile' key.
       this.dataManager.resetDatabase()      // Deletes the SQL database saved under 'sqlite'.
     ]).then(() => {
-      // Clear transient state keys from localStorage.
-      localStorage.removeItem("animatedDiaryIds");
-      localStorage.removeItem("isRepeatingCycle");
-      localStorage.removeItem("mirrorQuestReady");
-      localStorage.removeItem("regData");
-      localStorage.removeItem("registrationCompleted");
-      localStorage.removeItem("cameraButtonActive");
-      localStorage.removeItem("shootButtonActive");
-      localStorage.removeItem("quest_state_repeating_quest");
+      // Clear transient state keys via StateManager.
+      StateManager.remove("animatedDiaryIds");
+      StateManager.remove("isRepeatingCycle");
+      StateManager.remove("mirrorQuestReady");
+      StateManager.remove("regData");
+      StateManager.remove("registrationCompleted");
+      StateManager.remove("cameraButtonActive");
+      StateManager.remove("shootButtonActive");
+      StateManager.remove("quest_state_repeating_quest");
       
       console.log("Profile, database, and transient state reset. Reloading page...");
       window.location.reload();
     }).catch((err) => {
-      console.error("Error resetting profile and database:", err);
+      ErrorManager.logError(err, "resetProfile");
     });
   }
 
@@ -74,7 +76,6 @@ export class ProfileManager {
    * @param {Object} apartmentPlanManager - The apartment plan manager.
    */
   exportProfileData(databaseManager, apartmentPlanManager) {
-    // Retrieve the profile asynchronously.
     this.getProfile().then(profile => {
       if (!profile) {
         alert("No profile found to export.");
@@ -168,15 +169,15 @@ export class ProfileManager {
           });
         }
   
-        // Clear transient UI state keys to avoid conflicts.
-        localStorage.removeItem("cameraButtonActive");
-        localStorage.removeItem("shootButtonActive");
-        localStorage.removeItem("quest_state_repeating_quest");
+        // Clear transient state keys using StateManager.
+        StateManager.remove("cameraButtonActive");
+        StateManager.remove("shootButtonActive");
+        StateManager.remove("quest_state_repeating_quest");
   
         alert("Profile imported successfully. Reloading page.");
         window.location.reload();
       } catch (err) {
-        console.error(err);
+        ErrorManager.logError(err, "importProfileData");
         alert("Error parsing the profile file.");
       }
     };

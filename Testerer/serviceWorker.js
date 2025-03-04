@@ -1,14 +1,14 @@
 // Define BASE_PATH based on current URL.
-// If the URL contains "/Testerer/", assume a specific environment (e.g. GitHub Pages),
+// If the URL contains "/Testerer/", assume a specific environment (e.g., GitHub Pages),
 // and set BASE_PATH accordingly; otherwise, use an empty string.
 const BASE_PATH = self.location.pathname.includes("/Testerer/") 
   ? "/testerer-deploy.github.io/Testerer" 
   : "";
 
-// Define the cache name. Update the version (e.g., "game-cache-v2") when files change.
-const CACHE_NAME = "game-cache-v1";
+// Define the cache name. Update the version when files change.
+const CACHE_NAME = "game-cache-v2";
 
-// List of URLs to cache. Exclude dynamic database management files to prevent issues with table updates.
+// List of URLs to cache. Database-related files are excluded to prevent conflicts.
 const urlsToCache = [
   // Root page and index.html
   `${BASE_PATH}/`,
@@ -22,8 +22,9 @@ const urlsToCache = [
   `${BASE_PATH}/js/app.js`,
   `${BASE_PATH}/js/apartmentPlanManager.js`,
   `${BASE_PATH}/js/cameraSectionManager.js`,
-  // Exclude databaseManager.js due to dynamic table operations:
+  // Exclude databaseManager.js and SQLiteDataManager.js to avoid dynamic DB issues
   // `${BASE_PATH}/js/databaseManager.js`,
+  // `${BASE_PATH}/js/SQLiteDataManager.js`,
   `${BASE_PATH}/js/eventManager.js`,
   `${BASE_PATH}/js/gameEventManager.js`,
   `${BASE_PATH}/js/ghostManager.js`,
@@ -32,17 +33,28 @@ const urlsToCache = [
   `${BASE_PATH}/js/questManager.js`,
   `${BASE_PATH}/js/showProfileModal.js`,
   
+  // UI and state management modules
+  `${BASE_PATH}/js/viewManager.js`,
+  `${BASE_PATH}/js/stateManager.js`,
+  `${BASE_PATH}/js/errorManager.js`,
+  `${BASE_PATH}/js/notificationManager.js`,
+  
   // Modules related to events and quests
   `${BASE_PATH}/js/baseEvent.js`,
   `${BASE_PATH}/js/welcomeEvent.js`,
-  `${BASE_PATH}/js/ghostEvent1.js`,
+  `${BASE_PATH}/js/postMirrorEvent.js`,
+  `${BASE_PATH}/js/postRepeatingEvent.js`,
+  `${BASE_PATH}/js/finalEvent.js`,
   
-  // Configuration files for ghosts and quests
+  // Quest modules
+  `${BASE_PATH}/js/baseMirrorQuest.js`,
+  `${BASE_PATH}/js/baseRepeatingQuest.js`,
+  `${BASE_PATH}/js/finalQuest.js`,
+  
+  // Additional configuration and utility files
   `${BASE_PATH}/js/ghostQuestsConfig.js`,
   `${BASE_PATH}/js/ghostTextManager.js`,
   `${BASE_PATH}/js/ghostTextsConfig.js`,
-  
-  // Utilities for image processing and visual effects
   `${BASE_PATH}/js/visualEffectsManager.js`,
   `${BASE_PATH}/js/imageUtils.js`,
   
@@ -74,10 +86,7 @@ self.addEventListener("activate", (event) => {
           }
         })
       );
-    }).then(() => {
-      // Claim clients immediately so that the new SW takes control
-      return self.clients.claim();
-    })
+    }).then(() => self.clients.claim())
   );
 });
 
@@ -105,17 +114,15 @@ self.addEventListener("message", (event) => {
 
 self.addEventListener("fetch", (event) => {
   // Bypass caching for dynamic database management files.
-  if (event.request.url.includes("databaseManager.js")) {
+  if (event.request.url.includes("databaseManager.js") ||
+      event.request.url.includes("SQLiteDataManager.js")) {
     return event.respondWith(fetch(event.request));
   }
-
+  
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request)
+        return response || fetch(event.request)
           .then((networkResponse) => {
             return caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, networkResponse.clone());

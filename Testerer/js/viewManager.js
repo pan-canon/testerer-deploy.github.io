@@ -456,6 +456,22 @@ export class ViewManager {
     this.setShootButtonActive(isActive);
   }
 
+  // ------------------ Apartment Plan UI ------------------
+
+  /**
+   * setApartmentPlanNextButtonEnabled
+   * Enables or disables the "Next" button on the apartment plan screen.
+   * @param {boolean} isEnabled - True to enable, false to disable.
+   */
+  setApartmentPlanNextButtonEnabled(isEnabled) {
+    const nextBtn = document.getElementById("apartment-plan-next-btn");
+    if (nextBtn) {
+      nextBtn.disabled = !isEnabled;
+    } else {
+      ErrorManager.logError("Apartment plan Next button not found.", "setApartmentPlanNextButtonEnabled");
+    }
+  }
+
   // ------------------ Mirror Quest UI ------------------
 
   /**

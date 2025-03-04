@@ -1,115 +1,96 @@
 export class ApartmentPlanManager {
   /**
-   * Конструктор класса ApartmentPlanManager.
-   * @param {string} containerId - ID контейнера, в котором будет отображаться план квартиры.
-   * @param {DatabaseManager} dbManager - Менеджер базы данных для сохранения и загрузки данных плана.
+   * Constructor for ApartmentPlanManager.
+   * @param {string} containerId - ID of the container where the apartment plan is displayed.
+   * @param {DatabaseManager} dbManager - Database manager for saving and loading plan data.
+   * @param {App} appInstance - Reference to the main application instance.
    */
-  constructor(containerId, dbManager) {
-    // Получаем DOM-элемент контейнера для плана квартиры
+  constructor(containerId, dbManager, appInstance) {
+    this.app = appInstance; // Reference to main app to delegate UI tasks.
     this.container = document.getElementById(containerId);
     this.dbManager = dbManager;
 
-    // Массив объектов помещений (комнат) для текущего этажа.
-    // Каждый объект имеет свойства: { floor, startRow, startCol, endRow, endCol, type }
+    // Array of room objects for the current floor.
     this.rooms = [];
 
-    // Начальный этаж, который отображается
+    // Current floor.
     this.currentFloor = 1;
 
-    // Флаг выбора (выделения) ячеек (помещений)
+    // Flags and cells for selection.
     this.isSelecting = false;
-
-    // Начальная и конечная ячейки выделения
     this.startCell = null;
     this.endCell = null;
 
-    // Размер сетки: предлагаем 16×16 ячеек (можно изменить при необходимости)
+    // Grid dimensions: 16×16 cells.
     this.gridRows = 16;
     this.gridCols = 16;
 
-    // Создаем сетку (грид) с помощью div'ов вместо таблицы
+    // Create the grid container and initialize cells.
     this.createGrid();
 
-    // Привязываем обработчики событий для взаимодействия с ячейками
+    // Bind event handlers for interaction.
     this.attachEvents();
 
-    // После инициализации базы данных загружаем данные плана для текущего этажа
+    // Load apartment plan data for the current floor after DB initialization.
     this.dbManager.initDatabasePromise.then(() => {
       this.loadFromDB();
     });
   }
 
   /**
-   * createGrid – создает контейнер-сетку для отображения плана квартиры.
-   * Вместо таблицы создается <div> с CSS‑grid, в котором создаются ячейки в виде div’ов.
+   * createGrid – Creates a grid container for displaying the apartment plan.
    */
   createGrid() {
-    // Создаем контейнер для сетки
     this.gridContainer = document.createElement('div');
-    // Используем CSS Grid для размещения ячеек
     this.gridContainer.style.display = "grid";
-    // Задаем количество столбцов равное количеству ячеек в строке (фиксированная ширина ячейки 50px)
     this.gridContainer.style.gridTemplateColumns = `repeat(${this.gridCols}, 50px)`;
-    // Задаем фиксированную высоту ячейки (50px)
     this.gridContainer.style.gridAutoRows = "50px";
-    // Задаем промежуток между ячейками, если нужно (опционально)
     this.gridContainer.style.gap = "1px";
 
-    // Очищаем контейнер и добавляем созданный элемент сетки
+    // Clear the container and append the grid container.
     this.container.innerHTML = "";
     this.container.appendChild(this.gridContainer);
 
-    // Заполняем сетку ячейками
+    // Initialize the grid with cells.
     this.initGrid();
   }
 
   /**
-   * initGrid – инициализирует сетку, создавая 16×16 ячеек.
-   * Каждая ячейка представляет собой div с датасетами row и col для хранения координат.
+   * initGrid – Initializes the grid by creating grid cells.
    */
   initGrid() {
-    // Очищаем сетку
     this.gridContainer.innerHTML = "";
-    // Цикл по строкам
     for (let r = 0; r < this.gridRows; r++) {
-      // Цикл по столбцам
       for (let c = 0; c < this.gridCols; c++) {
         const cell = document.createElement("div");
-        // Сохраняем координаты ячейки в data-атрибутах
         cell.dataset.row = r;
         cell.dataset.col = c;
-        // Задаем фиксированные размеры и стили для ячеек
         cell.style.width = "50px";
         cell.style.height = "50px";
         cell.style.border = "1px solid #ccc";
         cell.style.textAlign = "center";
         cell.style.verticalAlign = "middle";
         cell.style.cursor = "pointer";
-        // Добавляем ячейку в контейнер сетки
         this.gridContainer.appendChild(cell);
       }
     }
   }
 
   /**
-   * attachEvents – привязывает обработчики событий для взаимодействия с ячейками сетки.
-   * Обрабатываются как события мыши, так и касания.
+   * attachEvents – Binds event handlers for cell selection (mouse and touch).
    */
   attachEvents() {
-    // Обработчики для мыши:
+    // Mouse events.
     this.gridContainer.addEventListener("mousedown", (e) => this.startSelection(e));
     this.gridContainer.addEventListener("mousemove", (e) => this.updateSelection(e));
     document.addEventListener("mouseup", (e) => this.finishSelection(e));
 
-    // Обработчики для touch-событий:
+    // Touch events.
     this.gridContainer.addEventListener("touchstart", (e) => this.handleTouchStart(e));
     this.gridContainer.addEventListener("touchmove", (e) => this.handleTouchMove(e));
     this.gridContainer.addEventListener("touchend", (e) => this.handleTouchEnd(e));
   }
 
-  /**
-   * handleTouchStart – обработчик для начала касания, предотвращающий нежелательный скроллинг.
-   */
   handleTouchStart(e) {
     e.preventDefault();
     const touch = e.touches[0];
@@ -119,9 +100,6 @@ export class ApartmentPlanManager {
     }
   }
 
-  /**
-   * handleTouchMove – обработчик для движения касания.
-   */
   handleTouchMove(e) {
     e.preventDefault();
     const touch = e.touches[0];
@@ -131,35 +109,27 @@ export class ApartmentPlanManager {
     }
   }
 
-  /**
-   * handleTouchEnd – обработчик для завершения касания.
-   */
   handleTouchEnd(e) {
     e.preventDefault();
     this.finishSelection(e);
   }
 
   /**
-   * startSelection – начинает выделение ячеек при нажатии (mousedown/touchstart).
-   * @param {Object} e - Событие, содержащее информацию о цели.
+   * startSelection – Begins cell selection on mousedown/touchstart.
    */
   startSelection(e) {
     if (e.target.tagName === "DIV") {
       this.isSelecting = true;
-      // Сохраняем координаты начальной ячейки
       const row = parseInt(e.target.dataset.row);
       const col = parseInt(e.target.dataset.col);
       this.startCell = { row, col };
-      // Изначально конечная ячейка совпадает с начальной
       this.endCell = { row, col };
-      // Обновляем визуальное выделение
       this.highlightSelection();
     }
   }
 
   /**
-   * updateSelection – обновляет выделение ячеек при движении мыши/касании.
-   * @param {Object} e - Событие, содержащее цель.
+   * updateSelection – Updates the cell selection as the mouse/touch moves.
    */
   updateSelection(e) {
     if (this.isSelecting && e.target.tagName === "DIV") {
@@ -171,23 +141,18 @@ export class ApartmentPlanManager {
   }
 
   /**
-   * finishSelection – завершает процесс выделения ячеек.
-   * Если не было выделено, выбирается весь план по умолчанию.
-   * Затем вызывается модальное окно для выбора типа помещения.
+   * finishSelection – Ends the selection process.
+   * If no cells were selected, selects the entire grid by default.
+   * Then shows the modal for choosing the location type.
    */
   finishSelection(e) {
-    // Если событие произошло внутри модального окна, игнорируем его
     if (e.target.closest('#location-type-modal-overlay')) return;
-
     if (this.isSelecting) {
       this.isSelecting = false;
-      // Если не было выделено ни одной ячейки, задаем дефолтное помещение на весь план
       if (!this.startCell || !this.endCell) {
         this.startCell = { row: 0, col: 0 };
         this.endCell = { row: this.gridRows - 1, col: this.gridCols - 1 };
       }
-      
-      // Вызываем модальное окно для выбора типа помещения
       this.showLocationTypeModal(
         (selectedType) => {
           if (this.app && this.app.profileManager) {
@@ -204,6 +169,10 @@ export class ApartmentPlanManager {
           this.rooms.push(room);
           this.saveToDB();
           this.renderRooms();
+          // Enable the "Далее" button for the apartment plan stage.
+          if (this.app && this.app.viewManager && typeof this.app.viewManager.setApartmentPlanNextButtonEnabled === 'function') {
+            this.app.viewManager.setApartmentPlanNextButtonEnabled(true);
+          }
         },
         () => {
           console.log("Локация не выбрана, выбран тип по умолчанию: 'Другое'.");
@@ -221,27 +190,27 @@ export class ApartmentPlanManager {
           this.rooms.push(room);
           this.saveToDB();
           this.renderRooms();
+          // Enable the "Далее" button for the apartment plan stage.
+          if (this.app && this.app.viewManager && typeof this.app.viewManager.setApartmentPlanNextButtonEnabled === 'function') {
+            this.app.viewManager.setApartmentPlanNextButtonEnabled(true);
+          }
         }
       );
     }
   }
 
   /**
-   * highlightSelection – визуально подсвечивает выбранную область в сетке.
-   * Проходит по всем ячейкам и сбрасывает подсветку, затем устанавливает фон для выбранных ячеек.
+   * highlightSelection – Visually highlights the selected area in the grid.
    */
   highlightSelection() {
-    // Сбрасываем подсветку для всех ячеек.
     Array.from(this.gridContainer.children).forEach(cell => {
       cell.style.backgroundColor = "";
     });
     if (!this.startCell || !this.endCell) return;
-    // Вычисляем начальные и конечные координаты выделения.
     const startRow = Math.min(this.startCell.row, this.endCell.row);
     const endRow = Math.max(this.startCell.row, this.endCell.row);
     const startCol = Math.min(this.startCell.col, this.endCell.col);
     const endCol = Math.max(this.startCell.col, this.endCell.col);
-    // Проходим по выбранной области и подсвечиваем ячейки.
     for (let r = startRow; r <= endRow; r++) {
       for (let c = startCol; c <= endCol; c++) {
         const cell = this.gridContainer.querySelector(`div[data-row='${r}'][data-col='${c}']`);
@@ -251,13 +220,10 @@ export class ApartmentPlanManager {
   }
 
   /**
-   * renderRooms – обновляет отображение помещений для текущего этажа.
-   * Инициализирует сетку заново и подсвечивает ячейки, соответствующие сохраненным помещениям.
+   * renderRooms – Recreates the grid and highlights cells corresponding to saved rooms for the current floor.
    */
   renderRooms() {
-    // Пересоздаем сетку с ячейками
     this.initGrid();
-    // Для каждого помещения, сохраненного для текущего этажа, подсвечиваем соответствующие ячейки
     this.rooms.forEach(room => {
       if (room.floor === this.currentFloor) {
         for (let r = room.startRow; r <= room.endRow; r++) {
@@ -271,18 +237,16 @@ export class ApartmentPlanManager {
   }
 
   /**
-   * saveToDB – сохраняет данные помещений для текущего этажа в базу данных.
+   * saveToDB – Saves the apartment plan (rooms) for the current floor to the database.
    */
   saveToDB() {
-    // Фильтруем помещения, относящиеся к текущему этажу.
     const currentRooms = this.rooms.filter(room => room.floor === this.currentFloor);
     console.log("Сохраняем в БД комнаты: ", currentRooms);
     this.dbManager.addApartmentRooms(this.currentFloor, currentRooms);
   }
 
   /**
-   * loadFromDB – загружает данные плана для текущего этажа из базы данных.
-   * @returns {void}
+   * loadFromDB – Loads the apartment plan data for the current floor from the database.
    */
   loadFromDB() {
     console.log("Загружаем данные для этажа:", this.currentFloor);
@@ -298,7 +262,7 @@ export class ApartmentPlanManager {
   }
 
   /**
-   * nextFloor – переключает отображение на следующий этаж и загружает данные.
+   * nextFloor – Switches to the next floor and loads its data.
    */
   nextFloor() {
     console.log("Переключаем на следующий этаж");
@@ -307,7 +271,7 @@ export class ApartmentPlanManager {
   }
 
   /**
-   * prevFloor – переключает отображение на предыдущий этаж, если текущий этаж больше первого.
+   * prevFloor – Switches to the previous floor if the current floor is greater than 1.
    */
   prevFloor() {
     if (this.currentFloor > 1) {
@@ -318,12 +282,11 @@ export class ApartmentPlanManager {
   }
 
   /**
-   * showLocationTypeModal – отображает модальное окно для выбора типа помещения.
-   * @param {Function} onConfirm - функция, вызываемая при подтверждении выбора типа.
-   * @param {Function} onCancel - функция, вызываемая при отмене выбора.
+   * showLocationTypeModal – Displays a modal window for selecting the location type.
+   * @param {Function} onConfirm - Callback invoked with the selected type.
+   * @param {Function} onCancel - Callback invoked if selection is cancelled.
    */
   showLocationTypeModal(onConfirm, onCancel) {
-    // Создаем overlay для модального окна
     const modalOverlay = document.createElement("div");
     modalOverlay.id = "location-type-modal-overlay";
     Object.assign(modalOverlay.style, {
@@ -339,7 +302,6 @@ export class ApartmentPlanManager {
       zIndex: "3000"
     });
     
-    // Создаем само модальное окно
     const modal = document.createElement("div");
     modal.id = "location-type-modal";
     Object.assign(modal.style, {
@@ -351,12 +313,10 @@ export class ApartmentPlanManager {
       textAlign: "center"
     });
     
-    // Заголовок модального окна
     const title = document.createElement("h3");
     title.textContent = "Выберите тип помещения";
     modal.appendChild(title);
     
-    // Создаем select для выбора типа помещения
     const selectElem = document.createElement("select");
     const locationTypes = [
       "Кухня", "Спальня", "Гостиная", "Ванная", "Коридор", "Другое",
@@ -368,18 +328,15 @@ export class ApartmentPlanManager {
       option.textContent = type;
       selectElem.appendChild(option);
     });
-    // Устанавливаем значение по умолчанию "Другое"
     selectElem.value = "Другое";
     selectElem.style.marginBottom = "15px";
     selectElem.style.display = "block";
     selectElem.style.width = "100%";
     modal.appendChild(selectElem);
     
-    // Контейнер для кнопок модального окна
     const btnContainer = document.createElement("div");
     btnContainer.style.marginTop = "15px";
     
-    // Кнопка подтверждения выбора
     const confirmBtn = document.createElement("button");
     confirmBtn.textContent = "Подтвердить";
     confirmBtn.style.marginRight = "10px";
@@ -388,14 +345,12 @@ export class ApartmentPlanManager {
       const selectedType = selectElem.value;
       if (onConfirm) onConfirm(selectedType);
       console.log("Удаляем модальное окно");
-      // Небольшая задержка перед удалением окна
       setTimeout(() => {
         modalOverlay.remove();
       }, 50);
     });
     btnContainer.appendChild(confirmBtn);
     
-    // Кнопка отмены выбора
     const cancelBtn = document.createElement("button");
     cancelBtn.textContent = "Отмена";
     cancelBtn.addEventListener("click", () => {

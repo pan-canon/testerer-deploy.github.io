@@ -51,18 +51,40 @@ export class ViewManager {
   /**
    * bindEvents
    * Binds UI events that were previously placed in App.
+   * Also sets up listeners on registration fields to enable the "Next" button
+   * when all required fields (name, gender, language) are filled.
+   *
    * @param {App} app - The main application instance.
    */
   bindEvents(app) {
+    // Function to check registration form validity.
+    const checkRegistrationValidity = () => {
+      const nameValid = this.nameInput && this.nameInput.value.trim().length > 0;
+      const genderValid = this.genderSelect && this.genderSelect.value && this.genderSelect.value !== "";
+      const languageValid = this.languageSelector && this.languageSelector.value && this.languageSelector.value !== "";
+      // Enable Next button if all fields are valid; otherwise, disable it.
+      if (this.nextStepBtn) {
+        this.nextStepBtn.disabled = !(nameValid && genderValid && languageValid);
+      }
+    };
+
     // Registration fields events.
     if (this.nameInput) {
       this.nameInput.addEventListener('input', () => {
         console.log("Name input changed:", this.nameInput.value);
+        checkRegistrationValidity();
       });
     }
     if (this.genderSelect) {
       this.genderSelect.addEventListener('change', () => {
         console.log("Gender select changed:", this.genderSelect.value);
+        checkRegistrationValidity();
+      });
+    }
+    if (this.languageSelector) {
+      this.languageSelector.addEventListener('change', () => {
+        console.log("Language select changed:", this.languageSelector.value);
+        checkRegistrationValidity();
       });
     }
     if (this.nextStepBtn) {

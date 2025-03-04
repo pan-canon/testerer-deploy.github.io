@@ -1,44 +1,43 @@
 export class ApartmentPlanManager {
   /**
    * Constructor for ApartmentPlanManager.
-   * @param {string} containerId - ID of the container where the apartment plan is displayed.
-   * @param {DatabaseManager} dbManager - Database manager for saving and loading plan data.
+   * @param {string} containerId - ID of the container where the apartment plan will be displayed.
+   * @param {DatabaseManager} dbManager - Manager for database persistence.
    * @param {App} appInstance - Reference to the main application instance.
    */
   constructor(containerId, dbManager, appInstance) {
-    this.app = appInstance; // Reference to main app to delegate UI tasks.
+    this.app = appInstance; // Reference to main app (for UI delegation)
     this.container = document.getElementById(containerId);
     this.dbManager = dbManager;
 
     // Array of room objects for the current floor.
+    // Each room has properties: { floor, startRow, startCol, endRow, endCol, type }
     this.rooms = [];
 
     // Current floor.
     this.currentFloor = 1;
 
-    // Flags and cells for selection.
+    // Flags for cell selection.
     this.isSelecting = false;
     this.startCell = null;
     this.endCell = null;
 
-    // Grid dimensions: 16×16 cells.
+    // Grid dimensions (16×16 cells).
     this.gridRows = 16;
     this.gridCols = 16;
 
-    // Create the grid container and initialize cells.
+    // Create grid and bind events.
     this.createGrid();
-
-    // Bind event handlers for interaction.
     this.attachEvents();
 
-    // Load apartment plan data for the current floor after DB initialization.
+    // Load plan data for the current floor after DB initialization.
     this.dbManager.initDatabasePromise.then(() => {
       this.loadFromDB();
     });
   }
 
   /**
-   * createGrid – Creates a grid container for displaying the apartment plan.
+   * createGrid – Creates a grid container for the apartment plan.
    */
   createGrid() {
     this.gridContainer = document.createElement('div');
@@ -46,17 +45,13 @@ export class ApartmentPlanManager {
     this.gridContainer.style.gridTemplateColumns = `repeat(${this.gridCols}, 50px)`;
     this.gridContainer.style.gridAutoRows = "50px";
     this.gridContainer.style.gap = "1px";
-
-    // Clear the container and append the grid container.
     this.container.innerHTML = "";
     this.container.appendChild(this.gridContainer);
-
-    // Initialize the grid with cells.
     this.initGrid();
   }
 
   /**
-   * initGrid – Initializes the grid by creating grid cells.
+   * initGrid – Initializes the grid by creating cells.
    */
   initGrid() {
     this.gridContainer.innerHTML = "";
@@ -77,15 +72,13 @@ export class ApartmentPlanManager {
   }
 
   /**
-   * attachEvents – Binds event handlers for cell selection (mouse and touch).
+   * attachEvents – Binds mouse and touch event handlers for cell selection.
    */
   attachEvents() {
-    // Mouse events.
     this.gridContainer.addEventListener("mousedown", (e) => this.startSelection(e));
     this.gridContainer.addEventListener("mousemove", (e) => this.updateSelection(e));
     document.addEventListener("mouseup", (e) => this.finishSelection(e));
 
-    // Touch events.
     this.gridContainer.addEventListener("touchstart", (e) => this.handleTouchStart(e));
     this.gridContainer.addEventListener("touchmove", (e) => this.handleTouchMove(e));
     this.gridContainer.addEventListener("touchend", (e) => this.handleTouchEnd(e));
@@ -115,7 +108,7 @@ export class ApartmentPlanManager {
   }
 
   /**
-   * startSelection – Begins cell selection on mousedown/touchstart.
+   * startSelection – Begins cell selection.
    */
   startSelection(e) {
     if (e.target.tagName === "DIV") {
@@ -129,7 +122,7 @@ export class ApartmentPlanManager {
   }
 
   /**
-   * updateSelection – Updates the cell selection as the mouse/touch moves.
+   * updateSelection – Updates cell selection as the pointer moves.
    */
   updateSelection(e) {
     if (this.isSelecting && e.target.tagName === "DIV") {
@@ -141,11 +134,10 @@ export class ApartmentPlanManager {
   }
 
   /**
-   * finishSelection – Ends the selection process.
-   * If no cells were selected, selects the entire grid by default.
-   * Then shows the modal for choosing the location type.
+   * finishSelection – Completes cell selection and shows the location type modal.
    */
   finishSelection(e) {
+    // Ignore events inside modal overlay.
     if (e.target.closest('#location-type-modal-overlay')) return;
     if (this.isSelecting) {
       this.isSelecting = false;
@@ -155,6 +147,7 @@ export class ApartmentPlanManager {
       }
       this.showLocationTypeModal(
         (selectedType) => {
+          // Confirm callback: save location type and add room.
           if (this.app && this.app.profileManager) {
             this.app.profileManager.saveLocationType(selectedType);
           }
@@ -169,12 +162,13 @@ export class ApartmentPlanManager {
           this.rooms.push(room);
           this.saveToDB();
           this.renderRooms();
-          // Enable the "Далее" button for the apartment plan stage.
+          // Enable the "Next" button on the apartment plan screen.
           if (this.app && this.app.viewManager && typeof this.app.viewManager.setApartmentPlanNextButtonEnabled === 'function') {
             this.app.viewManager.setApartmentPlanNextButtonEnabled(true);
           }
         },
         () => {
+          // Cancel callback: use default type "Другое"
           console.log("Локация не выбрана, выбран тип по умолчанию: 'Другое'.");
           if (this.app && this.app.profileManager) {
             this.app.profileManager.saveLocationType("Другое");
@@ -190,7 +184,6 @@ export class ApartmentPlanManager {
           this.rooms.push(room);
           this.saveToDB();
           this.renderRooms();
-          // Enable the "Далее" button for the apartment plan stage.
           if (this.app && this.app.viewManager && typeof this.app.viewManager.setApartmentPlanNextButtonEnabled === 'function') {
             this.app.viewManager.setApartmentPlanNextButtonEnabled(true);
           }
@@ -271,7 +264,7 @@ export class ApartmentPlanManager {
   }
 
   /**
-   * prevFloor – Switches to the previous floor if the current floor is greater than 1.
+   * prevFloor – Switches to the previous floor if possible.
    */
   prevFloor() {
     if (this.currentFloor > 1) {
@@ -344,7 +337,6 @@ export class ApartmentPlanManager {
       console.log("Нажата кнопка Подтвердить, выбран тип:", selectElem.value);
       const selectedType = selectElem.value;
       if (onConfirm) onConfirm(selectedType);
-      console.log("Удаляем модальное окно");
       setTimeout(() => {
         modalOverlay.remove();
       }, 50);

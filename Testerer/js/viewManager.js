@@ -467,6 +467,7 @@ export class ViewManager {
     const nextBtn = document.getElementById("apartment-plan-next-btn");
     if (nextBtn) {
       nextBtn.disabled = !isEnabled;
+      console.log(`Apartment Plan Next button is now ${isEnabled ? "enabled" : "disabled"}.`);
     } else {
       ErrorManager.logError("Apartment plan Next button not found.", "setApartmentPlanNextButtonEnabled");
     }

@@ -1,3 +1,6 @@
+import { ErrorManager } from './errorManager.js';
+import { StateManager } from './stateManager.js';
+
 export class ApartmentPlanManager {
   /**
    * Constructor for ApartmentPlanManager.
@@ -34,6 +37,19 @@ export class ApartmentPlanManager {
     this.dbManager.initDatabasePromise.then(() => {
       this.loadFromDB();
     });
+
+    // Bind event listener for the "Далее" button on the apartment plan screen.
+    const nextBtn = document.getElementById("apartment-plan-next-btn");
+    if (nextBtn) {
+      nextBtn.addEventListener("click", () => {
+        // Optionally disable the button to prevent double-clicks.
+        nextBtn.disabled = true;
+        // Transition to the selfie screen.
+        this.app.goToSelfieScreen();
+      });
+    } else {
+      ErrorManager.logError("Apartment plan Next button not found during initialization.", "ApartmentPlanManager");
+    }
   }
 
   /**
@@ -168,7 +184,7 @@ export class ApartmentPlanManager {
           }
         },
         () => {
-          // Cancel callback: use default type "Другое"
+          // Cancel callback: use default type "Другое".
           console.log("Локация не выбрана, выбран тип по умолчанию: 'Другое'.");
           if (this.app && this.app.profileManager) {
             this.app.profileManager.saveLocationType("Другое");

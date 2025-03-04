@@ -39,6 +39,9 @@ export class SQLiteDataManager {
    * initDatabase – Initializes the SQL.js database.
    * If saved database data is found in IndexedDB, restores it.
    * Otherwise, creates a new database instance and sets up the required tables.
+   *
+   * Tables: diary, apartment_plan, quest_progress, ghosts, events, quests.
+   *
    * @param {Object} SQL - The SQL.js module.
    * @returns {Promise<SQL.Database>} Resolves to the SQL.js database instance.
    */
@@ -55,9 +58,8 @@ export class SQLiteDataManager {
       dbInstance = new SQL.Database(binaryData);
       console.log("Database restored from IndexedDB.");
     } else {
-      // Create a new database instance.
+      // Create a new database instance and initialize tables.
       dbInstance = new SQL.Database();
-      // Create the required tables.
       dbInstance.run(`
         CREATE TABLE IF NOT EXISTS diary (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -101,7 +103,8 @@ export class SQLiteDataManager {
   }
 
   /**
-   * saveDatabase – Saves the provided database data (as a base64 string) to IndexedDB.
+   * saveDatabase – Exports the database to a base64 string and persists it via IndexedDB.
+   *
    * @param {string} base64Data - The base64-encoded database data.
    * @returns {Promise<void>} Resolves when saving is complete.
    */
@@ -128,6 +131,7 @@ export class SQLiteDataManager {
 
   /**
    * loadDatabase – Loads the database data from IndexedDB.
+   *
    * @returns {Promise<string>} Resolves to the base64 string representing the database, or undefined if not found.
    */
   async loadDatabase() {
@@ -153,6 +157,7 @@ export class SQLiteDataManager {
 
   /**
    * resetDatabase – Deletes the saved SQL database data (base64 string) from IndexedDB.
+   *
    * @returns {Promise<void>} Resolves when the database data is successfully deleted.
    */
   async resetDatabase() {
@@ -178,6 +183,7 @@ export class SQLiteDataManager {
 
   /**
    * saveProfile – Saves the profile data to IndexedDB.
+   *
    * @param {Object} profile - The profile object to be saved.
    * @returns {Promise<void>}
    */
@@ -205,6 +211,7 @@ export class SQLiteDataManager {
 
   /**
    * getProfile – Loads the profile data from IndexedDB.
+   *
    * @returns {Promise<Object|null>} Resolves to the profile object or null if not found.
    */
   async getProfile() {
@@ -235,6 +242,7 @@ export class SQLiteDataManager {
 
   /**
    * resetProfile – Deletes the profile data from IndexedDB.
+   *
    * @returns {Promise<void>} Resolves when the profile is successfully reset.
    */
   async resetProfile() {

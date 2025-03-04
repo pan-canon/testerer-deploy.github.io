@@ -1,12 +1,28 @@
 import { SQLiteDataManager } from './SQLiteDataManager.js';
+import { ErrorManager } from './errorManager.js';
 
+/**
+ * DatabaseManager
+ *
+ * Responsible for managing the SQL database which stores:
+ * - Diary entries
+ * - Apartment plans
+ * - Quest progress
+ * - Ghost states
+ * - Events
+ * - Quests
+ *
+ * It uses SQLiteDataManager for persistence (IndexedDB) and ensures that
+ * entries (such as diary entries) are stored in a way that the event key checks
+ * (via isEventLogged) work correctly.
+ */
 export class DatabaseManager {
   /**
    * Constructor for DatabaseManager.
-   * @param {SQLiteDataManager} dataManager - Instance of the DataManager for persistence.
+   * @param {SQLiteDataManager} dataManager - Instance for persistence operations.
    */
   constructor(dataManager) {
-    this.dataManager = dataManager; // Save reference to DataManager
+    this.dataManager = dataManager; // Reference to the DataManager
     // The SQL.js database instance will be stored here.
     this.db = null;
     // A Promise that resolves after the database has been initialized.
@@ -20,15 +36,19 @@ export class DatabaseManager {
    * Tables: diary, apartment_plan, quest_progress, ghosts, events, quests.
    */
   async initDatabase() {
-    // Load SQL.js, providing a locateFile function to find necessary files.
-    const SQL = await initSqlJs({
-      locateFile: file => `js/${file}`
-    });
-    
-    // Restore database from IndexedDB if saved, otherwise create a new instance
-    this.db = await this.dataManager.initDatabase(SQL);
-    
-    console.log("📖 Database initialized!");
+    try {
+      // Load SQL.js, providing a locateFile function to find necessary files.
+      const SQL = await initSqlJs({
+        locateFile: file => `js/${file}`
+      });
+      
+      // Restore database from IndexedDB if saved, otherwise create a new instance.
+      this.db = await this.dataManager.initDatabase(SQL);
+      
+      console.log("📖 Database initialized!");
+    } catch (error) {
+      ErrorManager.logError(error, "DatabaseManager.initDatabase");
+    }
   }
 
   /**
@@ -48,11 +68,14 @@ export class DatabaseManager {
 
   /**
    * addDiaryEntry – Adds a new entry to the diary table.
-   * @param {string} entry - The text of the entry (usually a JSON string).
+   * The entry is stored as a JSON string containing an "entry" property and a "postClass" property.
+   * This format ensures that isEventLogged (which checks the "entry" field) works correctly.
+   *
+   * @param {string} entry - The text of the entry (usually a key or message).
    */
   async addDiaryEntry(entry) {
     if (!this.db) {
-      console.error("⚠️ Database not initialized!");
+      ErrorManager.logError("Database not initialized!", "addDiaryEntry");
       return;
     }
     const timestamp = new Date().toISOString();
@@ -63,11 +86,13 @@ export class DatabaseManager {
 
   /**
    * getDiaryEntries – Returns an array of diary entries sorted by descending timestamp.
-   * @returns {Array} An array of entry objects { id, entry, postClass, timestamp }.
+   * Each entry is parsed from JSON, so that the "entry" property can be used for comparisons.
+   *
+   * @returns {Array} Array of entry objects: { id, entry, postClass, timestamp }.
    */
   getDiaryEntries() {
     if (!this.db) {
-      console.error("⚠️ Database not initialized!");
+      ErrorManager.logError("Database not initialized!", "getDiaryEntries");
       return [];
     }
     const result = this.db.exec("SELECT * FROM diary ORDER BY timestamp DESC");
@@ -77,7 +102,9 @@ export class DatabaseManager {
         try {
           parsed = JSON.parse(row[1]);
         } catch (e) {
+          // Fallback: if parsing fails, assume a plain entry.
           parsed = { entry: row[1], postClass: "user-post" };
+          ErrorManager.logError(e, "getDiaryEntries JSON.parse");
         }
         return { id: row[0], ...parsed, timestamp: row[2] };
       });
@@ -87,12 +114,13 @@ export class DatabaseManager {
 
   /**
    * addQuestProgress – Adds a quest progress record to the quest_progress table.
+   *
    * @param {string} questKey - The key of the quest.
    * @param {string} status - The status of the quest.
    */
   addQuestProgress(questKey, status) {
     if (!this.db) {
-      console.error("⚠️ Database not initialized!");
+      ErrorManager.logError("Database not initialized!", "addQuestProgress");
       return;
     }
     this.db.run("INSERT INTO quest_progress (quest_key, status) VALUES (?, ?)", [questKey, status]);
@@ -102,12 +130,13 @@ export class DatabaseManager {
 
   /**
    * getQuestProgress – Returns an array of progress records for the specified quest.
+   *
    * @param {string} questKey - The key of the quest.
-   * @returns {Array} An array of progress objects { id, quest_key, status }.
+   * @returns {Array} Array of progress objects: { id, quest_key, status }.
    */
   getQuestProgress(questKey) {
     if (!this.db) {
-      console.error("⚠️ Database not initialized!");
+      ErrorManager.logError("Database not initialized!", "getQuestProgress");
       return null;
     }
     const result = this.db.exec("SELECT * FROM quest_progress WHERE quest_key = ?", [questKey]);
@@ -119,12 +148,13 @@ export class DatabaseManager {
 
   /**
    * addApartmentRooms – Saves the apartment plan data for the specified floor.
+   *
    * @param {number} floor - The floor number.
    * @param {Array} rooms - An array of room objects.
    */
   addApartmentRooms(floor, rooms) {
     if (!this.db) {
-      console.error("⚠️ Database not initialized!");
+      ErrorManager.logError("Database not initialized!", "addApartmentRooms");
       return;
     }
     const roomData = JSON.stringify(rooms);
@@ -136,12 +166,13 @@ export class DatabaseManager {
 
   /**
    * getApartmentPlan – Returns the apartment plan data for the specified floor.
+   *
    * @param {number} floor - The floor number.
-   * @param {function} callback - A callback function that receives the plan data array.
+   * @param {function} callback - Callback function receiving the plan data array.
    */
   getApartmentPlan(floor, callback) {
     if (!this.db) {
-      console.error("⚠️ Database not initialized!");
+      ErrorManager.logError("Database not initialized!", "getApartmentPlan");
       callback([]);
       return;
     }
@@ -151,6 +182,7 @@ export class DatabaseManager {
         try {
           return JSON.parse(row[0]);
         } catch (e) {
+          ErrorManager.logError(e, "getApartmentPlan JSON.parse");
           return row[0];
         }
       });
@@ -160,15 +192,16 @@ export class DatabaseManager {
     }
   }
 
-  // ===== New methods for ghosts, events, and quests =====
+  // ===== Methods for ghosts, events, and quests =====
 
   /**
    * saveGhostState – Saves or updates the ghost state in the ghosts table.
+   *
    * @param {Object} ghost - Ghost object containing id (optional), name, status, progress.
    */
   saveGhostState(ghost) {
     if (!this.db) {
-      console.error("⚠️ Database not initialized!");
+      ErrorManager.logError("Database not initialized!", "saveGhostState");
       return;
     }
     this.db.run(
@@ -182,12 +215,13 @@ export class DatabaseManager {
 
   /**
    * getGhostState – Retrieves the ghost state by ghost id.
+   *
    * @param {number} ghostId - The ID of the ghost.
    * @returns {Object|null} The ghost object or null if not found.
    */
   getGhostState(ghostId) {
     if (!this.db) {
-      console.error("⚠️ Database not initialized!");
+      ErrorManager.logError("Database not initialized!", "getGhostState");
       return null;
     }
     const result = this.db.exec("SELECT * FROM ghosts WHERE id = ?", [ghostId]);
@@ -200,11 +234,12 @@ export class DatabaseManager {
 
   /**
    * saveEvent – Saves an event record in the events table.
+   *
    * @param {Object} eventData - Object with properties: event_key, event_text, timestamp, completed (0 or 1).
    */
   saveEvent(eventData) {
     if (!this.db) {
-      console.error("⚠️ Database not initialized!");
+      ErrorManager.logError("Database not initialized!", "saveEvent");
       return;
     }
     this.db.run(
@@ -218,11 +253,12 @@ export class DatabaseManager {
 
   /**
    * getEvents – Retrieves all event records from the events table.
+   *
    * @returns {Array} An array of event objects.
    */
   getEvents() {
     if (!this.db) {
-      console.error("⚠️ Database not initialized!");
+      ErrorManager.logError("Database not initialized!", "getEvents");
       return [];
     }
     const result = this.db.exec("SELECT * FROM events ORDER BY timestamp DESC");
@@ -240,11 +276,12 @@ export class DatabaseManager {
 
   /**
    * saveQuestRecord – Saves or updates a quest record in the quests table.
+   *
    * @param {Object} questData - Object with properties: quest_key, status, current_stage, total_stages.
    */
   saveQuestRecord(questData) {
     if (!this.db) {
-      console.error("⚠️ Database not initialized!");
+      ErrorManager.logError("Database not initialized!", "saveQuestRecord");
       return;
     }
     this.db.run(
@@ -258,12 +295,13 @@ export class DatabaseManager {
 
   /**
    * getQuestRecord – Retrieves a quest record by quest key.
+   *
    * @param {string} questKey - The key of the quest.
    * @returns {Object|null} The quest record or null if not found.
    */
   getQuestRecord(questKey) {
     if (!this.db) {
-      console.error("⚠️ Database not initialized!");
+      ErrorManager.logError("Database not initialized!", "getQuestRecord");
       return null;
     }
     const result = this.db.exec("SELECT * FROM quests WHERE quest_key = ?", [questKey]);

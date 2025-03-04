@@ -1,11 +1,11 @@
 import { App } from './app.js';
 
-// Wait until the DOM is fully loaded, then initialize the application
+// Wait until the DOM is fully loaded, then initialize the application.
 document.addEventListener("DOMContentLoaded", async () => {
-  // Create a new instance of the application
+  // Create a new instance of the application.
   const app = new App();
 
-  // Handle the beforeinstallprompt event for PWA
+  // Handle the beforeinstallprompt event for PWA installation.
   let deferredPrompt;
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  // When the install button is clicked, prompt the user to install the PWA.
   const installBtn = document.getElementById("install-btn");
   if (installBtn) {
     installBtn.addEventListener("click", async () => {
@@ -29,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Register the service worker if supported by the browser
+  // Register the Service Worker if supported by the browser.
   if ('serviceWorker' in navigator) {
     try {
       // Determine BASE_PATH based on the URL.
@@ -43,8 +44,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Update mechanism: Attach event listener to the update button.
-  // This now calls the clearCache() method from the ViewManager.
+  // Update mechanism: attach an event listener to the update button.
+  // This calls the clearCache() method via ViewManager.
   const updateBtn = document.getElementById("update-btn");
   if (updateBtn) {
     updateBtn.addEventListener("click", () => {
@@ -54,7 +55,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// New load event handler that hides the preloader after all resources are loaded
+// Hide the preloader after all resources have loaded.
 window.addEventListener("load", () => {
   const preloader = document.getElementById("preloader");
   if (preloader) {

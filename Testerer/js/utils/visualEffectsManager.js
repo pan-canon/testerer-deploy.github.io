@@ -1,20 +1,28 @@
 import { ErrorManager } from '../errorManager.js';
 
+/**
+ * VisualEffectsManager
+ *
+ * Manages visual effects (fades, animations, transitions) for the application.
+ * It delegates UI updates to the ViewManager when available and uses ErrorManager
+ * for error handling.
+ *
+ * @param {App} appInstance - Reference to the main application instance.
+ * @param {HTMLElement} controlsPanel - The controls panel element used for blocking interactions.
+ */
 export class VisualEffectsManager {
-  /**
-   * @param {App} appInstance – Reference to the main application instance (contains flag isCameraOpen).
-   * @param {HTMLElement} controlsPanel – The controls panel element for blocking interactions.
-   */
   constructor(appInstance, controlsPanel) {
     this.app = appInstance;
     this.controlsPanel = controlsPanel;
   }
 
   /**
+   * playAudioWithStop
    * Plays an audio file and stops it automatically after the specified delay.
+   *
    * @param {string} audioSrc - Path to the audio file.
    * @param {number} stopDelay - Time in milliseconds after which to stop playback.
-   * @returns {HTMLAudioElement} The audio object.
+   * @returns {HTMLAudioElement|null} The audio object, or null if an error occurred.
    */
   playAudioWithStop(audioSrc, stopDelay) {
     try {
@@ -33,12 +41,14 @@ export class VisualEffectsManager {
   }
 
   /**
-   * Blocks or unblocks the controls.
-   * Delegates to ViewManager if available.
-   * @param {boolean} shouldBlock - true to block controls, false to unblock.
+   * setControlsBlocked
+   * Blocks or unblocks user interaction with the controls.
+   * Delegates to the ViewManager if available.
+   *
+   * @param {boolean} shouldBlock - True to block controls, false to unblock.
    */
   setControlsBlocked(shouldBlock) {
-    // Do not block controls if camera is open.
+    // Do not block controls if the camera is open.
     if (this.app.isCameraOpen) {
       shouldBlock = false;
     }
@@ -54,13 +64,15 @@ export class VisualEffectsManager {
   }
 
   /**
+   * animateHTMLText
    * Animates HTML text by "typing" it into the target element.
-   * @param {HTMLElement} targetElem - The target element to animate text into.
+   *
+   * @param {HTMLElement} targetElem - The target element for text animation.
    * @param {string} text - The text (including HTML tags) to animate.
    * @param {number} speed - Typing speed in milliseconds.
-   * @param {HTMLAudioElement} [audioObj] - Audio object to play during animation.
+   * @param {HTMLAudioElement} [audioObj] - Optional audio object to play during animation.
    * @param {Function} [callback] - Callback invoked after animation completes.
-   * @param {Function} [onChar] - Callback after each character is inserted.
+   * @param {Function} [onChar] - Callback invoked after each character is inserted.
    */
   animateHTMLText(targetElem, text, speed, audioObj, callback, onChar) {
     targetElem.innerHTML = "";
@@ -103,8 +115,9 @@ export class VisualEffectsManager {
   }
 
   /**
-   * Triggers the mirror effect.
-   * Delegates background transition to ViewManager if available.
+   * triggerMirrorEffect
+   * Triggers the mirror effect by applying a background transition and playing a ringtone.
+   * Delegates the background transition to the ViewManager when available.
    */
   triggerMirrorEffect() {
     if (!this.app.isCameraOpen) {
@@ -116,7 +129,7 @@ export class VisualEffectsManager {
       this.app.viewManager.applyBackgroundTransition("black", 1000);
     } else {
       try {
-        // Fallback: Direct manipulation of document.body styles.
+        // Fallback: Direct DOM manipulation.
         document.body.style.transition = "background 1s";
         document.body.style.background = "black";
         setTimeout(() => {
@@ -131,9 +144,11 @@ export class VisualEffectsManager {
   }
 
   /**
+   * triggerGhostAppearanceEffect
    * Triggers the ghost appearance effect.
-   * Delegates display to ViewManager if available.
-   * @param {string} ghostId - Identifier for the ghost effect.
+   * Delegates display to ViewManager if available, otherwise uses a fallback.
+   *
+   * @param {string} ghostId - Identifier for the ghost effect image.
    */
   triggerGhostAppearanceEffect(ghostId) {
     if (!this.app.isCameraOpen) {
@@ -168,6 +183,7 @@ export class VisualEffectsManager {
   }
 
   /**
+   * triggerWhisperEffect
    * Triggers the whisper effect by playing a whisper audio for 5 seconds.
    */
   triggerWhisperEffect() {
@@ -175,8 +191,10 @@ export class VisualEffectsManager {
   }
 
   /**
-   * Triggers ghost text effect by "typing" ghostly text.
+   * triggerGhostTextEffect
+   * Triggers a ghost text effect by "typing" ghostly text into the target element.
    * Blocks controls during the animation.
+   *
    * @param {HTMLElement} targetElem - The target element for text animation.
    * @param {string} text - The ghost text to animate.
    * @param {Function} callback - Callback invoked after animation completes.
@@ -202,8 +220,10 @@ export class VisualEffectsManager {
   }
 
   /**
-   * Triggers user text effect that simulates typing with a moving pencil icon.
+   * triggerUserTextEffect
+   * Triggers a user text effect that simulates typing with a moving pencil icon.
    * Blocks controls during the animation.
+   *
    * @param {HTMLElement} targetElem - The target element for text animation.
    * @param {string} text - The text to animate.
    * @param {Function} callback - Callback invoked after animation completes.

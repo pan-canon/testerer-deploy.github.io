@@ -1,23 +1,39 @@
+/*
+  App.js - Main Application Module
+  This module initializes all managers, handles user registration, and switches screens.
+  All UI operations are delegated to the ViewManager, state management to the StateManager,
+  and error logging to the ErrorManager.
+*/
+
+// --- Utilities ---
 import { ImageUtils } from './utils/imageUtils.js';
 import { VisualEffectsManager } from './utils/visualEffectsManager.js';
+
+// --- Persistence ---
+import { SQLiteDataManager } from './SQLiteDataManager.js';
 import { DatabaseManager } from './databaseManager.js';
+
+// --- State and Error Management ---
+import { StateManager } from './stateManager.js';
+import { ErrorManager } from './errorManager.js';
+
+// --- UI Operations ---
+import { ViewManager } from './viewManager.js'; // Centralized UI operations
+
+// --- Domain Managers ---
 import { LanguageManager } from './languageManager.js';
 import { cameraSectionManager } from './cameraSectionManager.js';
 import { ProfileManager } from './profileManager.js';
 import { ApartmentPlanManager } from './apartmentPlanManager.js';
 import { GhostManager } from './ghostManager.js';
 import { EventManager } from './eventManager.js';
-import { GameEventManager } from './gameEventManager.js';
 import { QuestManager } from './questManager.js';
+import { GameEventManager } from './gameEventManager.js';
 import { ShowProfileModal } from './showProfileModal.js';
-import { ViewManager } from './viewManager.js'; // Centralized UI operations
-import { SQLiteDataManager } from './SQLiteDataManager.js'; // Persistence via IndexedDB
-import { StateManager } from './stateManager.js';
-import { ErrorManager } from './errorManager.js';
 
 export class App {
   constructor() {
-    // Initialize the ViewManager and delegate UI event binding.
+    // Initialize the ViewManager and bind UI events to the application instance.
     this.viewManager = new ViewManager();
     this.viewManager.bindEvents(this);
 
@@ -25,11 +41,11 @@ export class App {
     this.sqliteDataManager = new SQLiteDataManager();
     this.databaseManager = new DatabaseManager(this.sqliteDataManager);
 
-    // Application state.
+    // Application state variables.
     this.isCameraOpen = false;
     this.selfieData = null;
 
-    // Initialize core managers.
+    // Initialize core domain managers.
     this.languageManager = new LanguageManager('language-selector');
     this.cameraSectionManager = new cameraSectionManager();
     this.profileManager = new ProfileManager(this.sqliteDataManager);
@@ -39,9 +55,10 @@ export class App {
       this.databaseManager,
       this.languageManager,
       this.ghostManager,
+      // Pass the controls panel directly from ViewManager.
       new VisualEffectsManager(this, this.viewManager.controlsPanel)
     );
-    // Delegate ViewManager reference.
+    // Set cross-manager references.
     this.eventManager.viewManager = this.viewManager;
     this.ghostManager.eventManager = this.eventManager;
 
@@ -56,6 +73,7 @@ export class App {
     this.init();
   }
 
+  // Load previously saved application state.
   loadAppState() {
     const savedGhostId = StateManager.get('currentGhostId');
     if (savedGhostId) {
@@ -65,6 +83,7 @@ export class App {
     }
   }
 
+  // Initialize the application.
   async init() {
     this.loadAppState();
     await this.databaseManager.initDatabasePromise;
@@ -91,13 +110,14 @@ export class App {
     }
   }
 
-  // Callback invoked by ViewManager when registration form data is needed.
+  // Callback invoked by the ViewManager when registration form data is needed.
   goToApartmentPlanScreen() {
     const regData = this.viewManager.getRegistrationData();
     if (!regData) {
       ErrorManager.showError("Registration data missing.");
       return;
     }
+    // Save registration data using StateManager.
     StateManager.set('regData', JSON.stringify(regData));
     this.viewManager.switchScreen('apartment-plan-screen', 'apartment-plan-buttons');
     if (!this.apartmentPlanManager) {
@@ -105,6 +125,7 @@ export class App {
     }
   }
 
+  // Transition to the selfie capture screen.
   goToSelfieScreen() {
     this.viewManager.switchScreen('selfie-screen', 'selfie-buttons');
     this.viewManager.showGlobalCamera();
@@ -117,6 +138,7 @@ export class App {
     this.viewManager.disableCompleteButton();
   }
 
+  // Capture a selfie from the active camera stream.
   async captureSelfie() {
     console.log("📸 Attempting to capture selfie...");
     const video = this.cameraSectionManager.videoElement;
@@ -139,6 +161,7 @@ export class App {
         throw new Error("Failed to get 2D drawing context.");
       }
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Convert the captured image to grayscale.
       const grayscaleData = ImageUtils.convertToGrayscale(canvas);
       this.viewManager.updateSelfiePreview(grayscaleData);
       this.viewManager.enableCompleteButton();
@@ -150,6 +173,7 @@ export class App {
     }
   }
 
+  // Complete the registration process.
   async completeRegistration() {
     const selfieSrc = this.viewManager.getSelfieSource();
     if (!selfieSrc || selfieSrc === "") {
@@ -171,11 +195,13 @@ export class App {
     await this.profileManager.saveProfile(profile);
     StateManager.set("registrationCompleted", "true");
 
+    // Stop the camera and hide the global camera view.
     this.cameraSectionManager.stopCamera();
     this.viewManager.hideGlobalCamera();
 
     await this.showMainScreen();
 
+    // Set the post button state based on the welcome flag.
     if (StateManager.get("welcomeDone") === "true") {
       this.viewManager.setPostButtonEnabled(true);
       StateManager.set("postButtonEnabled", "true");
@@ -183,9 +209,11 @@ export class App {
       StateManager.set("postButtonEnabled", "false");
     }
 
+    // Auto-launch the welcome event after registration.
     this.gameEventManager.autoLaunchWelcomeEvent();
   }
 
+  // Toggle between camera view and diary view.
   async toggleCameraView() {
     if (!this.isCameraOpen) {
       console.log("📸 Switching to camera view...");
@@ -209,6 +237,7 @@ export class App {
     }
   }
 
+  // Display the main screen after successful registration.
   async showMainScreen() {
     this.viewManager.switchScreen('main-screen', 'main-buttons');
     this.viewManager.showToggleCameraButton();
@@ -220,14 +249,25 @@ export class App {
     }
   }
 
+  // Show the registration screen and reset state flags for a new registration cycle.
   showRegistrationScreen() {
+    // Reset state keys to ensure a clean registration process.
+    StateManager.remove("welcomeDone");
+    StateManager.remove("mirrorQuestReady");
+    StateManager.remove("postButtonEnabled");
+    StateManager.remove("regData");
+    // Optionally, remove quest state if it exists.
+    StateManager.remove("quest_state_repeating_quest");
+
     this.viewManager.switchScreen('registration-screen', 'registration-buttons');
   }
 
+  // Export the profile data.
   exportProfile() {
     this.profileManager.exportProfileData(this.databaseManager, this.apartmentPlanManager);
   }
 
+  // Import profile data from a selected file.
   importProfile() {
     const file = this.viewManager.getImportFile();
     if (!file) {

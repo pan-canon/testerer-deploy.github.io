@@ -1,52 +1,65 @@
+// --- Error Management ---
 import { ErrorManager } from './errorManager.js';
 
+/**
+ * EventManager
+ * Responsible for handling diary (log) operations and recording system events.
+ * - Adds diary entries (both user and ghost posts).
+ * - Delegates the diary UI update to ViewManager.
+ * - Can trigger short events (e.g., ghost quests) if needed.
+ */
 export class EventManager {
   /**
-   * Constructor for EventManager.
    * @param {DatabaseManager} databaseManager - Instance of the database manager.
    * @param {LanguageManager} languageManager - Localization manager.
-   * @param {GhostManager} ghostManager - Ghost manager.
-   * @param {VisualEffectsManager} visualEffectsManager - Visual effects manager.
+   * @param {GhostManager} ghostManager - Manager handling ghost-related operations.
+   * @param {VisualEffectsManager} visualEffectsManager - Manager handling visual effects.
    *
-   * This class is responsible for diary operations:
-   * - Adding entries (dialogues, notifications, quest messages).
-   * - Delegating the display update of diary entries to the ViewManager.
-   * - Launching short events if needed.
+   * Note: The viewManager reference is expected to be set externally (e.g. in App.js).
    */
   constructor(databaseManager, languageManager, ghostManager, visualEffectsManager) {
     this.databaseManager = databaseManager;
     this.languageManager = languageManager;
     this.ghostManager = ghostManager;
     this.visualEffectsManager = visualEffectsManager;
-    // The viewManager reference is expected to be set externally (e.g., from App).
+    // viewManager is assigned externally after instantiation.
   }
 
   /**
-   * isEventLogged – Checks whether an entry with the given key has already been added.
-   * @param {string} eventKey - The event key.
-   * @returns {boolean} True if the entry is found, otherwise false.
+   * isEventLogged
+   * Checks whether an entry with the given event key has already been logged.
+   * This method compares the stored event key with the provided key.
+   *
+   * @param {string} eventKey - The event key to check.
+   * @returns {boolean} True if the event is already logged, otherwise false.
    */
   isEventLogged(eventKey) {
     const entries = this.databaseManager.getDiaryEntries();
+    // Compare the stored entry key with the provided key.
     return entries.some(entry => entry.entry === eventKey);
   }
 
   /**
-   * addDiaryEntry – Adds an entry to the diary with an indication of its source (ghost or user).
-   * Delegates the diary UI update to the ViewManager.
-   * Also saves system events to the events table.
-   * @param {string} entry - The text of the entry.
-   * @param {boolean} [isPostFromGhost=false] - If true, styles the entry as a ghost post.
+   * addDiaryEntry
+   * Adds an entry to the diary. It constructs an object with the entry text and post type,
+   * serializes it as JSON, and saves it to the database. If the entry represents a system event
+   * (e.g., from a ghost), it is additionally saved to the events table.
+   *
+   * After saving, it delegates the UI update (diary rendering) to the ViewManager.
+   *
+   * @param {string} entry - The text of the diary entry.
+   * @param {boolean} [isPostFromGhost=false] - Flag to mark the entry as a ghost post.
    */
   async addDiaryEntry(entry, isPostFromGhost = false) {
+    // Determine post class based on the source.
     const postClass = isPostFromGhost ? "ghost-post" : "user-post";
     const entryData = { entry, postClass };
     const serializedEntry = JSON.stringify(entryData);
 
-    // Add diary entry to the database.
+    // Save the diary entry to the database.
     await this.databaseManager.addDiaryEntry(serializedEntry);
 
-    // If this is a system event, also save it to the events table.
+    // If this is a system event (ghost post), also record it in the events table.
     if (isPostFromGhost) {
       const eventData = {
         event_key: entry,
@@ -57,30 +70,37 @@ export class EventManager {
       this.databaseManager.saveEvent(eventData);
     }
 
-    // Delegate UI update.
+    // Delegate UI update of the diary to the ViewManager.
     this.updateDiaryDisplay();
   }
 
   /**
-   * updateDiaryDisplay – Retrieves diary entries and delegates rendering to the ViewManager.
+   * updateDiaryDisplay
+   * Retrieves diary entries from the database and instructs the ViewManager
+   * to render them. Uses the current language from the LanguageManager.
    */
   updateDiaryDisplay() {
     if (this.viewManager && typeof this.viewManager.renderDiary === 'function') {
       const entries = this.databaseManager.getDiaryEntries();
       const currentLanguage = this.languageManager.getLanguage();
+      // Delegate rendering of the diary entries to the ViewManager.
       this.viewManager.renderDiary(entries, currentLanguage, this.visualEffectsManager);
     } else {
+      // Log and display an error if the viewManager is not available.
       ErrorManager.logError("ViewManager is not available. Cannot update diary display.", "updateDiaryDisplay");
       ErrorManager.showError("Unable to update diary display.");
     }
   }
 
   /**
-   * startGhostQuest – Example method: Starts a quest for the current ghost.
+   * startGhostQuest
+   * An example method to initiate a ghost quest. It retrieves the current ghost,
+   * constructs a unique quest key for that ghost, and logs the corresponding event as a ghost post.
    */
   async startGhostQuest() {
     const ghost = this.ghostManager.getCurrentGhost();
     if (ghost) {
+      // Construct a unique event key for the ghost quest.
       const questKey = `ghost_${ghost.id}_quest`;
       await this.addDiaryEntry(questKey, true);
       console.log(`👻 Starting quest for ${ghost.name}...`);
@@ -90,5 +110,5 @@ export class EventManager {
     }
   }
   
-  // Additional helper methods can be added as needed.
+  // Additional helper methods for handling events can be added here as needed.
 }

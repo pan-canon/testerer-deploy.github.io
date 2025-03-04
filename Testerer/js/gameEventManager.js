@@ -1,17 +1,31 @@
+// --- Event Modules ---
 import { WelcomeEvent } from './events/welcomeEvent.js';
 import { PostMirrorEvent } from './events/postMirrorEvent.js';
 import { PostRepeatingEvent } from './events/postRepeatingEvent.js';
 import { FinalEvent } from './events/finalEvent.js';
+
+// --- State and Error Management ---
 import { StateManager } from './stateManager.js';
 import { ErrorManager } from './errorManager.js';
 
+/**
+ * GameEventManager class
+ * Manages one-time game events (e.g., welcome, post-mirror, post-repeating, final).
+ * It handles auto-launching the welcome event after registration by checking state flags
+ * via StateManager, and activates events using the provided EventManager.
+ */
 export class GameEventManager {
+  /**
+   * @param {EventManager} eventManager - Manager for diary/event operations.
+   * @param {App} appInstance - The main application instance.
+   * @param {LanguageManager} languageManager - Localization manager.
+   */
   constructor(eventManager, appInstance, languageManager) {
     this.eventManager = eventManager;
     this.app = appInstance;
     this.languageManager = languageManager;
     
-    // Array of one-time events; the order is not automatically chained.
+    // Array of one-time events; order is not automatically chained.
     this.events = [
       new WelcomeEvent(this.eventManager, this.app, this.languageManager),
       new PostMirrorEvent(this.eventManager, this.app),
@@ -21,8 +35,10 @@ export class GameEventManager {
   }
 
   /**
-   * activateEvent – Activates the specified event by key.
-   * This method only activates the given event and does not automatically trigger the next event.
+   * activateEvent
+   * Activates the event corresponding to the given key.
+   * This method only activates the specified event and does not trigger any subsequent events.
+   *
    * @param {string} key - The unique key of the event to activate.
    */
   async activateEvent(key) {
@@ -36,9 +52,9 @@ export class GameEventManager {
   }
 
   /**
-   * startQuest – Example helper method to start a ghost quest.
-   * This method explicitly activates the event for the ghost quest, if available,
-   * otherwise it starts the quest directly via QuestManager.
+   * startQuest
+   * Example helper method to start a ghost quest.
+   * It checks if an event exists for the ghost quest; if not, it directly starts the quest via QuestManager.
    */
   async startQuest() {
     const ghost = this.app.ghostManager.getCurrentGhost();
@@ -47,13 +63,14 @@ export class GameEventManager {
     if (event) {
       await this.activateEvent(questKey);
     } else {
-      // Alternatively, start the quest directly via QuestManager.
+      // Alternatively, start the quest directly via QuestManager if no event is found.
       await this.app.questManager.activateQuest(questKey);
     }
   }
 
   /**
-   * startMirrorQuest – Example helper method to explicitly start the mirror quest event.
+   * startMirrorQuest
+   * Helper method to explicitly start the mirror quest event.
    */
   async startMirrorQuest() {
     await this.activateEvent('mirror_quest');
@@ -61,9 +78,11 @@ export class GameEventManager {
   }
   
   /**
-   * autoLaunchWelcomeEvent – Automatically launches the welcome event after registration.
-   * Checks for the presence of the "welcomeDone" flag; if absent, launches the welcome event
-   * after a 5-second delay. Otherwise, ensures the "Post" button is enabled.
+   * autoLaunchWelcomeEvent
+   * Automatically launches the welcome event after registration.
+   * It checks the "welcomeDone" flag using StateManager; if the flag is not set,
+   * it launches the welcome event after a 5-second delay.
+   * If the flag is set, it ensures that the "Post" button is enabled via ViewManager.
    */
   async autoLaunchWelcomeEvent() {
     if (StateManager.get("welcomeDone") === "true") {

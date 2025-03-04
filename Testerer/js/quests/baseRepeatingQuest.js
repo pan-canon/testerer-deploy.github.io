@@ -1,4 +1,5 @@
 import { BaseEvent } from '../events/baseEvent.js';
+import { StateManager } from '../stateManager.js';
 
 /**
  * BaseRepeatingQuest – Base class for the repeating quest.
@@ -32,7 +33,7 @@ export class BaseRepeatingQuest extends BaseEvent {
    * loadState – Restores the quest state from StateManager.
    */
   loadState() {
-    const saved = window.StateManager.get(`quest_state_${this.key}`);
+    const saved = StateManager.get(`quest_state_${this.key}`);
     if (saved) {
       try {
         const state = JSON.parse(saved);
@@ -57,7 +58,7 @@ export class BaseRepeatingQuest extends BaseEvent {
       finished: this.finished,
       totalStages: this.totalStages
     };
-    window.StateManager.set(`quest_state_${this.key}`, JSON.stringify(state));
+    StateManager.set(`quest_state_${this.key}`, JSON.stringify(state));
     console.log(`[BaseRepeatingQuest] Saved quest state: stage=${this.currentStage}, finished=${this.finished}`);
   }
 
@@ -159,7 +160,7 @@ export class BaseRepeatingQuest extends BaseEvent {
 
     if (this.currentStage <= this.totalStages) {
       // Set the readiness flag using StateManager.
-      window.StateManager.set("mirrorQuestReady", "true");
+      StateManager.set("mirrorQuestReady", "true");
       // Enable the Post button via ViewManager.
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(true);
@@ -195,7 +196,7 @@ export class BaseRepeatingQuest extends BaseEvent {
     }
     
     // Remove the readiness flag using StateManager.
-    window.StateManager.remove("mirrorQuestReady");
+    StateManager.remove("mirrorQuestReady");
     
     // Disable the Post button via ViewManager.
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
@@ -204,7 +205,7 @@ export class BaseRepeatingQuest extends BaseEvent {
     }
     
     // Remove saved quest state from StateManager.
-    window.StateManager.remove(`quest_state_${this.key}`);
+    StateManager.remove(`quest_state_${this.key}`);
     
     // Reset the active state of the Open Camera button via ViewManager.
     if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {

@@ -230,6 +230,18 @@ export class ViewManager {
     }
   }
 
+  /**
+   * showGlobalCamera
+   * Displays the global camera element by setting its display style to 'block'.
+   */
+  showGlobalCamera() {
+    if (this.globalCamera) {
+      this.globalCamera.style.display = 'block';
+    } else {
+      ErrorManager.logError("Global camera element not found.", "showGlobalCamera");
+    }
+  }
+
   // ------------------ Profile Display Operations ------------------
 
   /**

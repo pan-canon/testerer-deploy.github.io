@@ -53,6 +53,7 @@ export class ViewManager {
    * Binds UI events that were previously placed in App.
    * Also sets up listeners on registration fields to enable the "Next" button
    * when all required fields (name, gender, language) are filled.
+   * Additionally, binds the "Capture" button click event to trigger selfie capture.
    *
    * @param {App} app - The main application instance.
    */
@@ -90,6 +91,13 @@ export class ViewManager {
     if (this.nextStepBtn) {
       this.nextStepBtn.addEventListener('click', () => {
         app.goToApartmentPlanScreen();
+      });
+    }
+    // Bind capture button event for selfie stage.
+    if (this.captureBtn) {
+      this.captureBtn.addEventListener("click", () => {
+        console.log("Capture button clicked. Triggering captureSelfie().");
+        app.captureSelfie();
       });
     }
     // Toggle camera/diary view events.

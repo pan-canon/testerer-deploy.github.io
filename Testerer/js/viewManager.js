@@ -258,6 +258,17 @@ export class ViewManager {
     }
   }
 
+  /**
+   * hideGlobalCamera – Hides the global camera element by setting its display style to 'none'.
+   */
+  hideGlobalCamera() {
+    if (this.globalCamera) {
+      this.globalCamera.style.display = 'none';
+    } else {
+      ErrorManager.logError("Global camera element not found.", "hideGlobalCamera");
+    }
+  }
+
   // ------------------ Profile Display Operations ------------------
 
   /**

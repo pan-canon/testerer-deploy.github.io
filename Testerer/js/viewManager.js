@@ -95,6 +95,20 @@ export class ViewManager {
     }
   }
 
+  // ------------------ New Methods for Button Visibility ------------------
+
+  /**
+   * hidePostButton
+   * Hides the "Post" button by setting its display style to 'none'.
+   * NEW: This method is used to ensure that the "Post" button is hidden
+   * when the camera view is active.
+   */
+  hidePostButton() {
+    if (this.postBtn) {
+      this.postBtn.style.display = 'none';
+    }
+  }
+
   // ------------------ Event Binding ------------------
 
   /**
@@ -296,8 +310,20 @@ export class ViewManager {
   }
 
   /**
+   * hidePostButton
+   * Hides the "Post" button.
+   * NEW: This method is used to hide the Post button when the camera view is active.
+   */
+  hidePostButton() {
+    if (this.postBtn) {
+      this.postBtn.style.display = 'none';
+    }
+  }
+
+  /**
    * showDiaryView
    * Displays the diary view and hides the global camera.
+   * NEW: Ensures that the Post button is shown when returning to the diary view.
    */
   showDiaryView() {
     const diary = document.getElementById("diary");
@@ -306,12 +332,15 @@ export class ViewManager {
       this.globalCamera.style.display = "none";
       if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = 'inline-block';
       if (this.toggleDiaryBtn) this.toggleDiaryBtn.style.display = 'none';
+      // NEW: Show Post button when diary view is active.
+      this.showPostButton();
     }
   }
 
   /**
    * showCameraView
    * Displays the camera view and hides the diary.
+   * NEW: Hides the Post button when camera view is active.
    */
   showCameraView() {
     const diary = document.getElementById("diary");
@@ -320,6 +349,8 @@ export class ViewManager {
       this.globalCamera.style.display = "flex";
       if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = 'none';
       if (this.toggleDiaryBtn) this.toggleDiaryBtn.style.display = 'inline-block';
+      // NEW: Hide Post button when camera view is active.
+      this.hidePostButton();
     }
   }
 

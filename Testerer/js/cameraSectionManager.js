@@ -58,6 +58,16 @@ export class cameraSectionManager {
       return;
     }
     try {
+      // NEW: Automatically attach video element if not created yet.
+      if (!this.videoElement) {
+        this.attachTo("global-camera", {
+          width: "100%",
+          height: "100%",
+          filter: "grayscale(100%)"
+        });
+        console.log("Video element was not created; auto-attached to 'global-camera'.");
+      }
+      
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       const constraints = { video: { facingMode: isMobile ? "environment" : "user" } };
       console.log(`🎥 Starting camera with facing mode: ${constraints.video.facingMode}`);

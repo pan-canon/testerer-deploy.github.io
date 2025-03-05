@@ -138,7 +138,13 @@ export class App {
     this.viewManager.disableCompleteButton();
   }
 
-  // Capture a selfie from the active camera stream.
+  /**
+   * captureSelfie – Captures an image from the active camera stream,
+   * converts it to grayscale, updates the selfie preview, and enables
+   * the "Complete Registration" button.
+   *
+   * This method is triggered by the "Capture" button.
+   */
   async captureSelfie() {
     console.log("📸 Attempting to capture selfie...");
     const video = this.cameraSectionManager.videoElement;
@@ -153,6 +159,7 @@ export class App {
       return;
     }
     try {
+      // Create a temporary canvas to capture the current video frame.
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth || 640;
       canvas.height = video.videoHeight || 480;
@@ -160,12 +167,21 @@ export class App {
       if (!ctx) {
         throw new Error("Failed to get 2D drawing context.");
       }
+      // Draw the current frame of the video onto the canvas.
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      // Convert the captured image to grayscale.
+      
+      // Convert the captured frame to grayscale.
       const grayscaleData = ImageUtils.convertToGrayscale(canvas);
+      
+      // Update the selfie preview using ViewManager.
       this.viewManager.updateSelfiePreview(grayscaleData);
+      
+      // Enable the "Complete Registration" button.
       this.viewManager.enableCompleteButton();
+      
+      // Save the captured selfie data for later use.
       this.selfieData = grayscaleData;
+      
       console.log("✅ Selfie captured successfully!");
     } catch (error) {
       ErrorManager.logError(error, "captureSelfie");

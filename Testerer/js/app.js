@@ -1,26 +1,14 @@
-/*
-  App.js - Main Application Module
-  This module initializes all managers, handles user registration, and switches screens.
-  All UI operations are delegated to the ViewManager, state management to the StateManager,
-  and error logging to the ErrorManager.
-*/
-
-// --- Utilities ---
 import { ImageUtils } from './utils/imageUtils.js';
 import { VisualEffectsManager } from './utils/visualEffectsManager.js';
 
-// --- Persistence ---
 import { SQLiteDataManager } from './SQLiteDataManager.js';
 import { DatabaseManager } from './databaseManager.js';
 
-// --- State and Error Management ---
 import { StateManager } from './stateManager.js';
 import { ErrorManager } from './errorManager.js';
 
-// --- UI Operations ---
-import { ViewManager } from './viewManager.js'; // Centralized UI operations
+import { ViewManager } from './viewManager.js';
 
-// --- Domain Managers ---
 import { LanguageManager } from './languageManager.js';
 import { cameraSectionManager } from './cameraSectionManager.js';
 import { ProfileManager } from './profileManager.js';
@@ -133,11 +121,8 @@ export class App {
   goToSelfieScreen() {
     this.viewManager.switchScreen('selfie-screen', 'selfie-buttons');
     this.viewManager.showGlobalCamera();
-    this.cameraSectionManager.attachTo('global-camera', {
-      width: "100%",
-      height: "100%",
-      filter: "grayscale(100%)"
-    });
+    // NEW: No need to call attachTo explicitly – startCamera() will auto-attach with proper options.
+    // If needed, startCamera() can internally use default options.
     this.cameraSectionManager.startCamera();
     this.viewManager.disableCompleteButton();
   }

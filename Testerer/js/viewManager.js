@@ -45,10 +45,54 @@ export class ViewManager {
     this.globalCamera = document.getElementById("global-camera");
     this.postBtn = document.getElementById("post-btn");
 
-    // --- Additional Control Buttons (New bindings) ---
+    // --- Additional Control Buttons ---
     this.resetDataBtn = document.getElementById("reset-data");
     this.exportProfileBtn = document.getElementById("export-profile-btn");
     this.updateBtn = document.getElementById("update-btn");
+
+    // --- Camera Manager Reference (to be set externally) ---
+    this.cameraManager = null;
+  }
+
+  /**
+   * setCameraManager
+   * Sets the camera manager instance (e.g., an instance of cameraSectionManager)
+   * to allow unified access to camera methods.
+   *
+   * @param {Object} cameraManager - The camera manager instance.
+   */
+  setCameraManager(cameraManager) {
+    this.cameraManager = cameraManager;
+  }
+
+  /**
+   * startCameraWithOptions
+   * Wrapper method to start the camera with given options.
+   * Options may include width, height, filter, etc.
+   *
+   * @param {Object} options - Configuration options for the video element.
+   */
+  startCameraWithOptions(options = {}) {
+    if (this.cameraManager) {
+      // Attach the video element to the global camera container with specified options.
+      this.cameraManager.attachTo("global-camera", options);
+      // Start the camera.
+      this.cameraManager.startCamera();
+    } else {
+      ErrorManager.logError("Camera Manager is not set.", "startCameraWithOptions");
+    }
+  }
+
+  /**
+   * stopCamera
+   * Wrapper method to stop the camera via the camera manager.
+   */
+  stopCamera() {
+    if (this.cameraManager) {
+      this.cameraManager.stopCamera();
+    } else {
+      ErrorManager.logError("Camera Manager is not set.", "stopCamera");
+    }
   }
 
   // ------------------ Event Binding ------------------
@@ -138,7 +182,7 @@ export class ViewManager {
     if (this.updateBtn) {
       this.updateBtn.addEventListener("click", () => {
         console.log("Update button clicked.");
-        app.viewManager.clearCache();
+        this.clearCache();
       });
     }
     // Toggle camera/diary view events.
@@ -292,7 +336,8 @@ export class ViewManager {
   }
 
   /**
-   * hideGlobalCamera – Hides the global camera element by setting its display style to 'none'.
+   * hideGlobalCamera
+   * Hides the global camera element by setting its display style to 'none'.
    */
   hideGlobalCamera() {
     if (this.globalCamera) {

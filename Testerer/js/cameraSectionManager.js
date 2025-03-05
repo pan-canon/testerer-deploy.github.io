@@ -51,6 +51,8 @@ export class cameraSectionManager {
    * Upon success, sets the video element's source to the stream.
    * Once the video metadata is loaded, calls onVideoReady (if defined)
    * and dispatches the custom "cameraReady" event.
+   *
+   * NEW: Automatically attaches the video element if not created yet, using provided options.
    */
   async startCamera() {
     if (this.stream) {
@@ -58,7 +60,7 @@ export class cameraSectionManager {
       return;
     }
     try {
-      // NEW: Automatically attach video element if not created yet.
+      // Automatically attach video element if not created yet.
       if (!this.videoElement) {
         this.attachTo("global-camera", {
           width: "100%",

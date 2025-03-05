@@ -44,6 +44,11 @@ export class ViewManager {
     this.toggleDiaryBtn = document.getElementById("toggle-diary");
     this.globalCamera = document.getElementById("global-camera");
     this.postBtn = document.getElementById("post-btn");
+
+    // --- Additional Control Buttons (New bindings) ---
+    this.resetDataBtn = document.getElementById("reset-data");
+    this.exportProfileBtn = document.getElementById("export-profile-btn");
+    this.updateBtn = document.getElementById("update-btn");
   }
 
   // ------------------ Event Binding ------------------
@@ -55,6 +60,8 @@ export class ViewManager {
    * when all required fields (name, gender, language) are filled.
    * Additionally, binds the "Capture" and "Complete" buttons click events to
    * trigger selfie capture and completeRegistration respectively.
+   * 
+   * NEW: Binds events for "Post", "Reset Data", "Export Profile" and "Update" buttons.
    *
    * @param {App} app - The main application instance.
    */
@@ -106,6 +113,32 @@ export class ViewManager {
       this.completeBtn.addEventListener("click", () => {
         console.log("Complete Registration button clicked. Triggering completeRegistration().");
         app.completeRegistration();
+      });
+    }
+    // Bind Post button event to trigger mirror quest via QuestManager.
+    if (this.postBtn) {
+      this.postBtn.addEventListener("click", () => {
+        console.log("Post button clicked. Triggering handlePostButtonClick().");
+        app.questManager.handlePostButtonClick();
+      });
+    }
+    // Bind additional control buttons:
+    if (this.resetDataBtn) {
+      this.resetDataBtn.addEventListener("click", () => {
+        console.log("Reset Data button clicked.");
+        app.profileManager.resetProfile();
+      });
+    }
+    if (this.exportProfileBtn) {
+      this.exportProfileBtn.addEventListener("click", () => {
+        console.log("Export Profile button clicked.");
+        app.exportProfile();
+      });
+    }
+    if (this.updateBtn) {
+      this.updateBtn.addEventListener("click", () => {
+        console.log("Update button clicked.");
+        app.viewManager.clearCache();
       });
     }
     // Toggle camera/diary view events.

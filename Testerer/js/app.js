@@ -50,13 +50,17 @@ export class App {
     this.cameraSectionManager = new cameraSectionManager();
     this.profileManager = new ProfileManager(this.sqliteDataManager);
 
+    // Create VisualEffectsManager instance and assign it to app.visualEffectsManager
+    // so that events (like welcomeEvent) can access it.
+    this.visualEffectsManager = new VisualEffectsManager(this, this.viewManager.controlsPanel);
+
     this.ghostManager = new GhostManager(null, this.profileManager, this);
+    // Pass the same visualEffectsManager instance to EventManager.
     this.eventManager = new EventManager(
       this.databaseManager,
       this.languageManager,
       this.ghostManager,
-      // Pass the controls panel directly from ViewManager.
-      new VisualEffectsManager(this, this.viewManager.controlsPanel)
+      this.visualEffectsManager
     );
     // Set cross-manager references.
     this.eventManager.viewManager = this.viewManager;

@@ -354,8 +354,15 @@ export class ViewManager {
       this.globalCamera.style.display = "flex";
       if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = 'none';
       if (this.toggleDiaryBtn) this.toggleDiaryBtn.style.display = 'inline-block';
-      // NEW: Hide Post button when camera view is active.
+      // Скрываем кнопку "Запостить"
       this.hidePostButton();
+      // Обеспечиваем наличие кнопки "Заснять" в режиме камеры
+      const shootBtn = document.getElementById("btn_shoot");
+      if (shootBtn) {
+        shootBtn.style.display = "inline-block";
+        shootBtn.disabled = true; // начальное состояние - неактивна
+        shootBtn.style.pointerEvents = "none";
+      }
     }
   }
 
@@ -677,6 +684,7 @@ export class ViewManager {
     const shootBtn = document.getElementById(shootButtonId);
     if (shootBtn) {
       shootBtn.disabled = !success;
+      shootBtn.style.pointerEvents = success ? "auto" : "none";
     }
   }
 

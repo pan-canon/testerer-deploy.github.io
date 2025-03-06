@@ -282,7 +282,12 @@ export class App {
   async showMainScreen() {
     this.viewManager.switchScreen('main-screen', 'main-buttons');
     this.viewManager.showToggleCameraButton();
-    this.viewManager.showPostButton();
+    // Устанавливаем состояние кнопки "Запостить" в зависимости от флага welcomeDone
+    if (StateManager.get("welcomeDone") === "true") {
+      this.viewManager.setPostButtonEnabled(true);
+    } else {
+      this.viewManager.setPostButtonEnabled(false);
+    }
     const profile = await this.profileManager.getProfile();
     if (profile) {
       this.viewManager.updateProfileDisplay(profile);

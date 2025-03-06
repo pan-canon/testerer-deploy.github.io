@@ -75,17 +75,15 @@ export class App {
   }
 
   /**
-   * init
-   * Initializes the application.
-   * First, it loads saved state, waits for the database to initialize,
-   * then calls the new QuestManager.syncQuestState() method to synchronize the current quest state
-   * from the database. This method will update the local flag (postButtonDisabled) and update the UI accordingly.
+   * init - Initializes the application.
+   * After loading the state and initializing the database,
+   * it calls QuestManager.syncQuestState() to synchronize quest state from the DB.
    */
   async init() {
     this.loadAppState();
     await this.databaseManager.initDatabasePromise;
 
-    // Synchronize the current quest state from the database via QuestManager.
+    // Synchronize quest state from the database via QuestManager.
     await this.questManager.syncQuestState();
 
     this.viewManager.showToggleCameraButton();
@@ -96,9 +94,7 @@ export class App {
       console.log("Profile found:", profile);
       await this.showMainScreen();
 
-      // The Post button state is now determined by the QuestManager.syncQuestState() call.
-      // (The old check using welcomeDone is no longer needed here.)
-      
+      // The Post button state is now set by syncQuestState(), so we do not override it here.
       if (StateManager.get("registrationCompleted") === "true") {
         this.gameEventManager.autoLaunchWelcomeEvent();
       }
@@ -133,10 +129,8 @@ export class App {
   }
 
   /**
-   * captureSelfie
-   * Captures an image from the active camera stream, converts it to grayscale,
-   * updates the selfie preview, and enables the "Complete Registration" button.
-   * Triggered by the "Capture" button.
+   * captureSelfie - Captures an image from the active camera stream,
+   * converts it to grayscale, updates the selfie preview, and enables the "Complete Registration" button.
    */
   async captureSelfie() {
     console.log("📸 Attempting to capture selfie...");
@@ -210,8 +204,8 @@ export class App {
 
     await this.showMainScreen();
 
-    // After registration, the Post button state will be determined via quest state synchronization.
-    // (No need to check welcomeDone here.)
+    // After registration, the Post button state is determined by quest state synchronization.
+    // (welcomeDone is used only for initial welcome event activation.)
     
     // Auto-launch the welcome event after registration.
     this.gameEventManager.autoLaunchWelcomeEvent();
@@ -245,8 +239,12 @@ export class App {
   async showMainScreen() {
     this.viewManager.switchScreen('main-screen', 'main-buttons');
     this.viewManager.showToggleCameraButton();
-    // Set the Post button state based on quest state.
-    // (The syncQuestState() call in init() ensures that if an active quest exists, the Post button is disabled.)
+    // Set the Post button state based on the persisted quest state.
+    if (StateManager.get("postButtonDisabled") === "true") {
+      this.viewManager.setPostButtonEnabled(false);
+    } else {
+      this.viewManager.setPostButtonEnabled(true);
+    }
     const profile = await this.profileManager.getProfile();
     if (profile) {
       this.viewManager.updateProfileDisplay(profile);

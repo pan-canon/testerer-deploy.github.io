@@ -105,6 +105,10 @@ export class QuestManager {
    * Called when the "Post" button is clicked.
    * Depending on the state flags (using StateManager), triggers either the mirror quest or repeating quest.
    * Delegates UI updates (e.g. disabling/enabling buttons) to the ViewManager.
+   *
+   * NEW: Sets a persistent flag "postButtonDisabled" in StateManager and
+   * calls the universal method getCurrentQuestStatus() from the base quest class
+   * to verify and log the current quest status.
    */
   async handlePostButtonClick() {
     // Disable the post button via ViewManager.
@@ -112,6 +116,8 @@ export class QuestManager {
       this.app.viewManager.setPostButtonEnabled(false);
       console.log("[QuestManager] Post button disabled immediately after click.");
     }
+    // Set persistent flag in StateManager.
+    StateManager.set("postButtonDisabled", "true");
 
     // If the repeating quest is finished, do not start a new cycle.
     const repeatingQuest = this.quests.find(q => q.key === "repeating_quest");
@@ -135,12 +141,18 @@ export class QuestManager {
       this.app.viewManager.setCameraButtonActive(true);
     }
     
-    // Check if the repeating cycle mode is active using StateManager.
-    const isRepeating = StateManager.get("isRepeatingCycle") === "true";
-    if (isRepeating) {
+    // Universal check of current quest status using base class method.
+    if (StateManager.get("isRepeatingCycle") === "true") {
+      console.log("[QuestManager] Checking status for repeating quest...");
+      const status = await repeatingQuest.getCurrentQuestStatus();
+      console.log("[QuestManager] Current repeating quest status:", status);
       console.log("[QuestManager] Triggering repeating quest from handlePostButtonClick.");
       await this.activateQuest("repeating_quest");
     } else {
+      const mirrorQuest = this.quests.find(q => q.key === "mirror_quest");
+      console.log("[QuestManager] Checking status for mirror quest...");
+      const status = await mirrorQuest.getCurrentQuestStatus();
+      console.log("[QuestManager] Current mirror quest status:", status);
       console.log("[QuestManager] Triggering mirror quest from handlePostButtonClick.");
       await this.activateQuest("mirror_quest");
     }

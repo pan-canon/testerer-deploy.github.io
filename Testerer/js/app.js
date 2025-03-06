@@ -75,10 +75,46 @@ export class App {
     }
   }
 
+  /**
+   * syncQuestStateFromDB
+   * 
+   * NEW: Synchronizes the current quest/event state from the database.
+   * Checks for an active quest (e.g. "mirror_quest" or "repeating_quest") and sets
+   * the "postButtonDisabled" flag in StateManager accordingly. This flag then influences
+   * the UI via ViewManager (e.g. disabling the "Post" button if the quest is active).
+   */
+  async syncQuestStateFromDB() {
+    // Attempt to retrieve quest records from the DB.
+    const mirrorQuestRecord = this.databaseManager.getQuestRecord("mirror_quest");
+    const repeatingQuestRecord = this.databaseManager.getQuestRecord("repeating_quest");
+    const activeQuestRecord = mirrorQuestRecord || repeatingQuestRecord;
+
+    if (activeQuestRecord) {
+      // If an active quest exists and its status is not "finished", disable the Post button.
+      if (activeQuestRecord.status !== "finished") {
+        StateManager.set("postButtonDisabled", "true");
+        this.viewManager.setPostButtonEnabled(false);
+        console.log("Sync: Active quest detected, post button disabled.");
+      } else {
+        StateManager.set("postButtonDisabled", "false");
+        this.viewManager.setPostButtonEnabled(true);
+        console.log("Sync: Active quest finished, post button enabled.");
+      }
+    } else {
+      // No quest record found – ensure Post button is enabled.
+      StateManager.set("postButtonDisabled", "false");
+      this.viewManager.setPostButtonEnabled(true);
+      console.log("Sync: No quest record found, post button enabled.");
+    }
+  }
+
   // Initialize the application.
   async init() {
     this.loadAppState();
     await this.databaseManager.initDatabasePromise;
+
+    // NEW: Synchronize active quest/event state from the DB.
+    await this.syncQuestStateFromDB();
 
     this.viewManager.showToggleCameraButton();
     this.eventManager.updateDiaryDisplay();
@@ -88,6 +124,7 @@ export class App {
       console.log("Profile found:", profile);
       await this.showMainScreen();
 
+      // These flags can be further refined based on additional DB state if needed.
       if (StateManager.get("welcomeDone") === "true") {
         this.viewManager.setPostButtonEnabled(true);
         StateManager.set("postButtonEnabled", "true");
@@ -122,7 +159,6 @@ export class App {
     this.viewManager.switchScreen('selfie-screen', 'selfie-buttons');
     this.viewManager.showGlobalCamera();
     // NEW: No need to call attachTo explicitly – startCamera() will auto-attach with proper options.
-    // If needed, startCamera() can internally use default options.
     this.cameraSectionManager.startCamera();
     this.viewManager.disableCompleteButton();
   }

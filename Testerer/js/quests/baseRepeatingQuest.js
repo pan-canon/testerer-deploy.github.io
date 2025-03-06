@@ -241,4 +241,24 @@ export class BaseRepeatingQuest extends BaseEvent {
     console.log("[BaseRepeatingQuest] Quest state has been reset for a new cycle.");
     this.saveState();
   }
+
+  /**
+   * getCurrentQuestStatus
+   * NEW: Retrieves the current status of the repeating quest.
+   * Combines local quest state (currentStage, finished, totalStages) and information from the database.
+   *
+   * @returns {Promise<Object>} An object with keys: key, active, finished, currentStage, totalStages, dbStatus.
+   */
+  async getCurrentQuestStatus() {
+    const record = this.app.databaseManager.getQuestRecord(this.key);
+    const active = (!this.finished && this.currentStage <= this.totalStages);
+    return {
+      key: this.key,
+      active: active,
+      finished: this.finished,
+      currentStage: this.currentStage,
+      totalStages: this.totalStages,
+      dbStatus: record ? record.status : "not recorded"
+    };
+  }
 }

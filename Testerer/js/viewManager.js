@@ -323,7 +323,7 @@ export class ViewManager {
   /**
    * showDiaryView
    * Displays the diary view and hides the global camera.
-   * NEW: Ensures that the Post button is shown when returning to the diary view.
+   * NEW: Ensures that the Post button is shown and the "Shoot" button is hidden when returning to the diary view.
    */
   showDiaryView() {
     const diary = document.getElementById("diary");
@@ -332,8 +332,13 @@ export class ViewManager {
       this.globalCamera.style.display = "none";
       if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = 'inline-block';
       if (this.toggleDiaryBtn) this.toggleDiaryBtn.style.display = 'none';
-      // NEW: Show Post button when diary view is active.
+      // Show Post button when diary view is active.
       this.showPostButton();
+      // Hide the Shoot button when in diary view.
+      const shootBtn = document.getElementById("btn_shoot");
+      if (shootBtn) {
+        shootBtn.style.display = "none";
+      }
     }
   }
 
@@ -630,6 +635,7 @@ export class ViewManager {
    *   - statusElementId: ID of the status display element.
    *   - shootButtonId: ID of the "Shoot" button.
    *   - onShoot: Callback executed when the "Shoot" button is clicked.
+   *   - initialActive (optional): Boolean flag indicating if the "Shoot" button should be initially active.
    */
   startMirrorQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
@@ -640,8 +646,10 @@ export class ViewManager {
     const shootBtn = document.getElementById(options.shootButtonId);
     if (shootBtn) {
       shootBtn.style.display = "inline-block";
-      this.setShootButtonActive(true);
-      shootBtn.style.pointerEvents = "auto";
+      // Use provided initialActive flag (default is false)
+      const initialActive = (typeof options.initialActive !== 'undefined') ? options.initialActive : false;
+      this.setShootButtonActive(initialActive);
+      shootBtn.style.pointerEvents = initialActive ? "auto" : "none";
       shootBtn.onclick = null;
       shootBtn.onclick = () => {
         this.setShootButtonActive(false);

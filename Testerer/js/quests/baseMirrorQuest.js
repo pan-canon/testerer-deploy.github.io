@@ -193,6 +193,26 @@ export class BaseMirrorQuest extends BaseEvent {
   }
 
   /**
+   * getCurrentQuestStatus
+   * NEW: Retrieves the current status of the mirror quest.
+   * Combines information from the database (via DatabaseManager) and local StateManager flags.
+   *
+   * @returns {Promise<Object>} An object with keys: key, active, finished, dbStatus.
+   */
+  async getCurrentQuestStatus() {
+    // Retrieve the quest record from the database.
+    const record = this.app.databaseManager.getQuestRecord(this.key);
+    // Check local active flag.
+    const activeFlag = StateManager.get("mirrorQuestActive") === "true";
+    return {
+      key: this.key,
+      active: activeFlag,
+      finished: this.finished,
+      dbStatus: record ? record.status : "not recorded"
+    };
+  }
+
+  /**
    * getRandomLetter
    * Returns a random letter from the ghost's name (only alphabetic characters).
    *

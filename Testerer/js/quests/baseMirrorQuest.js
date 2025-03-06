@@ -55,12 +55,12 @@ export class BaseMirrorQuest extends BaseEvent {
     }
     console.log("[BaseMirrorQuest] Mirror quest activated.");
     StateManager.set("mirrorQuestActive", "true");
-    // Save quest state as active in the database
+    // Сохраняем состояние квеста как active (для зеркального квеста totalStages = 1)
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
       status: "active",
       current_stage: 1,
-      total_stages: this.app ? this.app.totalStages : 0  // or this.totalStages
+      total_stages: 1
     });
   }
 
@@ -189,20 +189,17 @@ export class BaseMirrorQuest extends BaseEvent {
       await this.eventManager.addDiaryEntry(`user_post_failed: ${randomLetter}`, false);
     }
     this.updateUIAfterFinish(success);
-    // Remove active state from the Open Camera button via ViewManager.
     if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {
       this.app.viewManager.setCameraButtonActive(false);
     }
-    // Remove the "mirrorQuestActive" flag using StateManager.
     StateManager.remove("mirrorQuestActive");
-    // Update quest record in the database as finished.
+    // Обновляем запись о квесте в БД как finished
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
       status: "finished",
-      current_stage: this.app ? this.app.currentStage : 1,  // можно заменить на this.currentStage, если логика такова
-      total_stages: this.totalStages
+      current_stage: 1,
+      total_stages: 1
     });
-    // If the quest was successful, trigger the post-mirror event.
     if (success) {
       this.app.gameEventManager.activateEvent("post_mirror_event");
     }

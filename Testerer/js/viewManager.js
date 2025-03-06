@@ -331,14 +331,17 @@ export class ViewManager {
       diary.style.display = "block";
       this.globalCamera.style.display = "none";
       if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = 'inline-block';
-      if (this.toggleDiaryBtn) this.toggleDiaryBtn.style.display = 'none'; // Скрываем кнопку "Открыть дневник"
-      // Show Post button when diary view is active.
-      this.showPostButton();
-      // Также, если в режиме дневника присутствует кнопка "Открыть дневник", скрываем её:
-      const toggleDiaryBtn = document.getElementById("toggle-diary");
-      if (toggleDiaryBtn) {
-        toggleDiaryBtn.style.display = "none";
+      // Скрываем кнопку "Открыть дневник"
+      if (this.toggleDiaryBtn) {
+        this.toggleDiaryBtn.style.display = "none";
       }
+      // Скрываем кнопку "Заснять"
+      const shootBtn = document.getElementById("btn_shoot");
+      if (shootBtn) {
+        shootBtn.style.display = "none";
+      }
+      // Показываем кнопку "Запостить", если это требуется
+      this.showPostButton();
     }
   }
 
@@ -356,11 +359,11 @@ export class ViewManager {
       if (this.toggleDiaryBtn) this.toggleDiaryBtn.style.display = 'inline-block';
       // Скрываем кнопку "Запостить"
       this.hidePostButton();
-      // Обеспечиваем наличие кнопки "Заснять" в режиме камеры
+      // Обеспечиваем наличие кнопки "Заснять" в режиме камеры с начальным состоянием неактивной
       const shootBtn = document.getElementById("btn_shoot");
       if (shootBtn) {
         shootBtn.style.display = "inline-block";
-        shootBtn.disabled = true; // начальное состояние - неактивна
+        shootBtn.disabled = true;
         shootBtn.style.pointerEvents = "none";
       }
     }
@@ -523,6 +526,17 @@ export class ViewManager {
       if (targetGroup) {
         targetGroup.style.display = 'flex';
         targetGroup.style.pointerEvents = 'auto';
+        // Если активен режим дневника, скрываем кнопку "Открыть дневник" и "Заснять"
+        if (screenId === "main-screen") {
+          const td = targetGroup.querySelector("#toggle-diary");
+          if (td) {
+            td.style.display = "none";
+          }
+          const shootBtn = targetGroup.querySelector("#btn_shoot");
+          if (shootBtn) {
+            shootBtn.style.display = "none";
+          }
+        }
       }
     }
   }

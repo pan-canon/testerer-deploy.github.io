@@ -9,12 +9,14 @@ import { ErrorManager } from './errorManager.js';
 
 /**
  * QuestManager class
+ * 
  * Responsible for managing quest activation, state updates, and UI restoration.
  * All UI updates (e.g. disabling/enabling buttons) are delegated to ViewManager,
  * and all state access uses StateManager.
  */
 export class QuestManager {
   /**
+   * Constructor for QuestManager.
    * @param {EventManager} eventManager - The event manager handling diary entries.
    * @param {App} appInstance - The main application instance.
    */
@@ -42,7 +44,7 @@ export class QuestManager {
       this.restoreRepeatingQuestUI();
     }
 
-    // Optionally, restore any other UI states via ViewManager here.
+    // Optionally, restore additional UI states (e.g. camera button state).
     if (this.app.viewManager && typeof this.app.viewManager.restoreCameraButtonState === 'function') {
       this.app.viewManager.restoreCameraButtonState();
     }
@@ -65,16 +67,31 @@ export class QuestManager {
 
   /**
    * syncQuestState
-   * NEW: Synchronizes the current quest state from the database.
-   * Checks for an active quest (mirror or repeating) and, if found with a status not "finished",
-   * sets the "postButtonDisabled" flag in StateManager and disables the Post button via ViewManager.
-   * Otherwise, ensures the Post button is enabled.
+   * Synchronizes the current quest state from the database.
+   * 
+   * This method checks if there is an active quest (mirror or repeating) in the database.
+   * If an active quest exists and its status is not "finished", it sets the 
+   * "postButtonDisabled" flag in StateManager and disables the Post button via ViewManager.
+   * Additionally, if the game is finalized (flag "gameFinalized" set), the Post button remains disabled.
+   * Otherwise, it enables the Post button.
    */
   async syncQuestState() {
+    // Check if the game has been finalized (final quest completed)
+    if (StateManager.get("gameFinalized") === "true") {
+      StateManager.set("postButtonDisabled", "true");
+      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
+        this.app.viewManager.setPostButtonEnabled(false);
+      }
+      console.log("QuestManager.syncQuestState: Game finalized; post button disabled.");
+      return;
+    }
+
+    // Retrieve quest records for mirror and repeating quests from the database.
     const mirrorQuestRecord = this.app.databaseManager.getQuestRecord("mirror_quest");
     const repeatingQuestRecord = this.app.databaseManager.getQuestRecord("repeating_quest");
     const activeQuestRecord = mirrorQuestRecord || repeatingQuestRecord;
 
+    // If an active quest is detected and its status is not "finished"
     if (activeQuestRecord && activeQuestRecord.status !== "finished") {
       StateManager.set("postButtonDisabled", "true");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
@@ -82,6 +99,7 @@ export class QuestManager {
       }
       console.log("QuestManager.syncQuestState: Active quest detected, post button disabled.");
     } else {
+      // No active quest or quest finished: enable the Post button.
       StateManager.set("postButtonDisabled", "false");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(true);
@@ -129,21 +147,28 @@ export class QuestManager {
 
   /**
    * handlePostButtonClick
-   * Called when the "Post" button is clicked.
-   * Depending on the state flags (using StateManager), triggers either the mirror quest or repeating quest.
-   * Delegates UI updates (e.g. disabling/enabling buttons) to the ViewManager.
-   *
-   * NEW: Sets a persistent flag "postButtonDisabled" in StateManager and
-   * calls the universal method getCurrentQuestStatus() from the base quest class
-   * to verify and log the current quest status.
+   * Handles the click event for the "Post" button.
+   * 
+   * This method disables the Post button immediately and sets the corresponding flag.
+   * It then checks for two conditions:
+   *   1. If the game is finalized (flag "gameFinalized" is set), the action is aborted.
+   *   2. If the "mirrorQuestReady" flag is not set, an error is shown.
+   * If all conditions are met, it removes the readiness flag, activates the camera button,
+   * and then, based on whether the repeating cycle flag is set, triggers the appropriate quest.
    */
   async handlePostButtonClick() {
-    // Disable the post button via ViewManager.
+    // If game is finalized, do not process the button click.
+    if (StateManager.get("gameFinalized") === "true") {
+      ErrorManager.showError("The game has been finalized. No further posts are allowed.");
+      return;
+    }
+
+    // Disable the Post button immediately via ViewManager.
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
       this.app.viewManager.setPostButtonEnabled(false);
       console.log("[QuestManager] Post button disabled immediately after click.");
     }
-    // Set persistent flag in StateManager.
+    // Set persistent flag to indicate Post button is disabled.
     StateManager.set("postButtonDisabled", "true");
 
     // If the repeating quest is finished, do not start a new cycle.
@@ -153,22 +178,22 @@ export class QuestManager {
       return;
     }
     
-    // Check readiness flag for mirror quest via StateManager.
+    // Check the readiness flag for the mirror quest.
     const isReady = StateManager.get("mirrorQuestReady") === "true";
     if (!isReady) {
       ErrorManager.showError("Repeating quest is not ready.");
       return;
     }
     
-    // Remove the readiness flag immediately to prevent reactivation.
+    // Remove the readiness flag immediately to prevent multiple activations.
     StateManager.remove("mirrorQuestReady");
     
-    // Activate the "Open Camera" button via ViewManager.
+    // Activate the "Open Camera" button via ViewManager to indicate camera readiness.
     if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {
       this.app.viewManager.setCameraButtonActive(true);
     }
     
-    // Universal check of current quest status using base class method.
+    // Determine which quest to activate based on the "isRepeatingCycle" flag.
     if (StateManager.get("isRepeatingCycle") === "true") {
       console.log("[QuestManager] Checking status for repeating quest...");
       const status = await repeatingQuest.getCurrentQuestStatus();
@@ -188,6 +213,8 @@ export class QuestManager {
   /**
    * updateQuestProgress
    * Updates the quest progress in the database.
+   * 
+   * Constructs a quest progress object and delegates saving the record to the DatabaseManager.
    * @param {string} questKey - The key of the quest.
    * @param {number} currentStage - The current stage of the quest.
    * @param {number} totalStages - The total number of stages.

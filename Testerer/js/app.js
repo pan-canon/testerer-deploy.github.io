@@ -1,3 +1,4 @@
+// Import utility modules and managers
 import { ImageUtils } from './utils/imageUtils.js';
 import { VisualEffectsManager } from './utils/visualEffectsManager.js';
 
@@ -19,13 +20,18 @@ import { QuestManager } from './questManager.js';
 import { GameEventManager } from './gameEventManager.js';
 import { ShowProfileModal } from './showProfileModal.js';
 
+/**
+ * Main application class.
+ * Responsible for initializing core managers, setting up the UI,
+ * loading the persisted state, and handling primary navigation and events.
+ */
 export class App {
   constructor() {
-    // Initialize the ViewManager and bind UI events to the application instance.
+    // Initialize ViewManager and bind UI events to the application instance.
     this.viewManager = new ViewManager();
     this.viewManager.bindEvents(this);
 
-    // Create persistence managers.
+    // Create persistence managers for database operations.
     this.sqliteDataManager = new SQLiteDataManager();
     this.databaseManager = new DatabaseManager(this.sqliteDataManager);
 
@@ -38,11 +44,13 @@ export class App {
     this.cameraSectionManager = new cameraSectionManager();
     this.profileManager = new ProfileManager(this.sqliteDataManager);
 
-    // Create VisualEffectsManager instance and assign it so that events (e.g. welcome event) can access it.
+    // Create VisualEffectsManager instance to handle UI visual effects.
     this.visualEffectsManager = new VisualEffectsManager(this, this.viewManager.controlsPanel);
 
+    // Initialize GhostManager with a null eventManager initially (will be set later) and pass profileManager and app instance.
     this.ghostManager = new GhostManager(null, this.profileManager, this);
-    // Pass the same VisualEffectsManager instance to EventManager.
+    
+    // Create EventManager instance and pass required dependencies.
     this.eventManager = new EventManager(
       this.databaseManager,
       this.languageManager,
@@ -53,18 +61,25 @@ export class App {
     this.eventManager.viewManager = this.viewManager;
     this.ghostManager.eventManager = this.eventManager;
 
+    // Initialize QuestManager and GameEventManager.
     this.questManager = new QuestManager(this.eventManager, this);
     this.gameEventManager = new GameEventManager(this.eventManager, this, this.languageManager);
+    
+    // Modal for profile display.
     this.showProfileModal = new ShowProfileModal(this);
 
-    // Temporary canvas for selfie processing.
+    // Temporary canvas used for processing selfie images.
     this.tempCanvas = document.createElement("canvas");
     this.tempCtx = this.tempCanvas.getContext("2d");
 
+    // Begin application initialization.
     this.init();
   }
 
-  // Load previously saved application state.
+  /**
+   * loadAppState - Loads previously saved application state.
+   * Retrieves the saved ghost ID from StateManager and sets the active ghost accordingly.
+   */
   loadAppState() {
     const savedGhostId = StateManager.get('currentGhostId');
     if (savedGhostId) {
@@ -76,42 +91,58 @@ export class App {
 
   /**
    * init - Initializes the application.
-   * After loading the state and initializing the database,
-   * it calls QuestManager.syncQuestState() to synchronize quest state from the DB.
+   * 
+   * This method first awaits the completion of the database initialization,
+   * then loads the saved application state (such as the active ghost) to ensure
+   * that any state-saving calls occur only after the database is fully ready.
+   * Finally, it synchronizes quest state from the database, updates the UI,
+   * and either displays the main screen (if a profile exists) or shows the registration screen.
    */
   async init() {
-    this.loadAppState();
+    // Wait for database initialization to complete.
     await this.databaseManager.initDatabasePromise;
+    console.log("Database initialization complete.");
+
+    // Now that the database is ready, load the persisted application state.
+    this.loadAppState();
 
     // Synchronize quest state from the database via QuestManager.
     await this.questManager.syncQuestState();
 
+    // Update UI: Show the toggle camera button and update the diary display.
     this.viewManager.showToggleCameraButton();
     this.eventManager.updateDiaryDisplay();
 
+    // Check if a user profile is already saved.
     if (await this.profileManager.isProfileSaved()) {
       const profile = await this.profileManager.getProfile();
       console.log("Profile found:", profile);
       await this.showMainScreen();
 
-      // The Post button state is now set by syncQuestState(), so we do not override it here.
+      // If registration is completed, auto-launch the welcome event.
       if (StateManager.get("registrationCompleted") === "true") {
         this.gameEventManager.autoLaunchWelcomeEvent();
       }
     } else {
+      // If no profile is found, show the registration screen.
       console.log("Profile not found, showing registration screen.");
       this.showRegistrationScreen();
     }
   }
 
-  // Callback invoked by the ViewManager when registration form data is needed.
+  /**
+   * goToApartmentPlanScreen - Callback invoked by the ViewManager when registration form data is needed.
+   * 
+   * Retrieves registration data from the ViewManager, saves it via StateManager,
+   * and then switches the screen to the apartment plan screen.
+   */
   goToApartmentPlanScreen() {
     const regData = this.viewManager.getRegistrationData();
     if (!regData) {
       ErrorManager.showError("Registration data missing.");
       return;
     }
-    // Save registration data using StateManager.
+    // Save registration data as a JSON string.
     StateManager.set('regData', JSON.stringify(regData));
     this.viewManager.switchScreen('apartment-plan-screen', 'apartment-plan-buttons');
     if (!this.apartmentPlanManager) {
@@ -119,18 +150,24 @@ export class App {
     }
   }
 
-  // Transition to the selfie capture screen.
+  /**
+   * goToSelfieScreen - Transitions the UI to the selfie capture screen.
+   * 
+   * Switches the screen, shows the global camera view, starts the camera, and disables the complete registration button.
+   */
   goToSelfieScreen() {
     this.viewManager.switchScreen('selfie-screen', 'selfie-buttons');
     this.viewManager.showGlobalCamera();
-    // No need to call attachTo explicitly – startCamera() will auto-attach with proper options.
+    // startCamera() will auto-attach the video element with proper options.
     this.cameraSectionManager.startCamera();
     this.viewManager.disableCompleteButton();
   }
 
   /**
-   * captureSelfie - Captures an image from the active camera stream,
-   * converts it to grayscale, updates the selfie preview, and enables the "Complete Registration" button.
+   * captureSelfie - Captures an image from the active camera stream.
+   * 
+   * The method converts the captured frame to grayscale, updates the selfie preview via ViewManager,
+   * enables the "Complete Registration" button, and stores the selfie data for later use.
    */
   async captureSelfie() {
     console.log("📸 Attempting to capture selfie...");
@@ -154,19 +191,19 @@ export class App {
       if (!ctx) {
         throw new Error("Failed to get 2D drawing context.");
       }
-      // Draw the current frame of the video onto the canvas.
+      // Draw the current frame from the video onto the canvas.
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       
-      // Convert the captured frame to grayscale.
+      // Convert the captured frame to grayscale using ImageUtils.
       const grayscaleData = ImageUtils.convertToGrayscale(canvas);
       
-      // Update the selfie preview using ViewManager.
+      // Update the selfie preview image in the UI.
       this.viewManager.updateSelfiePreview(grayscaleData);
       
       // Enable the "Complete Registration" button.
       this.viewManager.enableCompleteButton();
       
-      // Save the captured selfie data for later use.
+      // Save the processed selfie data for later use (e.g., profile creation).
       this.selfieData = grayscaleData;
       
       console.log("✅ Selfie captured successfully!");
@@ -176,7 +213,14 @@ export class App {
     }
   }
 
-  // Complete the registration process.
+  /**
+   * completeRegistration - Completes the registration process.
+   * 
+   * Validates that a selfie has been captured and registration data is available.
+   * Then it saves the profile via ProfileManager, updates the registration state,
+   * stops the camera, hides the global camera view, and transitions to the main screen.
+   * Finally, it auto-launches the welcome event.
+   */
   async completeRegistration() {
     const selfieSrc = this.viewManager.getSelfieSource();
     if (!selfieSrc || selfieSrc === "") {
@@ -204,14 +248,16 @@ export class App {
 
     await this.showMainScreen();
 
-    // After registration, the Post button state is determined by quest state synchronization.
-    // (welcomeDone is used only for initial welcome event activation.)
-    
     // Auto-launch the welcome event after registration.
     this.gameEventManager.autoLaunchWelcomeEvent();
   }
 
-  // Toggle between camera view and diary view.
+  /**
+   * toggleCameraView - Toggles between camera view and diary view.
+   * 
+   * If the camera is not open, switches to the camera view, starts the camera, and waits for video metadata.
+   * Otherwise, switches back to the diary view and stops the camera.
+   */
   async toggleCameraView() {
     if (!this.isCameraOpen) {
       console.log("📸 Switching to camera view...");
@@ -235,11 +281,16 @@ export class App {
     }
   }
 
-  // Display the main screen after successful registration.
+  /**
+   * showMainScreen - Displays the main screen after successful registration.
+   * 
+   * Switches to the main screen, updates the toggle camera button,
+   * and sets the "Post" button state based on the persisted quest state.
+   */
   async showMainScreen() {
     this.viewManager.switchScreen('main-screen', 'main-buttons');
     this.viewManager.showToggleCameraButton();
-    // Set the Post button state based on the persisted quest state.
+    // Set the "Post" button state according to the saved quest state.
     if (StateManager.get("postButtonDisabled") === "true") {
       this.viewManager.setPostButtonEnabled(false);
     } else {
@@ -252,25 +303,38 @@ export class App {
     }
   }
 
-  // Show the registration screen and reset state flags for a new registration cycle.
+  /**
+   * showRegistrationScreen - Displays the registration screen and resets state keys.
+   * 
+   * Clears transient state keys via StateManager to ensure a clean registration cycle,
+   * then switches to the registration screen.
+   */
   showRegistrationScreen() {
-    // Reset state keys to ensure a clean registration process.
+    // Reset state keys for a clean registration process.
     StateManager.remove("welcomeDone");
     StateManager.remove("mirrorQuestReady");
     StateManager.remove("postButtonEnabled");
     StateManager.remove("regData");
-    // Optionally, remove quest state if it exists.
+    // Optionally, remove repeating quest state if it exists.
     StateManager.remove("quest_state_repeating_quest");
 
     this.viewManager.switchScreen('registration-screen', 'registration-buttons');
   }
 
-  // Export the profile data.
+  /**
+   * exportProfile - Exports the profile data.
+   * 
+   * Delegates the export operation to ProfileManager along with required managers.
+   */
   exportProfile() {
     this.profileManager.exportProfileData(this.databaseManager, this.apartmentPlanManager);
   }
 
-  // Import profile data from a selected file.
+  /**
+   * importProfile - Imports profile data from a selected file.
+   * 
+   * Retrieves the file via ViewManager and delegates the import operation to ProfileManager.
+   */
   importProfile() {
     const file = this.viewManager.getImportFile();
     if (!file) {

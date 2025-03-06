@@ -331,16 +331,16 @@ export class ViewManager {
       diary.style.display = "block";
       this.globalCamera.style.display = "none";
       if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = 'inline-block';
-      // Скрываем кнопку "Открыть дневник"
+      // Hide the "Open Diary" button.
       if (this.toggleDiaryBtn) {
         this.toggleDiaryBtn.style.display = "none";
       }
-      // Скрываем кнопку "Заснять"
+      // Hide the "Shoot" button.
       const shootBtn = document.getElementById("btn_shoot");
       if (shootBtn) {
         shootBtn.style.display = "none";
       }
-      // Показываем кнопку "Запостить", если это требуется
+      // Show the "Post" button if required.
       this.showPostButton();
     }
   }
@@ -357,9 +357,9 @@ export class ViewManager {
       this.globalCamera.style.display = "flex";
       if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = 'none';
       if (this.toggleDiaryBtn) this.toggleDiaryBtn.style.display = 'inline-block';
-      // Скрываем кнопку "Запостить"
+      // Hide the "Post" button.
       this.hidePostButton();
-      // Обеспечиваем наличие кнопки "Заснять" в режиме камеры с начальным состоянием неактивной
+      // Ensure the "Shoot" button is visible with initial inactive state.
       const shootBtn = document.getElementById("btn_shoot");
       if (shootBtn) {
         shootBtn.style.display = "inline-block";
@@ -526,7 +526,7 @@ export class ViewManager {
       if (targetGroup) {
         targetGroup.style.display = 'flex';
         targetGroup.style.pointerEvents = 'auto';
-        // Если активен режим дневника, скрываем кнопку "Открыть дневник" и "Заснять"
+        // If in diary mode, hide the "Open Diary" and "Shoot" buttons.
         if (screenId === "main-screen") {
           const td = targetGroup.querySelector("#toggle-diary");
           if (td) {
@@ -546,12 +546,24 @@ export class ViewManager {
   /**
    * setPostButtonEnabled
    * Enables or disables the "Post" button.
+   * 
+   * In addition to the passed flag, this method checks persistent flags in StateManager:
+   * if "postButtonDisabled" or "gameFinalized" are set, the button remains disabled.
+   *
    * @param {boolean} isEnabled - True to enable, false to disable.
    */
   setPostButtonEnabled(isEnabled) {
     const postBtn = document.getElementById("post-btn");
     if (postBtn) {
-      postBtn.disabled = !isEnabled;
+      // Retrieve persistent state flags.
+      const gameFinalized = StateManager.get("gameFinalized") === "true";
+      const postDisabled = StateManager.get("postButtonDisabled") === "true";
+      // If game is finalized or postButtonDisabled flag is set, force disable the button.
+      if (gameFinalized || postDisabled) {
+        postBtn.disabled = true;
+      } else {
+        postBtn.disabled = !isEnabled;
+      }
     }
   }
 

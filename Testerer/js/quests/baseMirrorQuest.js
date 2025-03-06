@@ -46,6 +46,7 @@ export class BaseMirrorQuest extends BaseEvent {
    * activate
    * Activates the mirror quest. If the event has not been logged,
    * logs it in the diary and sets the "mirrorQuestActive" flag via StateManager.
+   * Also saves the quest record in the database with status "active".
    */
   async activate() {
     if (!this.eventManager.isEventLogged(this.key)) {
@@ -54,6 +55,13 @@ export class BaseMirrorQuest extends BaseEvent {
     }
     console.log("[BaseMirrorQuest] Mirror quest activated.");
     StateManager.set("mirrorQuestActive", "true");
+    // Save quest state as active in the database
+    await this.app.databaseManager.saveQuestRecord({
+      quest_key: this.key,
+      status: "active",
+      current_stage: 1,
+      total_stages: this.app ? this.app.totalStages : 0  // or this.totalStages
+    });
   }
 
   /**
@@ -163,6 +171,7 @@ export class BaseMirrorQuest extends BaseEvent {
    * - Checks the final status and logs a corresponding diary entry.
    * - Updates the UI and resets the active flag using StateManager.
    * - If successful, triggers the post-mirror event.
+   * Also updates the quest record in the database with status "finished".
    */
   async finish() {
     if (this.finished) return;
@@ -186,6 +195,13 @@ export class BaseMirrorQuest extends BaseEvent {
     }
     // Remove the "mirrorQuestActive" flag using StateManager.
     StateManager.remove("mirrorQuestActive");
+    // Update quest record in the database as finished.
+    await this.app.databaseManager.saveQuestRecord({
+      quest_key: this.key,
+      status: "finished",
+      current_stage: this.app ? this.app.currentStage : 1,  // можно заменить на this.currentStage, если логика такова
+      total_stages: this.totalStages
+    });
     // If the quest was successful, trigger the post-mirror event.
     if (success) {
       this.app.gameEventManager.activateEvent("post_mirror_event");

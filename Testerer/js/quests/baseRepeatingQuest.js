@@ -66,11 +66,20 @@ export class BaseRepeatingQuest extends BaseEvent {
    * activate – Activates the repeating quest.
    * Waits for the camera to be open (using a "cameraReady" event) if needed,
    * then starts the UI check loop and sets the "Open Camera" button active via ViewManager.
+   * Also saves the quest record in the database with status "active".
    */
   async activate() {
     console.log(`Activating repeating quest: ${this.key}`);
     await this.eventManager.addDiaryEntry(this.key, true);
     console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
+
+    // Save quest state as active in the database.
+    await this.app.databaseManager.saveQuestRecord({
+      quest_key: this.key,
+      status: "active",
+      current_stage: this.currentStage,
+      total_stages: this.totalStages
+    });
 
     // Set the "Open Camera" button active via ViewManager.
     if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {
@@ -177,6 +186,7 @@ export class BaseRepeatingQuest extends BaseEvent {
    * Logs the final diary entry, triggers the final event,
    * disables the Post button via ViewManager, resets quest state via StateManager,
    * and resets the "Open Camera" button active state.
+   * Also updates the quest record in the database with status "finished".
    */
   async finish() {
     if (this.finished) return;
@@ -212,6 +222,14 @@ export class BaseRepeatingQuest extends BaseEvent {
       this.app.viewManager.setCameraButtonActive(false);
       console.log("[BaseRepeatingQuest] Camera button active state reset after quest completion.");
     }
+    
+    // Update quest record in the database as finished.
+    await this.app.databaseManager.saveQuestRecord({
+      quest_key: this.key,
+      status: "finished",
+      current_stage: this.currentStage,
+      total_stages: this.totalStages
+    });
   }
 
   /**

@@ -44,7 +44,7 @@ export class ProfileManager {
   /**
    * resetProfile – Resets the profile and all related data.
    * Calls the DataManager to remove profile data along with ghost and quest progress.
-   * Also clears transient state keys using StateManager.
+   * Also clears transient state keys using StateManager (all keys except the language).
    * After reset, the page is reloaded.
    */
   resetProfile() {
@@ -52,7 +52,7 @@ export class ProfileManager {
       this.dataManager.resetProfile(),    // Deletes the 'profile' key.
       this.dataManager.resetDatabase()      // Deletes the SQL database saved under 'sqlite'.
     ]).then(() => {
-      // Clear transient state keys via StateManager.
+      // Clear transient state keys via StateManager (exclude language-related key).
       StateManager.remove("animatedDiaryIds");
       StateManager.remove("isRepeatingCycle");
       StateManager.remove("mirrorQuestReady");
@@ -61,7 +61,8 @@ export class ProfileManager {
       StateManager.remove("cameraButtonActive");
       StateManager.remove("shootButtonActive");
       StateManager.remove("quest_state_repeating_quest");
-      
+      StateManager.remove("gameFinalized");
+
       console.log("Profile, database, and transient state reset. Reloading page...");
       window.location.reload();
     }).catch((err) => {

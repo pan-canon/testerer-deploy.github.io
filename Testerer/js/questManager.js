@@ -64,6 +64,33 @@ export class QuestManager {
   }
 
   /**
+   * syncQuestState
+   * NEW: Synchronizes the current quest state from the database.
+   * Checks for an active quest (mirror or repeating) and, if found with a status not "finished",
+   * sets the "postButtonDisabled" flag in StateManager and disables the Post button via ViewManager.
+   * Otherwise, ensures the Post button is enabled.
+   */
+  async syncQuestState() {
+    const mirrorQuestRecord = this.app.databaseManager.getQuestRecord("mirror_quest");
+    const repeatingQuestRecord = this.app.databaseManager.getQuestRecord("repeating_quest");
+    const activeQuestRecord = mirrorQuestRecord || repeatingQuestRecord;
+
+    if (activeQuestRecord && activeQuestRecord.status !== "finished") {
+      StateManager.set("postButtonDisabled", "true");
+      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
+        this.app.viewManager.setPostButtonEnabled(false);
+      }
+      console.log("QuestManager.syncQuestState: Active quest detected, post button disabled.");
+    } else {
+      StateManager.set("postButtonDisabled", "false");
+      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
+        this.app.viewManager.setPostButtonEnabled(true);
+      }
+      console.log("QuestManager.syncQuestState: No active quest or quest finished, post button enabled.");
+    }
+  }
+
+  /**
    * activateQuest
    * Finds a quest by its key and activates it.
    * @param {string} key - The quest key.

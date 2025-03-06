@@ -38,12 +38,11 @@ export class App {
     this.cameraSectionManager = new cameraSectionManager();
     this.profileManager = new ProfileManager(this.sqliteDataManager);
 
-    // Create VisualEffectsManager instance and assign it to app.visualEffectsManager
-    // so that events (like welcomeEvent) can access it.
+    // Create VisualEffectsManager instance and assign it so that events (e.g. welcome event) can access it.
     this.visualEffectsManager = new VisualEffectsManager(this, this.viewManager.controlsPanel);
 
     this.ghostManager = new GhostManager(null, this.profileManager, this);
-    // Pass the same visualEffectsManager instance to EventManager.
+    // Pass the same VisualEffectsManager instance to EventManager.
     this.eventManager = new EventManager(
       this.databaseManager,
       this.languageManager,
@@ -76,45 +75,18 @@ export class App {
   }
 
   /**
-   * syncQuestStateFromDB
-   * 
-   * NEW: Synchronizes the current quest/event state from the database.
-   * Checks for an active quest (e.g. "mirror_quest" or "repeating_quest") and sets
-   * the "postButtonDisabled" flag in StateManager accordingly. This flag then influences
-   * the UI via ViewManager (e.g. disabling the "Post" button if the quest is active).
+   * init
+   * Initializes the application.
+   * First, it loads saved state, waits for the database to initialize,
+   * then calls the new QuestManager.syncQuestState() method to synchronize the current quest state
+   * from the database. This method will update the local flag (postButtonDisabled) and update the UI accordingly.
    */
-  async syncQuestStateFromDB() {
-    // Attempt to retrieve quest records from the DB.
-    const mirrorQuestRecord = this.databaseManager.getQuestRecord("mirror_quest");
-    const repeatingQuestRecord = this.databaseManager.getQuestRecord("repeating_quest");
-    const activeQuestRecord = mirrorQuestRecord || repeatingQuestRecord;
-
-    if (activeQuestRecord) {
-      // If an active quest exists and its status is not "finished", disable the Post button.
-      if (activeQuestRecord.status !== "finished") {
-        StateManager.set("postButtonDisabled", "true");
-        this.viewManager.setPostButtonEnabled(false);
-        console.log("Sync: Active quest detected, post button disabled.");
-      } else {
-        StateManager.set("postButtonDisabled", "false");
-        this.viewManager.setPostButtonEnabled(true);
-        console.log("Sync: Active quest finished, post button enabled.");
-      }
-    } else {
-      // No quest record found – ensure Post button is enabled.
-      StateManager.set("postButtonDisabled", "false");
-      this.viewManager.setPostButtonEnabled(true);
-      console.log("Sync: No quest record found, post button enabled.");
-    }
-  }
-
-  // Initialize the application.
   async init() {
     this.loadAppState();
     await this.databaseManager.initDatabasePromise;
 
-    // Синхронизация состояния активного квеста из БД
-    await this.syncQuestStateFromDB();
+    // Synchronize the current quest state from the database via QuestManager.
+    await this.questManager.syncQuestState();
 
     this.viewManager.showToggleCameraButton();
     this.eventManager.updateDiaryDisplay();
@@ -124,15 +96,8 @@ export class App {
       console.log("Profile found:", profile);
       await this.showMainScreen();
 
-      // Если сохранён флаг, что кнопка должна быть отключена, применяем его:
-      if (StateManager.get("postButtonDisabled") === "true") {
-        this.viewManager.setPostButtonEnabled(false);
-      } else if (StateManager.get("welcomeDone") === "true") {
-        this.viewManager.setPostButtonEnabled(true);
-        StateManager.set("postButtonEnabled", "true");
-      } else {
-        StateManager.set("postButtonEnabled", "false");
-      }
+      // The Post button state is now determined by the QuestManager.syncQuestState() call.
+      // (The old check using welcomeDone is no longer needed here.)
       
       if (StateManager.get("registrationCompleted") === "true") {
         this.gameEventManager.autoLaunchWelcomeEvent();
@@ -162,17 +127,16 @@ export class App {
   goToSelfieScreen() {
     this.viewManager.switchScreen('selfie-screen', 'selfie-buttons');
     this.viewManager.showGlobalCamera();
-    // NEW: No need to call attachTo explicitly – startCamera() will auto-attach with proper options.
+    // No need to call attachTo explicitly – startCamera() will auto-attach with proper options.
     this.cameraSectionManager.startCamera();
     this.viewManager.disableCompleteButton();
   }
 
   /**
-   * captureSelfie – Captures an image from the active camera stream,
-   * converts it to grayscale, updates the selfie preview, and enables
-   * the "Complete Registration" button.
-   *
-   * This method is triggered by the "Capture" button.
+   * captureSelfie
+   * Captures an image from the active camera stream, converts it to grayscale,
+   * updates the selfie preview, and enables the "Complete Registration" button.
+   * Triggered by the "Capture" button.
    */
   async captureSelfie() {
     console.log("📸 Attempting to capture selfie...");
@@ -246,14 +210,9 @@ export class App {
 
     await this.showMainScreen();
 
-    // Set the post button state based on the welcome flag.
-    if (StateManager.get("welcomeDone") === "true") {
-      this.viewManager.setPostButtonEnabled(true);
-      StateManager.set("postButtonEnabled", "true");
-    } else {
-      StateManager.set("postButtonEnabled", "false");
-    }
-
+    // After registration, the Post button state will be determined via quest state synchronization.
+    // (No need to check welcomeDone here.)
+    
     // Auto-launch the welcome event after registration.
     this.gameEventManager.autoLaunchWelcomeEvent();
   }
@@ -286,12 +245,8 @@ export class App {
   async showMainScreen() {
     this.viewManager.switchScreen('main-screen', 'main-buttons');
     this.viewManager.showToggleCameraButton();
-    // Устанавливаем состояние кнопки "Запостить" в зависимости от флага welcomeDone
-    if (StateManager.get("welcomeDone") === "true") {
-      this.viewManager.setPostButtonEnabled(true);
-    } else {
-      this.viewManager.setPostButtonEnabled(false);
-    }
+    // Set the Post button state based on quest state.
+    // (The syncQuestState() call in init() ensures that if an active quest exists, the Post button is disabled.)
     const profile = await this.profileManager.getProfile();
     if (profile) {
       this.viewManager.updateProfileDisplay(profile);

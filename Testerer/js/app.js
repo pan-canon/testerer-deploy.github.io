@@ -279,19 +279,37 @@ export class App {
   }
 
   // Display the main screen after successful registration.
-  async showMainScreen() {
-    this.viewManager.switchScreen('main-screen', 'main-buttons');
+  async init() {
+    this.loadAppState();
+    await this.databaseManager.initDatabasePromise;
+
+    // Синхронизация состояния активного квеста из БД
+    await this.syncQuestStateFromDB();
+
     this.viewManager.showToggleCameraButton();
-    // Устанавливаем состояние кнопки "Запостить" в зависимости от флага welcomeDone
-    if (StateManager.get("welcomeDone") === "true") {
-      this.viewManager.setPostButtonEnabled(true);
+    this.eventManager.updateDiaryDisplay();
+
+    if (await this.profileManager.isProfileSaved()) {
+      const profile = await this.profileManager.getProfile();
+      console.log("Profile found:", profile);
+      await this.showMainScreen();
+
+      // Если сохранён флаг, что кнопка должна быть отключена, применяем его:
+      if (StateManager.get("postButtonDisabled") === "true") {
+        this.viewManager.setPostButtonEnabled(false);
+      } else if (StateManager.get("welcomeDone") === "true") {
+        this.viewManager.setPostButtonEnabled(true);
+        StateManager.set("postButtonEnabled", "true");
+      } else {
+        StateManager.set("postButtonEnabled", "false");
+      }
+      
+      if (StateManager.get("registrationCompleted") === "true") {
+        this.gameEventManager.autoLaunchWelcomeEvent();
+      }
     } else {
-      this.viewManager.setPostButtonEnabled(false);
-    }
-    const profile = await this.profileManager.getProfile();
-    if (profile) {
-      this.viewManager.updateProfileDisplay(profile);
-      this.selfieData = profile.selfie;
+      console.log("Profile not found, showing registration screen.");
+      this.showRegistrationScreen();
     }
   }
 

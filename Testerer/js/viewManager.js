@@ -331,13 +331,13 @@ export class ViewManager {
       diary.style.display = "block";
       this.globalCamera.style.display = "none";
       if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = 'inline-block';
-      if (this.toggleDiaryBtn) this.toggleDiaryBtn.style.display = 'none';
+      if (this.toggleDiaryBtn) this.toggleDiaryBtn.style.display = 'none'; // Скрываем кнопку "Открыть дневник"
       // Show Post button when diary view is active.
       this.showPostButton();
-      // Hide the Shoot button when in diary view.
-      const shootBtn = document.getElementById("btn_shoot");
-      if (shootBtn) {
-        shootBtn.style.display = "none";
+      // Также, если в режиме дневника присутствует кнопка "Открыть дневник", скрываем её:
+      const toggleDiaryBtn = document.getElementById("toggle-diary");
+      if (toggleDiaryBtn) {
+        toggleDiaryBtn.style.display = "none";
       }
     }
   }

@@ -32,7 +32,7 @@ export class ProfileManager {
    * saveProfile – Asynchronously saves the given profile object via the DataManager.
    *
    * IMPORTANT: Registration data (name, gender, language, selfie, etc.) should be 
-   * integrated into the profile object. Do not store them separately.
+   * integrated into the profile object. Do not store additional transient keys.
    *
    * @param {Object} profile - The profile object (should include registration fields).
    * @returns {Promise<void>}
@@ -44,13 +44,13 @@ export class ProfileManager {
   /**
    * resetProfile – Resets the profile and all related data.
    * Calls the DataManager to remove profile data along with ghost and quest progress.
-   * Also clears transient state keys using StateManager (all keys except the language).
-   * After reset, the page is reloaded.
+   * Also clears transient state keys using StateManager (all keys except language-related ones).
+   * After reset, the service worker cache is cleared and the page is reloaded.
    */
   resetProfile() {
     Promise.all([
       this.dataManager.resetProfile(),    // Deletes the 'profile' key.
-      this.dataManager.resetDatabase()      // Deletes the SQL database saved under 'sqlite'.
+      this.dataManager.resetDatabase()      // Deletes the SQL database saved under 'sqlite', fully clearing tables.
     ]).then(() => {
       // Clear transient state keys via StateManager (exclude language-related key).
       StateManager.remove("animatedDiaryIds");
@@ -62,6 +62,12 @@ export class ProfileManager {
       StateManager.remove("shootButtonActive");
       StateManager.remove("quest_state_repeating_quest");
       StateManager.remove("gameFinalized");
+
+      // NEW: Clear Service Worker caches to force script update.
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ action: 'CLEAR_CACHE' });
+        console.log("Service Worker cache clear message sent.");
+      }
 
       console.log("Profile, database, and transient state reset. Reloading page...");
       window.location.reload();
@@ -82,6 +88,14 @@ export class ProfileManager {
         alert("No profile found to export.");
         return;
       }
+      // Filter profile to include only essential registration fields.
+      const filteredProfile = {
+        name: profile.name,
+        gender: profile.gender,
+        language: profile.language,
+        selfie: profile.selfie
+      };
+
       // Retrieve diary entries.
       const diaryEntries = databaseManager.getDiaryEntries();
       // Retrieve apartment plan data if available.
@@ -100,7 +114,7 @@ export class ProfileManager {
   
       // Form the export object.
       const exportData = {
-        profile: profile,
+        profile: filteredProfile,
         diary: diaryEntries,
         apartment: apartmentPlanData,
         quests: questProgressData

@@ -565,29 +565,33 @@ export class ViewManager {
       const mirrorStatus = StateManager.get("event_mirror_status") || "not_started";
       const repeatingStatus = StateManager.get("event_repeating_status") || "not_started";
 
-      // Determine final state for Post button based on sequence.
       let enablePost = isEnabled; // Base flag
       
-      // If welcome event is in progress and mirror quest not started, allow posting.
-      if (welcomeStatus === "in_progress" && mirrorStatus === "not_started") {
-        enablePost = true;
-      }
-      // If repeating event is in progress, allow posting (assuming quest is awaiting restart).
-      else if (repeatingStatus === "in_progress") {
-        enablePost = true;
-      }
-      // If mirror quest is in progress or finished, disable posting.
-      else if (mirrorStatus === "in_progress" || mirrorStatus === "finished") {
+      // NEW: If the welcome event has not started, disable posting.
+      if (welcomeStatus === "not_started") {
         enablePost = false;
+      } else {
+        // If welcome event is in progress and mirror quest not started, allow posting.
+        if (welcomeStatus === "in_progress" && mirrorStatus === "not_started") {
+          enablePost = true;
+        }
+        // If repeating event is in progress, allow posting.
+        else if (repeatingStatus === "in_progress") {
+          enablePost = true;
+        }
+        // If mirror quest is in progress or finished, disable posting.
+        else if (mirrorStatus === "in_progress" || mirrorStatus === "finished") {
+          enablePost = false;
+        }
       }
       
-      // Force disable if game is finalized or postButtonDisabled flag is set.
+      // Force disable if game is finalized or the persistent flag is set.
       if (gameFinalized || postDisabled) {
         postBtn.disabled = true;
       } else {
         postBtn.disabled = !enablePost;
       }
-      // Optionally, persist the final state.
+      // Persist the final state.
       StateManager.set("postButtonEnabled", JSON.stringify(!postBtn.disabled));
     }
   }

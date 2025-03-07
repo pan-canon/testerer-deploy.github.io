@@ -10,6 +10,8 @@ import { ErrorManager } from '../errorManager.js';
  * - If the ghost is finished, it triggers the final quest.
  * - Otherwise, it resets the "mirrorQuestReady" flag, re-enables the "Post" button via ViewManager,
  *   and triggers the mirror visual effect.
+ *
+ * NOTE: This event is now part of the sequential chain managed by GhostManager.
  */
 export class PostRepeatingEvent extends BaseEvent {
   /**
@@ -44,9 +46,9 @@ export class PostRepeatingEvent extends BaseEvent {
       
       // Reset the mirror quest readiness flag via StateManager.
       StateManager.set("mirrorQuestReady", "true");
-      // The flag "isRepeatingCycle" is assumed to remain true for repeating cycles.
+      // The flag "isRepeatingCycle" remains true for repeating cycles.
       
-      // Delegate the UI update to enable the "Post" button via ViewManager.
+      // Delegate the UI update: enable the "Post" button via ViewManager.
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
         this.app.viewManager.setPostButtonEnabled(true);
       }

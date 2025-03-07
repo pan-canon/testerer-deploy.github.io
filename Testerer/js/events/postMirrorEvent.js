@@ -7,6 +7,8 @@ import { ErrorManager } from '../errorManager.js';
  * 
  * This event publishes a ghost post and sets flags to start the mirror quest.
  * It updates the UI via ViewManager and uses StateManager to set the necessary flags.
+ *
+ * NOTE: This event is now part of the sequential chain managed by GhostManager.
  */
 export class PostMirrorEvent extends BaseEvent {
   /**

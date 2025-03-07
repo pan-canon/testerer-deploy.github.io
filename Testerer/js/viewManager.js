@@ -13,6 +13,9 @@ import { ErrorManager } from './errorManager.js';
  *
  * All UI updates must be performed exclusively through these methods,
  * ensuring a single source of truth for UI operations.
+ *
+ * NOTE: Управление последовательными цепочками событий и квестов реализовано через GhostManager,
+ *       поэтому ViewManager остаётся неизменным и продолжает отвечать только за UI.
  */
 export class ViewManager {
   constructor() {

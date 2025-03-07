@@ -9,6 +9,8 @@ import { ErrorManager } from '../errorManager.js';
  * (invitation to approach the mirror) in the diary and enables the "Post" button.
  * It uses StateManager to check and update the "welcomeDone" flag so that the event
  * is launched only once per registration cycle.
+ *
+ * NOTE: This event is now part of the sequential chain managed by GhostManager.
  */
 export class WelcomeEvent extends BaseEvent {
   /**

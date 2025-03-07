@@ -13,6 +13,9 @@ import { ErrorManager } from './errorManager.js';
  * Responsible for managing quest activation, state updates, and UI restoration.
  * All UI updates (e.g. disabling/enabling buttons) are delegated to ViewManager,
  * and all state access uses StateManager.
+ *
+ * NOTE: Последовательное связывание событий и квестов теперь осуществляется через API GhostManager.
+ *       QuestManager остаётся ответственным за непосредственную активацию квестов и обновление UI.
  */
 export class QuestManager {
   /**

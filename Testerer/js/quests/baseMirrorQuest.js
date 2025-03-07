@@ -1,4 +1,4 @@
-import { BaseEvent } from '../events/baseEvent.js';
+import { BaseEvent } from './baseEvent.js';
 import { ImageUtils } from '../utils/imageUtils.js';
 import { StateManager } from '../stateManager.js';
 
@@ -6,6 +6,8 @@ import { StateManager } from '../stateManager.js';
  * BaseMirrorQuest – Base class for the mirror quest.
  * Encapsulates the logic for comparing the current frame (canvas → grayscale → compare),
  * managing the check loop, and delegating UI updates to the ViewManager.
+ *
+ * NOTE: This quest is part of the sequential chain managed by GhostManager.
  */
 export class BaseMirrorQuest extends BaseEvent {
   constructor(eventManager, appInstance, config = {}) {
@@ -55,7 +57,7 @@ export class BaseMirrorQuest extends BaseEvent {
     }
     console.log("[BaseMirrorQuest] Mirror quest activated.");
     StateManager.set("mirrorQuestActive", "true");
-    // Сохраняем состояние квеста как active (для зеркального квеста totalStages = 1)
+    // Save quest record as active (for mirror quest totalStages = 1)
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
       status: "active",
@@ -193,7 +195,7 @@ export class BaseMirrorQuest extends BaseEvent {
       this.app.viewManager.setCameraButtonActive(false);
     }
     StateManager.remove("mirrorQuestActive");
-    // Обновляем запись о квесте в БД как finished
+    // Update quest record in the database as finished.
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
       status: "finished",

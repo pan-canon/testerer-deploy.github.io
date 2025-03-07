@@ -24,6 +24,8 @@ import { ShowProfileModal } from './showProfileModal.js';
  * Main application class.
  * Responsible for initializing core managers, setting up the UI,
  * loading the persisted state, and handling primary navigation and events.
+ *
+ * NOTE: Новое API для последовательного управления событиями и квестами реализовано в GhostManager.
  */
 export class App {
   constructor() {
@@ -47,7 +49,8 @@ export class App {
     // Create VisualEffectsManager instance to handle UI visual effects.
     this.visualEffectsManager = new VisualEffectsManager(this, this.viewManager.controlsPanel);
 
-    // Initialize GhostManager with a null eventManager initially (will be set later) and pass profileManager and app instance.
+    // Initialize GhostManager.
+    // NOTE: GhostManager now provides a convenient API for sequential management of events and quests.
     this.ghostManager = new GhostManager(null, this.profileManager, this);
     
     // Create EventManager instance and pass required dependencies.

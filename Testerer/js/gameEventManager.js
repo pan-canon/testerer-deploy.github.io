@@ -82,7 +82,9 @@ export class GameEventManager {
    * Automatically launches the welcome event after registration.
    * It checks the "welcomeDone" flag using StateManager; if the flag is not set,
    * it launches the welcome event after a 5-second delay.
-   * If the flag is set, it ensures that the "Post" button is enabled via ViewManager.
+   * 
+   * NEW: Before launching, the method sets initial flags in GhostManager.
+   * This will be used later by QuestManager for determining the correct sequence.
    */
   async autoLaunchWelcomeEvent() {
     if (StateManager.get("welcomeDone") === "true") {
@@ -94,6 +96,9 @@ export class GameEventManager {
     }
     console.log("Auto-launching welcome event in 5 seconds...");
     setTimeout(async () => {
+      // NEW: Set the initial flag for the welcome event in GhostManager.
+      this.app.ghostManager.updateEventStepStatus('welcome', 'in_progress');
+      // Launch the welcome event.
       await this.activateEvent("welcome");
     }, 5000);
   }

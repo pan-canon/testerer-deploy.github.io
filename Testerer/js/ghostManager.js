@@ -10,6 +10,7 @@ import { StateManager } from './stateManager.js';
  * - Triggering events (e.g., final event) via GameEventManager.
  *
  * CURRENT CHANGE: The ghost list is simplified to contain only the default ghost.
+ * NEW: Introduces eventSequence configuration to manage the flow of game events/quests.
  */
 export class GhostManager {
   /**
@@ -31,6 +32,19 @@ export class GhostManager {
 
     // Index of the current phenomenon (quest step) for the active ghost.
     this.currentPhenomenonIndex = 0;
+
+    // NEW: Initialize event sequence configuration.
+    // This configuration defines the overall flow of events/quests:
+    // - welcome: Start of the welcome event.
+    // - mirror: State of the mirror quest (not_started, in_progress, finished).
+    // - repeating: State of the repeating event/quest.
+    // - final: Final event flag.
+    this.eventSequence = [
+      { name: 'welcome', status: 'not_started' },
+      { name: 'mirror', status: 'not_started' },
+      { name: 'repeating', status: 'not_started' },
+      { name: 'final', status: 'not_started' }
+    ];
 
     // We do not load saved ghost state here to ensure a reset.
     // this.loadState(); // Disabled for default ghost configuration.
@@ -178,4 +192,73 @@ export class GhostManager {
   }
   
   // Note: Methods saveState() and loadState() are now obsolete because state persistence is handled via DatabaseManager.
+
+  // ===========================================================
+  // NEW: Event Sequence Management API
+  // This API allows transparent configuration of the sequence of events and quests.
+  // ===========================================================
+
+  /**
+   * setEventSequence
+   * Sets the event sequence configuration.
+   * @param {Array} sequence - Array of event steps, each being an object with properties:
+   *   - name: string (e.g., 'welcome', 'mirror', 'repeating', 'final')
+   *   - status: string ('not_started', 'in_progress', 'finished')
+   */
+  setEventSequence(sequence) {
+    this.eventSequence = sequence;
+    console.log("Event sequence updated:", this.eventSequence);
+    // Optionally, persist the sequence using StateManager if needed.
+    StateManager.set("eventSequence", JSON.stringify(this.eventSequence));
+  }
+
+  /**
+   * getEventSequence
+   * Returns the current event sequence configuration.
+   * @returns {Array} The event sequence.
+   */
+  getEventSequence() {
+    // Optionally, retrieve persisted sequence from StateManager.
+    const stored = StateManager.get("eventSequence");
+    if (stored) {
+      try {
+        this.eventSequence = JSON.parse(stored);
+      } catch (e) {
+        console.error("Error parsing stored event sequence:", e);
+      }
+    }
+    return this.eventSequence;
+  }
+
+  /**
+   * updateEventStepStatus
+   * Updates the status of a given event step.
+   * @param {string} eventName - Name of the event step (e.g., 'welcome', 'mirror', etc.).
+   * @param {string} status - New status ('not_started', 'in_progress', 'finished').
+   */
+  updateEventStepStatus(eventName, status) {
+    if (!this.eventSequence) return;
+    const step = this.eventSequence.find(e => e.name === eventName);
+    if (step) {
+      step.status = status;
+      console.log(`Event step '${eventName}' updated to status: ${status}`);
+      // Persist the updated status.
+      StateManager.set(`event_${eventName}_status`, status);
+    } else {
+      console.warn(`Event step '${eventName}' not found in sequence.`);
+    }
+  }
+
+  /**
+   * getCurrentEventStep
+   * Determines and returns the current active event step based on the event sequence.
+   * This method can be extended to consider various conditions.
+   * @returns {Object|null} The current event step object, or null if all steps are finished.
+   */
+  getCurrentEventStep() {
+    if (!this.eventSequence) return null;
+    // Find first step that is not finished.
+    const currentStep = this.eventSequence.find(step => step.status !== 'finished');
+    return currentStep || null;
+  }
 }

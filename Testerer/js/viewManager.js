@@ -549,8 +549,10 @@ export class ViewManager {
    * 
    * In addition to the passed flag, this method checks persistent flags in StateManager:
    * if "postButtonDisabled" or "gameFinalized" are set, the button remains disabled.
+   * Additionally, it now checks event sequence statuses (e.g., welcome, mirror, repeating)
+   * to determine whether posting is allowed.
    *
-   * @param {boolean} isEnabled - True to enable, false to disable.
+   * @param {boolean} isEnabled - Base flag to enable, but final state is determined by additional conditions.
    */
   setPostButtonEnabled(isEnabled) {
     const postBtn = document.getElementById("post-btn");
@@ -558,13 +560,46 @@ export class ViewManager {
       // Retrieve persistent state flags.
       const gameFinalized = StateManager.get("gameFinalized") === "true";
       const postDisabled = StateManager.get("postButtonDisabled") === "true";
-      // If game is finalized or postButtonDisabled flag is set, force disable the button.
+      // Retrieve event sequence statuses from StateManager.
+      const welcomeStatus = StateManager.get("event_welcome_status") || "not_started";
+      const mirrorStatus = StateManager.get("event_mirror_status") || "not_started";
+      const repeatingStatus = StateManager.get("event_repeating_status") || "not_started";
+
+      // Determine final state for Post button based on sequence.
+      let enablePost = isEnabled; // Base flag
+      
+      // If welcome event is in progress and mirror quest not started, allow posting.
+      if (welcomeStatus === "in_progress" && mirrorStatus === "not_started") {
+        enablePost = true;
+      }
+      // If repeating event is in progress, allow posting (assuming quest is awaiting restart).
+      else if (repeatingStatus === "in_progress") {
+        enablePost = true;
+      }
+      // If mirror quest is in progress or finished, disable posting.
+      else if (mirrorStatus === "in_progress" || mirrorStatus === "finished") {
+        enablePost = false;
+      }
+      
+      // Force disable if game is finalized or postButtonDisabled flag is set.
       if (gameFinalized || postDisabled) {
         postBtn.disabled = true;
       } else {
-        postBtn.disabled = !isEnabled;
+        postBtn.disabled = !enablePost;
       }
+      // Optionally, persist the final state.
+      StateManager.set("postButtonEnabled", JSON.stringify(!postBtn.disabled));
     }
+  }
+
+  /**
+   * restorePostButtonState
+   * Restores the "Post" button state from StateManager.
+   */
+  restorePostButtonState() {
+    const stored = StateManager.get("postButtonEnabled");
+    const isEnabled = stored ? JSON.parse(stored) : false;
+    this.setPostButtonEnabled(isEnabled);
   }
 
   /**

@@ -53,10 +53,18 @@ export class ViewManager {
     this.cameraManager = null;
   }
 
+  /**
+   * setCameraManager
+   * Sets the camera manager instance to allow unified access to camera methods.
+   */
   setCameraManager(cameraManager) {
     this.cameraManager = cameraManager;
   }
 
+  /**
+   * startCameraWithOptions
+   * Starts the camera with given options.
+   */
   startCameraWithOptions(options = {}) {
     if (this.cameraManager) {
       this.cameraManager.attachTo("global-camera", options);
@@ -66,6 +74,10 @@ export class ViewManager {
     }
   }
 
+  /**
+   * stopCamera
+   * Stops the camera via the camera manager.
+   */
   stopCamera() {
     if (this.cameraManager) {
       this.cameraManager.stopCamera();
@@ -76,6 +88,10 @@ export class ViewManager {
 
   // ------------------ New Methods for Button Visibility ------------------
 
+  /**
+   * hidePostButton
+   * Hides the "Post" button.
+   */
   hidePostButton() {
     if (this.postBtn) {
       this.postBtn.style.display = 'none';
@@ -84,6 +100,10 @@ export class ViewManager {
 
   // ------------------ Event Binding ------------------
 
+  /**
+   * bindEvents
+   * Binds UI events for registration, selfie capture, and other controls.
+   */
   bindEvents(app) {
     const checkRegistrationValidity = () => {
       const nameValid = this.nameInput && this.nameInput.value.trim().length > 0;
@@ -414,19 +434,25 @@ export class ViewManager {
 
   /**
    * setPostButtonEnabled
-   * Enables or disables the "Post" button.
+   * Enables or disables the "Post" button based on persistent flags and event sequence statuses.
    * 
-   * This method checks persistent flags in StateManager:
-   * - If "gameFinalized" or "postButtonDisabled" are set, the button is disabled.
-   * - Otherwise, it determines the state based on the event sequence statuses:
-   *   - If welcome is "not_started", disable posting.
-   *   - If welcome is "in_progress" and mirror is "not_started", enable posting (to start mirror quest).
-   *   - If mirror is "in_progress", disable posting.
-   *   - If mirror is "finished", then if repeating is "not_started" or "in_progress", enable posting.
-   *   - If welcome is "finished", then if repeating is "not_started" or "in_progress", enable posting.
-   *   - Otherwise, disable posting.
+   * This method retrieves the following values from StateManager:
+   * - event_welcome_status (default "not_started")
+   * - event_mirror_status
+   * - event_repeating_status
+   * - event_final_status
+   * 
+   * Then it applies the following logic:
+   * - If gameFinalized, postButtonDisabled or finalStatus is "in_progress" or "finished" → disable.
+   * - If welcome is "not_started" → disable.
+   * - If welcome is "in_progress" and mirror is "not_started" → enable (to start mirror quest).
+   * - If mirror is "in_progress" → disable.
+   * - If mirror is "finished" or welcome is "finished", and repeating is "not_started" or "in_progress" → enable.
+   * - Otherwise, disable.
+   * 
+   * The method logs the input flags and persists the final state.
    *
-   * @param {boolean} isEnabled - Base flag (unused if sequence conditions override).
+   * @param {boolean} isEnabled - Base flag (не используется, если условия последовательности переопределяют).
    */
   setPostButtonEnabled(isEnabled) {
     const postBtn = document.getElementById("post-btn");
@@ -487,7 +513,6 @@ export class ViewManager {
   /**
    * setCameraButtonHighlight
    * Adds or removes a highlight effect on the camera toggle button.
-   * @param {boolean} isActive - True to add highlight, false to remove.
    */
   setCameraButtonHighlight(isActive) {
     const cameraBtn = document.getElementById("toggle-camera");
@@ -502,9 +527,7 @@ export class ViewManager {
 
   /**
    * setCameraButtonActive
-   * Sets the active state for the "Open Camera" button.
-   * Also saves the state using StateManager.
-   * @param {boolean} isActive - True to mark as active, false to remove.
+   * Sets the active state for the "Open Camera" button and saves the state.
    */
   setCameraButtonActive(isActive) {
     const cameraBtn = document.getElementById("toggle-camera");
@@ -530,9 +553,7 @@ export class ViewManager {
 
   /**
    * setShootButtonActive
-   * Sets the active state for the "Shoot" button.
-   * Enables/disables the button and saves the state using StateManager.
-   * @param {boolean} isActive - True to enable, false to disable.
+   * Sets the active state for the "Shoot" button, enabling or disabling it and saving the state.
    */
   setShootButtonActive(isActive) {
     const shootBtn = document.getElementById("btn_shoot");

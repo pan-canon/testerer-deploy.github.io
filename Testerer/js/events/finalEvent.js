@@ -9,6 +9,8 @@ import { ErrorManager } from '../errorManager.js';
  * sets the game as finalized, triggers a ghost fade-out effect,
  * marks the current ghost as finished, disables active UI elements,
  * and notifies the user via the ViewManager.
+ *
+ * NOTE: FinalEvent is part of the sequential chain managed by GhostManager.
  */
 export class FinalEvent extends BaseEvent {
   /**

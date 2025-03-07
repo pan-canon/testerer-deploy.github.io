@@ -5,6 +5,8 @@ import { StateManager } from '../stateManager.js';
  * BaseRepeatingQuest – Base class for the repeating quest.
  * Manages quest progress by updating state across multiple stages,
  * saving progress via StateManager, and delegating UI updates to ViewManager.
+ *
+ * NOTE: This quest is part of the sequential chain managed by GhostManager.
  */
 export class BaseRepeatingQuest extends BaseEvent {
   constructor(eventManager, appInstance, config = {}) {
@@ -72,7 +74,7 @@ export class BaseRepeatingQuest extends BaseEvent {
     console.log(`Activating repeating quest: ${this.key}`);
     await this.eventManager.addDiaryEntry(this.key, true);
     console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
-    // Сохраняем состояние квеста как active
+    // Save quest record as active.
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
       status: "active",
@@ -204,7 +206,7 @@ export class BaseRepeatingQuest extends BaseEvent {
       this.app.viewManager.setCameraButtonActive(false);
       console.log("[BaseRepeatingQuest] Camera button active state reset after quest completion.");
     }
-    // Обновляем запись о квесте в БД как finished
+    // Update quest record in the database as finished.
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
       status: "finished",

@@ -149,23 +149,24 @@ export class QuestManager {
    * handlePostButtonClick
    * Handles the click event for the "Post" button.
    * 
-   * The method now integrates the new event sequence logic from GhostManager.
-   * Depending on the current event step (welcome, mirror, repeating, final), it decides
-   * whether to activate the corresponding quest or display an error message.
+   * This method disables the Post button immediately and sets the corresponding flag.
+   * It then checks for the current event step to decide whether to activate a quest or display an error message.
    */
   async handlePostButtonClick() {
-    // Check if game is finalized.
+    // If game is finalized, do not process the button click.
     if (StateManager.get("gameFinalized") === "true") {
       ErrorManager.showError("The game has been finalized. No further posts are allowed.");
       return;
     }
 
-    // Disable the Post button immediately via ViewManager.
+    // First, set the persistent flag to disable the Post button.
+    StateManager.set("postButtonDisabled", "true");
+    
+    // Then, immediately disable the Post button via ViewManager.
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
       this.app.viewManager.setPostButtonEnabled(false);
       console.log("[QuestManager] Post button disabled immediately after click.");
     }
-    StateManager.set("postButtonDisabled", "true");
 
     // Get the current event step from GhostManager.
     const currentStep = this.app.ghostManager.getCurrentEventStep();

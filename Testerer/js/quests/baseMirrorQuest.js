@@ -202,7 +202,6 @@ export class BaseMirrorQuest extends BaseEvent {
       current_stage: 1,
       total_stages: 1
     });
-    await this.app.questManager.syncQuestState();
     if (success) {
       this.app.gameEventManager.activateEvent("post_mirror_event");
     }

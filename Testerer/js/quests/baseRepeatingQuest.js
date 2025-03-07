@@ -213,7 +213,6 @@ export class BaseRepeatingQuest extends BaseEvent {
       current_stage: this.currentStage,
       total_stages: this.totalStages
     });
-    await this.app.questManager.syncQuestState();
   }
 
   /**

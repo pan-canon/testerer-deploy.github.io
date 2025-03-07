@@ -44,6 +44,7 @@ export class GameEventManager {
   async activateEvent(key) {
     const event = this.events.find(e => e.key === key);
     if (event) {
+      console.log(`Activating event '${key}'...`);
       await event.activate();
       console.log(`Event '${key}' activated.`);
     } else {
@@ -63,7 +64,6 @@ export class GameEventManager {
     if (event) {
       await this.activateEvent(questKey);
     } else {
-      // Alternatively, start the quest directly via QuestManager if no event is found.
       await this.app.questManager.activateQuest(questKey);
     }
   }
@@ -83,8 +83,8 @@ export class GameEventManager {
    * It checks the "welcomeDone" flag using StateManager; if the flag is not set,
    * it launches the welcome event after a 5-second delay.
    * 
-   * NEW: Before launching, the method sets initial flags in GhostManager.
-   * This will be used later by QuestManager for determining the correct sequence.
+   * NEW: Before launching, the method sets the initial flag for the welcome event in GhostManager.
+   * This flag is used later by QuestManager for determining the correct sequence.
    */
   async autoLaunchWelcomeEvent() {
     if (StateManager.get("welcomeDone") === "true") {
@@ -96,8 +96,9 @@ export class GameEventManager {
     }
     console.log("Auto-launching welcome event in 5 seconds...");
     setTimeout(async () => {
-      // NEW: Set the initial flag for the welcome event in GhostManager.
+      // Set the initial flag for the welcome event.
       this.app.ghostManager.updateEventStepStatus('welcome', 'in_progress');
+      console.log("Welcome event status set to 'in_progress'.");
       // Launch the welcome event.
       await this.activateEvent("welcome");
     }, 5000);

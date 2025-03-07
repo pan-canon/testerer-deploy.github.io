@@ -45,9 +45,8 @@ export class GhostManager {
       { name: 'repeating', status: 'not_started' },
       { name: 'final', status: 'not_started' }
     ];
-
-    // We do not load saved ghost state here to ensure a reset.
-    // this.loadState(); // Disabled for default ghost configuration.
+    // Optionally, persist initial sequence.
+    StateManager.set("eventSequence", JSON.stringify(this.eventSequence));
 
     const currentGhost = this.getCurrentGhost();
     console.log(`Current active ghost: ${currentGhost ? currentGhost.name : 'not found'}`);
@@ -88,7 +87,6 @@ export class GhostManager {
     const ghost = this.getCurrentGhost();
     if (ghost) {
       console.log(`Ghost ${ghost.name} activated.`);
-      // Save ghost state using the DatabaseManager.
       await this.app.databaseManager.saveGhostState(ghost);
     } else {
       ErrorManager.logError(`Ghost with ID=${ghostId} not found!`, "setCurrentGhost");
@@ -158,9 +156,7 @@ export class GhostManager {
         const finalEntry = `${ghost.name}: Final phenomenon – ghost finished!`;
         await this.eventManager.addDiaryEntry(finalEntry);
         console.log(finalEntry);
-
         console.log(`Triggering final event for ghost "${ghost.name}"...`);
-        // Await the activation of the final event to ensure sequential execution.
         await this.app.gameEventManager.activateEvent("ghost_final_event");
       }
     } else {
@@ -179,7 +175,6 @@ export class GhostManager {
   async resetGhostChain() {
     this.currentGhostId = 1;
     this.currentPhenomenonIndex = 0;
-    // Reset ghost progress stored in the profile.
     await this.profileManager.resetGhostProgress();
     console.log("Ghost chain has been reset.");
     const ghost = this.getCurrentGhost();
@@ -191,8 +186,6 @@ export class GhostManager {
     }
   }
   
-  // Note: Methods saveState() and loadState() are now obsolete because state persistence is handled via DatabaseManager.
-
   // ===========================================================
   // NEW: Event Sequence Management API
   // This API allows transparent configuration of the sequence of events and quests.
@@ -208,7 +201,6 @@ export class GhostManager {
   setEventSequence(sequence) {
     this.eventSequence = sequence;
     console.log("Event sequence updated:", this.eventSequence);
-    // Optionally, persist the sequence using StateManager if needed.
     StateManager.set("eventSequence", JSON.stringify(this.eventSequence));
   }
 
@@ -218,7 +210,6 @@ export class GhostManager {
    * @returns {Array} The event sequence.
    */
   getEventSequence() {
-    // Optionally, retrieve persisted sequence from StateManager.
     const stored = StateManager.get("eventSequence");
     if (stored) {
       try {
@@ -242,7 +233,6 @@ export class GhostManager {
     if (step) {
       step.status = status;
       console.log(`Event step '${eventName}' updated to status: ${status}`);
-      // Persist the updated status.
       StateManager.set(`event_${eventName}_status`, status);
     } else {
       console.warn(`Event step '${eventName}' not found in sequence.`);
@@ -252,12 +242,10 @@ export class GhostManager {
   /**
    * getCurrentEventStep
    * Determines and returns the current active event step based on the event sequence.
-   * This method can be extended to consider various conditions.
    * @returns {Object|null} The current event step object, or null if all steps are finished.
    */
   getCurrentEventStep() {
     if (!this.eventSequence) return null;
-    // Find first step that is not finished.
     const currentStep = this.eventSequence.find(step => step.status !== 'finished');
     return currentStep || null;
   }

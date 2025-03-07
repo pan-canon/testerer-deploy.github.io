@@ -76,7 +76,6 @@ export class QuestManager {
    * Otherwise, it enables the Post button.
    */
   async syncQuestState() {
-    // Check if the game has been finalized (final quest completed)
     if (StateManager.get("gameFinalized") === "true") {
       StateManager.set("postButtonDisabled", "true");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
@@ -86,12 +85,10 @@ export class QuestManager {
       return;
     }
 
-    // Retrieve quest records for mirror and repeating quests from the database.
     const mirrorQuestRecord = this.app.databaseManager.getQuestRecord("mirror_quest");
     const repeatingQuestRecord = this.app.databaseManager.getQuestRecord("repeating_quest");
     const activeQuestRecord = mirrorQuestRecord || repeatingQuestRecord;
 
-    // If an active quest is detected and its status is not "finished"
     if (activeQuestRecord && activeQuestRecord.status !== "finished") {
       StateManager.set("postButtonDisabled", "true");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
@@ -99,7 +96,6 @@ export class QuestManager {
       }
       console.log("QuestManager.syncQuestState: Active quest detected, post button disabled.");
     } else {
-      // No active quest or quest finished: enable the Post button.
       StateManager.set("postButtonDisabled", "false");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(true);
@@ -153,22 +149,17 @@ export class QuestManager {
    * It then checks for the current event step to decide whether to activate a quest or display an error message.
    */
   async handlePostButtonClick() {
-    // If game is finalized, do not process the button click.
     if (StateManager.get("gameFinalized") === "true") {
       ErrorManager.showError("The game has been finalized. No further posts are allowed.");
       return;
     }
 
-    // First, set the persistent flag to disable the Post button.
     StateManager.set("postButtonDisabled", "true");
-    
-    // Then, immediately disable the Post button via ViewManager.
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
       this.app.viewManager.setPostButtonEnabled(false);
       console.log("[QuestManager] Post button disabled immediately after click.");
     }
 
-    // Get the current event step from GhostManager.
     const currentStep = this.app.ghostManager.getCurrentEventStep();
     if (!currentStep) {
       ErrorManager.showError("No active event found.");
@@ -176,12 +167,9 @@ export class QuestManager {
     }
     console.log("[QuestManager] Current event step:", currentStep);
 
-    // Determine quest activation based on the current event step.
     switch (currentStep.name) {
       case 'welcome':
-        // If welcome event is active and not yet started, allow activation.
         if (currentStep.status === 'not_started') {
-          // Transition from welcome to mirror quest.
           this.app.ghostManager.updateEventStepStatus('welcome', 'finished');
           this.app.ghostManager.updateEventStepStatus('mirror', 'in_progress');
           console.log("[QuestManager] Transitioning from welcome to mirror quest.");
@@ -191,25 +179,22 @@ export class QuestManager {
         }
         break;
       case 'mirror':
-        // If mirror quest is already in progress or finished, disable posting.
         ErrorManager.showError("Нечего постить.");
         break;
       case 'repeating':
-        // For repeating event, check if the quest is not started and within the allowed window.
         if (currentStep.status === 'not_started') {
-          if (StateManager.get("isRepeatingCycle") === "true") {
-            this.app.ghostManager.updateEventStepStatus('repeating', 'in_progress');
-            console.log("[QuestManager] Activating repeating quest.");
-            await this.activateQuest("repeating_quest");
-          } else {
-            ErrorManager.showError("Повторяющийся квест не готов.");
+          if (StateManager.get("isRepeatingCycle") !== "true") {
+            StateManager.set("isRepeatingCycle", "true");
+            console.log("[QuestManager] isRepeatingCycle flag forced to true.");
           }
+          this.app.ghostManager.updateEventStepStatus('repeating', 'in_progress');
+          console.log("[QuestManager] Activating repeating quest.");
+          await this.activateQuest("repeating_quest");
         } else {
           ErrorManager.showError("Нечего постить.");
         }
         break;
       case 'final':
-        // Final event – game is over.
         ErrorManager.showError("Игра завершена.");
         break;
       default:

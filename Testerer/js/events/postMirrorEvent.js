@@ -34,15 +34,19 @@ export class PostMirrorEvent extends BaseEvent {
     // Update ghost sequence: mark mirror quest as finished and prepare repeating event.
     this.app.ghostManager.updateEventStepStatus('mirror', 'finished');
     this.app.ghostManager.updateEventStepStatus('repeating', 'not_started');
+    console.log("[PostMirrorEvent] Updated event sequence: 'mirror' set to finished and 'repeating' set to not_started.");
 
     // Clear the mirrorQuestReady flag.
     StateManager.set("mirrorQuestReady", "false");
     // Set the isRepeatingCycle flag so that repeating quest can be initiated.
     StateManager.set("isRepeatingCycle", "true");
+    // Ensure that the postButtonDisabled flag is cleared.
+    StateManager.set("postButtonDisabled", "false");
 
     // Delegate UI update: enable the "Post" button via ViewManager.
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
       this.app.viewManager.setPostButtonEnabled(true);
+      console.log("[PostMirrorEvent] Post button enabled via ViewManager.");
     }
 
     // Trigger the mirror visual effect.

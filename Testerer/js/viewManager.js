@@ -124,18 +124,15 @@ export class ViewManager {
    * @param {App} app - The main application instance.
    */
   bindEvents(app) {
-    // Function to check registration form validity.
     const checkRegistrationValidity = () => {
       const nameValid = this.nameInput && this.nameInput.value.trim().length > 0;
       const genderValid = this.genderSelect && this.genderSelect.value && this.genderSelect.value !== "";
       const languageValid = this.languageSelector && this.languageSelector.value && this.languageSelector.value !== "";
-      // Enable Next button if all fields are valid; otherwise, disable it.
       if (this.nextStepBtn) {
         this.nextStepBtn.disabled = !(nameValid && genderValid && languageValid);
       }
     };
 
-    // Registration fields events.
     if (this.nameInput) {
       this.nameInput.addEventListener('input', () => {
         console.log("Name input changed:", this.nameInput.value);
@@ -159,28 +156,24 @@ export class ViewManager {
         app.goToApartmentPlanScreen();
       });
     }
-    // Bind capture button event for selfie stage.
     if (this.captureBtn) {
       this.captureBtn.addEventListener("click", () => {
         console.log("Capture button clicked. Triggering captureSelfie().");
         app.captureSelfie();
       });
     }
-    // Bind complete registration button event.
     if (this.completeBtn) {
       this.completeBtn.addEventListener("click", () => {
         console.log("Complete Registration button clicked. Triggering completeRegistration().");
         app.completeRegistration();
       });
     }
-    // Bind Post button event to trigger mirror quest via QuestManager.
     if (this.postBtn) {
       this.postBtn.addEventListener("click", () => {
         console.log("Post button clicked. Triggering handlePostButtonClick().");
         app.questManager.handlePostButtonClick();
       });
     }
-    // Bind additional control buttons:
     if (this.resetDataBtn) {
       this.resetDataBtn.addEventListener("click", () => {
         console.log("Reset Data button clicked.");
@@ -199,14 +192,12 @@ export class ViewManager {
         this.clearCache();
       });
     }
-    // Toggle camera/diary view events.
     if (this.toggleCameraBtn) {
       this.toggleCameraBtn.addEventListener("click", () => app.toggleCameraView());
     }
     if (this.toggleDiaryBtn) {
       this.toggleDiaryBtn.addEventListener("click", () => app.toggleCameraView());
     }
-    // Additional events for other buttons are handled in their respective managers.
   }
 
   // ------------------ Registration Form Operations ------------------
@@ -331,16 +322,13 @@ export class ViewManager {
       diary.style.display = "block";
       this.globalCamera.style.display = "none";
       if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = 'inline-block';
-      // Hide the "Open Diary" button.
       if (this.toggleDiaryBtn) {
         this.toggleDiaryBtn.style.display = "none";
       }
-      // Hide the "Shoot" button.
       const shootBtn = document.getElementById("btn_shoot");
       if (shootBtn) {
         shootBtn.style.display = "none";
       }
-      // Show the "Post" button if required.
       this.showPostButton();
     }
   }
@@ -357,9 +345,7 @@ export class ViewManager {
       this.globalCamera.style.display = "flex";
       if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = 'none';
       if (this.toggleDiaryBtn) this.toggleDiaryBtn.style.display = 'inline-block';
-      // Hide the "Post" button.
       this.hidePostButton();
-      // Ensure the "Shoot" button is visible with initial inactive state.
       const shootBtn = document.getElementById("btn_shoot");
       if (shootBtn) {
         shootBtn.style.display = "inline-block";
@@ -526,7 +512,6 @@ export class ViewManager {
       if (targetGroup) {
         targetGroup.style.display = 'flex';
         targetGroup.style.pointerEvents = 'auto';
-        // If in diary mode, hide the "Open Diary" and "Shoot" buttons.
         if (screenId === "main-screen") {
           const td = targetGroup.querySelector("#toggle-diary");
           if (td) {
@@ -547,52 +532,56 @@ export class ViewManager {
    * setPostButtonEnabled
    * Enables or disables the "Post" button.
    * 
-   * In addition to the passed flag, this method checks persistent flags in StateManager:
-   * if "postButtonDisabled" or "gameFinalized" are set, the button remains disabled.
-   * Additionally, it now checks event sequence statuses (e.g., welcome, mirror, repeating)
-   * to determine whether posting is allowed.
+   * This method checks persistent flags in StateManager:
+   * - If "gameFinalized" or "postButtonDisabled" are set, the button is disabled.
+   * - Otherwise, it determines the state based on the event sequence statuses:
+   *   - If welcome is "not_started", disable posting.
+   *   - If welcome is "in_progress" and mirror is "not_started", enable posting (to start mirror quest).
+   *   - If mirror is "in_progress", disable posting.
+   *   - If mirror is "finished", then if repeating is "not_started" or "in_progress", enable posting.
+   *   - Otherwise, disable posting.
    *
-   * @param {boolean} isEnabled - Base flag to enable, but final state is determined by additional conditions.
+   * @param {boolean} isEnabled - Base flag (unused if sequence conditions override).
    */
   setPostButtonEnabled(isEnabled) {
     const postBtn = document.getElementById("post-btn");
     if (postBtn) {
-      // Retrieve persistent state flags.
       const gameFinalized = StateManager.get("gameFinalized") === "true";
       const postDisabled = StateManager.get("postButtonDisabled") === "true";
-      // Retrieve event sequence statuses from StateManager.
+      
       const welcomeStatus = StateManager.get("event_welcome_status") || "not_started";
       const mirrorStatus = StateManager.get("event_mirror_status") || "not_started";
       const repeatingStatus = StateManager.get("event_repeating_status") || "not_started";
-
-      let enablePost = isEnabled; // Base flag
+      const finalStatus = StateManager.get("event_final_status") || "not_started";
       
-      // NEW: If the welcome event has not started, disable posting.
-      if (welcomeStatus === "not_started") {
+      let enablePost = false;
+      
+      if (gameFinalized || postDisabled || finalStatus === "in_progress" || finalStatus === "finished") {
         enablePost = false;
+      } else if (welcomeStatus === "not_started") {
+        enablePost = false;
+      } else if (welcomeStatus === "in_progress") {
+        if (mirrorStatus === "not_started") {
+          enablePost = true;
+        } else if (mirrorStatus === "in_progress") {
+          enablePost = false;
+        } else if (mirrorStatus === "finished") {
+          if (repeatingStatus === "not_started" || repeatingStatus === "in_progress") {
+            enablePost = true;
+          } else {
+            enablePost = false;
+          }
+        }
       } else {
-        // If welcome event is in progress and mirror quest not started, allow posting.
-        if (welcomeStatus === "in_progress" && mirrorStatus === "not_started") {
+        if (repeatingStatus === "not_started" || repeatingStatus === "in_progress") {
           enablePost = true;
-        }
-        // If repeating event is in progress, allow posting.
-        else if (repeatingStatus === "in_progress") {
-          enablePost = true;
-        }
-        // If mirror quest is in progress or finished, disable posting.
-        else if (mirrorStatus === "in_progress" || mirrorStatus === "finished") {
+        } else {
           enablePost = false;
         }
       }
       
-      // Force disable if game is finalized or the persistent flag is set.
-      if (gameFinalized || postDisabled) {
-        postBtn.disabled = true;
-      } else {
-        postBtn.disabled = !enablePost;
-      }
-      // Persist the final state.
-      StateManager.set("postButtonEnabled", JSON.stringify(!postBtn.disabled));
+      postBtn.disabled = !enablePost;
+      StateManager.set("postButtonEnabled", JSON.stringify(enablePost));
     }
   }
 
@@ -718,7 +707,6 @@ export class ViewManager {
     const shootBtn = document.getElementById(options.shootButtonId);
     if (shootBtn) {
       shootBtn.style.display = "inline-block";
-      // Use provided initialActive flag (default is false)
       const initialActive = (typeof options.initialActive !== 'undefined') ? options.initialActive : false;
       this.setShootButtonActive(initialActive);
       shootBtn.style.pointerEvents = initialActive ? "auto" : "none";

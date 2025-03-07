@@ -5,8 +5,9 @@ import { ErrorManager } from '../errorManager.js';
 /**
  * PostMirrorEvent
  * 
- * This event publishes a ghost post and sets flags to start the mirror quest.
- * It updates the UI via ViewManager and uses StateManager to set the necessary flags.
+ * This event publishes a ghost post and updates the ghost sequence to mark the mirror quest as finished,
+ * preparing the repeating event by setting its status to 'not_started'.
+ * It also updates the UI via ViewManager.
  */
 export class PostMirrorEvent extends BaseEvent {
   /**
@@ -30,8 +31,13 @@ export class PostMirrorEvent extends BaseEvent {
     // Log the event in the diary as a ghost post.
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Set necessary flags using StateManager.
-    StateManager.set("mirrorQuestReady", "true");
+    // Update ghost sequence: mark mirror quest as finished and prepare repeating event.
+    this.app.ghostManager.updateEventStepStatus('mirror', 'finished');
+    this.app.ghostManager.updateEventStepStatus('repeating', 'not_started');
+
+    // Clear the mirrorQuestReady flag.
+    StateManager.set("mirrorQuestReady", "false");
+    // Set the isRepeatingCycle flag so that repeating quest can be initiated.
     StateManager.set("isRepeatingCycle", "true");
 
     // Delegate UI update: enable the "Post" button via ViewManager.

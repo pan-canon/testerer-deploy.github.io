@@ -13,6 +13,9 @@ import { ErrorManager } from './errorManager.js';
  * Manages one-time game events (e.g., welcome, post-mirror, post-repeating, final).
  * It handles auto-launching the welcome event after registration by checking state flags
  * via StateManager, and activates events using the provided EventManager.
+ *
+ * NOTE: Последовательное связывание событий и квестов теперь реализовано через API GhostManager.
+ * Поэтому этот класс отвечает лишь за активацию конкретного события по ключу.
  */
 export class GameEventManager {
   /**
@@ -26,6 +29,7 @@ export class GameEventManager {
     this.languageManager = languageManager;
     
     // Array of one-time events; order is not automatically chained.
+    // NOTE: Автоматическую последовательность теперь осуществляет GhostManager.
     this.events = [
       new WelcomeEvent(this.eventManager, this.app, this.languageManager),
       new PostMirrorEvent(this.eventManager, this.app),

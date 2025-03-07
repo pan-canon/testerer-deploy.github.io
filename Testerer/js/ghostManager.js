@@ -10,6 +10,7 @@ import { StateManager } from './stateManager.js';
  * - Triggering events (e.g., final event) via GameEventManager.
  *
  * CURRENT CHANGE: The ghost list is simplified to contain only the default ghost.
+ * NEW CHANGE: Added API for sequential management of events and quests.
  */
 export class GhostManager {
   /**
@@ -32,11 +33,30 @@ export class GhostManager {
     // Index of the current phenomenon (quest step) for the active ghost.
     this.currentPhenomenonIndex = 0;
 
-    // We do not load saved ghost state here to ensure a reset.
-    // this.loadState(); // Disabled for default ghost configuration.
-
     const currentGhost = this.getCurrentGhost();
     console.log(`Current active ghost: ${currentGhost ? currentGhost.name : 'not found'}`);
+
+    // NEW: Initialize Event-Quest sequence configuration.
+    // Each entry defines a chain: { eventKey, questKey, nextEventKey }
+    // Пример последовательности: событие "welcome" запускает квест "mirror_quest",
+    // по завершении которого автоматически запускается событие "post_repeating_event",
+    // далее событие "post_repeating_event" запускает квест "repeating_quest",
+    // а по его завершении – событие "final_event", которое может запускать финальный квест.
+    this.eventQuestSequenceList = [
+      { eventKey: "welcome",         questKey: "mirror_quest",      nextEventKey: "post_repeating_event" },
+      { eventKey: "post_repeating_event", questKey: "repeating_quest",  nextEventKey: "final_event" },
+      { eventKey: "final_event",       questKey: "final_quest",       nextEventKey: null }
+    ];
+
+    // Subscribe to global events for completions.
+    // Предполагается, что GameEventManager и QuestManager по завершении
+    // диспатчат события "gameEventCompleted" и "questCompleted" с detail = ключ.
+    document.addEventListener("gameEventCompleted", (e) => {
+      this.onEventCompleted(e.detail);
+    });
+    document.addEventListener("questCompleted", (e) => {
+      this.onQuestCompleted(e.detail);
+    });
   }
 
   /**
@@ -176,6 +196,50 @@ export class GhostManager {
       ErrorManager.logError("Failed to reset ghost chain: default ghost not found.", "resetGhostChain");
     }
   }
-  
-  // Note: Methods saveState() and loadState() are now obsolete because state persistence is handled via DatabaseManager.
+
+  // ------------------ New API for Sequential Event and Quest Management ------------------
+
+  /**
+   * startEvent - Starts an event using the GameEventManager.
+   * @param {string} eventKey - The key of the event to start.
+   */
+  startEvent(eventKey) {
+    console.log(`GhostManager: Starting event with key: ${eventKey}`);
+    this.app.gameEventManager.activateEvent(eventKey);
+  }
+
+  /**
+   * startQuest - Starts a quest using the QuestManager.
+   * @param {string} questKey - The key of the quest to start.
+   */
+  startQuest(questKey) {
+    console.log(`GhostManager: Starting quest with key: ${questKey}`);
+    this.app.questManager.activateQuest(questKey);
+  }
+
+  /**
+   * onEventCompleted - Handler called when a game event completes.
+   * It searches for a linked quest in the sequence and starts it.
+   * @param {string} eventKey - The key of the completed event.
+   */
+  onEventCompleted(eventKey) {
+    console.log(`GhostManager: Event completed with key: ${eventKey}`);
+    const link = this.eventQuestSequenceList.find(link => link.eventKey === eventKey);
+    if (link && link.questKey) {
+      this.startQuest(link.questKey);
+    }
+  }
+
+  /**
+   * onQuestCompleted - Handler called when a quest completes.
+   * It searches for a linked next event in the sequence and starts it.
+   * @param {string} questKey - The key of the completed quest.
+   */
+  onQuestCompleted(questKey) {
+    console.log(`GhostManager: Quest completed with key: ${questKey}`);
+    const link = this.eventQuestSequenceList.find(link => link.questKey === questKey);
+    if (link && link.nextEventKey) {
+      this.startEvent(link.nextEventKey);
+    }
+  }
 }

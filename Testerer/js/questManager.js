@@ -197,14 +197,13 @@ export class QuestManager {
       case 'repeating':
         // For repeating event, check if the quest is not started and within the allowed window.
         if (currentStep.status === 'not_started') {
-          // If the isRepeatingCycle flag is not set, force it to true.
-          if (StateManager.get("isRepeatingCycle") !== "true") {
-            StateManager.set("isRepeatingCycle", "true");
-            console.log("[QuestManager] isRepeatingCycle flag forced to true.");
+          if (StateManager.get("isRepeatingCycle") === "true") {
+            this.app.ghostManager.updateEventStepStatus('repeating', 'in_progress');
+            console.log("[QuestManager] Activating repeating quest.");
+            await this.activateQuest("repeating_quest");
+          } else {
+            ErrorManager.showError("Повторяющийся квест не готов.");
           }
-          this.app.ghostManager.updateEventStepStatus('repeating', 'in_progress');
-          console.log("[QuestManager] Activating repeating quest.");
-          await this.activateQuest("repeating_quest");
         } else {
           ErrorManager.showError("Нечего постить.");
         }

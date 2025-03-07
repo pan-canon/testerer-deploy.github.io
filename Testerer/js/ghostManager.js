@@ -10,7 +10,6 @@ import { StateManager } from './stateManager.js';
  * - Triggering events (e.g., final event) via GameEventManager.
  *
  * CURRENT CHANGE: The ghost list is simplified to contain only the default ghost.
- * NEW: Introduces eventSequence configuration to manage the flow of game events/quests.
  */
 export class GhostManager {
   /**
@@ -33,20 +32,8 @@ export class GhostManager {
     // Index of the current phenomenon (quest step) for the active ghost.
     this.currentPhenomenonIndex = 0;
 
-    // NEW: Initialize event sequence configuration.
-    // This configuration defines the overall flow of events/quests:
-    // - welcome: Start of the welcome event.
-    // - mirror: State of the mirror quest (not_started, in_progress, finished).
-    // - repeating: State of the repeating event/quest.
-    // - final: Final event flag.
-    this.eventSequence = [
-      { name: 'welcome', status: 'not_started' },
-      { name: 'mirror', status: 'not_started' },
-      { name: 'repeating', status: 'not_started' },
-      { name: 'final', status: 'not_started' }
-    ];
-    // Сохраняем начальное состояние последовательности в localStorage.
-    StateManager.set("eventSequence", JSON.stringify(this.eventSequence));
+    // We do not load saved ghost state here to ensure a reset.
+    // this.loadState(); // Disabled for default ghost configuration.
 
     const currentGhost = this.getCurrentGhost();
     console.log(`Current active ghost: ${currentGhost ? currentGhost.name : 'not found'}`);
@@ -58,10 +45,11 @@ export class GhostManager {
    * CURRENT CHANGE: Only the default ghost is created.
    */
   setupGhosts() {
+    // Create a default ghost with ID 1.
     const defaultGhost = {
       id: 1,
-      name: "призрак 1",
-      phenomenaCount: 3,
+      name: "призрак 1", // Default ghost name.
+      phenomenaCount: 3, // Fixed default number of phenomena (quest steps).
       isFinished: false
     };
     this.ghosts = [defaultGhost];
@@ -79,12 +67,14 @@ export class GhostManager {
   /**
    * setCurrentGhost
    * Sets the active ghost by the given ID and saves its state via DatabaseManager.
+   * @param {number} ghostId - The ID of the ghost to activate.
    */
   async setCurrentGhost(ghostId) {
     this.currentGhostId = ghostId;
     const ghost = this.getCurrentGhost();
     if (ghost) {
       console.log(`Ghost ${ghost.name} activated.`);
+      // Save ghost state using the DatabaseManager.
       await this.app.databaseManager.saveGhostState(ghost);
     } else {
       ErrorManager.logError(`Ghost with ID=${ghostId} not found!`, "setCurrentGhost");
@@ -109,6 +99,7 @@ export class GhostManager {
   /**
    * isCurrentGhostFinished
    * Checks whether the current active ghost is marked as finished.
+   * @returns {boolean} True if finished, otherwise false.
    */
   isCurrentGhostFinished() {
     const ghost = this.getCurrentGhost();
@@ -118,6 +109,9 @@ export class GhostManager {
   /**
    * triggerNextPhenomenon
    * Initiates the next phenomenon (quest step) for the current ghost.
+   * - If the phenomenon index is less than the total phenomena for the ghost, a diary entry is added
+   *   and the progress is updated via ProfileManager.
+   * - If all phenomena are completed, a final diary entry is logged and the final event is triggered.
    */
   async triggerNextPhenomenon() {
     const ghost = this.getCurrentGhost();
@@ -125,25 +119,34 @@ export class GhostManager {
       ErrorManager.logError("No ghost found to trigger phenomenon.", "triggerNextPhenomenon");
       return;
     }
+
     if (ghost.isFinished) {
       ErrorManager.logError(`Ghost "${ghost.name}" is already finished; phenomena unavailable.`, "triggerNextPhenomenon");
       return;
     }
+
     if (this.currentPhenomenonIndex < ghost.phenomenaCount) {
       const phenomenonNumber = this.currentPhenomenonIndex + 1;
       const phenomenonEntry = `${ghost.name}: Phenomenon ${phenomenonNumber} - Approach the mirror`;
       await this.eventManager.addDiaryEntry(phenomenonEntry);
       console.log(`Triggered phenomenon for ${ghost.name}: ${phenomenonEntry}`);
+
       this.currentPhenomenonIndex++;
+
+      // Save ghost progress via ProfileManager.
       await this.profileManager.saveGhostProgress({
         ghostId: this.currentGhostId,
         phenomenonIndex: this.currentPhenomenonIndex
       });
+
+      // If all phenomena are completed, log the final entry and trigger the final event.
       if (this.currentPhenomenonIndex === ghost.phenomenaCount) {
         const finalEntry = `${ghost.name}: Final phenomenon – ghost finished!`;
         await this.eventManager.addDiaryEntry(finalEntry);
         console.log(finalEntry);
+
         console.log(`Triggering final event for ghost "${ghost.name}"...`);
+        // Await the activation of the final event to ensure sequential execution.
         await this.app.gameEventManager.activateEvent("ghost_final_event");
       }
     } else {
@@ -153,11 +156,16 @@ export class GhostManager {
 
   /**
    * resetGhostChain
-   * Resets the ghost chain: active ghost, phenomenon index, and state.
+   * Resets the ghost chain:
+   * - Sets the active ghost back to the default.
+   * - Resets the phenomenon index.
+   * - Resets the saved ghost progress via ProfileManager.
+   * - Updates the database with the reset state.
    */
   async resetGhostChain() {
     this.currentGhostId = 1;
     this.currentPhenomenonIndex = 0;
+    // Reset ghost progress stored in the profile.
     await this.profileManager.resetGhostProgress();
     console.log("Ghost chain has been reset.");
     const ghost = this.getCurrentGhost();
@@ -169,60 +177,5 @@ export class GhostManager {
     }
   }
   
-  // ================= Event Sequence Management API =================
-
-  /**
-   * setEventSequence
-   * Sets the event sequence configuration and persists it.
-   */
-  setEventSequence(sequence) {
-    this.eventSequence = sequence;
-    console.log("Event sequence updated:", this.eventSequence);
-    StateManager.set("eventSequence", JSON.stringify(this.eventSequence));
-  }
-
-  /**
-   * getEventSequence
-   * Returns the current event sequence configuration.
-   */
-  getEventSequence() {
-    const stored = StateManager.get("eventSequence");
-    if (stored) {
-      try {
-        this.eventSequence = JSON.parse(stored);
-      } catch (e) {
-        console.error("Error parsing stored event sequence:", e);
-      }
-    }
-    return this.eventSequence;
-  }
-
-  /**
-   * updateEventStepStatus
-   * Updates the status of a given event step and immediately saves the whole sequence.
-   */
-  updateEventStepStatus(eventName, status) {
-    if (!this.eventSequence) return;
-    const step = this.eventSequence.find(e => e.name === eventName);
-    if (step) {
-      step.status = status;
-      console.log(`Event step '${eventName}' updated to status: ${status}`);
-      // Сохраняем статус отдельного шага
-      StateManager.set(`event_${eventName}_status`, status);
-      // И сразу сохраняем всю последовательность, чтобы in‑memory массив синхронизировался с localStorage.
-      StateManager.set("eventSequence", JSON.stringify(this.eventSequence));
-    } else {
-      console.warn(`Event step '${eventName}' not found in sequence.`);
-    }
-  }
-
-  /**
-   * getCurrentEventStep
-   * Determines and returns the current active event step based on the sequence.
-   */
-  getCurrentEventStep() {
-    if (!this.eventSequence) return null;
-    const currentStep = this.eventSequence.find(step => step.status !== 'finished');
-    return currentStep || null;
-  }
+  // Note: Methods saveState() and loadState() are now obsolete because state persistence is handled via DatabaseManager.
 }

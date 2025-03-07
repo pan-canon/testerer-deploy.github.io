@@ -95,9 +95,8 @@ export class App {
    * This method first awaits the completion of the database initialization,
    * then loads the saved application state (such as the active ghost) to ensure
    * that any state-saving calls occur only after the database is fully ready.
-   * It then restores the event sequence from GhostManager, synchronizes quest state
-   * from the database, updates the UI, and either displays the main screen (if a profile exists)
-   * or shows the registration screen.
+   * Finally, it synchronizes quest state from the database, updates the UI,
+   * and either displays the main screen (if a profile exists) or shows the registration screen.
    */
   async init() {
     // Wait for database initialization to complete.
@@ -106,10 +105,6 @@ export class App {
 
     // Now that the database is ready, load the persisted application state.
     this.loadAppState();
-
-    // Restore (or set) the event sequence in GhostManager.
-    const restoredSequence = this.ghostManager.getEventSequence();
-    console.log("Event sequence restored:", restoredSequence);
 
     // Synchronize quest state from the database via QuestManager.
     await this.questManager.syncQuestState();

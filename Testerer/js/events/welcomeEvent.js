@@ -67,10 +67,5 @@ export class WelcomeEvent extends BaseEvent {
 
     // Finally, mark the welcome event as completed to prevent future auto-launch.
     StateManager.set("welcomeDone", "true");
-    // NEW: Update event sequence status for welcome to "finished".
-    if (this.app.ghostManager && typeof this.app.ghostManager.updateEventStepStatus === "function") {
-      this.app.ghostManager.updateEventStepStatus('welcome', 'finished');
-      console.log("Welcome event status updated to 'finished'.");
-    }
   }
 }

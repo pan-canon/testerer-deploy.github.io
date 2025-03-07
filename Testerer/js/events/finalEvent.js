@@ -49,15 +49,22 @@ export class FinalEvent extends BaseEvent {
     // Set the game finalized flag using StateManager.
     StateManager.set("gameFinalized", "true");
 
-    // Trigger the ghost fade-out visual effect.
-    this.app.visualEffectsManager.triggerGhostAppearanceEffect("ghost_fade_out");
+    // Trigger the ghost fade-out visual effect (e.g., "ghost_fade_out").
+    if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerGhostAppearanceEffect === "function") {
+      this.app.visualEffectsManager.triggerGhostAppearanceEffect("ghost_fade_out");
+    }
 
     // Mark the current ghost as finished.
     await this.app.ghostManager.finishCurrentGhost();
 
-    // Delegate UI update: disable active buttons (e.g., Post button) via ViewManager.
+    // Disable active buttons (e.g., Post button) via ViewManager.
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
       this.app.viewManager.setPostButtonEnabled(false);
+    }
+
+    // Optionally, re-sync quest state so UI is updated instantly:
+    if (this.app.questManager && typeof this.app.questManager.syncQuestState === "function") {
+      await this.app.questManager.syncQuestState();
     }
 
     // Notify the user that the scenario has ended via ViewManager.

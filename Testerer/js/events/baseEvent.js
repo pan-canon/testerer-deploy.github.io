@@ -16,7 +16,7 @@ export class BaseEvent {
   constructor(eventManager) {
     /** @type {EventManager} */
     this.eventManager = eventManager;
-    // Event key; should be set in subclasses.
+    // Event key; should be overridden in subclasses.
     this.key = "";
   }
 
@@ -24,6 +24,9 @@ export class BaseEvent {
    * activate - Activates the event.
    * If an event with the given key has not been logged yet, the event is logged via the eventManager.
    * This method handles logging and notification without triggering subsequent actions.
+   *
+   * NOTE: No direct UI manipulations should be placed here — any UI updates
+   *       (e.g. enabling/disabling buttons) happen in specialized managers.
    *
    * @returns {Promise<void>} Asynchronous execution.
    */

@@ -19,7 +19,6 @@ import { ErrorManager } from './errorManager.js';
  */
 export class QuestManager {
   /**
-   * Constructor for QuestManager.
    * @param {EventManager} eventManager - The event manager handling diary entries.
    * @param {App} appInstance - The main application instance.
    */
@@ -65,6 +64,8 @@ export class QuestManager {
     };
     cameraManager.onCameraClosed = () => {
       console.log("[QuestManager] onCameraClosed signal received.");
+      // ADDED (пример, если хотим что-то делать при закрытии камеры)
+      // this.app.viewManager.setCameraButtonActive(false);
     };
   }
 
@@ -72,11 +73,9 @@ export class QuestManager {
    * syncQuestState
    * Synchronizes the current quest state from the database.
    * 
-   * This method checks if there is an active quest (mirror or repeating) in the database.
-   * If an active quest exists and its status is not "finished", it sets the 
-   * "postButtonDisabled" flag in StateManager and disables the Post button via ViewManager.
-   * Additionally, if the game is finalized (flag "gameFinalized" set), the Post button remains disabled.
-   * Otherwise, it enables the Post button.
+   * - Checks if game is finalized -> disable Post
+   * - Checks if there's an active quest (mirror or repeating) -> disable Post
+   * - Otherwise -> enable Post
    */
   async syncQuestState() {
     // Check if the game has been finalized (final quest completed)
@@ -123,6 +122,9 @@ export class QuestManager {
       return;
     }
     await quest.activate();
+
+    // ADDED: После активации квеста сразу обновим UI, чтобы "Пост" стал disabled (если квест активен)
+    await this.syncQuestState();
   }
 
   /**
@@ -137,6 +139,9 @@ export class QuestManager {
       return;
     }
     await quest.finish();
+
+    // ADDED: После завершения квеста заново синхронизируем UI
+    await this.syncQuestState();
   }
 
   /**
@@ -146,18 +151,18 @@ export class QuestManager {
   async handleShootMirrorQuest() {
     console.log("[QuestManager] handleShootMirrorQuest() called.");
     await this.checkQuest("mirror_quest");
+    // CHANGED: теперь после checkQuest() → syncQuestState() вызывается в самом checkQuest().
   }
 
   /**
    * handlePostButtonClick
    * Handles the click event for the "Post" button.
    * 
-   * This method disables the Post button immediately and sets the corresponding flag.
-   * It then checks for two conditions:
-   *   1. If the game is finalized (flag "gameFinalized" is set), the action is aborted.
-   *   2. If the "mirrorQuestReady" flag is not set, an error is shown.
-   * If all conditions are met, it removes the readiness flag, activates the camera button,
-   * and then, based on whether the repeating cycle flag is set, triggers the appropriate quest.
+   * - Immediately disables "Post".
+   * - Checks if game is finalized => abort.
+   * - Checks mirrorQuestReady => if false => error.
+   * - If repeating quest is finished => error.
+   * - Otherwise removes mirrorQuestReady, activates camera, and starts the quest.
    */
   async handlePostButtonClick() {
     // If game is finalized, do not process the button click.
@@ -215,9 +220,7 @@ export class QuestManager {
 
   /**
    * updateQuestProgress
-   * Updates the quest progress in the database.
-   * 
-   * Constructs a quest progress object and delegates saving the record to the DatabaseManager.
+   * Saves the quest progress to the database (delegated to DatabaseManager).
    * @param {string} questKey - The key of the quest.
    * @param {number} currentStage - The current stage of the quest.
    * @param {number} totalStages - The total number of stages.

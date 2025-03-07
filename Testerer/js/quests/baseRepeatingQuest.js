@@ -81,9 +81,13 @@ export class BaseRepeatingQuest extends BaseEvent {
       current_stage: this.currentStage,
       total_stages: this.totalStages
     });
+
+    // ADDED: Включаем кнопку камеры через ViewManager (вместо прямого доступа к DOM)
     if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {
       this.app.viewManager.setCameraButtonActive(true);
     }
+
+    // Если камера ещё не открыта, ждём события cameraReady
     if (!this.app.isCameraOpen) {
       console.log("[BaseRepeatingQuest] Camera is not open. Waiting for cameraReady event...");
       await new Promise(resolve => {
@@ -99,7 +103,8 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * startCheckLoop – Delegates UI initialization for the quest stage to ViewManager,
-   * then starts a periodic check loop (every 2 seconds) to update the quest status.
+   * then (optionally) could start a periodic check loop. 
+   * In the example, it only initializes the UI and waits for user action.
    */
   startCheckLoop() {
     if (this.app.viewManager && typeof this.app.viewManager.startRepeatingQuestUI === 'function') {
@@ -142,39 +147,42 @@ export class BaseRepeatingQuest extends BaseEvent {
   /**
    * finishStage – Completes one stage of the repeating quest.
    * Disables the "Shoot" button via ViewManager, captures a snapshot, logs the stage completion,
-   * updates quest state via StateManager, and enables the "Post" button for the next stage.
+   * updates quest state via StateManager, and enables the "Post" button for the next stage (if any).
    */
   async finishStage() {
     if (this.finished) return;
     
-    // Disable the Shoot button via ViewManager to prevent multiple clicks.
+    // CHANGED: Вместо прямого доступа — отключаем Shoot через ViewManager
     if (this.app.viewManager && typeof this.app.viewManager.setShootButtonActive === 'function') {
       this.app.viewManager.setShootButtonActive(false);
       console.log("[BaseRepeatingQuest] Shoot button disabled after click.");
     }
     
+    // Захватываем кадр:
     const photoData = this.captureSimplePhoto();
     console.log(`[BaseRepeatingQuest] Captured snapshot for stage ${this.currentStage}.`);
     
+    // Добавляем запись в дневник
     await this.eventManager.addDiaryEntry(
       `repeating_stage_${this.currentStage} [photo attached]\n${photoData}`,
       false
     );
     console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
     
+    // Увеличиваем currentStage
     this.currentStage++;
     this.saveState();
 
+    // Если ещё есть этапы
     if (this.currentStage <= this.totalStages) {
-      // Set the readiness flag using StateManager.
+      // Ставим mirrorQuestReady и включаем кнопку «Пост»
       StateManager.set("mirrorQuestReady", "true");
-      // Enable the Post button via ViewManager.
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(true);
         console.log("[BaseRepeatingQuest] Post button enabled for next stage.");
       }
     } else {
-      // All stages completed; finish the quest.
+      // Все этапы завершены -> вызываем finish()
       await this.finish();
     }
   }
@@ -182,8 +190,8 @@ export class BaseRepeatingQuest extends BaseEvent {
   /**
    * finish – Completes the repeating quest.
    * Logs the final diary entry, triggers the final event,
-   * disables the Post button via ViewManager, resets quest state via StateManager,
-   * and resets the "Open Camera" button active state.
+   * disables the Post button via ViewManager (or you can rely on QuestManager.syncQuestState()),
+   * resets quest state via StateManager, and resets the "Open Camera" button active state.
    * Also updates the quest record in the database with status "finished".
    */
   async finish() {
@@ -191,28 +199,49 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.finished = true;
     this.saveState();
     console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
+
+    // Финальное сообщение
     await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
+
+    // Триггерим final_event (или любой другой ивент)
     if (!this.finalRepeatingQuestCompleted) {
       this.finalRepeatingQuestCompleted = true;
       await this.app.gameEventManager.activateEvent("final_event");
     }
+
+    // Сбрасываем mirrorQuestReady
     StateManager.remove("mirrorQuestReady");
+
+    // Отключаем «Пост» напрямую (либо можно полагаться на QuestManager.syncQuestState())
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
       this.app.viewManager.setPostButtonEnabled(false);
       console.log("[BaseRepeatingQuest] Post button disabled after finishing repeating quest.");
     }
+
+    // Удаляем сохранённый стейт квеста
     StateManager.remove(`quest_state_${this.key}`);
+
+    // Сбрасываем кнопку камеры
     if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {
       this.app.viewManager.setCameraButtonActive(false);
       console.log("[BaseRepeatingQuest] Camera button active state reset after quest completion.");
     }
-    // Update quest record in the database as finished.
+
+    // Если в ViewManager есть метод stopRepeatingQuestUI, можем вызвать:
+    if (this.app.viewManager && typeof this.app.viewManager.stopRepeatingQuestUI === 'function') {
+      this.app.viewManager.stopRepeatingQuestUI(this.statusElementId);
+    }
+
+    // Финальное сохранение в БД
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
       status: "finished",
       current_stage: this.currentStage,
       total_stages: this.totalStages
     });
+
+    // ADDED (опционально): Попросим QuestManager пересинхронизировать состояние и обновить UI
+    // await this.app.questManager.syncQuestState();
   }
 
   /**
@@ -245,10 +274,8 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * getCurrentQuestStatus
-   * NEW: Retrieves the current status of the repeating quest.
-   * Combines local quest state (currentStage, finished, totalStages) and information from the database.
-   *
-   * @returns {Promise<Object>} An object with keys: key, active, finished, currentStage, totalStages, dbStatus.
+   * Retrieves the current status of the repeating quest.
+   * Combines local quest state (currentStage, finished, totalStages) and DB record.
    */
   async getCurrentQuestStatus() {
     const record = this.app.databaseManager.getQuestRecord(this.key);

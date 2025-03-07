@@ -22,27 +22,34 @@ export class PostMirrorEvent extends BaseEvent {
   }
 
   async activate() {
-    // If the event is already logged, skip activation.
+    // Если событие уже записано в дневник, не активируем повторно.
     if (this.eventManager.isEventLogged(this.key)) {
       console.log(`[PostMirrorEvent] Event '${this.key}' is already logged, skipping activation.`);
       return;
     }
-    console.log(`[PostMirrorEvent] Activating event '${this.key}'.`);
 
-    // Log the event in the diary as a ghost post.
+    console.log(`[PostMirrorEvent] Activating event '${this.key}'.`);
+    // Запись в дневник как "ghost post".
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Set necessary flags using StateManager.
+    // Ставим нужные флаги в StateManager.
     StateManager.set("mirrorQuestReady", "true");
     StateManager.set("isRepeatingCycle", "true");
 
-    // Delegate UI update: enable the "Post" button via ViewManager.
+    // Включаем «Пост» через ViewManager.
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
       this.app.viewManager.setPostButtonEnabled(true);
     }
 
-    // Trigger the mirror visual effect.
-    this.app.visualEffectsManager.triggerMirrorEffect();
+    // Вызываем эффект зеркала (при условии, что он реализован).
+    if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === 'function') {
+      this.app.visualEffectsManager.triggerMirrorEffect();
+    }
+
+    // (Опционально) пересинхронизировать квест-состояние:
+    // if (this.app.questManager && typeof this.app.questManager.syncQuestState === "function") {
+    //   await this.app.questManager.syncQuestState();
+    // }
 
     console.log("[PostMirrorEvent] Mirror quest cycle ended; waiting for user action to trigger repeating quest.");
   }

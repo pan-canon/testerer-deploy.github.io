@@ -1,4 +1,6 @@
 import { BaseEvent } from '../events/baseEvent.js';
+// CHANGED: вместо window.StateManager, напрямую используем
+import { StateManager } from '../stateManager.js';
 
 /**
  * FinalQuest – The final quest signifies the complete end of the scenario
@@ -49,7 +51,7 @@ export class FinalQuest extends BaseEvent {
    *  2) Logs the completion in the diary.
    *  3) Sets the "gameFinalized" flag via StateManager.
    *  4) Calls finishCurrentGhost from GhostManager to mark the scenario as finished.
-   *  5) Notifies the user via ViewManager.
+   *  5) Notifies the user via ViewManager (and optionally disables or re-syncs the UI).
    *
    * @returns {Promise<void>}
    */
@@ -72,8 +74,8 @@ export class FinalQuest extends BaseEvent {
     // Log the final quest completion in the diary.
     await this.eventManager.addDiaryEntry(`${this.key}_completed`, true);
 
-    // Set the game finalized flag using StateManager.
-    window.StateManager.set("gameFinalized", "true");
+    // CHANGED: Ставим флаг напрямую, без window.
+    StateManager.set("gameFinalized", "true");
     
     // Mark the current ghost as finished via GhostManager.
     if (this.app.ghostManager) {
@@ -85,6 +87,11 @@ export class FinalQuest extends BaseEvent {
       this.app.viewManager.showNotification("🎉 Final quest completed! Scenario ended!");
     } else {
       console.log("🎉 Final quest completed! Scenario ended!");
+    }
+
+    // ADDED (опционально): Синхронизируем UI, чтобы «Пост» и др. кнопки тут же отключились.
+    if (this.app.questManager && typeof this.app.questManager.syncQuestState === "function") {
+      await this.app.questManager.syncQuestState();
     }
   }
 }

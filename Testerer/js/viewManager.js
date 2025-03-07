@@ -27,7 +27,6 @@ export class ViewManager {
     this.nextStepBtn = document.getElementById('next-step-btn');
     
     // --- Selfie Screen Elements ---
-    // Selfie preview element is assumed to have id "selfie-thumbnail".
     this.selfiePreview = document.getElementById('selfie-thumbnail');
     this.captureBtn = document.getElementById('capture-btn');
     this.completeBtn = document.getElementById('complete-registration');
@@ -54,39 +53,19 @@ export class ViewManager {
     this.cameraManager = null;
   }
 
-  /**
-   * setCameraManager
-   * Sets the camera manager instance (e.g., an instance of cameraSectionManager)
-   * to allow unified access to camera methods.
-   *
-   * @param {Object} cameraManager - The camera manager instance.
-   */
   setCameraManager(cameraManager) {
     this.cameraManager = cameraManager;
   }
 
-  /**
-   * startCameraWithOptions
-   * Wrapper method to start the camera with given options.
-   * Options may include width, height, filter, etc.
-   *
-   * @param {Object} options - Configuration options for the video element.
-   */
   startCameraWithOptions(options = {}) {
     if (this.cameraManager) {
-      // Attach the video element to the global camera container with specified options.
       this.cameraManager.attachTo("global-camera", options);
-      // Start the camera.
       this.cameraManager.startCamera();
     } else {
       ErrorManager.logError("Camera Manager is not set.", "startCameraWithOptions");
     }
   }
 
-  /**
-   * stopCamera
-   * Wrapper method to stop the camera via the camera manager.
-   */
   stopCamera() {
     if (this.cameraManager) {
       this.cameraManager.stopCamera();
@@ -97,12 +76,6 @@ export class ViewManager {
 
   // ------------------ New Methods for Button Visibility ------------------
 
-  /**
-   * hidePostButton
-   * Hides the "Post" button by setting its display style to 'none'.
-   * NEW: This method is used to ensure that the "Post" button is hidden
-   * when the camera view is active.
-   */
   hidePostButton() {
     if (this.postBtn) {
       this.postBtn.style.display = 'none';
@@ -111,18 +84,6 @@ export class ViewManager {
 
   // ------------------ Event Binding ------------------
 
-  /**
-   * bindEvents
-   * Binds UI events that were previously placed in App.
-   * Also sets up listeners on registration fields to enable the "Next" button
-   * when all required fields (name, gender, language) are filled.
-   * Additionally, binds the "Capture" and "Complete" buttons click events to
-   * trigger selfie capture and completeRegistration respectively.
-   * 
-   * NEW: Binds events for "Post", "Reset Data", "Export Profile" and "Update" buttons.
-   *
-   * @param {App} app - The main application instance.
-   */
   bindEvents(app) {
     const checkRegistrationValidity = () => {
       const nameValid = this.nameInput && this.nameInput.value.trim().length > 0;
@@ -202,11 +163,6 @@ export class ViewManager {
 
   // ------------------ Registration Form Operations ------------------
 
-  /**
-   * getRegistrationData
-   * Retrieves registration data from the form.
-   * @returns {Object|null} An object with { name, gender, language } or null if elements are missing.
-   */
   getRegistrationData() {
     if (!this.nameInput || !this.genderSelect || !this.languageSelector) {
       ErrorManager.logError("Registration form elements not found.", "getRegistrationData");
@@ -221,11 +177,6 @@ export class ViewManager {
 
   // ------------------ Selfie and Profile Operations ------------------
 
-  /**
-   * updateSelfiePreview
-   * Updates the selfie preview image using a Data URL.
-   * @param {string} imageData - Data URL of the processed selfie.
-   */
   updateSelfiePreview(imageData) {
     if (this.selfiePreview) {
       this.selfiePreview.src = imageData;
@@ -235,42 +186,24 @@ export class ViewManager {
     }
   }
 
-  /**
-   * enableCompleteButton
-   * Enables the "Complete Registration" button.
-   */
   enableCompleteButton() {
     if (this.completeBtn) {
       this.completeBtn.disabled = false;
     }
   }
 
-  /**
-   * disableCompleteButton
-   * Disables the "Complete Registration" button.
-   */
   disableCompleteButton() {
     if (this.completeBtn) {
       this.completeBtn.disabled = true;
     }
   }
 
-  /**
-   * getSelfieSource
-   * Returns the current selfie source (Data URL).
-   * @returns {string} The Data URL from the selfie preview.
-   */
   getSelfieSource() {
     return this.selfiePreview ? this.selfiePreview.src : "";
   }
 
   // ------------------ File Import Operations ------------------
 
-  /**
-   * getImportFile
-   * Returns the selected file from the import input.
-   * @returns {File|null} The selected file, or null if none selected.
-   */
   getImportFile() {
     if (this.importFileInput && this.importFileInput.files.length > 0) {
       return this.importFileInput.files[0];
@@ -280,42 +213,24 @@ export class ViewManager {
 
   // ------------------ Toggle Buttons and Camera Views ------------------
 
-  /**
-   * showToggleCameraButton
-   * Displays the toggle-camera button.
-   */
   showToggleCameraButton() {
     if (this.toggleCameraBtn) {
       this.toggleCameraBtn.style.display = 'inline-block';
     }
   }
 
-  /**
-   * showPostButton
-   * Displays the "Post" button.
-   */
   showPostButton() {
     if (this.postBtn) {
       this.postBtn.style.display = 'inline-block';
     }
   }
 
-  /**
-   * hidePostButton
-   * Hides the "Post" button.
-   * NEW: This method is used to hide the Post button when the camera view is active.
-   */
   hidePostButton() {
     if (this.postBtn) {
       this.postBtn.style.display = 'none';
     }
   }
 
-  /**
-   * showDiaryView
-   * Displays the diary view and hides the global camera.
-   * NEW: Ensures that the Post button is shown and the "Shoot" button is hidden when returning to the diary view.
-   */
   showDiaryView() {
     const diary = document.getElementById("diary");
     if (diary && this.globalCamera) {
@@ -333,11 +248,6 @@ export class ViewManager {
     }
   }
 
-  /**
-   * showCameraView
-   * Displays the camera view and hides the diary.
-   * NEW: Hides the Post button when camera view is active.
-   */
   showCameraView() {
     const diary = document.getElementById("diary");
     if (diary && this.globalCamera) {
@@ -355,10 +265,6 @@ export class ViewManager {
     }
   }
 
-  /**
-   * showGlobalCamera
-   * Displays the global camera element by setting its display style to 'block'.
-   */
   showGlobalCamera() {
     if (this.globalCamera) {
       this.globalCamera.style.display = 'block';
@@ -367,10 +273,6 @@ export class ViewManager {
     }
   }
 
-  /**
-   * hideGlobalCamera
-   * Hides the global camera element by setting its display style to 'none'.
-   */
   hideGlobalCamera() {
     if (this.globalCamera) {
       this.globalCamera.style.display = 'none';
@@ -381,11 +283,6 @@ export class ViewManager {
 
   // ------------------ Profile Display Operations ------------------
 
-  /**
-   * updateProfileDisplay
-   * Updates the profile display with provided data.
-   * @param {Object} profile - An object containing at least { name, selfie }.
-   */
   updateProfileDisplay(profile) {
     if (this.profileNameElem) {
       this.profileNameElem.textContent = profile.name;
@@ -398,13 +295,6 @@ export class ViewManager {
 
   // ------------------ Diary Rendering Operations ------------------
 
-  /**
-   * renderDiary
-   * Renders the diary entries into the diary container.
-   * @param {Array} entries - Array of diary entry objects.
-   * @param {string} currentLanguage - Current language code.
-   * @param {Object} effectsManager - Reference to the VisualEffectsManager.
-   */
   renderDiary(entries, currentLanguage, effectsManager) {
     if (!this.diaryContainer) {
       ErrorManager.logError("Diary container not found!", "renderDiary");
@@ -489,12 +379,6 @@ export class ViewManager {
 
   // ------------------ Screen Switching ------------------
 
-  /**
-   * switchScreen
-   * Switches between different application screens and updates button groups.
-   * @param {string} screenId - ID of the target screen.
-   * @param {string} buttonsGroupId - ID of the buttons group to display.
-   */
   switchScreen(screenId, buttonsGroupId) {
     document.querySelectorAll('section').forEach(section => {
       section.style.display = 'none';
@@ -539,6 +423,7 @@ export class ViewManager {
    *   - If welcome is "in_progress" and mirror is "not_started", enable posting (to start mirror quest).
    *   - If mirror is "in_progress", disable posting.
    *   - If mirror is "finished", then if repeating is "not_started" or "in_progress", enable posting.
+   *   - If welcome is "finished", then if repeating is "not_started" or "in_progress", enable posting.
    *   - Otherwise, disable posting.
    *
    * @param {boolean} isEnabled - Base flag (unused if sequence conditions override).
@@ -553,6 +438,8 @@ export class ViewManager {
       const mirrorStatus = StateManager.get("event_mirror_status") || "not_started";
       const repeatingStatus = StateManager.get("event_repeating_status") || "not_started";
       const finalStatus = StateManager.get("event_final_status") || "not_started";
+      
+      console.log("setPostButtonEnabled:", { gameFinalized, postDisabled, welcomeStatus, mirrorStatus, repeatingStatus, finalStatus });
       
       let enablePost = false;
       
@@ -572,12 +459,14 @@ export class ViewManager {
             enablePost = false;
           }
         }
-      } else {
+      } else if (welcomeStatus === "finished") {
         if (repeatingStatus === "not_started" || repeatingStatus === "in_progress") {
           enablePost = true;
         } else {
           enablePost = false;
         }
+      } else {
+        enablePost = false;
       }
       
       postBtn.disabled = !enablePost;
@@ -672,11 +561,6 @@ export class ViewManager {
 
   // ------------------ Apartment Plan UI ------------------
 
-  /**
-   * setApartmentPlanNextButtonEnabled
-   * Enables or disables the "Next" button on the apartment plan screen.
-   * @param {boolean} isEnabled - True to enable, false to disable.
-   */
   setApartmentPlanNextButtonEnabled(isEnabled) {
     const nextBtn = document.getElementById("apartment-plan-next-btn");
     if (nextBtn) {
@@ -689,15 +573,6 @@ export class ViewManager {
 
   // ------------------ Mirror Quest UI ------------------
 
-  /**
-   * startMirrorQuestUI
-   * Initializes the UI for the mirror quest.
-   * @param {Object} options - Contains:
-   *   - statusElementId: ID of the status display element.
-   *   - shootButtonId: ID of the "Shoot" button.
-   *   - onShoot: Callback executed when the "Shoot" button is clicked.
-   *   - initialActive (optional): Boolean flag indicating if the "Shoot" button should be initially active.
-   */
   startMirrorQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
     if (statusElem) {
@@ -722,13 +597,6 @@ export class ViewManager {
     }
   }
 
-  /**
-   * updateMirrorQuestStatus
-   * Updates the mirror quest status UI.
-   * @param {boolean} success - True if the mirror match was successful.
-   * @param {string} statusElementId - ID of the status display element.
-   * @param {string} shootButtonId - ID of the "Shoot" button.
-   */
   updateMirrorQuestStatus(success, statusElementId, shootButtonId) {
     const statusElem = document.getElementById(statusElementId);
     if (statusElem) {
@@ -741,11 +609,6 @@ export class ViewManager {
     }
   }
 
-  /**
-   * stopMirrorQuestUI
-   * Hides the mirror quest UI elements.
-   * @param {string} statusElementId - ID of the status display element.
-   */
   stopMirrorQuestUI(statusElementId) {
     const statusElem = document.getElementById(statusElementId);
     if (statusElem) {
@@ -755,16 +618,6 @@ export class ViewManager {
 
   // ------------------ Repeating Quest UI ------------------
 
-  /**
-   * startRepeatingQuestUI
-   * Initializes the UI for a repeating quest stage.
-   * @param {Object} options - Contains:
-   *   - statusElementId: ID of the status display element.
-   *   - shootButtonId: ID of the "Shoot" button.
-   *   - stage: Current stage number.
-   *   - totalStages: Total number of stages.
-   *   - onShoot: Callback executed when the "Shoot" button is clicked.
-   */
   startRepeatingQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
     if (statusElem) {
@@ -788,11 +641,6 @@ export class ViewManager {
     }
   }
 
-  /**
-   * disableShootButton
-   * Disables the "Shoot" button.
-   * @param {string} shootButtonId - ID of the "Shoot" button.
-   */
   disableShootButton(shootButtonId) {
     const shootBtn = document.getElementById(shootButtonId);
     if (shootBtn) {
@@ -801,11 +649,6 @@ export class ViewManager {
     }
   }
 
-  /**
-   * stopRepeatingQuestUI
-   * Hides the repeating quest UI.
-   * @param {string} statusElementId - ID of the status display element.
-   */
   stopRepeatingQuestUI(statusElementId) {
     const statusElem = document.getElementById(statusElementId);
     if (statusElem) {
@@ -815,12 +658,6 @@ export class ViewManager {
 
   // ------------------ Visual Effects and Notifications ------------------
 
-  /**
-   * applyBackgroundTransition
-   * Applies a background transition effect to the document body.
-   * @param {string} color - The target background color.
-   * @param {number} duration - Duration of the transition in milliseconds.
-   */
   applyBackgroundTransition(color, duration) {
     document.body.style.transition = `background ${duration}ms`;
     document.body.style.background = color;
@@ -829,11 +666,6 @@ export class ViewManager {
     }, duration);
   }
 
-  /**
-   * showGhostAppearanceEffect
-   * Displays a ghost appearance effect.
-   * @param {string} ghostId - Identifier for the ghost effect image.
-   */
   showGhostAppearanceEffect(ghostId) {
     const ghostEffect = document.createElement("div");
     Object.assign(ghostEffect.style, {
@@ -853,11 +685,6 @@ export class ViewManager {
     setTimeout(() => { ghostEffect.remove(); }, 5000);
   }
 
-  /**
-   * showNotification
-   * Displays a notification message to the user using a simple toast.
-   * @param {string} message - The notification message.
-   */
   showNotification(message) {
     const notification = document.createElement("div");
     notification.textContent = message;
@@ -888,21 +715,12 @@ export class ViewManager {
 
   // ------------------ Miscellaneous ------------------
 
-  /**
-   * setControlsBlocked
-   * Blocks or unblocks user interaction with the controls panel.
-   * @param {boolean} shouldBlock - True to block, false to unblock.
-   */
   setControlsBlocked(shouldBlock) {
     if (this.controlsPanel) {
       this.controlsPanel.style.pointerEvents = shouldBlock ? "none" : "auto";
     }
   }
 
-  /**
-   * clearCache
-   * Sends a message to the Service Worker to clear all caches.
-   */
   clearCache() {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({ action: 'CLEAR_CACHE' });

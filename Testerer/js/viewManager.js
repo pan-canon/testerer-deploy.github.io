@@ -547,52 +547,61 @@ export class ViewManager {
    * setPostButtonEnabled
    * Enables or disables the "Post" button.
    * 
-   * In addition to the passed flag, this method checks persistent flags in StateManager:
-   * if "postButtonDisabled" or "gameFinalized" are set, the button remains disabled.
-   * Additionally, it now checks event sequence statuses (e.g., welcome, mirror, repeating)
-   * to determine whether posting is allowed.
+   * This method checks persistent flags in StateManager:
+   * - If "gameFinalized" or "postButtonDisabled" are set, the button is disabled.
+   * - Otherwise, it determines the state based on the event sequence statuses:
+   *   - If welcome is "not_started", disable posting.
+   *   - If welcome is "in_progress" and mirror is "not_started", enable posting (to start mirror quest).
+   *   - If mirror is "in_progress", disable posting.
+   *   - If mirror is "finished", then if repeating is "not_started" or "in_progress", enable posting.
+   *   - Otherwise, disable posting.
    *
-   * @param {boolean} isEnabled - Base flag to enable, but final state is determined by additional conditions.
+   * @param {boolean} isEnabled - Base flag (unused if sequence conditions override).
    */
   setPostButtonEnabled(isEnabled) {
     const postBtn = document.getElementById("post-btn");
     if (postBtn) {
-      // Retrieve persistent state flags.
       const gameFinalized = StateManager.get("gameFinalized") === "true";
       const postDisabled = StateManager.get("postButtonDisabled") === "true";
+      
       // Retrieve event sequence statuses from StateManager.
       const welcomeStatus = StateManager.get("event_welcome_status") || "not_started";
       const mirrorStatus = StateManager.get("event_mirror_status") || "not_started";
       const repeatingStatus = StateManager.get("event_repeating_status") || "not_started";
-
-      let enablePost = isEnabled; // Base flag
+      const finalStatus = StateManager.get("event_final_status") || "not_started";
       
-      // NEW: If the welcome event has not started, disable posting.
-      if (welcomeStatus === "not_started") {
+      let enablePost = false;
+      
+      if (gameFinalized || postDisabled || finalStatus === "in_progress" || finalStatus === "finished") {
         enablePost = false;
+      } else if (welcomeStatus === "not_started") {
+        enablePost = false;
+      } else if (welcomeStatus === "in_progress") {
+        if (mirrorStatus === "not_started") {
+          // Welcome event active and mirror quest not started – allow to start mirror quest.
+          enablePost = true;
+        } else if (mirrorStatus === "in_progress") {
+          enablePost = false;
+        } else if (mirrorStatus === "finished") {
+          // Mirror quest finished – allow posting if repeating quest is not yet started or in progress.
+          if (repeatingStatus === "not_started" || repeatingStatus === "in_progress") {
+            enablePost = true;
+          } else {
+            enablePost = false;
+          }
+        }
       } else {
-        // If welcome event is in progress and mirror quest not started, allow posting.
-        if (welcomeStatus === "in_progress" && mirrorStatus === "not_started") {
+        // Если welcome завершён (например, "finished"), предполагаем, что переходим в повторяющуюся фазу.
+        if (repeatingStatus === "not_started" || repeatingStatus === "in_progress") {
           enablePost = true;
-        }
-        // If repeating event is in progress, allow posting.
-        else if (repeatingStatus === "in_progress") {
-          enablePost = true;
-        }
-        // If mirror quest is in progress or finished, disable posting.
-        else if (mirrorStatus === "in_progress" || mirrorStatus === "finished") {
+        } else {
           enablePost = false;
         }
       }
       
-      // Force disable if game is finalized or the persistent flag is set.
-      if (gameFinalized || postDisabled) {
-        postBtn.disabled = true;
-      } else {
-        postBtn.disabled = !enablePost;
-      }
+      postBtn.disabled = !enablePost;
       // Persist the final state.
-      StateManager.set("postButtonEnabled", JSON.stringify(!postBtn.disabled));
+      StateManager.set("postButtonEnabled", JSON.stringify(enablePost));
     }
   }
 

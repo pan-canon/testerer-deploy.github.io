@@ -1,3 +1,4 @@
+// --- ViewManager.js ---
 import { StateManager } from './stateManager.js';
 import { ErrorManager } from './errorManager.js';
 
@@ -11,33 +12,32 @@ import { ErrorManager } from './errorManager.js';
  * - Rendering the diary.
  * - Handling UI effects and notifications.
  *
- * All UI updates must be performed exclusively through these methods,
- * ensuring a single source of truth for UI operations.
+ * All UI updates are performed exclusively through these methods.
  */
 export class ViewManager {
   constructor() {
     // --- Cache Main UI Elements ---
     this.diaryContainer = document.getElementById("diary");
     this.controlsPanel = document.getElementById("controls-panel");
-    
+
     // --- Registration Form Elements ---
     this.nameInput = document.getElementById('player-name');
     this.genderSelect = document.getElementById('player-gender');
     this.languageSelector = document.getElementById('language-selector');
     this.nextStepBtn = document.getElementById('next-step-btn');
-    
+
     // --- Selfie Screen Elements ---
     this.selfiePreview = document.getElementById('selfie-thumbnail');
     this.captureBtn = document.getElementById('capture-btn');
     this.completeBtn = document.getElementById('complete-registration');
-    
+
     // --- Profile Display Elements ---
     this.profileNameElem = document.getElementById('profile-name');
     this.profilePhotoElem = document.getElementById('profile-photo');
-    
+
     // --- Import File Input ---
     this.importFileInput = document.getElementById('import-file');
-    
+
     // --- Toggle Buttons and Global Camera ---
     this.toggleCameraBtn = document.getElementById("toggle-camera");
     this.toggleDiaryBtn = document.getElementById("toggle-diary");
@@ -49,22 +49,14 @@ export class ViewManager {
     this.exportProfileBtn = document.getElementById("export-profile-btn");
     this.updateBtn = document.getElementById("update-btn");
 
-    // --- Camera Manager Reference (to be set externally) ---
+    // --- Camera Manager Reference ---
     this.cameraManager = null;
   }
 
-  /**
-   * setCameraManager
-   * Sets the camera manager instance to allow unified access to camera methods.
-   */
   setCameraManager(cameraManager) {
     this.cameraManager = cameraManager;
   }
 
-  /**
-   * startCameraWithOptions
-   * Starts the camera with given options.
-   */
   startCameraWithOptions(options = {}) {
     if (this.cameraManager) {
       this.cameraManager.attachTo("global-camera", options);
@@ -74,10 +66,6 @@ export class ViewManager {
     }
   }
 
-  /**
-   * stopCamera
-   * Stops the camera via the camera manager.
-   */
   stopCamera() {
     if (this.cameraManager) {
       this.cameraManager.stopCamera();
@@ -88,10 +76,6 @@ export class ViewManager {
 
   // ------------------ New Methods for Button Visibility ------------------
 
-  /**
-   * hidePostButton
-   * Hides the "Post" button.
-   */
   hidePostButton() {
     if (this.postBtn) {
       this.postBtn.style.display = 'none';
@@ -100,10 +84,6 @@ export class ViewManager {
 
   // ------------------ Event Binding ------------------
 
-  /**
-   * bindEvents
-   * Binds UI events for registration, selfie capture, and other controls.
-   */
   bindEvents(app) {
     const checkRegistrationValidity = () => {
       const nameValid = this.nameInput && this.nameInput.value.trim().length > 0;
@@ -432,28 +412,6 @@ export class ViewManager {
 
   // ------------------ Button State Management ------------------
 
-  /**
-   * setPostButtonEnabled
-   * Enables or disables the "Post" button based on persistent flags and event sequence statuses.
-   * 
-   * This method retrieves the following values from StateManager:
-   * - event_welcome_status (default "not_started")
-   * - event_mirror_status
-   * - event_repeating_status
-   * - event_final_status
-   * 
-   * Then it applies the following logic:
-   * - If gameFinalized, postButtonDisabled or finalStatus is "in_progress" or "finished" → disable.
-   * - If welcome is "not_started" → disable.
-   * - If welcome is "in_progress" and mirror is "not_started" → enable (to start mirror quest).
-   * - If mirror is "in_progress" → disable.
-   * - If mirror is "finished" or welcome is "finished", and repeating is "not_started" or "in_progress" → enable.
-   * - Otherwise, disable.
-   * 
-   * The method logs the input flags and persists the final state.
-   *
-   * @param {boolean} isEnabled - Base flag (не используется, если условия последовательности переопределяют).
-   */
   setPostButtonEnabled(isEnabled) {
     const postBtn = document.getElementById("post-btn");
     if (postBtn) {
@@ -464,8 +422,6 @@ export class ViewManager {
       const mirrorStatus = StateManager.get("event_mirror_status") || "not_started";
       const repeatingStatus = StateManager.get("event_repeating_status") || "not_started";
       const finalStatus = StateManager.get("event_final_status") || "not_started";
-      
-      console.log("setPostButtonEnabled:", { gameFinalized, postDisabled, welcomeStatus, mirrorStatus, repeatingStatus, finalStatus });
       
       let enablePost = false;
       
@@ -485,14 +441,12 @@ export class ViewManager {
             enablePost = false;
           }
         }
-      } else if (welcomeStatus === "finished") {
+      } else {
         if (repeatingStatus === "not_started" || repeatingStatus === "in_progress") {
           enablePost = true;
         } else {
           enablePost = false;
         }
-      } else {
-        enablePost = false;
       }
       
       postBtn.disabled = !enablePost;
@@ -500,20 +454,12 @@ export class ViewManager {
     }
   }
 
-  /**
-   * restorePostButtonState
-   * Restores the "Post" button state from StateManager.
-   */
   restorePostButtonState() {
     const stored = StateManager.get("postButtonEnabled");
     const isEnabled = stored ? JSON.parse(stored) : false;
     this.setPostButtonEnabled(isEnabled);
   }
 
-  /**
-   * setCameraButtonHighlight
-   * Adds or removes a highlight effect on the camera toggle button.
-   */
   setCameraButtonHighlight(isActive) {
     const cameraBtn = document.getElementById("toggle-camera");
     if (cameraBtn) {
@@ -525,10 +471,6 @@ export class ViewManager {
     }
   }
 
-  /**
-   * setCameraButtonActive
-   * Sets the active state for the "Open Camera" button and saves the state.
-   */
   setCameraButtonActive(isActive) {
     const cameraBtn = document.getElementById("toggle-camera");
     if (cameraBtn) {
@@ -541,20 +483,12 @@ export class ViewManager {
     }
   }
 
-  /**
-   * restoreCameraButtonState
-   * Restores the "Open Camera" button state from StateManager.
-   */
   restoreCameraButtonState() {
     const stored = StateManager.get("cameraButtonActive");
     const isActive = stored ? JSON.parse(stored) : false;
     this.setCameraButtonActive(isActive);
   }
 
-  /**
-   * setShootButtonActive
-   * Sets the active state for the "Shoot" button, enabling or disabling it and saving the state.
-   */
   setShootButtonActive(isActive) {
     const shootBtn = document.getElementById("btn_shoot");
     if (shootBtn) {
@@ -570,10 +504,6 @@ export class ViewManager {
     }
   }
 
-  /**
-   * restoreShootButtonState
-   * Restores the "Shoot" button state from StateManager.
-   */
   restoreShootButtonState() {
     const stored = StateManager.get("shootButtonActive");
     const isActive = stored ? JSON.parse(stored) : false;

@@ -96,10 +96,8 @@ export class GameEventManager {
     }
     console.log("Auto-launching welcome event in 5 seconds...");
     setTimeout(async () => {
-      // Set the initial flag for the welcome event.
       this.app.ghostManager.updateEventStepStatus('welcome', 'in_progress');
       console.log("Welcome event status set to 'in_progress'.");
-      // Launch the welcome event.
       await this.activateEvent("welcome");
     }, 5000);
   }

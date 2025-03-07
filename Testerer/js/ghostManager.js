@@ -45,7 +45,7 @@ export class GhostManager {
       { name: 'repeating', status: 'not_started' },
       { name: 'final', status: 'not_started' }
     ];
-    // Optionally, persist initial sequence.
+    // Persist initial sequence.
     StateManager.set("eventSequence", JSON.stringify(this.eventSequence));
 
     const currentGhost = this.getCurrentGhost();
@@ -58,7 +58,6 @@ export class GhostManager {
    * CURRENT CHANGE: Only the default ghost is created.
    */
   setupGhosts() {
-    // Create a default ghost with ID 1.
     const defaultGhost = {
       id: 1,
       name: "призрак 1", // Default ghost name.
@@ -121,9 +120,9 @@ export class GhostManager {
   /**
    * triggerNextPhenomenon
    * Initiates the next phenomenon (quest step) for the current ghost.
-   * - If the phenomenon index is less than the total phenomena for the ghost, a diary entry is added
-   *   and the progress is updated via ProfileManager.
-   * - If all phenomena are completed, a final diary entry is logged and the final event is triggered.
+   * When all phenomena are completed, if the current event is the mirror quest,
+   * it triggers the post-mirror event to mark the mirror quest as finished and
+   * transition to the repeating quest.
    */
   async triggerNextPhenomenon() {
     const ghost = this.getCurrentGhost();
@@ -131,12 +130,10 @@ export class GhostManager {
       ErrorManager.logError("No ghost found to trigger phenomenon.", "triggerNextPhenomenon");
       return;
     }
-
     if (ghost.isFinished) {
       ErrorManager.logError(`Ghost "${ghost.name}" is already finished; phenomena unavailable.`, "triggerNextPhenomenon");
       return;
     }
-
     if (this.currentPhenomenonIndex < ghost.phenomenaCount) {
       const phenomenonNumber = this.currentPhenomenonIndex + 1;
       const phenomenonEntry = `${ghost.name}: Phenomenon ${phenomenonNumber} - Approach the mirror`;
@@ -144,20 +141,21 @@ export class GhostManager {
       console.log(`Triggered phenomenon for ${ghost.name}: ${phenomenonEntry}`);
 
       this.currentPhenomenonIndex++;
-
-      // Save ghost progress via ProfileManager.
       await this.profileManager.saveGhostProgress({
         ghostId: this.currentGhostId,
         phenomenonIndex: this.currentPhenomenonIndex
       });
 
-      // If all phenomena are completed, log the final entry and trigger the final event.
+      // Если все феномены выполнены, завершаем зеркальный квест
       if (this.currentPhenomenonIndex === ghost.phenomenaCount) {
         const finalEntry = `${ghost.name}: Final phenomenon – ghost finished!`;
         await this.eventManager.addDiaryEntry(finalEntry);
         console.log(finalEntry);
-        console.log(`Triggering final event for ghost "${ghost.name}"...`);
-        await this.app.gameEventManager.activateEvent("ghost_final_event");
+        console.log(`Triggering post-mirror event for ghost "${ghost.name}"...`);
+        // Здесь вместо ghost_final_event запускаем событие PostMirrorEvent,
+        // которое обновит последовательность (пометит зеркальный квест как завершённый
+        // и переключит текущий квест на повторяющийся).
+        await this.app.gameEventManager.activateEvent("post_mirror_event");
       }
     } else {
       ErrorManager.logError(`All phenomena for ghost ${ghost.name} have been completed (index=${this.currentPhenomenonIndex}).`, "triggerNextPhenomenon");
@@ -166,11 +164,8 @@ export class GhostManager {
 
   /**
    * resetGhostChain
-   * Resets the ghost chain:
-   * - Sets the active ghost back to the default.
-   * - Resets the phenomenon index.
-   * - Resets the saved ghost progress via ProfileManager.
-   * - Updates the database with the reset state.
+   * Resets the ghost chain: возвращает активного призрака к дефолту, сбрасывает индекс феноменов
+   * и обновляет сохранённое состояние.
    */
   async resetGhostChain() {
     this.currentGhostId = 1;

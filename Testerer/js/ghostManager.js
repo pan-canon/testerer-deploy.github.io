@@ -14,14 +14,18 @@ import { StateManager } from './stateManager.js';
  */
 export class GhostManager {
   /**
-   * @param {EventManager} eventManager - Manager for diary operations.
+   * @param {number} currentSequenceIndex - The starting index for the event-quest sequence (restored from StateManager).
    * @param {ProfileManager} profileManager - Manager for saving profile/ghost progress.
    * @param {App} app - The main application instance.
    */
-  constructor(eventManager, profileManager, app) {
-    this.eventManager = eventManager;
+  constructor(currentSequenceIndex, profileManager, app) {
+    // New property: current sequence index for event-quest chain
+    this.currentSequenceIndex = currentSequenceIndex;
     this.profileManager = profileManager;
     this.app = app;
+
+    // eventManager will be assigned externally (see App.js)
+    this.eventManager = null;
 
     // Initialize ghost list with only the default ghost.
     this.ghosts = [];
@@ -36,21 +40,18 @@ export class GhostManager {
     const currentGhost = this.getCurrentGhost();
     console.log(`Current active ghost: ${currentGhost ? currentGhost.name : 'not found'}`);
 
-    // NEW: Initialize Event-Quest sequence configuration.
+    // Initialize Event-Quest sequence configuration.
     // Each entry defines a chain: { eventKey, questKey, nextEventKey }
-    // Пример последовательности: событие "welcome" запускает квест "mirror_quest",
-    // по завершении которого автоматически запускается событие "post_repeating_event",
-    // далее событие "post_repeating_event" запускает квест "repeating_quest",
-    // а по его завершении – событие "final_event", которое может запускать финальный квест.
+    // Example: event "welcome" launches quest "mirror_quest",
+    // after which "post_repeating_event" is triggered, etc.
     this.eventQuestSequenceList = [
-      { eventKey: "welcome",         questKey: "mirror_quest",      nextEventKey: "post_repeating_event" },
-      { eventKey: "post_repeating_event", questKey: "repeating_quest",  nextEventKey: "final_event" },
-      { eventKey: "final_event",       questKey: "final_quest",       nextEventKey: null }
+      { eventKey: "welcome", questKey: "mirror_quest", nextEventKey: "post_repeating_event" },
+      { eventKey: "post_repeating_event", questKey: "repeating_quest", nextEventKey: "final_event" },
+      { eventKey: "final_event", questKey: "final_quest", nextEventKey: null }
     ];
 
     // Subscribe to global events for completions.
-    // Предполагается, что GameEventManager и QuestManager по завершении
-    // диспатчат события "gameEventCompleted" и "questCompleted" с detail = ключ.
+    // It is assumed that GameEventManager and QuestManager dispatch "gameEventCompleted" and "questCompleted" events with detail = key.
     document.addEventListener("gameEventCompleted", (e) => {
       this.onEventCompleted(e.detail);
     });
@@ -200,46 +201,95 @@ export class GhostManager {
   // ------------------ New API for Sequential Event and Quest Management ------------------
 
   /**
-   * startEvent - Starts an event using the GameEventManager.
-   * @param {string} eventKey - The key of the event to start.
+   * isNextInSequence - Checks if the given questKey matches the next expected quest in the sequence.
+   * @param {string} questKey - The key of the quest to check.
+   * @returns {boolean} True if the questKey matches the expected quest, false otherwise.
    */
-  startEvent(eventKey) {
-    console.log(`GhostManager: Starting event with key: ${eventKey}`);
-    this.app.gameEventManager.activateEvent(eventKey);
+  isNextInSequence(questKey) {
+    const nextEntry = this.eventQuestSequenceList[this.currentSequenceIndex];
+    return nextEntry && nextEntry.questKey === questKey;
   }
 
   /**
-   * startQuest - Starts a quest using the QuestManager.
+   * isNextEvent - Checks if the given eventKey matches the next expected event in the sequence.
+   * @param {string} eventKey - The key of the event to check.
+   * @returns {boolean} True if the eventKey matches the expected event, false otherwise.
+   */
+  isNextEvent(eventKey) {
+    const nextEntry = this.eventQuestSequenceList[this.currentSequenceIndex];
+    return nextEntry && nextEntry.eventKey === eventKey;
+  }
+
+  /**
+   * startQuest - Starts a quest after checking if it is the next expected quest.
+   * Calls QuestManager.activateQuest and updates the sequence index on success.
    * @param {string} questKey - The key of the quest to start.
    */
-  startQuest(questKey) {
+  async startQuest(questKey) {
+    if (!this.isNextInSequence(questKey)) {
+      console.error(`Quest "${questKey}" is not next in sequence.`);
+      return;
+    }
     console.log(`GhostManager: Starting quest with key: ${questKey}`);
-    this.app.questManager.activateQuest(questKey);
+    await this.app.questManager.activateQuest(questKey);
+    // Update the sequence index and save to StateManager.
+    this.currentSequenceIndex++;
+    StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.currentSequenceIndex));
+  }
+
+  /**
+   * startEvent - Starts an event after checking if it is the next expected event.
+   * Calls GameEventManager.activateEvent.
+   * @param {string} eventKey - The key of the event to start.
+   */
+  async startEvent(eventKey) {
+    if (!this.isNextEvent(eventKey)) {
+      console.error(`Event "${eventKey}" is not next in sequence.`);
+      return;
+    }
+    console.log(`GhostManager: Starting event with key: ${eventKey}`);
+    await this.app.gameEventManager.activateEvent(eventKey);
+    // Optionally, update the sequence index here if needed.
+  }
+
+  /**
+   * handlePostButtonClick - Handler for the "Post" button click.
+   * Determines the next sequence element and starts the corresponding quest.
+   */
+  async handlePostButtonClick() {
+    const nextEntry = this.eventQuestSequenceList[this.currentSequenceIndex];
+    if (!nextEntry) {
+      console.warn("No next sequence entry found.");
+      return;
+    }
+    console.log(`GhostManager: Handling Post button click. Next expected quest: ${nextEntry.questKey}`);
+    await this.startQuest(nextEntry.questKey);
   }
 
   /**
    * onEventCompleted - Handler called when a game event completes.
-   * It searches for a linked quest in the sequence and starts it.
+   * If the completed event matches the expected event, starts the corresponding quest.
    * @param {string} eventKey - The key of the completed event.
    */
   onEventCompleted(eventKey) {
     console.log(`GhostManager: Event completed with key: ${eventKey}`);
-    const link = this.eventQuestSequenceList.find(link => link.eventKey === eventKey);
-    if (link && link.questKey) {
-      this.startQuest(link.questKey);
+    const nextEntry = this.eventQuestSequenceList[this.currentSequenceIndex];
+    if (nextEntry && nextEntry.eventKey === eventKey && nextEntry.questKey) {
+      this.startQuest(nextEntry.questKey);
     }
   }
 
   /**
    * onQuestCompleted - Handler called when a quest completes.
-   * It searches for a linked next event in the sequence and starts it.
+   * If the completed quest matches the expected quest and there is a next event,
+   * starts the next event.
    * @param {string} questKey - The key of the completed quest.
    */
   onQuestCompleted(questKey) {
     console.log(`GhostManager: Quest completed with key: ${questKey}`);
-    const link = this.eventQuestSequenceList.find(link => link.questKey === questKey);
-    if (link && link.nextEventKey) {
-      this.startEvent(link.nextEventKey);
+    const nextEntry = this.eventQuestSequenceList[this.currentSequenceIndex];
+    if (nextEntry && nextEntry.questKey === questKey && nextEntry.nextEventKey) {
+      this.startEvent(nextEntry.nextEventKey);
     }
   }
 }

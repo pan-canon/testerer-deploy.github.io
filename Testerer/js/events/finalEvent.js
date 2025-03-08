@@ -11,6 +11,7 @@ import { ErrorManager } from '../errorManager.js';
  * and notifies the user via the ViewManager.
  *
  * NOTE: FinalEvent is part of the sequential chain managed by GhostManager.
+ * It only performs its assigned tasks and signals completion via the "gameEventCompleted" event.
  */
 export class FinalEvent extends BaseEvent {
   /**
@@ -32,6 +33,8 @@ export class FinalEvent extends BaseEvent {
    * Logs the event in the diary, sets the finalized flag,
    * triggers a ghost fade-out effect, finishes the current ghost,
    * disables active buttons via ViewManager, and notifies the user.
+   *
+   * At the end, it dispatches a "gameEventCompleted" event to signal completion.
    *
    * @returns {Promise<void>}
    */
@@ -57,12 +60,12 @@ export class FinalEvent extends BaseEvent {
     // Mark the current ghost as finished.
     await this.app.ghostManager.finishCurrentGhost();
 
-    // Disable active buttons (e.g., Post button) via ViewManager.
+    // Disable active buttons (e.g., the "Post" button) via ViewManager.
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
       this.app.viewManager.setPostButtonEnabled(false);
     }
 
-    // Optionally, re-sync quest state so UI is updated instantly:
+    // Optionally, re-sync quest state so that the UI updates instantly.
     if (this.app.questManager && typeof this.app.questManager.syncQuestState === "function") {
       await this.app.questManager.syncQuestState();
     }
@@ -73,5 +76,8 @@ export class FinalEvent extends BaseEvent {
     } else {
       console.log("🎉 Congratulations, the scenario is finished!");
     }
+
+    // Dispatch a custom event to signal that the final event has completed.
+    document.dispatchEvent(new CustomEvent("gameEventCompleted", { detail: this.key }));
   }
 }

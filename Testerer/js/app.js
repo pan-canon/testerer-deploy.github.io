@@ -25,7 +25,7 @@ import { ShowProfileModal } from './showProfileModal.js';
  * Responsible for initializing core managers, setting up the UI,
  * loading the persisted state, and handling primary navigation and events.
  *
- * NOTE: Новое API для последовательного управления событиями и квестами реализовано в GhostManager.
+ * NOTE: A new API for sequential management of events and quests is implemented in GhostManager.
  */
 export class App {
   constructor() {
@@ -51,7 +51,9 @@ export class App {
 
     // Initialize GhostManager.
     // NOTE: GhostManager now provides a convenient API for sequential management of events and quests.
-    this.ghostManager = new GhostManager(null, this.profileManager, this);
+    // Restore current sequence index from StateManager (default to 0 if not set)
+    const savedSequenceIndex = parseInt(StateManager.get('currentSequenceIndex'), 10) || 0;
+    this.ghostManager = new GhostManager(savedSequenceIndex, this.profileManager, this);
     
     // Create EventManager instance and pass required dependencies.
     this.eventManager = new EventManager(
@@ -110,6 +112,7 @@ export class App {
     this.loadAppState();
 
     // Synchronize quest state from the database via QuestManager.
+    // This call ensures UI states (e.g., button disabled/enabled) are updated.
     await this.questManager.syncQuestState();
 
     // Update UI: Show the toggle camera button and update the diary display.

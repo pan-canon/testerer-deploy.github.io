@@ -1,5 +1,4 @@
 import { BaseEvent } from '../events/baseEvent.js';
-// CHANGED: вместо window.StateManager, напрямую используем
 import { StateManager } from '../stateManager.js';
 
 /**
@@ -51,7 +50,8 @@ export class FinalQuest extends BaseEvent {
    *  2) Logs the completion in the diary.
    *  3) Sets the "gameFinalized" flag via StateManager.
    *  4) Calls finishCurrentGhost from GhostManager to mark the scenario as finished.
-   *  5) Notifies the user via ViewManager (and optionally disables or re-syncs the UI).
+   *  5) Notifies the user via ViewManager.
+   *  6) Dispatches a "questCompleted" event to signal completion to GhostManager.
    *
    * @returns {Promise<void>}
    */
@@ -74,7 +74,7 @@ export class FinalQuest extends BaseEvent {
     // Log the final quest completion in the diary.
     await this.eventManager.addDiaryEntry(`${this.key}_completed`, true);
 
-    // CHANGED: Ставим флаг напрямую, без window.
+    // Set the game as finalized.
     StateManager.set("gameFinalized", "true");
     
     // Mark the current ghost as finished via GhostManager.
@@ -82,16 +82,19 @@ export class FinalQuest extends BaseEvent {
       await this.app.ghostManager.finishCurrentGhost();
     }
 
-    // Notify the user that the scenario is finished via ViewManager.
+    // Notify the user that the scenario has ended via ViewManager.
     if (this.app.viewManager && typeof this.app.viewManager.showNotification === "function") {
       this.app.viewManager.showNotification("🎉 Final quest completed! Scenario ended!");
     } else {
       console.log("🎉 Final quest completed! Scenario ended!");
     }
 
-    // ADDED (опционально): Синхронизируем UI, чтобы «Пост» и др. кнопки тут же отключились.
+    // Optionally, synchronize the UI so that "Post" and other buttons are disabled.
     if (this.app.questManager && typeof this.app.questManager.syncQuestState === "function") {
       await this.app.questManager.syncQuestState();
     }
+
+    // Dispatch a custom "questCompleted" event to signal that the final quest has finished.
+    document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
   }
 }

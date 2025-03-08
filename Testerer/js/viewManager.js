@@ -14,9 +14,9 @@ import { ErrorManager } from './errorManager.js';
  * All UI updates must be performed exclusively through these methods,
  * ensuring a single source of truth for UI operations.
  *
- * NOTE: Управление последовательными цепочками событий и квестов реализовано через GhostManager,
- *       поэтому ViewManager остаётся неизменным и продолжает отвечать только за UI,
- *       но теперь дополнен методами для решения конкретных проблем с кнопками.
+ * NOTE: Sequential linking of events and quests is handled by GhostManager,
+ *       so ViewManager remains solely responsible for UI updates,
+ *       now enhanced with methods to persist and restore button states.
  */
 export class ViewManager {
   constructor() {
@@ -56,10 +56,9 @@ export class ViewManager {
     // --- Camera Manager Reference (to be set externally) ---
     this.cameraManager = null;
 
-    // ADDED: По умолчанию (после регистрации) кнопку «Пост» делаем неактивной.
-    // Если при загрузке нужно иначе, это переопределится в syncQuestState() или в App.showMainScreen().
+    // By default, disable the "Post" button after registration.
     if (this.postBtn) {
-      this.postBtn.disabled = true; // Отключаем «Пост» по умолчанию
+      this.postBtn.disabled = true;
     }
   }
 
@@ -437,17 +436,22 @@ export class ViewManager {
    * setPostButtonEnabled
    * Enables or disables the "Post" button.
    *
-   * При включении нужно учитывать флаг gameFinalized и postButtonDisabled.
+   * This method not only updates the UI but also saves the new state in StateManager.
+   * It considers flags such as gameFinalized and postButtonDisabled.
+   *
+   * @param {boolean} isEnabled - If true, the button should be enabled.
    */
   setPostButtonEnabled(isEnabled) {
     const postBtn = document.getElementById("post-btn");
     if (postBtn) {
       const gameFinalized = StateManager.get("gameFinalized") === "true";
-      const postDisabled = StateManager.get("postButtonDisabled") === "true";
-      if (gameFinalized || postDisabled) {
+      if (gameFinalized) {
         postBtn.disabled = true;
+        StateManager.set("postButtonDisabled", "true");
       } else {
         postBtn.disabled = !isEnabled;
+        // Save the state: if isEnabled is true, then postButtonDisabled should be "false"
+        StateManager.set("postButtonDisabled", isEnabled ? "false" : "true");
       }
     }
   }
@@ -552,13 +556,13 @@ export class ViewManager {
     }
   }
 
-  // CHANGED: Остановка Mirror-UI теперь сбрасывает активность камеры и кнопки Shoot
+  // CHANGED: Stopping Mirror UI now resets camera and shoot button states.
   stopMirrorQuestUI(statusElementId) {
     const statusElem = document.getElementById(statusElementId);
     if (statusElem) {
       statusElem.style.display = "none";
     }
-    // ADDED: сбрасываем кнопки камеры и "Заснять"
+    // Reset camera and shoot button states.
     this.setCameraButtonActive(false);
     this.setShootButtonActive(false);
   }
@@ -596,22 +600,22 @@ export class ViewManager {
     }
   }
 
-  // CHANGED: Остановка Repeating-UI теперь сбрасывает активность камеры и shoot
+  // CHANGED: Stopping Repeating UI now resets camera and shoot button states.
   stopRepeatingQuestUI(statusElementId) {
     const statusElem = document.getElementById(statusElementId);
     if (statusElem) {
       statusElem.style.display = "none";
     }
-    // ADDED: сбрасываем кнопки камеры и "Заснять"
+    // Reset camera and shoot button states.
     this.setCameraButtonActive(false);
     this.setShootButtonActive(false);
   }
 
-  // ADDED: Удобный метод массового обновления UI при завершении шага/квеста
+  // ADDED: Convenient method for mass UI update after quest stage completion.
   /**
    * updateUIAfterQuestStage
-   * Позволяет одной командой включить/выключить «Пост», «Открыть камеру», «Заснять» и пр.
-   * Пример использования:
+   * Allows simultaneous updating of "Post", "Open Camera", "Shoot", etc.
+   * Example usage:
    *    this.app.viewManager.updateUIAfterQuestStage({
    *      postEnabled: true,
    *      cameraActive: false,

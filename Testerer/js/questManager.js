@@ -11,11 +11,11 @@ import { ErrorManager } from './errorManager.js';
  * QuestManager class
  * 
  * Responsible for managing quest activation, state updates, and UI restoration.
- * All UI updates (e.g. disabling/enabling buttons) are delegated to ViewManager,
+ * All UI updates (e.g., disabling/enabling buttons) are delegated to ViewManager,
  * and all state access uses StateManager.
  *
- * NOTE: Последовательное связывание событий и квестов теперь осуществляется через API GhostManager.
- *       QuestManager остаётся ответственным за непосредственную активацию квестов и обновление UI.
+ * NOTE: Sequential linking of events and quests is now handled exclusively by the GhostManager.
+ *       QuestManager is solely responsible for the direct activation of quests and updating the UI.
  */
 export class QuestManager {
   /**
@@ -46,7 +46,7 @@ export class QuestManager {
       this.restoreRepeatingQuestUI();
     }
 
-    // Optionally, restore additional UI states (e.g. camera button state).
+    // Optionally, restore additional UI states (e.g., camera button state).
     if (this.app.viewManager && typeof this.app.viewManager.restoreCameraButtonState === 'function') {
       this.app.viewManager.restoreCameraButtonState();
     }
@@ -64,7 +64,7 @@ export class QuestManager {
     };
     cameraManager.onCameraClosed = () => {
       console.log("[QuestManager] onCameraClosed signal received.");
-      // ADDED (пример, если хотим что-то делать при закрытии камеры)
+      // Example: You may want to deactivate the camera button when camera is closed.
       // this.app.viewManager.setCameraButtonActive(false);
     };
   }
@@ -73,9 +73,9 @@ export class QuestManager {
    * syncQuestState
    * Synchronizes the current quest state from the database.
    * 
-   * - Checks if game is finalized -> disable Post
-   * - Checks if there's an active quest (mirror or repeating) -> disable Post
-   * - Otherwise -> enable Post
+   * - If game is finalized -> disable Post button.
+   * - If there's an active quest (mirror or repeating) -> disable Post button.
+   * - Otherwise -> enable Post button.
    */
   async syncQuestState() {
     // Check if the game has been finalized (final quest completed)
@@ -113,6 +113,7 @@ export class QuestManager {
   /**
    * activateQuest
    * Finds a quest by its key and activates it.
+   * This method simply activates the quest without performing sequence checks.
    * @param {string} key - The quest key.
    */
   async activateQuest(key) {
@@ -122,8 +123,7 @@ export class QuestManager {
       return;
     }
     await quest.activate();
-
-    // ADDED: После активации квеста сразу обновим UI, чтобы "Пост" стал disabled (если квест активен)
+    // After quest activation, update the UI state.
     await this.syncQuestState();
   }
 
@@ -139,83 +139,8 @@ export class QuestManager {
       return;
     }
     await quest.finish();
-
-    // ADDED: После завершения квеста заново синхронизируем UI
+    // After quest completion, update the UI state.
     await this.syncQuestState();
-  }
-
-  /**
-   * handleShootMirrorQuest
-   * Called when the "Shoot" button is clicked during the mirror quest.
-   */
-  async handleShootMirrorQuest() {
-    console.log("[QuestManager] handleShootMirrorQuest() called.");
-    await this.checkQuest("mirror_quest");
-    // CHANGED: теперь после checkQuest() → syncQuestState() вызывается в самом checkQuest().
-  }
-
-  /**
-   * handlePostButtonClick
-   * Handles the click event for the "Post" button.
-   * 
-   * - Immediately disables "Post".
-   * - Checks if game is finalized => abort.
-   * - Checks mirrorQuestReady => if false => error.
-   * - If repeating quest is finished => error.
-   * - Otherwise removes mirrorQuestReady, activates camera, and starts the quest.
-   */
-  async handlePostButtonClick() {
-    // If game is finalized, do not process the button click.
-    if (StateManager.get("gameFinalized") === "true") {
-      ErrorManager.showError("The game has been finalized. No further posts are allowed.");
-      return;
-    }
-
-    // Disable the Post button immediately via ViewManager.
-    if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
-      this.app.viewManager.setPostButtonEnabled(false);
-      console.log("[QuestManager] Post button disabled immediately after click.");
-    }
-    // Set persistent flag to indicate Post button is disabled.
-    StateManager.set("postButtonDisabled", "true");
-
-    // If the repeating quest is finished, do not start a new cycle.
-    const repeatingQuest = this.quests.find(q => q.key === "repeating_quest");
-    if (repeatingQuest && repeatingQuest.finished) {
-      ErrorManager.showError("Repeating quest is finished. Final event has been activated.");
-      return;
-    }
-    
-    // Check the readiness flag for the mirror quest.
-    const isReady = StateManager.get("mirrorQuestReady") === "true";
-    if (!isReady) {
-      ErrorManager.showError("Repeating quest is not ready.");
-      return;
-    }
-    
-    // Remove the readiness flag immediately to prevent multiple activations.
-    StateManager.remove("mirrorQuestReady");
-    
-    // Activate the "Open Camera" button via ViewManager to indicate camera readiness.
-    if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {
-      this.app.viewManager.setCameraButtonActive(true);
-    }
-    
-    // Determine which quest to activate based on the "isRepeatingCycle" flag.
-    if (StateManager.get("isRepeatingCycle") === "true") {
-      console.log("[QuestManager] Checking status for repeating quest...");
-      const status = await repeatingQuest.getCurrentQuestStatus();
-      console.log("[QuestManager] Current repeating quest status:", status);
-      console.log("[QuestManager] Triggering repeating quest from handlePostButtonClick.");
-      await this.activateQuest("repeating_quest");
-    } else {
-      const mirrorQuest = this.quests.find(q => q.key === "mirror_quest");
-      console.log("[QuestManager] Checking status for mirror quest...");
-      const status = await mirrorQuest.getCurrentQuestStatus();
-      console.log("[QuestManager] Current mirror quest status:", status);
-      console.log("[QuestManager] Triggering mirror quest from handlePostButtonClick.");
-      await this.activateQuest("mirror_quest");
-    }
   }
 
   /**

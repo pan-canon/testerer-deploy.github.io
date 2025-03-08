@@ -9,8 +9,22 @@ import { ErrorManager } from './errorManager.js';
  *
  * Note: Values are stored as strings, so for objects or arrays use JSON.stringify() before setting,
  * and JSON.parse() when retrieving.
+ *
+ * Default keys:
+ * - currentSequenceIndex: Index for the current sequence of events/quests.
+ * - postButtonDisabled: Flag to disable/enable the "Post" button.
+ * - cameraButtonActive: Flag indicating if the camera button is active.
+ * - mirrorQuestReady: Flag indicating if the mirror quest is ready.
  */
 export class StateManager {
+  // Define default keys as static constants for ease of use across the application.
+  static KEYS = {
+    CURRENT_SEQUENCE_INDEX: 'currentSequenceIndex',
+    POST_BUTTON_DISABLED: 'postButtonDisabled',
+    CAMERA_BUTTON_ACTIVE: 'cameraButtonActive',
+    MIRROR_QUEST_READY: 'mirrorQuestReady'
+  };
+
   /**
    * Retrieves the value associated with the specified key from localStorage.
    *

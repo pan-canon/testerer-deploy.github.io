@@ -1,4 +1,3 @@
-// --- Event Modules ---
 import { WelcomeEvent } from './events/welcomeEvent.js';
 import { PostMirrorEvent } from './events/postMirrorEvent.js';
 import { PostRepeatingEvent } from './events/postRepeatingEvent.js';
@@ -14,8 +13,8 @@ import { ErrorManager } from './errorManager.js';
  * It handles auto-launching the welcome event after registration by checking state flags
  * via StateManager, and activates events using the provided EventManager.
  *
- * NOTE: Последовательное связывание событий и квестов теперь реализовано через API GhostManager.
- *       Поэтому этот класс отвечает лишь за активацию конкретного события по ключу.
+ * NOTE: Sequential linking of events and quests is now handled by GhostManager.
+ *       This class is solely responsible for activating a specific event by its key.
  */
 export class GameEventManager {
   /**
@@ -28,7 +27,7 @@ export class GameEventManager {
     this.app = appInstance;
     this.languageManager = languageManager;
     
-    // Список одноразовых ивентов (welcome, postMirror, postRepeating, final).
+    // List of one-time events (welcome, postMirror, postRepeating, final).
     this.events = [
       new WelcomeEvent(this.eventManager, this.app, this.languageManager),
       new PostMirrorEvent(this.eventManager, this.app),
@@ -39,10 +38,10 @@ export class GameEventManager {
 
   /**
    * activateEvent
-   * Активирует ивент по его ключу (key).
-   * Не вызывает последующие ивенты автоматически (цепочка – через GhostManager).
+   * Activates an event by its key.
+   * Does not automatically trigger subsequent events (sequence is managed by GhostManager).
    *
-   * @param {string} key - Ключ ивента.
+   * @param {string} key - The event key.
    */
   async activateEvent(key) {
     const event = this.events.find(e => e.key === key);
@@ -56,9 +55,9 @@ export class GameEventManager {
 
   /**
    * startQuest
-   * Пример вспомогательного метода для запуска квеста конкретного призрака.
-   * Проверяем, нет ли ивента с таким же ключом (ghost_1_quest, ghost_2_quest...).
-   * Если ивента нет, запускаем квест напрямую через QuestManager.
+   * Example helper method for starting a ghost quest.
+   * Checks if an event with a specific key exists for the ghost (e.g., ghost_1_quest, ghost_2_quest, etc.).
+   * If not, starts the quest directly via QuestManager.
    */
   async startQuest() {
     const ghost = this.app.ghostManager.getCurrentGhost();
@@ -67,14 +66,14 @@ export class GameEventManager {
     if (event) {
       await this.activateEvent(questKey);
     } else {
-      // Иначе сразу через QuestManager
+      // If no matching event is found, directly activate the quest.
       await this.app.questManager.activateQuest(questKey);
     }
   }
 
   /**
    * startMirrorQuest
-   * Вспомогательный метод для явного запуска mirror_quest (если нужно).
+   * Helper method for explicitly starting the mirror quest (if needed).
    */
   async startMirrorQuest() {
     await this.activateEvent('mirror_quest');
@@ -83,16 +82,15 @@ export class GameEventManager {
   
   /**
    * autoLaunchWelcomeEvent
-   * Автоматически запускает welcome-событие (спустя 5с) после регистрации,
-   * если "welcomeDone" ещё не установлен.
+   * Automatically launches the welcome event (after 5 seconds) post-registration,
+   * if the "welcomeDone" flag is not set.
    *
-   * РАНЬШЕ тут включалась кнопка «Пост», если welcomeDone === "true". 
-   * Теперь убираем этот код, чтобы кнопка «Пост» не включалась «преждевременно».
+   * NOTE: Previously, this method also enabled the "Post" button if welcomeDone === "true".
+   * Now that code has been removed to prevent premature activation.
    */
   async autoLaunchWelcomeEvent() {
     if (StateManager.get("welcomeDone") === "true") {
       console.log("Welcome event already completed; auto-launch skipped.");
-      // Удалили логику автоматической активации кнопки «Пост».
       return;
     }
     console.log("Auto-launching welcome event in 5 seconds...");

@@ -8,7 +8,8 @@ import { ErrorManager } from '../errorManager.js';
  * This event publishes a ghost post and sets flags to start the mirror quest.
  * It updates the UI via ViewManager and uses StateManager to set the necessary flags.
  *
- * NOTE: This event is now part of the sequential chain managed by GhostManager.
+ * NOTE: This event is part of the sequential chain managed by GhostManager.
+ * It does not handle sequence logic; it only performs its task and signals completion.
  */
 export class PostMirrorEvent extends BaseEvent {
   /**
@@ -22,35 +23,33 @@ export class PostMirrorEvent extends BaseEvent {
   }
 
   async activate() {
-    // Если событие уже записано в дневник, не активируем повторно.
+    // If the event is already logged in the diary, do not activate it again.
     if (this.eventManager.isEventLogged(this.key)) {
       console.log(`[PostMirrorEvent] Event '${this.key}' is already logged, skipping activation.`);
       return;
     }
 
     console.log(`[PostMirrorEvent] Activating event '${this.key}'.`);
-    // Запись в дневник как "ghost post".
+    // Log the event as a ghost post.
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Ставим нужные флаги в StateManager.
+    // Set the necessary flags in StateManager.
     StateManager.set("mirrorQuestReady", "true");
     StateManager.set("isRepeatingCycle", "true");
 
-    // Включаем «Пост» через ViewManager.
+    // Enable the "Post" button via ViewManager.
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
       this.app.viewManager.setPostButtonEnabled(true);
     }
 
-    // Вызываем эффект зеркала (при условии, что он реализован).
+    // Trigger the mirror effect if it is implemented.
     if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === 'function') {
       this.app.visualEffectsManager.triggerMirrorEffect();
     }
 
-    // (Опционально) пересинхронизировать квест-состояние:
-    // if (this.app.questManager && typeof this.app.questManager.syncQuestState === "function") {
-    //   await this.app.questManager.syncQuestState();
-    // }
-
     console.log("[PostMirrorEvent] Mirror quest cycle ended; waiting for user action to trigger repeating quest.");
+
+    // Dispatch a custom event to signal the completion of this event.
+    document.dispatchEvent(new CustomEvent("gameEventCompleted", { detail: this.key }));
   }
 }

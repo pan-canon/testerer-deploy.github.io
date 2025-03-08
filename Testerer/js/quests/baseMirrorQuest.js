@@ -30,7 +30,7 @@ export class BaseMirrorQuest extends BaseEvent {
 
   /**
    * registerEvents
-   * If "mirrorQuestActive" flag is set, starts the check loop when camera becomes ready.
+   * If the "mirrorQuestActive" flag is set, starts the check loop when the camera becomes ready.
    */
   registerEvents() {
     document.addEventListener('cameraReady', () => {
@@ -42,8 +42,8 @@ export class BaseMirrorQuest extends BaseEvent {
 
   /**
    * activate
-   * Activates the mirror quest if not yet logged, sets mirrorQuestActive,
-   * creates an "active" quest record in DB.
+   * Activates the mirror quest if it is not yet logged, sets the mirrorQuestActive flag,
+   * and creates an "active" quest record in the database.
    */
   async activate() {
     if (!this.eventManager.isEventLogged(this.key)) {
@@ -64,7 +64,8 @@ export class BaseMirrorQuest extends BaseEvent {
 
   /**
    * startCheckLoop
-   * Shows UI for mirror quest (via ViewManager) and starts a loop checking "compareFrameInternally" every 2s.
+   * Displays the mirror quest UI (via ViewManager) and starts a loop that checks 
+   * "compareFrameInternally" every 2 seconds.
    */
   startCheckLoop() {
     if (this.checkInterval) return; // Already running.
@@ -73,7 +74,7 @@ export class BaseMirrorQuest extends BaseEvent {
       this.app.viewManager.startMirrorQuestUI({
         statusElementId: this.statusElementId,
         shootButtonId: this.shootButtonId,
-        onShoot: () => this.finish() // When user clicks shoot
+        onShoot: () => this.finish() // When user clicks the shoot button, finish the quest.
       });
     }
 
@@ -92,7 +93,7 @@ export class BaseMirrorQuest extends BaseEvent {
 
   /**
    * stopCheckLoop
-   * Clears the interval, hides quest UI via ViewManager.
+   * Clears the interval and hides the quest UI via ViewManager.
    */
   stopCheckLoop() {
     if (this.checkInterval) {
@@ -115,7 +116,8 @@ export class BaseMirrorQuest extends BaseEvent {
 
   /**
    * compareFrameInternally
-   * Grabs the current camera frame, compares to app.selfieData, returns boolean success/fail.
+   * Captures the current camera frame, converts it to grayscale, compares it to the saved selfieData,
+   * and returns a boolean indicating success or failure.
    */
   async compareFrameInternally() {
     if (!this.app.isCameraOpen) {
@@ -150,9 +152,10 @@ export class BaseMirrorQuest extends BaseEvent {
 
   /**
    * updateUIAfterFinish
-   * Calls a custom "updateMirrorQuestUIAfterFinish" in ViewManager (if exists).
-   * 
-   * @param {boolean} success - was the final check successful?
+   * Calls a custom "updateMirrorQuestUIAfterFinish" method in ViewManager (if available)
+   * to update UI elements after quest completion.
+   *
+   * @param {boolean} success - Indicates whether the final check was successful.
    */
   updateUIAfterFinish(success) {
     if (this.app.viewManager && typeof this.app.viewManager.updateMirrorQuestUIAfterFinish === 'function') {
@@ -166,20 +169,22 @@ export class BaseMirrorQuest extends BaseEvent {
 
   /**
    * finish
-   * - Stop check loop
-   * - Compare final frame (optional)
-   * - Log diary entry (success/fail)
-   * - UI cleanup
-   * - Clear mirrorQuestActive
-   * - Mark quest as finished in DB
-   * - Trigger next event if success
-   * - [ADDED] syncQuestState to refresh UI (enable Post if quest done)
+   * Finalizes the mirror quest:
+   * - Stops the check loop.
+   * - Performs a final status check.
+   * - Logs a diary entry indicating success or failure.
+   * - Updates the UI (e.g., disables camera highlights, resets buttons).
+   * - Clears the mirrorQuestActive flag.
+   * - Marks the quest as finished in the database.
+   * - Triggers the next event if the check is successful.
+   * - Synchronizes the quest state to update UI (e.g., enabling the "Post" button).
+   * - Dispatches a "questCompleted" event to signal completion to GhostManager.
    */
   async finish() {
     if (this.finished) return;
     this.finished = true;
 
-    this.stopCheckLoop();  // Отключаем UI квеста
+    this.stopCheckLoop();  // Stop the quest UI check loop.
 
     const success = await this.checkStatus(); 
     const ghost = this.app.ghostManager.getCurrentGhost();
@@ -194,18 +199,18 @@ export class BaseMirrorQuest extends BaseEvent {
       await this.eventManager.addDiaryEntry(`user_post_failed: ${randomLetter}`, false);
     }
 
-    // UI updates (e.g., disabling camera highlights)
+    // Update the UI after finishing the quest.
     this.updateUIAfterFinish(success);
 
-    // Сбрасываем кнопку «Открыть камеру», если нужно
+    // Reset the "Open Camera" button if necessary.
     if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {
       this.app.viewManager.setCameraButtonActive(false);
     }
 
-    // Убираем флаг "mirrorQuestActive"
+    // Remove the "mirrorQuestActive" flag.
     StateManager.remove("mirrorQuestActive");
 
-    // Отмечаем квест в БД как finished
+    // Mark the quest as finished in the database.
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
       status: "finished",
@@ -213,19 +218,22 @@ export class BaseMirrorQuest extends BaseEvent {
       total_stages: 1
     });
 
-    // Если успешно - запускаем post_mirror_event
+    // If the check was successful, trigger the "post_mirror_event".
     if (success) {
       this.app.gameEventManager.activateEvent("post_mirror_event");
     }
 
-    // ADDED: Чтобы кнопка «Пост» обновилась без перезагрузки
-    // (если нет других активных квестов, она включится)
+    // Synchronize the quest state so that the "Post" button updates without page reload.
     await this.app.questManager.syncQuestState();
+
+    // Dispatch a custom event to signal that the quest has been completed.
+    document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
   }
 
   /**
    * getCurrentQuestStatus
-   * Returns quest state from DB + local "finished" and "mirrorQuestActive" flags.
+   * Retrieves the quest state from the database along with local flags ("finished" and "mirrorQuestActive").
+   * @returns {Promise<Object>} An object containing quest status information.
    */
   async getCurrentQuestStatus() {
     const record = this.app.databaseManager.getQuestRecord(this.key);
@@ -240,7 +248,9 @@ export class BaseMirrorQuest extends BaseEvent {
 
   /**
    * getRandomLetter
-   * Utility: returns a random letter from ghost's name.
+   * Utility function: returns a random letter from the ghost's name.
+   * @param {string} name - The ghost's name.
+   * @returns {string} A random letter from the name.
    */
   getRandomLetter(name) {
     if (!name) return "";

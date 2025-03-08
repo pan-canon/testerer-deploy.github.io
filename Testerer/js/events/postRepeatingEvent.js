@@ -11,7 +11,8 @@ import { ErrorManager } from '../errorManager.js';
  * - Otherwise, it resets the "mirrorQuestReady" flag, re-enables the "Post" button via ViewManager,
  *   and triggers the mirror visual effect.
  *
- * NOTE: This event is now part of the sequential chain managed by GhostManager.
+ * NOTE: This event is part of the sequential chain managed by GhostManager.
+ * It only performs its assigned tasks and signals completion.
  */
 export class PostRepeatingEvent extends BaseEvent {
   /**
@@ -25,35 +26,35 @@ export class PostRepeatingEvent extends BaseEvent {
   }
 
   async activate() {
-    // Если событие уже есть в дневнике, пропускаем активацию.
+    // If the event is already logged in the diary, skip activation.
     if (this.eventManager.isEventLogged(this.key)) {
       console.log(`[PostRepeatingEvent] Event '${this.key}' is already logged, skipping activation.`);
       return;
     }
     console.log(`[PostRepeatingEvent] Activating event '${this.key}'.`);
 
-    // Запись в дневник как "ghost post".
+    // Log the event as a ghost post.
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Проверяем, завершён ли призрак
+    // Check if the current ghost is finished.
     const ghost = this.app.ghostManager.getCurrentGhost();
     if (ghost && ghost.isFinished) {
-      // Если призрак завершён — запускаем финальный квест
+      // If the ghost is finished, trigger the final quest.
       console.log("[PostRepeatingEvent] Ghost is finished, triggering final quest.");
       await this.app.questManager.activateQuest("final_quest");
     } else {
-      // Иначе готовим систему к следующему циклу повторяющегося квеста.
+      // Otherwise, prepare the system for the next cycle of the repeating quest.
       
-      // Ставим флаг mirrorQuestReady
+      // Set the mirrorQuestReady flag.
       StateManager.set("mirrorQuestReady", "true");
-      // (Флаг "isRepeatingCycle" остаётся true для повторного цикла)
+      // (The "isRepeatingCycle" flag remains true for the repeating cycle.)
       
-      // Включаем кнопку «Пост» через ViewManager
+      // Enable the "Post" button via ViewManager.
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
         this.app.viewManager.setPostButtonEnabled(true);
       }
       
-      // Вызываем визуальный «mirror effect» (если есть)
+      // Trigger the mirror visual effect, if available.
       if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === "function") {
         this.app.visualEffectsManager.triggerMirrorEffect();
       }
@@ -61,9 +62,12 @@ export class PostRepeatingEvent extends BaseEvent {
       console.log("[PostRepeatingEvent] Repeating quest cycle ended; waiting for user action.");
     }
 
-    // (Опционально) Если нужно сразу пересинхронизировать состояние:
+    // Optionally, you may re-sync quest state here.
     // if (this.app.questManager && typeof this.app.questManager.syncQuestState === "function") {
     //   await this.app.questManager.syncQuestState();
     // }
+
+    // Dispatch a custom event to signal the completion of this event.
+    document.dispatchEvent(new CustomEvent("gameEventCompleted", { detail: this.key }));
   }
 }

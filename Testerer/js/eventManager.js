@@ -7,6 +7,8 @@ import { ErrorManager } from './errorManager.js';
  * - Adds diary entries (both user and ghost posts).
  * - Delegates the diary UI update to ViewManager.
  * - Can trigger short events (e.g., ghost quests) if needed.
+ *
+ * NOTE: The sequential linking of events is managed by GhostManager.
  */
 export class EventManager {
   /**

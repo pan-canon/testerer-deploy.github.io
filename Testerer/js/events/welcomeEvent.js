@@ -11,6 +11,7 @@ import { ErrorManager } from '../errorManager.js';
  * is launched only once per registration cycle.
  *
  * NOTE: This event is now part of the sequential chain managed by GhostManager.
+ * It does not handle sequence logic; it only performs its task and signals completion.
  */
 export class WelcomeEvent extends BaseEvent {
   /**
@@ -22,22 +23,21 @@ export class WelcomeEvent extends BaseEvent {
     super(eventManager);
     this.app = appInstance;
     this.languageManager = languageManager;
-    // Уникальный ключ для welcome-события.
+    // Unique key for the welcome event.
     this.key = "welcome";
   }
 
   async activate() {
-    // Если welcomeDone уже стоит, пропускаем активацию.
+    // If welcomeDone is already set, skip activation.
     if (StateManager.get("welcomeDone") === "true") {
       console.log("Welcome event already completed; skipping activation.");
-      // По-прежнему включаем «Пост» (если это нужно по логике).
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
         this.app.viewManager.setPostButtonEnabled(true);
       }
       return;
     }
     
-    // Если событие уже есть в дневнике, проверяем mirrorQuestReady, чтобы решить, включать ли «Пост».
+    // If the event is already logged, check mirrorQuestReady flag to decide on the Post button.
     if (this.eventManager.isEventLogged(this.key)) {
       console.log(`Event '${this.key}' is already logged.`);
       if (StateManager.get("mirrorQuestReady") === "true") {
@@ -54,27 +54,25 @@ export class WelcomeEvent extends BaseEvent {
       return;
     }
 
-    // Если событие не записано в дневнике, логируем его (ghost post).
+    // Log the event as a ghost post (invitation to approach the mirror)
     console.log(`Activating event '${this.key}': Logging invitation to approach the mirror`);
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Ставим флаг mirrorQuestReady и включаем «Пост».
+    // Set the mirrorQuestReady flag and enable the Post button.
     StateManager.set("mirrorQuestReady", "true");
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
       this.app.viewManager.setPostButtonEnabled(true);
     }
     
-    // Если нужно – запускаем эффект зеркала.
+    // Trigger the mirror effect if available.
     if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === 'function') {
       this.app.visualEffectsManager.triggerMirrorEffect();
     }
 
-    // Наконец, ставим welcomeDone=true, чтобы событие не запускалось повторно.
+    // Mark the welcome event as completed.
     StateManager.set("welcomeDone", "true");
 
-    // (Опционально) пересинхронизировать квест-состояние:
-    // if (this.app.questManager && typeof this.app.questManager.syncQuestState === "function") {
-    //   await this.app.questManager.syncQuestState();
-    // }
+    // Dispatch a custom event to signal completion of the welcome event.
+    document.dispatchEvent(new CustomEvent("gameEventCompleted", { detail: this.key }));
   }
 }

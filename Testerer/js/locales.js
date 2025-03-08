@@ -1,6 +1,7 @@
 const locales = {
   "en": {
     "welcome": "Welcome!",
+    "post_repeating_event": "Отлично, ты справился с предыдущим заданием! Вот тебе новое.",
     "enter_name": "Enter your name:",
     "select_gender": "Select your gender:",
     "male": "Male",
@@ -27,6 +28,7 @@ const locales = {
   },
   "ru": {
     "welcome": "Добро пожаловать!",
+    "post_repeating_event": "Отлично, ты справился с предыдущим заданием! Вот тебе новое.",
     "enter_name": "Введите ваше имя:",
     "select_gender": "Выберите ваш пол:",
     "male": "Мужской",
@@ -53,6 +55,7 @@ const locales = {
   },
   "uk": {
     "welcome": "Ласкаво просимо!",
+    "post_repeating_event": "Отлично, ты справился с предыдущим заданием! Вот тебе новое.",
     "enter_name": "Введіть ваше ім'я:",
     "select_gender": "Оберіть вашу стать:",
     "male": "Чоловіча",

@@ -42,7 +42,8 @@ export class GhostManager {
 
     // Initialize Event-Quest sequence configuration.
     // Each entry defines a chain: { eventKey, questKey, nextEventKey }
-    // Example: event "welcome" launches quest "mirror_quest", after which "post_repeating_event" is triggered, etc.
+    // Example: event "welcome" launches quest "mirror_quest",
+    // after which "post_repeating_event" is triggered, etc.
     this.eventQuestSequenceList = [
       { eventKey: "welcome", questKey: "mirror_quest", nextEventKey: "post_repeating_event" },
       { eventKey: "post_repeating_event", questKey: "repeating_quest", nextEventKey: "final_event" },
@@ -184,6 +185,7 @@ export class GhostManager {
   async resetGhostChain() {
     this.currentGhostId = 1;
     this.currentPhenomenonIndex = 0;
+    // Reset ghost progress stored in the profile.
     await this.profileManager.resetGhostProgress();
     console.log("Ghost chain has been reset.");
     const ghost = this.getCurrentGhost();
@@ -252,7 +254,7 @@ export class GhostManager {
   /**
    * handlePostButtonClick - Handler for the "Post" button click.
    * Determines the next sequence element and starts the corresponding quest.
-   * After quest activation, the QuestManager.syncQuestState() method will disable the button.
+   * After quest activation, QuestManager.syncQuestState() will disable the Post button.
    */
   async handlePostButtonClick() {
     const nextEntry = this.eventQuestSequenceList[this.currentSequenceIndex];
@@ -266,15 +268,16 @@ export class GhostManager {
 
   /**
    * onEventCompleted - Handler called when a game event completes.
-   * If the completed event matches the expected event, starts the corresponding quest.
+   * 
+   * IMPORTANT CHANGE: Do not automatically trigger quest activation here.
+   * The quest should only be launched when the user clicks the Post button.
+   *
    * @param {string} eventKey - The key of the completed event.
    */
   onEventCompleted(eventKey) {
     console.log(`GhostManager: Event completed with key: ${eventKey}`);
-    const nextEntry = this.eventQuestSequenceList[this.currentSequenceIndex];
-    if (nextEntry && nextEntry.eventKey === eventKey && nextEntry.questKey) {
-      this.startQuest(nextEntry.questKey);
-    }
+    // Removed automatic quest activation.
+    // Quest activation will be triggered only via handlePostButtonClick() upon user click.
   }
 
   /**

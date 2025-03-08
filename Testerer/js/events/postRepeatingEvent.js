@@ -24,10 +24,10 @@ export class PostRepeatingEvent extends BaseEvent {
   }
 
   async activate() {
-    if (this.eventManager.isEventLogged(this.key)) {
+/*    if (this.eventManager.isEventLogged(this.key)) {
       console.log(`[PostRepeatingEvent] Event '${this.key}' is already logged, skipping activation.`);
       return;
-    }
+    }*/
     console.log(`[PostRepeatingEvent] Activating event '${this.key}'.`);
 
     await this.eventManager.addDiaryEntry(this.key, true);

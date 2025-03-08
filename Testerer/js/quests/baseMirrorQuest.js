@@ -1,3 +1,4 @@
+// Import utility modules and managers
 import { BaseEvent } from '../events/baseEvent.js';
 import { ImageUtils } from '../utils/imageUtils.js';
 import { StateManager } from '../stateManager.js';
@@ -176,8 +177,7 @@ export class BaseMirrorQuest extends BaseEvent {
    * - Updates the UI (e.g., disables camera highlights, resets buttons).
    * - Clears the mirrorQuestActive flag.
    * - Marks the quest as finished in the database.
-   * - Triggers the next event if the check is successful.
-   * - Synchronizes the quest state to update UI (e.g., enabling the "Post" button).
+   * - DOES NOT automatically trigger the next quest; instead, it enables the Post button for user action.
    * - Dispatches a "questCompleted" event to signal completion to GhostManager.
    */
   async finish() {
@@ -218,12 +218,10 @@ export class BaseMirrorQuest extends BaseEvent {
       total_stages: 1
     });
 
-    // If the check was successful, trigger the "post_mirror_event".
-    if (success) {
-      this.app.gameEventManager.activateEvent("post_mirror_event");
-    }
+    // *** Removed automatic triggering of the next quest event ***
+    // Instead, the Post button remains enabled so that the user may click it to launch the next quest.
 
-    // Synchronize the quest state so that the "Post" button updates without page reload.
+    // Synchronize the quest state so that the "Post" button updates without a page reload.
     await this.app.questManager.syncQuestState();
 
     // Dispatch a custom event to signal that the quest has been completed.

@@ -187,9 +187,8 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * finish – Completes the repeating quest.
-   * Logs the final diary entry, triggers the final event,
-   * disables the "Post" button via ViewManager, resets quest state via StateManager,
-   * and resets the "Open Camera" button active state.
+   * Logs the final diary entry, disables the "Post" button via ViewManager,
+   * resets quest state via StateManager, and resets the "Open Camera" button active state.
    * Also updates the quest record in the database with status "finished".
    * Dispatches a "questCompleted" event to signal completion to GhostManager.
    */
@@ -201,12 +200,6 @@ export class BaseRepeatingQuest extends BaseEvent {
 
     // Log the final diary entry.
     await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
-
-    // Trigger the final event if not already triggered.
-    if (!this.finalRepeatingQuestCompleted) {
-      this.finalRepeatingQuestCompleted = true;
-      await this.app.gameEventManager.activateEvent("final_event");
-    }
 
     // Remove the mirrorQuestReady flag.
     StateManager.remove("mirrorQuestReady");
@@ -239,7 +232,13 @@ export class BaseRepeatingQuest extends BaseEvent {
       total_stages: this.totalStages
     });
 
-    // Dispatch a custom "questCompleted" event to signal that this quest is finished.
+    // *** Removed automatic triggering of the next event ***
+    // The "Post" button remains enabled so that the user may click it to start the next quest phase.
+
+    // Synchronize the quest state so that the "Post" button updates without a page reload.
+    await this.app.questManager.syncQuestState();
+
+    // Dispatch a custom event to signal that this quest is finished.
     document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
   }
 

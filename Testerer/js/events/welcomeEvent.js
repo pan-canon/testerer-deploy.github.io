@@ -28,16 +28,18 @@ export class WelcomeEvent extends BaseEvent {
   }
 
   async activate() {
-    // If welcomeDone is already set, skip activation.
+    // If the welcome event has already been completed, skip activation.
     if (StateManager.get("welcomeDone") === "true") {
       console.log("Welcome event already completed; skipping activation.");
+      // Ensure the Post button is enabled if needed.
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
         this.app.viewManager.setPostButtonEnabled(true);
       }
       return;
     }
     
-    // If the event is already logged, check mirrorQuestReady flag to decide on the Post button.
+    // If the event is already logged, check the mirrorQuestReady flag
+    // to decide whether the Post button should be enabled.
     if (this.eventManager.isEventLogged(this.key)) {
       console.log(`Event '${this.key}' is already logged.`);
       if (StateManager.get("mirrorQuestReady") === "true") {
@@ -54,7 +56,7 @@ export class WelcomeEvent extends BaseEvent {
       return;
     }
 
-    // Log the event as a ghost post (invitation to approach the mirror)
+    // Log the event as a ghost post (invitation to approach the mirror).
     console.log(`Activating event '${this.key}': Logging invitation to approach the mirror`);
     await this.eventManager.addDiaryEntry(this.key, true);
 
@@ -65,7 +67,7 @@ export class WelcomeEvent extends BaseEvent {
     }
     
     // Trigger the mirror effect if available.
-    if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === 'function') {
+    if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === "function") {
       this.app.visualEffectsManager.triggerMirrorEffect();
     }
 

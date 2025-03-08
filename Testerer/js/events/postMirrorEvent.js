@@ -23,7 +23,7 @@ export class PostMirrorEvent extends BaseEvent {
   }
 
   async activate() {
-    // If the event is already logged in the diary, do not activate it again.
+    // If the event is already logged, skip activation.
     if (this.eventManager.isEventLogged(this.key)) {
       console.log(`[PostMirrorEvent] Event '${this.key}' is already logged, skipping activation.`);
       return;
@@ -33,23 +33,23 @@ export class PostMirrorEvent extends BaseEvent {
     // Log the event as a ghost post.
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Set the necessary flags in StateManager.
+    // Set the required flags to indicate the mirror quest is ready and that a repeating cycle is active.
     StateManager.set("mirrorQuestReady", "true");
     StateManager.set("isRepeatingCycle", "true");
 
-    // Enable the "Post" button via ViewManager.
+    // Enable the "Post" button to allow the user to launch the quest.
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
       this.app.viewManager.setPostButtonEnabled(true);
     }
 
-    // Trigger the mirror effect if it is implemented.
-    if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === 'function') {
+    // Trigger the mirror visual effect if available.
+    if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === "function") {
       this.app.visualEffectsManager.triggerMirrorEffect();
     }
 
     console.log("[PostMirrorEvent] Mirror quest cycle ended; waiting for user action to trigger repeating quest.");
 
-    // Dispatch a custom event to signal the completion of this event.
+    // Dispatch a custom event to signal completion of the event.
     document.dispatchEvent(new CustomEvent("gameEventCompleted", { detail: this.key }));
   }
 }

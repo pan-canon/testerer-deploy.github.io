@@ -19,7 +19,7 @@ export class GhostManager {
    * @param {App} app - The main application instance.
    */
   constructor(currentSequenceIndex, profileManager, app) {
-    // New property: current sequence index for event-quest chain
+    // New property: current sequence index for event-quest chain.
     this.currentSequenceIndex = currentSequenceIndex;
     this.profileManager = profileManager;
     this.app = app;
@@ -42,8 +42,7 @@ export class GhostManager {
 
     // Initialize Event-Quest sequence configuration.
     // Each entry defines a chain: { eventKey, questKey, nextEventKey }
-    // Example: event "welcome" launches quest "mirror_quest",
-    // after which "post_repeating_event" is triggered, etc.
+    // Example: event "welcome" launches quest "mirror_quest", after which "post_repeating_event" is triggered, etc.
     this.eventQuestSequenceList = [
       { eventKey: "welcome", questKey: "mirror_quest", nextEventKey: "post_repeating_event" },
       { eventKey: "post_repeating_event", questKey: "repeating_quest", nextEventKey: "final_event" },
@@ -167,7 +166,6 @@ export class GhostManager {
         console.log(finalEntry);
 
         console.log(`Triggering final event for ghost "${ghost.name}"...`);
-        // Await the activation of the final event to ensure sequential execution.
         await this.app.gameEventManager.activateEvent("ghost_final_event");
       }
     } else {
@@ -186,7 +184,6 @@ export class GhostManager {
   async resetGhostChain() {
     this.currentGhostId = 1;
     this.currentPhenomenonIndex = 0;
-    // Reset ghost progress stored in the profile.
     await this.profileManager.resetGhostProgress();
     console.log("Ghost chain has been reset.");
     const ghost = this.getCurrentGhost();
@@ -255,6 +252,7 @@ export class GhostManager {
   /**
    * handlePostButtonClick - Handler for the "Post" button click.
    * Determines the next sequence element and starts the corresponding quest.
+   * After quest activation, the QuestManager.syncQuestState() method will disable the button.
    */
   async handlePostButtonClick() {
     const nextEntry = this.eventQuestSequenceList[this.currentSequenceIndex];

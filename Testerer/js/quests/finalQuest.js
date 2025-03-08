@@ -31,7 +31,6 @@ export class FinalQuest extends BaseEvent {
       await this.eventManager.addDiaryEntry(this.key, true);
     }
     console.log("[FinalQuest] Final quest initiated.");
-    // Additional flags for final quest activation can be set here if needed.
   }
 
   /**
@@ -46,12 +45,13 @@ export class FinalQuest extends BaseEvent {
 
   /**
    * finish – Completes the final quest:
-   *  1) Checks the final conditions via checkStatus.
+   *  1) Checks final conditions via checkStatus.
    *  2) Logs the completion in the diary.
    *  3) Sets the "gameFinalized" flag via StateManager.
    *  4) Calls finishCurrentGhost from GhostManager to mark the scenario as finished.
    *  5) Notifies the user via ViewManager.
-   *  6) Dispatches a "questCompleted" event to signal completion to GhostManager.
+   *  6) Synchronizes UI state.
+   *  7) Dispatches a "questCompleted" event to signal completion to GhostManager.
    *
    * @returns {Promise<void>}
    */
@@ -77,19 +77,19 @@ export class FinalQuest extends BaseEvent {
     // Set the game as finalized.
     StateManager.set("gameFinalized", "true");
     
-    // Mark the current ghost as finished via GhostManager.
+    // Mark the current ghost as finished.
     if (this.app.ghostManager) {
       await this.app.ghostManager.finishCurrentGhost();
     }
 
-    // Notify the user that the scenario has ended via ViewManager.
+    // Notify the user that the scenario has ended.
     if (this.app.viewManager && typeof this.app.viewManager.showNotification === "function") {
       this.app.viewManager.showNotification("🎉 Final quest completed! Scenario ended!");
     } else {
       console.log("🎉 Final quest completed! Scenario ended!");
     }
 
-    // Optionally, synchronize the UI so that "Post" and other buttons are disabled.
+    // Synchronize UI state to update button statuses.
     if (this.app.questManager && typeof this.app.questManager.syncQuestState === "function") {
       await this.app.questManager.syncQuestState();
     }

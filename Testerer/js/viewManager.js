@@ -153,10 +153,11 @@ export class ViewManager {
         app.completeRegistration();
       });
     }
+    // Changed: "Post" button click now calls GhostManager.handlePostButtonClick()
     if (this.postBtn) {
       this.postBtn.addEventListener("click", () => {
-        console.log("Post button clicked. Triggering handlePostButtonClick().");
-        app.questManager.handlePostButtonClick();
+        console.log("Post button clicked. Triggering GhostManager.handlePostButtonClick().");
+        app.ghostManager.handlePostButtonClick();
       });
     }
     if (this.resetDataBtn) {
@@ -436,8 +437,8 @@ export class ViewManager {
    * setPostButtonEnabled
    * Enables or disables the "Post" button.
    *
-   * This method not only updates the UI but also saves the new state in StateManager.
-   * It considers flags such as gameFinalized and postButtonDisabled.
+   * This method updates the UI and saves the new state in StateManager.
+   * It takes into account flags such as gameFinalized and postButtonDisabled.
    *
    * @param {boolean} isEnabled - If true, the button should be enabled.
    */
@@ -450,7 +451,7 @@ export class ViewManager {
         StateManager.set("postButtonDisabled", "true");
       } else {
         postBtn.disabled = !isEnabled;
-        // Save the state: if isEnabled is true, then postButtonDisabled should be "false"
+        // Save state: if isEnabled is true, postButtonDisabled should be "false"
         StateManager.set("postButtonDisabled", isEnabled ? "false" : "true");
       }
     }

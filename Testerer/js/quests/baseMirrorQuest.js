@@ -53,7 +53,7 @@ export class BaseMirrorQuest extends BaseEvent {
     console.log("[BaseMirrorQuest] Mirror quest activated.");
     StateManager.set("mirrorQuestActive", "true");
 
-    // Save quest record as active
+    // Save quest record as active.
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
       status: "active",

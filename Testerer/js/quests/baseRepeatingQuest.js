@@ -103,7 +103,7 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * startCheckLoop – Delegates UI initialization for the quest stage to ViewManager,
-   * then (optionally) could start a periodic check loop. In this example, it only initializes the UI and awaits user action.
+   * then awaits user action (via the shoot button).
    */
   startCheckLoop() {
     if (this.app.viewManager && typeof this.app.viewManager.startRepeatingQuestUI === 'function') {
@@ -188,7 +188,7 @@ export class BaseRepeatingQuest extends BaseEvent {
   /**
    * finish – Completes the repeating quest.
    * Logs the final diary entry, triggers the final event,
-   * disables the Post button via ViewManager, resets quest state via StateManager,
+   * disables the "Post" button via ViewManager, resets quest state via StateManager,
    * and resets the "Open Camera" button active state.
    * Also updates the quest record in the database with status "finished".
    * Dispatches a "questCompleted" event to signal completion to GhostManager.
@@ -288,5 +288,18 @@ export class BaseRepeatingQuest extends BaseEvent {
       totalStages: this.totalStages,
       dbStatus: record ? record.status : "not recorded"
     };
+  }
+
+  /**
+   * getRandomLetter
+   * Utility function: returns a random letter from the ghost's name.
+   * @param {string} name - The ghost's name.
+   * @returns {string} A random letter from the name.
+   */
+  getRandomLetter(name) {
+    if (!name) return "";
+    const letters = name.replace(/[^A-Za-zА-Яа-яЁё]/g, '').split('');
+    if (!letters.length) return '';
+    return letters[Math.floor(Math.random() * letters.length)];
   }
 }

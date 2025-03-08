@@ -11,11 +11,11 @@ import { ErrorManager } from './errorManager.js';
  * QuestManager class
  * 
  * Responsible for managing quest activation, state updates, and UI restoration.
- * All UI updates (e.g., disabling/enabling buttons) are delegated to ViewManager,
+ * All UI updates (e.g., enabling/disabling buttons) are delegated to ViewManager,
  * and all state access uses StateManager.
  *
- * NOTE: Sequential linking of events and quests is now handled exclusively by the GhostManager.
- *       QuestManager is solely responsible for the direct activation of quests and updating the UI.
+ * NOTE: Sequential linking of events and quests is now handled exclusively by GhostManager.
+ *       QuestManager is solely responsible for directly activating quests and updating the UI.
  */
 export class QuestManager {
   /**
@@ -64,7 +64,7 @@ export class QuestManager {
     };
     cameraManager.onCameraClosed = () => {
       console.log("[QuestManager] onCameraClosed signal received.");
-      // Example: You may want to deactivate the camera button when camera is closed.
+      // Optionally, deactivate the camera button when the camera is closed.
       // this.app.viewManager.setCameraButtonActive(false);
     };
   }
@@ -72,48 +72,43 @@ export class QuestManager {
   /**
    * syncQuestState
    * Synchronizes the current quest state from the database.
-   * 
-   * - If game is finalized -> disable Post button.
-   * - If there's an active quest (mirror or repeating) -> disable Post button.
-   * - Otherwise -> enable Post button.
+   * - If the game is finalized, disable the Post button.
+   * - If an active quest is detected (mirror or repeating) and not finished, disable the Post button.
+   * - Otherwise, enable the Post button.
    */
   async syncQuestState() {
-    // Check if the game has been finalized (final quest completed)
     if (StateManager.get("gameFinalized") === "true") {
       StateManager.set("postButtonDisabled", "true");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(false);
       }
-      console.log("QuestManager.syncQuestState: Game finalized; post button disabled.");
+      console.log("QuestManager.syncQuestState: Game finalized; Post button disabled.");
       return;
     }
-
-    // Retrieve quest records for mirror and repeating quests from the database.
     const mirrorQuestRecord = this.app.databaseManager.getQuestRecord("mirror_quest");
     const repeatingQuestRecord = this.app.databaseManager.getQuestRecord("repeating_quest");
     const activeQuestRecord = mirrorQuestRecord || repeatingQuestRecord;
-
-    // If an active quest is detected and its status is not "finished"
     if (activeQuestRecord && activeQuestRecord.status !== "finished") {
       StateManager.set("postButtonDisabled", "true");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(false);
       }
-      console.log("QuestManager.syncQuestState: Active quest detected, post button disabled.");
+      console.log("QuestManager.syncQuestState: Active quest detected; Post button disabled.");
     } else {
-      // No active quest or quest finished: enable the Post button.
       StateManager.set("postButtonDisabled", "false");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(true);
       }
-      console.log("QuestManager.syncQuestState: No active quest or quest finished, post button enabled.");
+      console.log("QuestManager.syncQuestState: No active quest or quest finished; Post button enabled.");
     }
   }
 
   /**
    * activateQuest
    * Finds a quest by its key and activates it.
-   * This method simply activates the quest without performing sequence checks.
+   * This method simply activates the quest without performing any sequence checks.
+   * It then calls syncQuestState() to update the UI.
+   *
    * @param {string} key - The quest key.
    */
   async activateQuest(key) {
@@ -123,13 +118,15 @@ export class QuestManager {
       return;
     }
     await quest.activate();
-    // After quest activation, update the UI state.
+    // Update the UI state after quest activation.
     await this.syncQuestState();
   }
 
   /**
    * checkQuest
-   * Checks and finalizes the quest by calling its finish() method.
+   * Finalizes the quest by calling its finish() method.
+   * Then, updates the UI state.
+   *
    * @param {string} key - The quest key.
    */
   async checkQuest(key) {
@@ -139,13 +136,14 @@ export class QuestManager {
       return;
     }
     await quest.finish();
-    // After quest completion, update the UI state.
+    // Update the UI state after quest completion.
     await this.syncQuestState();
   }
 
   /**
    * updateQuestProgress
-   * Saves the quest progress to the database (delegated to DatabaseManager).
+   * Saves the quest progress to the database.
+   *
    * @param {string} questKey - The key of the quest.
    * @param {number} currentStage - The current stage of the quest.
    * @param {number} totalStages - The total number of stages.
@@ -164,7 +162,7 @@ export class QuestManager {
 
   /**
    * restoreRepeatingQuestUI
-   * Restores the UI for the repeating quest by delegating the UI restoration to the quest instance.
+   * Restores the UI for the repeating quest by delegating the restoration to the quest instance.
    */
   restoreRepeatingQuestUI() {
     const repeatingQuest = this.quests.find(q => q.key === "repeating_quest");

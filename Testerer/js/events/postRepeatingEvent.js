@@ -8,15 +8,15 @@ import { ErrorManager } from '../errorManager.js';
  * This event finalizes the mirror quest cycle and prepares the system for the repeating quest cycle.
  * It logs a ghost post, then checks if the current ghost is finished.
  * - If the ghost is finished, it triggers the final quest.
- * - Otherwise, it resets the "mirrorQuestReady" flag, re-enables the "Post" button via ViewManager,
+ * - Otherwise, it sets the "mirrorQuestReady" flag, re-enables the "Post" button via ViewManager,
  *   and triggers the mirror visual effect.
  *
  * NOTE: This event is part of the sequential chain managed by GhostManager.
- * It only performs its assigned tasks and signals completion.
+ * It does not handle sequence logic; it only performs its task and signals completion.
  */
 export class PostRepeatingEvent extends BaseEvent {
   /**
-   * @param {EventManager} eventManager - Manager for diary operations.
+   * @param {EventManager} eventManager - Manager handling diary operations.
    * @param {App} appInstance - Reference to the main application instance.
    */
   constructor(eventManager, appInstance) {
@@ -61,11 +61,6 @@ export class PostRepeatingEvent extends BaseEvent {
 
       console.log("[PostRepeatingEvent] Repeating quest cycle ended; waiting for user action.");
     }
-
-    // Optionally, you may re-sync quest state here.
-    // if (this.app.questManager && typeof this.app.questManager.syncQuestState === "function") {
-    //   await this.app.questManager.syncQuestState();
-    // }
 
     // Dispatch a custom event to signal the completion of this event.
     document.dispatchEvent(new CustomEvent("gameEventCompleted", { detail: this.key }));

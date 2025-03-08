@@ -50,7 +50,6 @@ export class App {
     this.visualEffectsManager = new VisualEffectsManager(this, this.viewManager.controlsPanel);
 
     // Initialize GhostManager.
-    // NOTE: GhostManager now provides a convenient API for sequential management of events and quests.
     // Restore current sequence index from StateManager (default to 0 if not set)
     const savedSequenceIndex = parseInt(StateManager.get('currentSequenceIndex'), 10) || 0;
     this.ghostManager = new GhostManager(savedSequenceIndex, this.profileManager, this);
@@ -140,7 +139,7 @@ export class App {
    * goToApartmentPlanScreen - Callback invoked by the ViewManager when registration form data is needed.
    * 
    * Retrieves registration data from the ViewManager, saves it via StateManager,
-   * and then switches the screen to the apartment plan screen.
+   * and then switches to the apartment plan screen.
    */
   goToApartmentPlanScreen() {
     const regData = this.viewManager.getRegistrationData();
@@ -172,7 +171,7 @@ export class App {
   /**
    * captureSelfie - Captures an image from the active camera stream.
    * 
-   * The method converts the captured frame to grayscale, updates the selfie preview via ViewManager,
+   * Converts the captured frame to grayscale, updates the selfie preview via ViewManager,
    * enables the "Complete Registration" button, and stores the selfie data for later use.
    */
   async captureSelfie() {
@@ -197,7 +196,6 @@ export class App {
       if (!ctx) {
         throw new Error("Failed to get 2D drawing context.");
       }
-      // Draw the current frame from the video onto the canvas.
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       
       // Convert the captured frame to grayscale using ImageUtils.
@@ -209,7 +207,7 @@ export class App {
       // Enable the "Complete Registration" button.
       this.viewManager.enableCompleteButton();
       
-      // Save the processed selfie data for later use (e.g., profile creation).
+      // Save the processed selfie data for later use.
       this.selfieData = grayscaleData;
       
       console.log("✅ Selfie captured successfully!");
@@ -222,8 +220,8 @@ export class App {
   /**
    * completeRegistration - Completes the registration process.
    * 
-   * Validates that a selfie has been captured and registration data is available.
-   * Then it saves the profile via ProfileManager, updates the registration state,
+   * Validates that a selfie has been captured and registration data is available,
+   * saves the profile via ProfileManager, updates registration state,
    * stops the camera, hides the global camera view, and transitions to the main screen.
    * Finally, it auto-launches the welcome event.
    */
@@ -291,16 +289,17 @@ export class App {
    * showMainScreen - Displays the main screen after successful registration.
    * 
    * Switches to the main screen, updates the toggle camera button,
-   * and sets the "Post" button state based on the persisted quest state.
+   * and sets the "Post" button state based on the mirrorQuestReady flag.
+   * The "Post" button remains disabled until a new event sets mirrorQuestReady.
    */
   async showMainScreen() {
     this.viewManager.switchScreen('main-screen', 'main-buttons');
     this.viewManager.showToggleCameraButton();
-    // Set the "Post" button state according to the saved quest state.
-    if (StateManager.get("postButtonDisabled") === "true") {
-      this.viewManager.setPostButtonEnabled(false);
-    } else {
+    // Enable "Post" button only if mirrorQuestReady flag is true; otherwise, disable it.
+    if (StateManager.get("mirrorQuestReady") === "true") {
       this.viewManager.setPostButtonEnabled(true);
+    } else {
+      this.viewManager.setPostButtonEnabled(false);
     }
     const profile = await this.profileManager.getProfile();
     if (profile) {

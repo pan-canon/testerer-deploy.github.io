@@ -1,4 +1,3 @@
-// --- Error Management ---
 import { ErrorManager } from './errorManager.js';
 
 /**
@@ -30,7 +29,7 @@ export class EventManager {
   /**
    * isEventLogged
    * Checks whether an entry with the given event key has already been logged.
-   * This method compares the stored event key with the provided key.
+   * This method compares the stored entry key with the provided key.
    *
    * @param {string} eventKey - The event key to check.
    * @returns {boolean} True if the event is already logged, otherwise false.

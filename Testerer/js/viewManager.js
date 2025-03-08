@@ -14,9 +14,8 @@ import { ErrorManager } from './errorManager.js';
  * All UI updates must be performed exclusively through these methods,
  * ensuring a single source of truth for UI operations.
  *
- * NOTE: Sequential linking of events and quests is handled by GhostManager,
- *       so ViewManager remains solely responsible for UI updates,
- *       now enhanced with methods to persist and restore button states.
+ * NOTE: Sequential linking of events and quests is handled by GhostManager.
+ *       This module also persists button states to StateManager.
  */
 export class ViewManager {
   constructor() {
@@ -59,6 +58,8 @@ export class ViewManager {
     // By default, disable the "Post" button after registration.
     if (this.postBtn) {
       this.postBtn.disabled = true;
+      // Persist state: post button is initially disabled.
+      StateManager.set("postButtonDisabled", "true");
     }
   }
 
@@ -153,7 +154,7 @@ export class ViewManager {
         app.completeRegistration();
       });
     }
-    // Changed: "Post" button click now calls GhostManager.handlePostButtonClick()
+    // IMPORTANT: "Post" button click calls GhostManager.handlePostButtonClick()
     if (this.postBtn) {
       this.postBtn.addEventListener("click", () => {
         console.log("Post button clicked. Triggering GhostManager.handlePostButtonClick().");
@@ -437,7 +438,7 @@ export class ViewManager {
    * setPostButtonEnabled
    * Enables or disables the "Post" button.
    *
-   * This method updates the UI and saves the new state in StateManager.
+   * This method updates the UI and persists the new state in StateManager.
    * It takes into account flags such as gameFinalized and postButtonDisabled.
    *
    * @param {boolean} isEnabled - If true, the button should be enabled.
@@ -451,7 +452,7 @@ export class ViewManager {
         StateManager.set("postButtonDisabled", "true");
       } else {
         postBtn.disabled = !isEnabled;
-        // Save state: if isEnabled is true, postButtonDisabled should be "false"
+        // Persist the new state: if isEnabled is true, then postButtonDisabled is "false".
         StateManager.set("postButtonDisabled", isEnabled ? "false" : "true");
       }
     }

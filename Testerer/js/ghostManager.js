@@ -24,6 +24,9 @@ export class GhostManager {
     this.profileManager = profileManager;
     this.app = app;
 
+    // This property tracks if a quest is currently active.
+    this.questActive = false;
+
     // eventManager will be assigned externally (see App.js)
     this.eventManager = null;
 
@@ -222,16 +225,23 @@ export class GhostManager {
   /**
    * startQuest - Starts a quest after checking if it is the next expected quest.
    * Calls QuestManager.activateQuest and updates the sequence index on success.
+   * Also, marks questActive as true.
+   *
    * @param {string} questKey - The key of the quest to start.
    */
   async startQuest(questKey) {
+    if (this.questActive) {
+      console.error("Quest already launched. Cannot start a new quest.");
+      return;
+    }
     if (!this.isNextInSequence(questKey)) {
       console.error(`Quest "${questKey}" is not next in sequence.`);
       return;
     }
     console.log(`GhostManager: Starting quest with key: ${questKey}`);
     await this.app.questManager.activateQuest(questKey);
-    // Update the sequence index and save to StateManager.
+    // Mark quest as active and update sequence index.
+    this.questActive = true;
     this.currentSequenceIndex++;
     StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.currentSequenceIndex));
   }
@@ -239,6 +249,7 @@ export class GhostManager {
   /**
    * startEvent - Starts an event after checking if it is the next expected event.
    * Calls GameEventManager.activateEvent.
+   *
    * @param {string} eventKey - The key of the event to start.
    */
   async startEvent(eventKey) {
@@ -248,15 +259,18 @@ export class GhostManager {
     }
     console.log(`GhostManager: Starting event with key: ${eventKey}`);
     await this.app.gameEventManager.activateEvent(eventKey);
-    // Optionally, update the sequence index here if needed.
+    // No change to questActive flag here.
   }
 
   /**
    * handlePostButtonClick - Handler for the "Post" button click.
-   * Determines the next sequence element and starts the corresponding quest.
-   * After quest activation, QuestManager.syncQuestState() will disable the Post button.
+   * First checks if a quest is already active. If not, it uses the sequence to launch the next quest.
    */
   async handlePostButtonClick() {
+    if (this.questActive) {
+      console.error("Quest already launched. Please wait until the current quest completes.");
+      return;
+    }
     const nextEntry = this.eventQuestSequenceList[this.currentSequenceIndex];
     if (!nextEntry) {
       console.warn("No next sequence entry found.");
@@ -268,28 +282,31 @@ export class GhostManager {
 
   /**
    * onEventCompleted - Handler called when a game event completes.
-   * 
-   * IMPORTANT CHANGE: Do not automatically trigger quest activation here.
-   * The quest should only be launched when the user clicks the Post button.
+   * IMPORTANT: Do not automatically trigger quest activation here.
+   * Quest activation should only be triggered by the user clicking the Post button.
    *
    * @param {string} eventKey - The key of the completed event.
    */
   onEventCompleted(eventKey) {
     console.log(`GhostManager: Event completed with key: ${eventKey}`);
-    // Removed automatic quest activation.
-    // Quest activation will be triggered only via handlePostButtonClick() upon user click.
+    // No automatic quest launch; wait for user interaction via Post button.
   }
 
   /**
    * onQuestCompleted - Handler called when a quest completes.
-   * If the completed quest matches the expected quest and there is a next event,
-   * starts the next event.
+   * If the completed quest matches the expected quest and a next event is available,
+   * automatically trigger that event.
+   * Also, reset the questActive flag.
+   *
    * @param {string} questKey - The key of the completed quest.
    */
   onQuestCompleted(questKey) {
     console.log(`GhostManager: Quest completed with key: ${questKey}`);
+    // Reset the quest active flag since the quest is finished.
+    this.questActive = false;
     const nextEntry = this.eventQuestSequenceList[this.currentSequenceIndex];
     if (nextEntry && nextEntry.questKey === questKey && nextEntry.nextEventKey) {
+      console.log(`GhostManager: Automatically starting next event: ${nextEntry.nextEventKey}`);
       this.startEvent(nextEntry.nextEventKey);
     }
   }

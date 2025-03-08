@@ -11,7 +11,7 @@ import { ErrorManager } from '../errorManager.js';
  * and notifies the user via the ViewManager.
  *
  * NOTE: FinalEvent is part of the sequential chain managed by GhostManager.
- * It performs its assigned tasks and signals completion via the "gameEventCompleted" event.
+ * It performs its task and signals completion via the "gameEventCompleted" event.
  */
 export class FinalEvent extends BaseEvent {
   /**
@@ -23,32 +23,19 @@ export class FinalEvent extends BaseEvent {
     super(eventManager);
     this.app = appInstance;
     this.languageManager = languageManager;
-    // Unique key for the final event.
     this.key = "final_event";
   }
 
-  /**
-   * activate – Activates the final event.
-   * Logs the event in the diary, sets the finalized flag,
-   * triggers a ghost fade-out effect, finishes the current ghost,
-   * disables active UI elements via ViewManager, and notifies the user.
-   *
-   * At the end, it dispatches a "gameEventCompleted" event to signal completion.
-   *
-   * @returns {Promise<void>}
-   */
   async activate() {
-    // Skip activation if the event is already logged.
     if (this.eventManager.isEventLogged(this.key)) {
       console.log(`Event '${this.key}' is already logged, skipping activation.`);
       return;
     }
 
     console.log(`Activating final event: '${this.key}'`);
-    // Log the final event as a ghost post.
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Set the game finalized flag.
+    // Set the game as finalized.
     StateManager.set("gameFinalized", "true");
 
     // Trigger the ghost fade-out effect.
@@ -59,12 +46,12 @@ export class FinalEvent extends BaseEvent {
     // Mark the current ghost as finished.
     await this.app.ghostManager.finishCurrentGhost();
 
-    // Disable active UI elements (e.g., the Post button).
+    // Disable active UI elements (e.g. Post button).
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
       this.app.viewManager.setPostButtonEnabled(false);
     }
 
-    // Re-sync UI state, ensuring buttons update accordingly.
+    // Re-sync UI state.
     if (this.app.questManager && typeof this.app.questManager.syncQuestState === "function") {
       await this.app.questManager.syncQuestState();
     }
@@ -76,7 +63,7 @@ export class FinalEvent extends BaseEvent {
       console.log("🎉 Congratulations, the scenario is finished!");
     }
 
-    // Dispatch a custom event to signal completion of the final event.
+    // Dispatch an event to signal completion of the final event.
     document.dispatchEvent(new CustomEvent("gameEventCompleted", { detail: this.key }));
   }
 }

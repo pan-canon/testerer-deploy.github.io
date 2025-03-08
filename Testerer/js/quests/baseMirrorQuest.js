@@ -1,7 +1,8 @@
-// Import utility modules and managers
+// --- Quest Classes ---
 import { BaseEvent } from '../events/baseEvent.js';
 import { ImageUtils } from '../utils/imageUtils.js';
 import { StateManager } from '../stateManager.js';
+import { ErrorManager } from '../errorManager.js';
 
 /**
  * BaseMirrorQuest – Base class for the mirror quest.
@@ -15,7 +16,7 @@ export class BaseMirrorQuest extends BaseEvent {
     this.key = config.key || "mirror_quest"; // Allows overriding the key.
     this.doneKey = config.doneKey || "mirror_done";
 
-    // Configuration for UI elements (identifiers used by ViewManager)
+    // UI configuration (identifiers used by ViewManager)
     this.statusElementId = config.statusElementId || "mirror-quest-status";
     this.shootButtonId = config.shootButtonId || "btn_shoot";
 
@@ -177,7 +178,7 @@ export class BaseMirrorQuest extends BaseEvent {
    * - Updates the UI (e.g., disables camera highlights, resets buttons).
    * - Clears the mirrorQuestActive flag.
    * - Marks the quest as finished in the database.
-   * - DOES NOT automatically trigger the next quest; instead, it enables the Post button for user action.
+   * - Does NOT automatically trigger the next quest or event.
    * - Dispatches a "questCompleted" event to signal completion to GhostManager.
    */
   async finish() {
@@ -218,10 +219,10 @@ export class BaseMirrorQuest extends BaseEvent {
       total_stages: 1
     });
 
-    // *** Removed automatic triggering of the next quest event ***
-    // Instead, the Post button remains enabled so that the user may click it to launch the next quest.
+    // Do not trigger any new event automatically.
+    // Instead, let GhostManager handle the sequencing after receiving the questCompleted event.
 
-    // Synchronize the quest state so that the "Post" button updates without a page reload.
+    // Synchronize the quest state so that the "Post" button updates.
     await this.app.questManager.syncQuestState();
 
     // Dispatch a custom event to signal that the quest has been completed.

@@ -10,8 +10,9 @@ import { ErrorManager } from '../errorManager.js';
  * It uses StateManager to check and update the "welcomeDone" flag so that the event
  * is launched only once per registration cycle.
  *
- * NOTE: This event is now part of the sequential chain managed by GhostManager.
- * It does not handle sequence logic; it only performs its task and signals completion.
+ * NOTE: This event is part of the sequential chain managed by GhostManager.
+ * It only performs its task (publishing a ghost post and setting flags) and then
+ * dispatches a "gameEventCompleted" event.
  */
 export class WelcomeEvent extends BaseEvent {
   /**
@@ -23,7 +24,6 @@ export class WelcomeEvent extends BaseEvent {
     super(eventManager);
     this.app = appInstance;
     this.languageManager = languageManager;
-    // Unique key for the welcome event.
     this.key = "welcome";
   }
 
@@ -31,15 +31,13 @@ export class WelcomeEvent extends BaseEvent {
     // If the welcome event has already been completed, skip activation.
     if (StateManager.get("welcomeDone") === "true") {
       console.log("Welcome event already completed; skipping activation.");
-      // Ensure the Post button is enabled if needed.
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
         this.app.viewManager.setPostButtonEnabled(true);
       }
       return;
     }
     
-    // If the event is already logged, check the mirrorQuestReady flag
-    // to decide whether the Post button should be enabled.
+    // If the event is already logged, check the mirrorQuestReady flag for enabling the Post button.
     if (this.eventManager.isEventLogged(this.key)) {
       console.log(`Event '${this.key}' is already logged.`);
       if (StateManager.get("mirrorQuestReady") === "true") {
@@ -56,7 +54,7 @@ export class WelcomeEvent extends BaseEvent {
       return;
     }
 
-    // Log the event as a ghost post (invitation to approach the mirror).
+    // Log the event as a ghost post.
     console.log(`Activating event '${this.key}': Logging invitation to approach the mirror`);
     await this.eventManager.addDiaryEntry(this.key, true);
 
@@ -74,7 +72,7 @@ export class WelcomeEvent extends BaseEvent {
     // Mark the welcome event as completed.
     StateManager.set("welcomeDone", "true");
 
-    // Dispatch a custom event to signal completion of the welcome event.
+    // Dispatch an event to signal that the welcome event has completed.
     document.dispatchEvent(new CustomEvent("gameEventCompleted", { detail: this.key }));
   }
 }

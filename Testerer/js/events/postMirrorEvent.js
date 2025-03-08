@@ -9,7 +9,7 @@ import { ErrorManager } from '../errorManager.js';
  * It updates the UI via ViewManager and uses StateManager to set the necessary flags.
  *
  * NOTE: This event is part of the sequential chain managed by GhostManager.
- * It does not handle sequence logic; it only performs its task and signals completion.
+ * It only performs its task and then dispatches a "gameEventCompleted" event.
  */
 export class PostMirrorEvent extends BaseEvent {
   /**
@@ -23,33 +23,31 @@ export class PostMirrorEvent extends BaseEvent {
   }
 
   async activate() {
-    // If the event is already logged, skip activation.
     if (this.eventManager.isEventLogged(this.key)) {
       console.log(`[PostMirrorEvent] Event '${this.key}' is already logged, skipping activation.`);
       return;
     }
 
     console.log(`[PostMirrorEvent] Activating event '${this.key}'.`);
-    // Log the event as a ghost post.
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Set the required flags to indicate the mirror quest is ready and that a repeating cycle is active.
+    // Set required flags to indicate the mirror quest is ready and a repeating cycle is active.
     StateManager.set("mirrorQuestReady", "true");
     StateManager.set("isRepeatingCycle", "true");
 
-    // Enable the "Post" button to allow the user to launch the quest.
+    // Enable the Post button.
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
       this.app.viewManager.setPostButtonEnabled(true);
     }
 
-    // Trigger the mirror visual effect if available.
+    // Trigger the mirror effect if available.
     if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === "function") {
       this.app.visualEffectsManager.triggerMirrorEffect();
     }
 
-    console.log("[PostMirrorEvent] Mirror quest cycle ended; waiting for user action to trigger repeating quest.");
-
-    // Dispatch a custom event to signal completion of the event.
+    console.log("[PostMirrorEvent] Mirror quest cycle ended; waiting for user action to trigger the next quest.");
+    
+    // Dispatch an event to signal completion of this event.
     document.dispatchEvent(new CustomEvent("gameEventCompleted", { detail: this.key }));
   }
 }

@@ -11,7 +11,7 @@ import { StateManager } from './stateManager.js';
  *
  * CURRENT CHANGE: The ghost list is simplified to contain only the default ghost.
  * NEW CHANGE: Added API for sequential management of events and quests.
- *            (Sequence now ensures that a ghost event is triggered before its corresponding quest starts.)
+ *            Sequence now ensures that a ghost event is triggered before its corresponding quest starts.
  */
 export class GhostManager {
   /**
@@ -20,12 +20,12 @@ export class GhostManager {
    * @param {App} app - The main application instance.
    */
   constructor(currentSequenceIndex, profileManager, app) {
-    // New property: current sequence index for event-quest chain.
+    // Current sequence index for event-quest chain.
     this.currentSequenceIndex = currentSequenceIndex;
     this.profileManager = profileManager;
     this.app = app;
 
-    // This property tracks if a quest is currently active.
+    // Tracks whether a quest is currently active.
     this.questActive = false;
 
     // eventManager will be assigned externally (see App.js)
@@ -215,6 +215,8 @@ export class GhostManager {
 
   /**
    * isNextEvent - Checks if the given eventKey matches the next expected event in the sequence.
+   * Note: For follow-up ghost events (triggered from quest completions), this check is bypassed.
+   *
    * @param {string} eventKey - The key of the event to check.
    * @returns {boolean} True if the eventKey matches the expected event, false otherwise.
    */
@@ -248,13 +250,14 @@ export class GhostManager {
   }
 
   /**
-   * startEvent - Starts an event after checking if it is the next expected event.
-   * Calls GameEventManager.activateEvent.
+   * startEvent - Starts an event.
+   * If the event is being triggered as a follow-up ghost event, bypass the normal check.
    *
    * @param {string} eventKey - The key of the event to start.
+   * @param {boolean} [isFollowup=false] - Indicates if this is a ghost event triggered after a quest.
    */
-  async startEvent(eventKey) {
-    if (!this.isNextEvent(eventKey)) {
+  async startEvent(eventKey, isFollowup = false) {
+    if (!isFollowup && !this.isNextEvent(eventKey)) {
       console.error(`Event "${eventKey}" is not next in sequence.`);
       return;
     }
@@ -304,8 +307,8 @@ export class GhostManager {
    * onQuestCompleted - Handler called when a quest completes.
    * 
    * After a quest is completed, if the current sequence entry has a corresponding ghost event,
-   * automatically trigger that event. Do not increment the sequence index here.
-   * The increment will happen in onEventCompleted.
+   * automatically trigger that event. Do not increment the sequence index here;
+   * the increment will happen in onEventCompleted.
    *
    * @param {string} questKey - The key of the completed quest.
    */
@@ -316,7 +319,8 @@ export class GhostManager {
     const currentEntry = this.eventQuestSequenceList[this.currentSequenceIndex];
     if (currentEntry && currentEntry.questKey === questKey && currentEntry.nextEventKey) {
       console.log(`GhostManager: Quest completed. Now starting ghost event: ${currentEntry.nextEventKey}`);
-      this.startEvent(currentEntry.nextEventKey);
+      // Call startEvent with the follow-up flag to bypass the standard check.
+      this.startEvent(currentEntry.nextEventKey, true);
       // Do not increment sequence index here; it will be done in onEventCompleted.
     }
   }

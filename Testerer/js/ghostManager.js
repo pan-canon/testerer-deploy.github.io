@@ -306,10 +306,12 @@ export class GhostManager {
   /**
    * onQuestCompleted - Handler called when a quest completes.
    * 
-   * After a quest is completed, if the current sequence entry has a corresponding ghost event,
-   * automatically trigger that event.
-   * For the repeating quest, if it is not finished (i.e. more stages remain), trigger the ghost event
-   * without incrementing the sequence index.
+   * For a repeating quest (questKey "repeating_quest"):
+   * - If the repeating quest is not finished (more stages remain), trigger the ghost event "post_repeating_event"
+   *   without incrementing the sequence index.
+   * - If the repeating quest is finished, trigger the ghost event "final_event" and then increment the sequence index.
+   *
+   * For non-repeating quests, trigger the ghost event from the current sequence entry.
    *
    * @param {string} questKey - The key of the completed quest.
    */
@@ -317,17 +319,23 @@ export class GhostManager {
     console.log(`GhostManager: Quest completed with key: ${questKey}`);
     // Reset the quest active flag since the quest (or stage) is complete.
     this.questActive = false;
-    const currentEntry = this.eventQuestSequenceList[this.currentSequenceIndex];
     if (questKey === "repeating_quest") {
-      // For the repeating quest, check its current status.
       const questStatus = await this.app.questManager.getCurrentQuestStatus("repeating_quest");
       if (!questStatus.finished) {
-        console.log(`GhostManager: Repeating quest stage completed. Triggering ghost event: ${currentEntry.nextEventKey} without sequence increment.`);
-        // Trigger the ghost event for repeating quest stage without incrementing the sequence index.
-        this.startEvent(currentEntry.nextEventKey, true);
+        // If not finished, trigger ghost event "post_repeating_event" without sequence increment.
+        console.log(`GhostManager: Repeating quest stage completed. Triggering ghost event: post_repeating_event without sequence increment.`);
+        this.startEvent("post_repeating_event", true);
+        return;
+      } else {
+        // If finished, trigger ghost event "final_event" and then increment sequence index.
+        console.log(`GhostManager: Repeating quest fully completed. Now starting ghost event: final_event`);
+        await this.startEvent("final_event", true);
+        this.currentSequenceIndex++;
+        StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.currentSequenceIndex));
         return;
       }
     }
+    const currentEntry = this.eventQuestSequenceList[this.currentSequenceIndex];
     if (currentEntry && currentEntry.questKey === questKey && currentEntry.nextEventKey) {
       console.log(`GhostManager: Quest completed. Now starting ghost event: ${currentEntry.nextEventKey}`);
       this.startEvent(currentEntry.nextEventKey, true);

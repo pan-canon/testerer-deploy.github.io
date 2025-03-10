@@ -307,21 +307,31 @@ export class GhostManager {
    * onQuestCompleted - Handler called when a quest completes.
    * 
    * After a quest is completed, if the current sequence entry has a corresponding ghost event,
-   * automatically trigger that event. Do not increment the sequence index here;
-   * the increment will happen in onEventCompleted.
+   * automatically trigger that event.
+   * For the repeating quest, if it is not finished (i.e. more stages remain), trigger the ghost event
+   * without incrementing the sequence index.
    *
    * @param {string} questKey - The key of the completed quest.
    */
-  onQuestCompleted(questKey) {
+  async onQuestCompleted(questKey) {
     console.log(`GhostManager: Quest completed with key: ${questKey}`);
-    // Reset the quest active flag since the quest is finished.
+    // Reset the quest active flag since the quest (or stage) is complete.
     this.questActive = false;
     const currentEntry = this.eventQuestSequenceList[this.currentSequenceIndex];
+    if (questKey === "repeating_quest") {
+      // For the repeating quest, check its current status.
+      const questStatus = await this.app.questManager.getCurrentQuestStatus("repeating_quest");
+      if (!questStatus.finished) {
+        console.log(`GhostManager: Repeating quest stage completed. Triggering ghost event: ${currentEntry.nextEventKey} without sequence increment.`);
+        // Trigger the ghost event for repeating quest stage without incrementing the sequence index.
+        this.startEvent(currentEntry.nextEventKey, true);
+        return;
+      }
+    }
     if (currentEntry && currentEntry.questKey === questKey && currentEntry.nextEventKey) {
       console.log(`GhostManager: Quest completed. Now starting ghost event: ${currentEntry.nextEventKey}`);
-      // Call startEvent with the follow-up flag to bypass the standard check.
       this.startEvent(currentEntry.nextEventKey, true);
-      // Do not increment sequence index here; it will be done in onEventCompleted.
+      // For non-repeating quests, sequence index increment will occur in onEventCompleted.
     }
   }
 }

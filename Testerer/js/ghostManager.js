@@ -317,28 +317,33 @@ export class GhostManager {
    */
   async onQuestCompleted(questKey) {
     console.log(`GhostManager: Quest completed with key: ${questKey}`);
-    // Reset the quest active flag since the quest (or stage) is complete.
+    // Reset the quest active flag.
     this.questActive = false;
+    
     if (questKey === "repeating_quest") {
       const questStatus = await this.app.questManager.getCurrentQuestStatus("repeating_quest");
+      console.log("Repeating quest status:", questStatus);
       if (!questStatus.finished) {
         // If not finished, trigger ghost event "post_repeating_event" without sequence increment.
-        console.log(`GhostManager: Repeating quest stage completed. Triggering ghost event: post_repeating_event without sequence increment.`);
-        this.startEvent("post_repeating_event", true);
+        console.log("Repeating quest stage completed. Triggering ghost event: post_repeating_event without sequence increment.");
+        await this.startEvent("post_repeating_event", true);
+        // Ensure flag is reset.
+        this.questActive = false;
         return;
       } else {
         // If finished, trigger ghost event "final_event" and then increment sequence index.
-        console.log(`GhostManager: Repeating quest fully completed. Now starting ghost event: final_event`);
+        console.log("Repeating quest fully completed. Now starting ghost event: final_event");
         await this.startEvent("final_event", true);
         this.currentSequenceIndex++;
         StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.currentSequenceIndex));
         return;
       }
     }
+    
     const currentEntry = this.eventQuestSequenceList[this.currentSequenceIndex];
     if (currentEntry && currentEntry.questKey === questKey && currentEntry.nextEventKey) {
       console.log(`GhostManager: Quest completed. Now starting ghost event: ${currentEntry.nextEventKey}`);
-      this.startEvent(currentEntry.nextEventKey, true);
+      await this.startEvent(currentEntry.nextEventKey, true);
       // For non-repeating quests, sequence index increment will occur in onEventCompleted.
     }
   }

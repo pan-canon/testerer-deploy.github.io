@@ -24,7 +24,7 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.currentStage = 1;
     this.finished = false;
 
-    // Flag to ensure final repeating quest is triggered only once.
+    // (Optional flag – not used further, can be removed if unnecessary)
     this.finalRepeatingQuestCompleted = false;
 
     // Restore saved quest state from StateManager.
@@ -143,6 +143,9 @@ export class BaseRepeatingQuest extends BaseEvent {
    * finishStage – Completes one stage of the repeating quest.
    * Disables the "Shoot" button, captures a snapshot, logs the stage completion,
    * updates quest state, and enables the "Post" button for the next stage (if any).
+   * 
+   * IMPORTANT: After finishing a stage (if quest is not finished),
+   * a "questCompleted" event is dispatched to notify GhostManager.
    */
   async finishStage() {
     if (this.finished) return;
@@ -170,6 +173,9 @@ export class BaseRepeatingQuest extends BaseEvent {
         this.app.viewManager.setPostButtonEnabled(true);
         console.log("[BaseRepeatingQuest] Post button enabled for next stage.");
       }
+      // Dispatch event to notify that a stage of the repeating quest is completed.
+      document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
+      console.log("[BaseRepeatingQuest] questCompleted event dispatched for repeating quest stage.");
     } else {
       await this.finish();
     }
@@ -216,11 +222,12 @@ export class BaseRepeatingQuest extends BaseEvent {
       total_stages: this.totalStages
     });
 
-    // Do not auto-trigger any new event here.
+    // Update UI state after finishing.
     await this.app.questManager.syncQuestState();
 
-    // Dispatch the "questCompleted" event.
+    // Dispatch the "questCompleted" event to signal full completion.
     document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
+    console.log("[BaseRepeatingQuest] questCompleted event dispatched for full completion.");
   }
 
   /**

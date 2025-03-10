@@ -96,6 +96,7 @@ export class BaseRepeatingQuest extends BaseEvent {
       });
     }
     this.startCheckLoop();
+    StateManager.set("shootButtonActive", "true");
     this.app.viewManager.restoreShootButtonState();
   }
 

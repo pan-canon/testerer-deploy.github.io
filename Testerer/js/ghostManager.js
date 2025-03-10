@@ -321,17 +321,17 @@ export class GhostManager {
     this.questActive = false;
     
     if (questKey === "repeating_quest") {
-      const questStatus = await this.app.questManager.getCurrentQuestStatus("repeating_quest");
+      // Получаем экземпляр повторяющегося квеста.
+      const repeatingQuest = this.app.questManager.quests.find(q => q.key === "repeating_quest");
+      const questStatus = repeatingQuest ? await repeatingQuest.getCurrentQuestStatus() : { finished: false };
       console.log("Repeating quest status:", questStatus);
       if (!questStatus.finished) {
-        // If not finished, trigger ghost event "post_repeating_event" without sequence increment.
+        // Если не завершён – вызываем ghost-событие "post_repeating_event" без инкрементации последовательного индекса.
         console.log("Repeating quest stage completed. Triggering ghost event: post_repeating_event without sequence increment.");
         await this.startEvent("post_repeating_event", true);
-        // Ensure flag is reset.
         this.questActive = false;
         return;
       } else {
-        // If finished, trigger ghost event "final_event" and then increment sequence index.
         console.log("Repeating quest fully completed. Now starting ghost event: final_event");
         await this.startEvent("final_event", true);
         this.currentSequenceIndex++;
@@ -344,7 +344,6 @@ export class GhostManager {
     if (currentEntry && currentEntry.questKey === questKey && currentEntry.nextEventKey) {
       console.log(`GhostManager: Quest completed. Now starting ghost event: ${currentEntry.nextEventKey}`);
       await this.startEvent(currentEntry.nextEventKey, true);
-      // For non-repeating quests, sequence index increment will occur in onEventCompleted.
     }
   }
 }

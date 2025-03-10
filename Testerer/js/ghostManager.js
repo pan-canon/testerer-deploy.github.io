@@ -11,6 +11,7 @@ import { StateManager } from './stateManager.js';
  *
  * CURRENT CHANGE: The ghost list is simplified to contain only the default ghost.
  * NEW CHANGE: Added API for sequential management of events and quests.
+ *            (Sequence now ensures that a ghost event is triggered before its corresponding quest starts.)
  */
 export class GhostManager {
   /**
@@ -224,8 +225,10 @@ export class GhostManager {
 
   /**
    * startQuest - Starts a quest after checking if it is the next expected quest.
-   * Calls QuestManager.activateQuest and updates the sequence index on success.
-   * Also, marks questActive as true.
+   * Calls QuestManager.activateQuest.
+   * 
+   * IMPORTANT: The sequence index is NOT incremented here.
+   * The increment will occur after the corresponding ghost event is successfully completed.
    *
    * @param {string} questKey - The key of the quest to start.
    */
@@ -240,10 +243,8 @@ export class GhostManager {
     }
     console.log(`GhostManager: Starting quest with key: ${questKey}`);
     await this.app.questManager.activateQuest(questKey);
-    // Mark quest as active and update sequence index.
+    // Mark quest as active but do not increment the sequence index yet.
     this.questActive = true;
-    this.currentSequenceIndex++;
-    StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.currentSequenceIndex));
   }
 
   /**
@@ -264,7 +265,7 @@ export class GhostManager {
 
   /**
    * handlePostButtonClick - Handler for the "Post" button click.
-   * First checks if a quest is already active. If not, it uses the sequence to launch the next quest.
+   * If no quest is currently active, it uses the sequence to launch the next quest.
    */
   async handlePostButtonClick() {
     if (this.questActive) {
@@ -282,21 +283,29 @@ export class GhostManager {
 
   /**
    * onEventCompleted - Handler called when a game event completes.
-   * IMPORTANT: Do not automatically trigger quest activation here.
-   * Quest activation should only be triggered by the user clicking the Post button.
+   * 
+   * IMPORTANT: After a ghost event completes, we increment the sequence index.
    *
    * @param {string} eventKey - The key of the completed event.
    */
   onEventCompleted(eventKey) {
     console.log(`GhostManager: Event completed with key: ${eventKey}`);
-    // No automatic quest launch; wait for user interaction via Post button.
+    const currentEntry = this.eventQuestSequenceList[this.currentSequenceIndex];
+    if (currentEntry && currentEntry.nextEventKey === eventKey) {
+      // Ghost event completed successfully; now increment the sequence index.
+      this.currentSequenceIndex++;
+      StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.currentSequenceIndex));
+      console.log(`GhostManager: Sequence index incremented to ${this.currentSequenceIndex}`);
+    }
+    // Do not automatically trigger quest activation here.
   }
 
   /**
    * onQuestCompleted - Handler called when a quest completes.
-   * If the completed quest matches the expected quest and a next event is available,
-   * automatically trigger that event.
-   * Also, reset the questActive flag.
+   * 
+   * After a quest is completed, if the current sequence entry has a corresponding ghost event,
+   * automatically trigger that event. Do not increment the sequence index here.
+   * The increment will happen in onEventCompleted.
    *
    * @param {string} questKey - The key of the completed quest.
    */
@@ -304,10 +313,11 @@ export class GhostManager {
     console.log(`GhostManager: Quest completed with key: ${questKey}`);
     // Reset the quest active flag since the quest is finished.
     this.questActive = false;
-    const nextEntry = this.eventQuestSequenceList[this.currentSequenceIndex];
-    if (nextEntry && nextEntry.questKey === questKey && nextEntry.nextEventKey) {
-      console.log(`GhostManager: Automatically starting next event: ${nextEntry.nextEventKey}`);
-      this.startEvent(nextEntry.nextEventKey);
+    const currentEntry = this.eventQuestSequenceList[this.currentSequenceIndex];
+    if (currentEntry && currentEntry.questKey === questKey && currentEntry.nextEventKey) {
+      console.log(`GhostManager: Quest completed. Now starting ghost event: ${currentEntry.nextEventKey}`);
+      this.startEvent(currentEntry.nextEventKey);
+      // Do not increment sequence index here; it will be done in onEventCompleted.
     }
   }
 }

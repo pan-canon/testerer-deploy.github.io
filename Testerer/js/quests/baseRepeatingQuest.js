@@ -96,6 +96,7 @@ export class BaseRepeatingQuest extends BaseEvent {
       });
     }
     this.startCheckLoop();
+    this.app.viewManager.restoreShootButtonState();
   }
 
   /**

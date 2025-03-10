@@ -41,12 +41,19 @@ export class GameEventManager {
    * Activates an event by its key.
    * Does not automatically trigger subsequent events (sequence is managed by GhostManager).
    *
+   * If the key is dynamic (e.g. "post_repeating_event_stage_X"), then the PostRepeatingEvent instance is used.
+   *
    * @param {string} key - The event key.
    */
   async activateEvent(key) {
-    const event = this.events.find(e => e.key === key);
+    // Try to find event by exact key.
+    let event = this.events.find(e => e.key === key);
+    // If not found and key starts with "post_repeating_event", use the PostRepeatingEvent instance.
+    if (!event && key.startsWith("post_repeating_event")) {
+      event = this.events.find(e => e.key === "post_repeating_event");
+    }
     if (event) {
-      await event.activate();
+      await event.activate(key);
       console.log(`Event '${key}' activated.`);
     } else {
       ErrorManager.logError(`Event "${key}" not found in the list.`, "activateEvent");

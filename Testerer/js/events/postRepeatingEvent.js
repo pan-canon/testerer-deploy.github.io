@@ -20,23 +20,31 @@ export class PostRepeatingEvent extends BaseEvent {
   constructor(eventManager, appInstance) {
     super(eventManager);
     this.app = appInstance;
+    // Base key for post repeating event.
     this.key = "post_repeating_event";
   }
 
-  async activate() {
-    if (this.eventManager.isEventLogged(this.key)) {
-      console.log(`[PostRepeatingEvent] Event '${this.key}' is already logged, skipping activation.`);
+  /**
+   * activate - Activates the post repeating event.
+   * Accepts an optional dynamicKey to generate a unique event id (e.g., "post_repeating_event_stage_2").
+   *
+   * @param {string} [dynamicKey] - Optional unique event key.
+   */
+  async activate(dynamicKey) {
+    const eventKey = dynamicKey || this.key;
+    if (this.eventManager.isEventLogged(eventKey)) {
+      console.log(`[PostRepeatingEvent] Event '${eventKey}' is already logged, skipping activation.`);
       return;
     }
-    console.log(`[PostRepeatingEvent] Activating event '${this.key}'.`);
+    console.log(`[PostRepeatingEvent] Activating event '${eventKey}'.`);
 
-    await this.eventManager.addDiaryEntry(this.key, true);
+    await this.eventManager.addDiaryEntry(eventKey, true);
 
     // Check if the current ghost is finished.
     const ghost = this.app.ghostManager.getCurrentGhost();
     if (ghost && ghost.isFinished) {
       console.log("[PostRepeatingEvent] Ghost is finished; ready to dispatch event completion.");
-      // (No automatic quest activation here; GhostManager will handle the sequence.)
+      // No additional processing needed if ghost is finished.
     } else {
       // Prepare the system for the next cycle of the repeating quest.
       StateManager.set("mirrorQuestReady", "true");
@@ -52,6 +60,6 @@ export class PostRepeatingEvent extends BaseEvent {
     }
 
     // Dispatch an event to signal completion of this event.
-    document.dispatchEvent(new CustomEvent("gameEventCompleted", { detail: this.key }));
+    document.dispatchEvent(new CustomEvent("gameEventCompleted", { detail: eventKey }));
   }
 }

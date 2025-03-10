@@ -43,6 +43,7 @@ export class QuestManager {
 
     // Restore UI state for the repeating quest if previously saved.
     if (StateManager.get("quest_state_repeating_quest")) {
+      console.log("[QuestManager] Detected saved state for repeating quest.");
       this.restoreRepeatingQuestUI();
     }
 
@@ -82,24 +83,26 @@ export class QuestManager {
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(false);
       }
-      console.log("QuestManager.syncQuestState: Game finalized; Post button disabled.");
+      console.log("[QuestManager.syncQuestState] Game finalized; Post button disabled.");
       return;
     }
     const mirrorQuestRecord = this.app.databaseManager.getQuestRecord("mirror_quest");
     const repeatingQuestRecord = this.app.databaseManager.getQuestRecord("repeating_quest");
+    console.log("[QuestManager.syncQuestState] mirrorQuestRecord:", mirrorQuestRecord);
+    console.log("[QuestManager.syncQuestState] repeatingQuestRecord:", repeatingQuestRecord);
     const activeQuestRecord = mirrorQuestRecord || repeatingQuestRecord;
     if (activeQuestRecord && activeQuestRecord.status !== "finished") {
       StateManager.set("postButtonDisabled", "true");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(false);
       }
-      console.log("QuestManager.syncQuestState: Active quest detected; Post button disabled.");
+      console.log("[QuestManager.syncQuestState] Active quest detected; Post button disabled.");
     } else {
       StateManager.set("postButtonDisabled", "false");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(true);
       }
-      console.log("QuestManager.syncQuestState: No active quest or quest finished; Post button enabled.");
+      console.log("[QuestManager.syncQuestState] No active quest or quest finished; Post button enabled.");
     }
   }
 
@@ -117,6 +120,7 @@ export class QuestManager {
       console.warn(`[QuestManager] Quest with key "${key}" not found.`);
       return;
     }
+    console.log(`[QuestManager] Activating quest: ${key}`);
     await quest.activate();
     // Update the UI state after quest activation.
     await this.syncQuestState();
@@ -135,6 +139,7 @@ export class QuestManager {
       console.warn(`[QuestManager] Cannot check quest "${key}": not found.`);
       return;
     }
+    console.log(`[QuestManager] Finishing quest: ${key}`);
     await quest.finish();
     // Update the UI state after quest completion.
     await this.syncQuestState();
@@ -157,7 +162,7 @@ export class QuestManager {
       status
     };
     await this.app.databaseManager.saveQuestRecord(questData);
-    console.log("Quest progress updated:", questData);
+    console.log("[QuestManager] Quest progress updated:", questData);
   }
 
   /**

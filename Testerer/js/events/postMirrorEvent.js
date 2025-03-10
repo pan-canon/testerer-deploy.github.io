@@ -6,7 +6,10 @@ import { ErrorManager } from '../errorManager.js';
  * PostMirrorEvent
  * 
  * This event publishes a ghost post and sets flags to start the mirror quest.
- * It now always logs its ghost post and then dispatches a "gameEventCompleted" event.
+ * It updates the UI via ViewManager and uses StateManager to set the necessary flags.
+ *
+ * NOTE: This event is part of the sequential chain managed by GhostManager.
+ * It only performs its task and then dispatches a "gameEventCompleted" event.
  */
 export class PostMirrorEvent extends BaseEvent {
   /**
@@ -20,11 +23,15 @@ export class PostMirrorEvent extends BaseEvent {
   }
 
   async activate() {
+    if (this.eventManager.isEventLogged(this.key)) {
+      console.log(`[PostMirrorEvent] Event '${this.key}' is already logged, skipping activation.`);
+      return;
+    }
+
     console.log(`[PostMirrorEvent] Activating event '${this.key}'.`);
-    // Always log the ghost post.
     await this.eventManager.addDiaryEntry(this.key, true);
-    
-    // Set required flags.
+
+    // Set required flags to indicate the mirror quest is ready and a repeating cycle is active.
     StateManager.set("mirrorQuestReady", "true");
     StateManager.set("isRepeatingCycle", "true");
 
@@ -32,14 +39,15 @@ export class PostMirrorEvent extends BaseEvent {
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
       this.app.viewManager.setPostButtonEnabled(true);
     }
-    
-    // Trigger the mirror visual effect if available.
+
+    // Trigger the mirror effect if available.
     if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === "function") {
       this.app.visualEffectsManager.triggerMirrorEffect();
     }
+
     console.log("[PostMirrorEvent] Mirror quest cycle ended; waiting for user action to trigger the next quest.");
     
-    // Dispatch the event-completed signal.
+    // Dispatch an event to signal completion of this event.
     document.dispatchEvent(new CustomEvent("gameEventCompleted", { detail: this.key }));
   }
 }

@@ -1,11 +1,11 @@
 // --- Quest Classes ---
-import { BaseMirrorQuest } from './quests/BaseMirrorQuest.js';
-import { BaseRepeatingQuest } from './quests/BaseRepeatingQuest.js';
-import { FinalQuest } from './quests/FinalQuest.js';
+import { BaseMirrorQuest } from '../quests/BaseMirrorQuest.js';
+import { BaseRepeatingQuest } from '../quests/BaseRepeatingQuest.js';
+import { FinalQuest } from '../quests/FinalQuest.js';
 
 // --- State and Error Management ---
-import { StateManager } from './managers/StateManager.js';
-import { ErrorManager } from './managers/ErrorManager.js';
+import { StateManager } from './StateManager.js';
+import { ErrorManager } from './ErrorManager.js';
 
 /**
  * QuestManager class

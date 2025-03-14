@@ -1,6 +1,6 @@
 // Define BASE_PATH based on current URL.
 // If the URL contains "/Testerer/", assume GitHub Pages environment and set BASE_PATH accordingly.
-const BASE_PATH = self.location.pathname.includes("/Testerer/")
+const BASE_PATH = self.location.hostname.includes("github.io")
   ? "/testerer-deploy.github.io/Testerer/game"
   : "";
 

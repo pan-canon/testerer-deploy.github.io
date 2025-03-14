@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const BASE_PATH = window.location.pathname.includes("/Testerer/")
         ? "/Testerer/game"
         : "";
-      const registration = await navigator.serviceWorker.register(`${BASE_PATH}/ServiceWorker.js`);
+      const registration = await navigator.serviceWorker.register(`${BASE_PATH}/sw.js`);
       console.log('✅ Service Worker registered with scope:', registration.scope);
     } catch (error) {
       console.error('❌ Error during Service Worker registration:', error);

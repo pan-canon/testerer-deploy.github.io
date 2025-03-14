@@ -1,4 +1,4 @@
-import { NotificationManager } from './managers/NotificationManager.js';
+import { NotificationManager } from './NotificationManager.js';
 
 /**
  * ErrorManager

@@ -1,5 +1,5 @@
-import { SQLiteDataManager } from './managers/SQLiteDataManager.js';
-import { ErrorManager } from './managers/ErrorManager.js';
+import { SQLiteDataManager } from './SQLiteDataManager.js';
+import { ErrorManager } from './ErrorManager.js';
 
 /**
  * DatabaseManager

@@ -1,5 +1,5 @@
-import { ErrorManager } from './managers/ErrorManager.js';
-import { StateManager } from './managers/StateManager.js';
+import { ErrorManager } from './ErrorManager.js';
+import { StateManager } from './StateManager.js';
 
 export class ApartmentPlanManager {
   /**

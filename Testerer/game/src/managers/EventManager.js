@@ -1,4 +1,4 @@
-import { ErrorManager } from './managers/ErrorManager.js';
+import { ErrorManager } from './ErrorManager.js';
 
 /**
  * EventManager

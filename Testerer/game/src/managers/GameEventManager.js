@@ -1,11 +1,11 @@
-import { WelcomeEvent } from './events/WelcomeEvent.js';
-import { PostMirrorEvent } from './events/PostMirrorEvent.js';
-import { PostRepeatingEvent } from './events/PostRepeatingEvent.js';
-import { FinalEvent } from './events/FinalEvent.js';
+import { WelcomeEvent } from '../events/WelcomeEvent.js';
+import { PostMirrorEvent } from '../events/PostMirrorEvent.js';
+import { PostRepeatingEvent } from '../events/PostRepeatingEvent.js';
+import { FinalEvent } from '../events/FinalEvent.js';
 
 // --- State and Error Management ---
-import { StateManager } from './managers/StateManager.js';
-import { ErrorManager } from './managers/ErrorManager.js';
+import { StateManager } from './StateManager.js';
+import { ErrorManager } from './ErrorManager.js';
 
 /**
  * GameEventManager class

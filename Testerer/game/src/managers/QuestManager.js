@@ -78,7 +78,7 @@ export class QuestManager {
    * - Otherwise, enable the Post button.
    */
   async syncQuestState() {
-    if (StateManager.get("gameFinalized") === "true" || StateManager.get("questActive") === "true") {
+    if (StateManager.get("gameFinalized") === "true") {
       StateManager.set("postButtonDisabled", "true");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(false);

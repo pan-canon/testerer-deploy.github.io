@@ -39,7 +39,7 @@ export class DatabaseManager {
     try {
       // Load SQL.js, providing a locateFile function to find necessary files.
       const SQL = await initSqlJs({
-        locateFile: file => `js/${file}`
+        locateFile: file => `managers/${file}`
       });
       
       // Restore database from IndexedDB if saved, otherwise create a new instance.

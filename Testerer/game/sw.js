@@ -1,7 +1,7 @@
 // Define BASE_PATH based on current URL.
 // If the URL contains "/Testerer/", assume GitHub Pages environment and set BASE_PATH accordingly.
 const BASE_PATH = self.location.pathname.includes("/Testerer/")
-  ? "/Testerer/game"
+  ? "/testerer-deploy.github.io/Testerer/game"
   : "";
 
 // Define the cache name. Update the version whenever any file changes.

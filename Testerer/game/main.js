@@ -34,8 +34,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   if ('serviceWorker' in navigator) {
     try {
       // Determine BASE_PATH based on the URL.
-      const BASE_PATH = window.location.pathname.includes("/Testerer/") 
-        ? "/testerer-deploy.github.io/Testerer"
+      const BASE_PATH = window.location.pathname.includes("/Testerer/")
+        ? "/Testerer/game"
         : "";
       const registration = await navigator.serviceWorker.register(`${BASE_PATH}/serviceWorker.js`);
       console.log('✅ Service Worker registered with scope:', registration.scope);
@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Update mechanism: attach an event listener to the update button.
-  // This calls the clearCache() method via ViewManager.
+  // This calls the clearCache() method on the ViewManager, which should trigger a cache clear in the Service Worker.
   const updateBtn = document.getElementById("update-btn");
   if (updateBtn) {
     updateBtn.addEventListener("click", () => {

@@ -600,7 +600,21 @@ export class ViewManager {
   }
 
   // ------------------ Repeating Quest UI ------------------
-
+  /**
+   * startRepeatingQuestUI
+   * Initializes the UI for a repeating quest stage.
+   * It displays the status, enables the "Shoot" button, and attaches an onClick handler.
+   * The onClick handler first checks if the quest (passed via options.quest) is finished.
+   * If not finished, it disables the Shoot button and calls the provided onShoot callback.
+   *
+   * @param {object} options - Options including:
+   *   - statusElementId: the ID of the status element.
+   *   - shootButtonId: the ID of the Shoot button.
+   *   - stage: current stage number.
+   *   - totalStages: total number of stages.
+   *   - onShoot: callback to be executed when Shoot is pressed.
+   *   - quest: the current repeating quest instance (for checking its finished flag).
+   */
   startRepeatingQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
     if (statusElem) {
@@ -615,8 +629,14 @@ export class ViewManager {
       shootBtn.style.pointerEvents = "auto";
       shootBtn.onclick = null;
       shootBtn.onclick = () => {
+        // Extra check: if the quest is finished, ignore the click.
+        if (options.quest && options.quest.finished) {
+          console.log("[ViewManager] Quest is finished; Shoot button click ignored.");
+          return;
+        }
+        // Disable the Shoot button immediately.
         this.setShootButtonActive(false);
-        if (typeof options.onShoot === 'function') {
+        if (typeof options.onShoot === "function") {
           options.onShoot();
         }
       };

@@ -279,7 +279,19 @@ export class ViewManager {
         shootBtn.style.display = "none";
       }
       this.showPostButton();
-      console.log("[ViewManager] Switched to diary view.");
+  console.log("[ViewManager] Switching to diary view...");
+
+  this.saveButtonStates(); // Сохранить статусы перед переключением
+
+  if (this.diaryContainer) this.diaryContainer.style.display = "block";
+  if (this.globalCamera) this.globalCamera.style.display = "none";
+
+  if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = "inline-block";
+  if (this.toggleDiaryBtn) this.toggleDiaryBtn.style.display = "none";
+
+  if (this.shootBtn) this.shootBtn.style.display = "none";
+
+  this.restoreButtonStates();
     }
   }
 
@@ -297,7 +309,23 @@ export class ViewManager {
         shootBtn.disabled = true;
         shootBtn.style.pointerEvents = "none";
       }
-      console.log("[ViewManager] Switched to camera view.");
+  console.log("[ViewManager] Switching to camera view...");
+  
+  this.saveButtonStates(); // Сохранить статусы перед переключением
+
+  if (this.diaryContainer) this.diaryContainer.style.display = "none";
+  if (this.globalCamera) this.globalCamera.style.display = "flex";
+
+  if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = "none";
+  if (this.toggleDiaryBtn) this.toggleDiaryBtn.style.display = "inline-block";
+
+  if (this.shootBtn) {
+    this.shootBtn.style.display = "inline-block";
+    this.shootBtn.disabled = true; 
+    this.shootBtn.style.pointerEvents = "none";
+  }
+
+  this.restoreButtonStates();
     }
   }
 

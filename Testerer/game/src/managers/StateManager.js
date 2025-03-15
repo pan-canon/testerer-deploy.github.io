@@ -66,4 +66,38 @@ export class StateManager {
       ErrorManager.logError(`StateManager.remove error for key "${key}": ${error}`, "StateManager.remove");
     }
   }
+
+saveButtonStates() {
+  StateManager.set("postButtonEnabled", this.postBtn && !this.postBtn.disabled);
+  StateManager.set("shootButtonEnabled", this.shootBtn && !this.shootBtn.disabled);
+  StateManager.set("cameraButtonActive", this.toggleCameraBtn && this.toggleCameraBtn.classList.contains("active"));
+  StateManager.set("diaryButtonActive", this.toggleDiaryBtn && this.toggleDiaryBtn.classList.contains("active"));
+  console.log("[ViewManager] Button states saved.");
+}
+
+restoreButtonStates() {
+  const postEnabled = StateManager.get("postButtonEnabled") === "true";
+  const shootEnabled = StateManager.get("shootButtonEnabled") === "true";
+  const cameraActive = StateManager.get("cameraButtonActive") === "true";
+  const diaryActive = StateManager.get("diaryButtonActive") === "true";
+
+  if (this.postBtn) this.postBtn.disabled = !postEnabled;
+  if (this.shootBtn) this.shootBtn.disabled = !shootEnabled;
+  if (this.toggleCameraBtn) {
+    if (cameraActive) {
+      this.toggleCameraBtn.classList.add("active");
+    } else {
+      this.toggleCameraBtn.classList.remove("active");
+    }
+  }
+  if (this.toggleDiaryBtn) {
+    if (diaryActive) {
+      this.toggleDiaryBtn.classList.add("active");
+    } else {
+      this.toggleDiaryBtn.classList.remove("active");
+    }
+  }
+  console.log("[ViewManager] Button states restored.");
+}
+
 }

@@ -122,54 +122,51 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * restoreUI – Restores the UI for the repeating quest if a cycle is active.
+   * This method now checks the DB record and, if the quest is active there,
+   * sets the local 'activated' flag to true before restoring the UI.
    */
-/**
- * restoreUI – Restores the UI for the repeating quest if a cycle is active.
- * This method now checks the DB record and, if the quest is active there,
- * sets the local 'activated' flag to true before restoring the UI.
- */
-restoreUI() {
-  console.log("[BaseRepeatingQuest] Attempting to restore repeating quest UI...");
+  restoreUI() {
+    console.log("[BaseRepeatingQuest] Attempting to restore repeating quest UI...");
 
-  // Retrieve the DB record for this quest.
-  const record = this.app.databaseManager.getQuestRecord(this.key);
-  
-  // If there is no record or the status is not "active", skip restoration.
-  if (!record || record.status !== "active") {
-    console.log("[BaseRepeatingQuest] DB record is not active; UI restoration skipped.");
-    return;
-  }
-  
-  // If the quest is finished locally, skip restoration.
-  if (this.finished) {
-    console.log("[BaseRepeatingQuest] Quest is finished; UI restoration skipped.");
-    return;
-  }
-  
-  // If the quest was not activated locally (e.g. after a page reload), set it to active based on DB record.
-  if (!this.activated) {
-    console.log("[BaseRepeatingQuest] Quest not activated locally; setting activated=true based on DB record.");
-    this.activated = true;
-  }
-  
-  // Function to restore UI state.
-  const restoreButtonState = () => {
-    this.startCheckLoop(); // This will reinitialize the repeating quest UI via ViewManager.
-    if (this.currentStage <= this.totalStages && this.app.isCameraOpen) {
-      if (this.app.viewManager && typeof this.app.viewManager.setShootButtonActive === 'function') {
-        this.app.viewManager.setShootButtonActive(true);
-        console.log("[BaseRepeatingQuest] Shoot button state restored as active.");
-      }
+    // Retrieve the DB record for this quest.
+    const record = this.app.databaseManager.getQuestRecord(this.key);
+    
+    // If there is no record or the status is not "active", skip restoration.
+    if (!record || record.status !== "active") {
+      console.log("[BaseRepeatingQuest] DB record is not active; UI restoration skipped.");
+      return;
     }
-  };
+    
+    // If the quest is finished locally, skip restoration.
+    if (this.finished) {
+      console.log("[BaseRepeatingQuest] Quest is finished; UI restoration skipped.");
+      return;
+    }
+    
+    // If the quest was not activated locally (e.g. after a page reload), set it to active based on DB record.
+    if (!this.activated) {
+      console.log("[BaseRepeatingQuest] Quest not activated locally; setting activated=true based on DB record.");
+      this.activated = true;
+    }
+    
+    // Function to restore UI state.
+    const restoreButtonState = () => {
+      this.startCheckLoop(); // This will reinitialize the repeating quest UI via ViewManager.
+      if (this.currentStage <= this.totalStages && this.app.isCameraOpen) {
+        if (this.app.viewManager && typeof this.app.viewManager.setShootButtonActive === 'function') {
+          this.app.viewManager.setShootButtonActive(true);
+          console.log("[BaseRepeatingQuest] Shoot button state restored as active.");
+        }
+      }
+    };
 
-  // If the camera is not open yet, wait for the "cameraReady" event.
-  if (!this.app.isCameraOpen) {
-    document.addEventListener("cameraReady", restoreButtonState, { once: true });
-  } else {
-    restoreButtonState();
+    // If the camera is not open yet, wait for the "cameraReady" event.
+    if (!this.app.isCameraOpen) {
+      document.addEventListener("cameraReady", restoreButtonState, { once: true });
+    } else {
+      restoreButtonState();
+    }
   }
-}
 
   /**
    * finishStage – Completes one stage of the repeating quest.

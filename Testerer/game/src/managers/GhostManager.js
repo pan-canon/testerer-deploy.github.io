@@ -247,31 +247,39 @@ export class GhostManager {
    * @param {string} questKey - The key of the quest to be started.
    * @returns {boolean} True if the quest can be launched, false otherwise.
    */
-  canStartQuest(questKey) {
-    const record = this.app.databaseManager.getQuestRecord(questKey);
-    if (questKey === "repeating_quest") {
-      if (record && record.status === "active") {
-        console.warn(`Repeating quest "${questKey}" is already active.`);
-        return false;
-      }
-      // If record is "inactive" or absent, it is allowed.
-    } else {
-      if (record && record.status !== "finished") {
-        console.warn(`Quest "${questKey}" is already active with status "${record.status}".`);
-        return false;
-      }
-    }
-    const activeQuestKey = StateManager.get("activeQuestKey");
-    if (activeQuestKey) {
-      console.warn(`Another quest "${activeQuestKey}" is already active, cannot start quest "${questKey}".`);
+canStartQuest(questKey) {
+  const record = this.app.databaseManager.getQuestRecord(questKey);
+
+  if (questKey === "repeating_quest") {
+    // Запрещаем старт, только если статус "active"
+    if (record && record.status === "active") {
+      console.warn(`Repeating quest "${questKey}" is already active.`);
       return false;
     }
-    if (!this.isNextInSequence(questKey)) {
-      console.error(`Quest "${questKey}" is not the next expected quest in the sequence.`);
+    // Если "inactive" или "finished" – разрешаем
+  } else {
+    // Для обычных квестов оставляем старую логику:
+    if (record && record.status !== "finished") {
+      console.warn(`Quest "${questKey}" is already active with status "${record.status}".`);
       return false;
     }
-    return true;
   }
+
+  // Проверяем нет ли другого активного квеста
+  const activeQuestKey = StateManager.get("activeQuestKey");
+  if (activeQuestKey) {
+    console.warn(`Another quest "${activeQuestKey}" is active. Can't start "${questKey}".`);
+    return false;
+  }
+
+  // Проверяем соответствие последовательности
+  if (!this.isNextInSequence(questKey)) {
+    console.error(`Quest "${questKey}" is not the next expected quest.`);
+    return false;
+  }
+
+  return true;
+}
 
   /**
    * startQuest
@@ -315,7 +323,7 @@ export class GhostManager {
    * For the repeating quest, if the DB record is "inactive", it updates it to "active" before activation.
    */
   async handlePostButtonClick() {
-    // Immediately disable the "Post" button to prevent repeated clicks.
+    // Disable button to prevent multiple clicks
     this.app.viewManager.setPostButtonEnabled(false);
 
     const nextEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
@@ -323,19 +331,28 @@ export class GhostManager {
       console.warn("No next sequence entry found.");
       return;
     }
-    console.log(`GhostManager: Handling Post button click. Next expected quest: ${nextEntry.questKey}`);
+    console.log(`GhostManager: Handling Post button. Next questKey: ${nextEntry.questKey}`);
 
+    // 1) Проверяем, что квест можно стартовать (состояние "inactive" или "finished").
+    //    canStartQuest(questKey) теперь ЛОЯЛЕН к "inactive" для repeating_quest.
     if (!this.canStartQuest(nextEntry.questKey)) {
+      console.log(`Quest "${nextEntry.questKey}" cannot be started right now.`);
       return;
     }
+
+    // 2) Если это repeating_quest и он "inactive", меняем на "active" (или пусть делает сам activateQuest).
     if (nextEntry.questKey === "repeating_quest") {
-      const record = this.app.databaseManager.getQuestRecord("repeating_quest");
-      if (record && record.status === "inactive") {
-        console.log("Re-activating repeating quest from inactive state.");
-        record.status = "active";
-        await this.app.databaseManager.saveQuestRecord(record);
+      const rec = this.app.databaseManager.getQuestRecord("repeating_quest");
+      if (rec && rec.status === "inactive") {
+        console.log("Changing repeating quest from inactive -> active before activation...");
+        rec.status = "active";
+        this.app.databaseManager.saveQuestRecord(rec);
+        // Не вызываем canStartQuest заново, потому что мы уже сделали проверку:
+        // "inactive" -> "active" – окей!
       }
     }
+
+    // 3) Теперь действительно запускаем квест
     await this.startQuest(nextEntry.questKey);
   }
 

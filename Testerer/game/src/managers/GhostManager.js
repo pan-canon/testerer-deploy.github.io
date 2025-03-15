@@ -271,6 +271,9 @@ export class GhostManager {
    * If no quest is active, launches the next quest from the sequence.
    */
   async handlePostButtonClick() {
+    // Немедленно блокируем кнопку «Пост» для предотвращения повторных кликов.
+    this.app.viewManager.setPostButtonEnabled(false);
+
     if (StateManager.get("activeQuestKey")) {
       console.error("Quest already launched. Please wait until the current quest completes.");
       return;

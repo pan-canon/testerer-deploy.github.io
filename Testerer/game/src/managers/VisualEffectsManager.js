@@ -140,7 +140,7 @@ export class VisualEffectsManager {
       }
     }
     // Play the ringtone audio for 3 seconds.
-    this.playAudioWithStop('../../assets/audio/phone_ringtone.mp3', 3000);
+    this.playAudioWithStop('../../../../assets/audio/phone_ringtone.mp3', 3000);
   }
 
   /**
@@ -187,7 +187,7 @@ export class VisualEffectsManager {
    * Triggers the whisper effect by playing a whisper audio for 5 seconds.
    */
   triggerWhisperEffect() {
-    this.playAudioWithStop('../../assets/audio/whisper.mp3', 5000);
+    this.playAudioWithStop('../../../../assets/audio/whisper.mp3', 5000);
   }
 
   /**
@@ -204,7 +204,7 @@ export class VisualEffectsManager {
     this.setControlsBlocked(true);
 
     // Play ghost sound.
-    const ghostSound = new Audio('../../assets/audio/ghost_effect.mp3');
+    const ghostSound = new Audio('../../../../assets/audio/ghost_effect.mp3');
     ghostSound.play();
 
     this.animateHTMLText(
@@ -231,7 +231,7 @@ export class VisualEffectsManager {
   triggerUserTextEffect(targetElem, text, callback) {
     // Create a pencil icon.
     const pencilIcon = document.createElement("img");
-    pencilIcon.src = "../../assets/images/pencil.png";
+    pencilIcon.src = "../../../../assets/images/pencil.png";
     pencilIcon.alt = "Typing...";
     Object.assign(pencilIcon.style, {
       width: "24px",
@@ -248,7 +248,7 @@ export class VisualEffectsManager {
     this.setControlsBlocked(true);
 
     // Play typing sound.
-    const typeSound = new Audio('../../assets/audio/type_sound.mp3');
+    const typeSound = new Audio('../../../../assets/audio/type_sound.mp3');
     typeSound.loop = true;
     typeSound.play();
 

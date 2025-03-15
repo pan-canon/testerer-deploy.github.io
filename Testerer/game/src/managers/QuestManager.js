@@ -176,4 +176,21 @@ export class QuestManager {
       repeatingQuest.restoreUI();
     }
   }
+
+  /**
+   * restoreAllActiveQuests
+   * Scans through all quests, retrieves their database records, and if a quest is marked
+   * "active" and is not finished locally, calls its restoreUI() method. This provides a
+   * universal approach to re-initialize any ongoing quest's UI without specialized checks.
+   */
+  restoreAllActiveQuests() {
+    console.log("[QuestManager] Attempting to restore UI for all active quests...");
+    this.quests.forEach(quest => {
+      const record = this.app.databaseManager.getQuestRecord(quest.key);
+      if (record && record.status === "active" && !quest.finished) {
+        console.log(`[QuestManager] Found active quest "${quest.key}". Restoring UI...`);
+        quest.restoreUI();
+      }
+    });
+  }
 }

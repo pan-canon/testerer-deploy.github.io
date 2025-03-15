@@ -161,6 +161,7 @@ async syncQuestState() {
       repeatingQuest.restoreUI();
     }
   }
+<<<<<<< HEAD
 
 /**
  * restoreAllActiveQuests
@@ -188,4 +189,6 @@ async syncQuestState() {
       }
     });
   }
+=======
+>>>>>>> parent of 785a026 (laslsa)
 }

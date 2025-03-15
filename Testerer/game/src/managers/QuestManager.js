@@ -164,6 +164,7 @@ async syncQuestState() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 
+<<<<<<< HEAD
 /**
  * restoreAllActiveQuests
  * Scans through all quests, retrieves their database records, and if a quest is considered active—
@@ -171,10 +172,19 @@ async syncQuestState() {
  * and the quest is not marked as finished locally—calls its restoreUI() method.
  * This provides a universal approach to re-initialize any ongoing quest's UI without specialized checks.
  */
+=======
+  /**
+   * restoreAllActiveQuests
+   * Scans through all quests, retrieves their database records, and if a quest is marked
+   * "active" and is not finished locally, calls its restoreUI() method. This provides a
+   * universal approach to re-initialize any ongoing quest's UI without specialized checks.
+   */
+>>>>>>> parent of 272483a (Update QuestManager.js)
   restoreAllActiveQuests() {
     console.log("[QuestManager] Attempting to restore UI for all active quests...");
     this.quests.forEach(quest => {
       const record = this.app.databaseManager.getQuestRecord(quest.key);
+<<<<<<< HEAD
       // Consider the quest active if DB status is "active" OR if status is "finished" but there are still stages left
       if (
         record &&
@@ -187,6 +197,11 @@ async syncQuestState() {
         } else {
           console.log([QuestManager] Quest "${quest.key}" does not implement restoreUI().);
         }
+=======
+      if (record && record.status === "active" && !quest.finished) {
+        console.log(`[QuestManager] Found active quest "${quest.key}". Restoring UI...`);
+        quest.restoreUI();
+>>>>>>> parent of 272483a (Update QuestManager.js)
       }
     });
   }

@@ -170,6 +170,13 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.saveState();
 
     if (this.currentStage <= this.totalStages) {
+      // For intermediate stages, force the quest record to be "finished" so that a new instance can be started.
+      await this.app.databaseManager.saveQuestRecord({
+        quest_key: this.key,
+        status: "finished",
+        current_stage: this.currentStage,
+        total_stages: this.totalStages
+      });
       StateManager.set("mirrorQuestReady", "true");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(true);
@@ -179,57 +186,28 @@ export class BaseRepeatingQuest extends BaseEvent {
       document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
       console.log("[BaseRepeatingQuest] questCompleted event dispatched for repeating quest stage.");
     } else {
-      await this.finish();
+      // If the current stage exceeds the total stages, finish the quest completely.
+      await this.finishCompletely();
     }
   }
 
   /**
-   * finish – Completes the repeating quest.
-   * Logs the final diary entry, disables the "Post" button, resets quest state,
-   * and resets the "Open Camera" button.
-   * It does NOT automatically trigger the next event.
-   * Dispatches a "questCompleted" event.
+   * finishCompletely - Finalizes the repeating quest.
+   * Sets the quest as finished in the database and dispatches the questCompleted event.
    */
-  async finish() {
-    if (this.finished) return;
+  async finishCompletely() {
+    // Mark the quest as finished.
     this.finished = true;
-    this.saveState();
-    console.log(`[BaseRepeatingQuest] All ${this.totalStages} stages completed!`);
-
-    await this.eventManager.addDiaryEntry(`${this.key}_complete`, true);
-
-    // Remove the mirrorQuestReady flag.
-    StateManager.remove("mirrorQuestReady");
-
-    if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
-      this.app.viewManager.setPostButtonEnabled(false);
-      console.log("[BaseRepeatingQuest] Post button disabled after finishing repeating quest.");
-    }
-
-    StateManager.remove(`quest_state_${this.key}`);
-
-    if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {
-      this.app.viewManager.setCameraButtonActive(false);
-      console.log("[BaseRepeatingQuest] Camera button active state reset after quest completion.");
-    }
-
-    if (this.app.viewManager && typeof this.app.viewManager.stopRepeatingQuestUI === 'function') {
-      this.app.viewManager.stopRepeatingQuestUI(this.statusElementId);
-    }
-
+    // Save the final state in the database with status "finished".
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
       status: "finished",
       current_stage: this.currentStage,
       total_stages: this.totalStages
     });
-
-    // Update UI state after finishing.
-    await this.app.questManager.syncQuestState();
-
-    // Dispatch the "questCompleted" event to signal full completion.
+    // Dispatch the questCompleted event to signal full completion.
     document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
-    console.log("[BaseRepeatingQuest] questCompleted event dispatched for full completion.");
+    console.log(`[BaseRepeatingQuest] Quest completely finished. questCompleted event dispatched.`);
   }
 
   /**

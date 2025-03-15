@@ -28,7 +28,7 @@ export class DatabaseManager {
     // A Promise that resolves after the database has been initialized.
     this.initDatabasePromise = this.initDatabase();
   }
-
+ 
   /**
    * initDatabase – Asynchronously initializes the database.
    * Restores the database from persistence if available;

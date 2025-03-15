@@ -46,8 +46,6 @@ export class ViewManager {
     this.toggleDiaryBtn = document.getElementById("toggle-diary");
     this.globalCamera = document.getElementById("global-camera");
     this.postBtn = document.getElementById("post-btn");
-    this.saveButtonStates = this.saveButtonStates.bind(this);
-    this.restoreButtonStates = this.restoreButtonStates.bind(this);
 
     // --- Additional Control Buttons ---
     this.resetDataBtn = document.getElementById("reset-data");
@@ -270,7 +268,6 @@ export class ViewManager {
   showDiaryView() {
     const diary = document.getElementById("diary");
     if (diary && this.globalCamera) {
-      this.saveButtonStates();
       diary.style.display = "block";
       this.globalCamera.style.display = "none";
       if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = 'inline-block';
@@ -283,41 +280,12 @@ export class ViewManager {
       }
       this.showPostButton();
       console.log("[ViewManager] Switched to diary view.");
-      this.restoreButtonStates();
     }
-  }
-
-  saveButtonStates() {
-    StateManager.set("postButtonEnabled", this.postBtn && !this.postBtn.disabled);
-    StateManager.set("shootButtonEnabled", this.shootBtn && !this.shootBtn.disabled);
-    StateManager.set("cameraButtonActive", this.toggleCameraBtn && this.toggleCameraBtn.classList.contains("active"));
-    StateManager.set("diaryButtonActive", this.toggleDiaryBtn && this.toggleDiaryBtn.classList.contains("active"));
-    console.log("[ViewManager] Button states saved.");
-  }
-
-  restoreButtonStates() {
-    const postEnabled = StateManager.get("postButtonEnabled") === "true";
-    const shootEnabled = StateManager.get("shootButtonEnabled") === "true";
-    const cameraActive = StateManager.get("cameraButtonActive") === "true";
-    const diaryActive = StateManager.get("diaryButtonActive") === "true";
-
-    if (this.postBtn) this.postBtn.disabled = !postEnabled;
-    if (this.shootBtn) this.shootBtn.disabled = !shootEnabled;
-    if (this.toggleCameraBtn) {
-      if (cameraActive) this.toggleCameraBtn.classList.add("active");
-      else this.toggleCameraBtn.classList.remove("active");
-    }
-    if (this.toggleDiaryBtn) {
-      if (diaryActive) this.toggleDiaryBtn.classList.add("active");
-      else this.toggleDiaryBtn.classList.remove("active");
-    }
-    console.log("[ViewManager] Button states restored.");
   }
 
   showCameraView() {
     const diary = document.getElementById("diary");
     if (diary && this.globalCamera) {
-      this.saveButtonStates();
       diary.style.display = "none";
       this.globalCamera.style.display = "flex";
       if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = 'none';
@@ -330,7 +298,6 @@ export class ViewManager {
         shootBtn.style.pointerEvents = "none";
       }
       console.log("[ViewManager] Switched to camera view.");
-      this.restoreButtonStates();
     }
   }
 

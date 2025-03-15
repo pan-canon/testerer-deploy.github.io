@@ -50,7 +50,7 @@ export class App {
     this.visualEffectsManager = new VisualEffectsManager(this, this.viewManager.controlsPanel);
 
     // Initialize GhostManager.
-    // Restore current sequence index from StateManager (default to 0 if not set)
+    // Restore current sequence index from StateManager (default to 0 if not set).
     const savedSequenceIndex = parseInt(StateManager.get('currentSequenceIndex'), 10) || 0;
     this.ghostManager = new GhostManager(savedSequenceIndex, this.profileManager, this);
     
@@ -113,6 +113,11 @@ export class App {
     // Synchronize quest state from the database via QuestManager.
     // This call ensures UI states (e.g., button disabled/enabled) are updated.
     await this.questManager.syncQuestState();
+
+    // NEW: Attempt to restore all active quests' UI after syncing the state.
+    // This is a universal approach so that any quest with status "active" and not finished
+    // will have its restoreUI() method called.
+    this.questManager.restoreAllActiveQuests();
 
     // Update UI: Show the toggle camera button and update the diary display.
     this.viewManager.showToggleCameraButton();
@@ -273,6 +278,10 @@ export class App {
       });
       console.log("Video ready:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
       this.isCameraOpen = true;
+
+      // (Optional) If you want to re-restore quest UI each time you switch to camera:
+      // this.questManager.restoreAllActiveQuests();
+
     } else {
       console.log("📓 Returning to diary view...");
       this.viewManager.showDiaryView();

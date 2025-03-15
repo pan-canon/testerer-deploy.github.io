@@ -52,7 +52,7 @@ export class GhostManager {
     this.currentPhenomenonIndex = 0;
 
     const currentGhost = this.getCurrentGhost();
-    console.log(Current active ghost: ${currentGhost ? currentGhost.name : 'not found'});
+    console.log(`Current active ghost: ${currentGhost ? currentGhost.name : 'not found'}`);
 
     // Load the event-quest sequence configuration from JSON via SequenceManager.
     loadSequenceConfig()
@@ -61,13 +61,13 @@ export class GhostManager {
         // Restore saved sequence index from StateManager (if any)
         const savedIndex = parseInt(StateManager.get(StateManager.KEYS.CURRENT_SEQUENCE_INDEX), 10) || 0;
         this.sequenceManager.currentIndex = savedIndex;
-        console.log(Sequence configuration loaded. Current index: ${this.sequenceManager.currentIndex});
+        console.log(`Sequence configuration loaded. Current index: ${this.sequenceManager.currentIndex}`);
 
         // Auto-launch the first event if registration is complete and welcome event is not done.
         if (StateManager.get("registrationCompleted") === "true" && StateManager.get("welcomeDone") !== "true") {
           const firstEntry = this.sequenceManager.getCurrentEntry();
           if (firstEntry) {
-            console.log(Auto-launching initial event: ${firstEntry.eventKey});
+            console.log(`Auto-launching initial event: ${firstEntry.eventKey}`);
             this.eventManager.activateEvent(firstEntry.eventKey);
             // Save the active quest key
             this.activeQuestKey = firstEntry.questKey;
@@ -121,10 +121,10 @@ export class GhostManager {
     this.currentGhostId = ghostId;
     const ghost = this.getCurrentGhost();
     if (ghost) {
-      console.log(Ghost ${ghost.name} activated.);
+      console.log(`Ghost ${ghost.name} activated.`);
       await this.app.databaseManager.saveGhostState(ghost);
     } else {
-      ErrorManager.logError(Ghost with ID=${ghostId} not found!, "setCurrentGhost");
+      ErrorManager.logError(`Ghost with ID=${ghostId} not found!`, "setCurrentGhost");
     }
   }
 
@@ -136,7 +136,7 @@ export class GhostManager {
     const ghost = this.getCurrentGhost();
     if (ghost) {
       ghost.isFinished = true;
-      console.log(Ghost ${ghost.name} finished.);
+      console.log(`Ghost ${ghost.name} finished.`);
       await this.app.databaseManager.saveGhostState(ghost);
     } else {
       ErrorManager.logError("Cannot finish ghost: ghost not found.", "finishCurrentGhost");
@@ -166,28 +166,28 @@ export class GhostManager {
       return;
     }
     if (ghost.isFinished) {
-      ErrorManager.logError(Ghost "${ghost.name}" is already finished; phenomena unavailable., "triggerNextPhenomenon");
+      ErrorManager.logError(`Ghost "${ghost.name}" is already finished; phenomena unavailable.`, "triggerNextPhenomenon");
       return;
     }
     if (this.currentPhenomenonIndex < ghost.phenomenaCount) {
       const phenomenonNumber = this.currentPhenomenonIndex + 1;
-      const phenomenonEntry = ${ghost.name}: Phenomenon ${phenomenonNumber} - Approach the mirror;
+      const phenomenonEntry = `${ghost.name}: Phenomenon ${phenomenonNumber} - Approach the mirror`;
       await this.eventManager.addDiaryEntry(phenomenonEntry);
-      console.log(Triggered phenomenon for ${ghost.name}: ${phenomenonEntry});
+      console.log(`Triggered phenomenon for ${ghost.name}: ${phenomenonEntry}`);
       this.currentPhenomenonIndex++;
       await this.profileManager.saveGhostProgress({
         ghostId: this.currentGhostId,
         phenomenonIndex: this.currentPhenomenonIndex
       });
       if (this.currentPhenomenonIndex === ghost.phenomenaCount) {
-        const finalEntry = ${ghost.name}: Final phenomenon – ghost finished!;
+        const finalEntry = `${ghost.name}: Final phenomenon – ghost finished!`;
         await this.eventManager.addDiaryEntry(finalEntry);
         console.log(finalEntry);
-        console.log(Triggering final event for ghost "${ghost.name}"...);
+        console.log(`Triggering final event for ghost "${ghost.name}"...`);
         await this.app.gameEventManager.activateEvent("ghost_final_event");
       }
     } else {
-      ErrorManager.logError(All phenomena for ghost ${ghost.name} have been completed (index=${this.currentPhenomenonIndex})., "triggerNextPhenomenon");
+      ErrorManager.logError(`All phenomena for ghost ${ghost.name} have been completed (index=${this.currentPhenomenonIndex}).`, "triggerNextPhenomenon");
     }
   }
 
@@ -245,26 +245,30 @@ export class GhostManager {
    * @param {string} questKey - The key of the quest to be started.
    * @returns {boolean} True if the quest can be launched, false otherwise.
    */
-canStartQuest(questKey) {
-  const record = this.app.databaseManager.getQuestRecord(questKey);
-  if (record && record.status !== "finished") {
-    console.warn(`Quest "${questKey}" already active.`);
-    return false;
+  canStartQuest(questKey) {
+    // 1) Check if a record for the quest exists in the database and is not finished.
+    const record = this.app.databaseManager.getQuestRecord(questKey);
+    if (record && record.status !== "finished") {
+      console.warn(`Quest "${questKey}" is already active with status "${record.status}".`);
+      return false;
+    }
+
+    // 2) Check if there is an active quest already recorded in the StateManager.
+    const activeQuestKey = StateManager.get("activeQuestKey");
+    if (activeQuestKey) {
+      console.warn(`Another quest "${activeQuestKey}" is already active, cannot start quest "${questKey}".`);
+      return false;
+    }
+
+    // 3) Check if the quest key is the next expected quest in the sequence.
+    if (!this.isNextInSequence(questKey)) {
+      console.error(`Quest "${questKey}" is not the next expected quest in the sequence.`);
+      return false;
+    }
+
+    // All checks passed, quest can be started.
+    return true;
   }
-
-  if (this.activeQuestKey && this.activeQuestKey !== questKey) {
-    console.warn(`Another quest (${this.activeQuestKey}) is already active.`);
-    return false;
-  }
-
-  if (!this.isNextInSequence(questKey)) {
-    console.error(`Quest "${questKey}" is not next in the sequence.`);
-    return false;
-  }
-
-  return true;
-}
-
 
   /**
    * startQuest
@@ -279,10 +283,10 @@ canStartQuest(questKey) {
   async startQuest(questKey) {
     // Use the unified method to verify if the quest can be started.
     if (!this.canStartQuest(questKey)) {
-      console.error(Cannot start quest with key: ${questKey}. Unified check failed.);
+      console.error(`Cannot start quest with key: ${questKey}. Unified check failed.`);
       return;
     }
-    console.log(GhostManager: Starting quest with key: ${questKey});
+    console.log(`GhostManager: Starting quest with key: ${questKey}`);
     await this.app.questManager.activateQuest(questKey);
     this.activeQuestKey = questKey;
     StateManager.set("activeQuestKey", questKey);
@@ -299,10 +303,10 @@ canStartQuest(questKey) {
    */
   async startEvent(eventKey, isFollowup = false) {
     if (!isFollowup && !this.isNextEvent(eventKey)) {
-      console.error(Event "${eventKey}" is not next in sequence.);
+      console.error(`Event "${eventKey}" is not next in sequence.`);
       return;
     }
-    console.log(GhostManager: Starting event with key: ${eventKey});
+    console.log(`GhostManager: Starting event with key: ${eventKey}`);
     await this.app.gameEventManager.activateEvent(eventKey);
   }
 
@@ -324,7 +328,7 @@ canStartQuest(questKey) {
       console.warn("No next sequence entry found.");
       return;
     }
-    console.log(GhostManager: Handling Post button click. Next expected quest: ${nextEntry.questKey});
+    console.log(`GhostManager: Handling Post button click. Next expected quest: ${nextEntry.questKey}`);
 
     // Use the unified check to determine if the quest can be started.
     if (!this.canStartQuest(nextEntry.questKey)) {
@@ -341,11 +345,11 @@ canStartQuest(questKey) {
    * @param {string} eventKey - The completed event key.
    */
   onEventCompleted(eventKey) {
-    console.log(GhostManager: Event completed with key: ${eventKey});
+    console.log(`GhostManager: Event completed with key: ${eventKey}`);
     if (this.sequenceManager && this.sequenceManager.getCurrentEntry().nextEventKey === eventKey) {
       this.sequenceManager.increment();
       StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
-      console.log(GhostManager: Sequence index incremented to ${this.sequenceManager.currentIndex});
+      console.log(`GhostManager: Sequence index incremented to ${this.sequenceManager.currentIndex}`);
     }
   }
 
@@ -357,31 +361,33 @@ canStartQuest(questKey) {
    * @param {string} questKey - The completed quest key.
    */
   async onQuestCompleted(questKey) {
-    const currentEntry = this.sequenceManager.getCurrentEntry();
+    console.log(`GhostManager: Quest completed with key: ${questKey}`);
+    // Clear the active quest key.
+    this.activeQuestKey = null;
+    StateManager.remove("activeQuestKey");
 
     if (questKey === "repeating_quest") {
       const repeatingQuest = this.app.questManager.quests.find(q => q.key === "repeating_quest");
-      const questStatus = await repeatingQuest.getCurrentQuestStatus();
-
-      if (!questStatus.finished && questStatus.active) {
+      const questStatus = repeatingQuest ? await repeatingQuest.getCurrentQuestStatus() : { finished: false, currentStage: 1 };
+      console.log("Repeating quest status:", questStatus);
+      if (!questStatus.finished) {
         const dynamicEventKey = `post_repeating_event_stage_${questStatus.currentStage}`;
+        console.log(`Repeating quest stage completed. Triggering ghost event: ${dynamicEventKey} without sequence increment.`);
         await this.startEvent(dynamicEventKey, true);
         return;
-      } else if (questStatus.finished) {
-        this.sequenceManager.advanceToNext();
-        StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, this.sequenceManager.currentIndex);
-        const nextEvent = this.sequenceManager.getCurrentEntry().nextEventKey;
-        if (nextEvent) {
-          await this.startEvent(nextEvent, true);
-        }
+      } else {
+        console.log("Repeating quest fully completed. Now starting ghost event: final_event");
+        await this.startEvent("final_event", true);
+        this.sequenceManager.increment();
+        StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
+        return;
       }
-    } else {
-      const currentEntry = this.sequenceManager.getCurrentEntry();
-      if (currentEntry && currentEntry.questKey === questKey && currentEntry.nextEventKey) {
-        await this.startEvent(currentEntry.nextEventKey, true);
-        this.sequenceManager.currentIndex++;
-        StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, this.sequenceManager.currentIndex);
-      }
+    }
+
+    const currentEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
+    if (currentEntry && currentEntry.questKey === questKey && currentEntry.nextEventKey) {
+      console.log(`GhostManager: Quest completed. Now starting ghost event: ${currentEntry.nextEventKey}`);
+      await this.startEvent(currentEntry.nextEventKey, true);
     }
   }
 }

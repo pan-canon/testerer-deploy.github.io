@@ -31,13 +31,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Register the Service Worker if supported by the browser.
-  if ('ServiceWorker' in navigator) {
+  if ('sw' in navigator) {
     try {
       // Determine BASE_PATH based on the URL.
       const BASE_PATH = window.location.hostname.includes("github.io")
         ? "/testerer-deploy.github.io/Testerer/game"
         : "";
-      const registration = await navigator.ServiceWorker.register(`${BASE_PATH}/sw.js`);
+      const registration = await navigator.sw.register(`${BASE_PATH}/sw.js`);
       console.log('✅ Service Worker registered with scope:', registration.scope);
     } catch (error) {
       console.error('❌ Error during Service Worker registration:', error);

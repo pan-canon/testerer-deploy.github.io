@@ -77,19 +77,34 @@ export class QuestManager {
    * - If an active quest is detected (mirror or repeating) and not finished, disable the Post button.
    * - Otherwise, enable the Post button.
    */
-async syncQuestState() {
-  const mirrorQuestRecord = this.app.databaseManager.getQuestRecord("mirror_quest");
-  const repeatingQuestRecord = this.app.databaseManager.getQuestRecord("repeating_quest");
-
-  const activeQuestRecord = [mirrorQuestRecord, repeatingQuestRecord]
-    .find(record => record && record.status === "active");
-
-  if (activeQuestRecord) {
-    this.app.viewManager.setPostButtonEnabled(false);
-  } else {
-    this.app.viewManager.setPostButtonEnabled(true);
+  async syncQuestState() {
+    if (StateManager.get("gameFinalized") === "true" || StateManager.get("questActive") === "true") {
+      StateManager.set("postButtonDisabled", "true");
+      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
+        this.app.viewManager.setPostButtonEnabled(false);
+      }
+      console.log("[QuestManager.syncQuestState] Game finalized; Post button disabled.");
+      return;
+    }
+    const mirrorQuestRecord = this.app.databaseManager.getQuestRecord("mirror_quest");
+    const repeatingQuestRecord = this.app.databaseManager.getQuestRecord("repeating_quest");
+    console.log("[QuestManager.syncQuestState] mirrorQuestRecord:", mirrorQuestRecord);
+    console.log("[QuestManager.syncQuestState] repeatingQuestRecord:", repeatingQuestRecord);
+    const activeQuestRecord = mirrorQuestRecord || repeatingQuestRecord;
+    if (activeQuestRecord && activeQuestRecord.status !== "finished") {
+      StateManager.set("postButtonDisabled", "true");
+      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
+        this.app.viewManager.setPostButtonEnabled(false);
+      }
+      console.log("[QuestManager.syncQuestState] Active quest detected; Post button disabled.");
+    } else {
+      StateManager.set("postButtonDisabled", "false");
+      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
+        this.app.viewManager.setPostButtonEnabled(true);
+      }
+      console.log("[QuestManager.syncQuestState] No active quest or quest finished; Post button enabled.");
+    }
   }
-}
 
   /**
    * activateQuest
@@ -102,10 +117,10 @@ async syncQuestState() {
   async activateQuest(key) {
     const quest = this.quests.find(q => q.key === key);
     if (!quest) {
-      console.warn([QuestManager] Quest with key "${key}" not found.);
+      console.warn(`[QuestManager] Quest with key "${key}" not found.`);
       return;
     }
-    console.log([QuestManager] Activating quest: ${key});
+    console.log(`[QuestManager] Activating quest: ${key}`);
     await quest.activate();
     // Update the UI state after quest activation.
     await this.syncQuestState();
@@ -121,10 +136,10 @@ async syncQuestState() {
   async checkQuest(key) {
     const quest = this.quests.find(q => q.key === key);
     if (!quest) {
-      console.warn([QuestManager] Cannot check quest "${key}": not found.);
+      console.warn(`[QuestManager] Cannot check quest "${key}": not found.`);
       return;
     }
-    console.log([QuestManager] Finishing quest: ${key});
+    console.log(`[QuestManager] Finishing quest: ${key}`);
     await quest.finish();
     // Update the UI state after quest completion.
     await this.syncQuestState();
@@ -161,58 +176,21 @@ async syncQuestState() {
       repeatingQuest.restoreUI();
     }
   }
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 
-<<<<<<< HEAD
-/**
- * restoreAllActiveQuests
- * Scans through all quests, retrieves their database records, and if a quest is considered active—
- * i.e. either its DB status is "active" OR its status is "finished" but the current stage is not beyond totalStages,
- * and the quest is not marked as finished locally—calls its restoreUI() method.
- * This provides a universal approach to re-initialize any ongoing quest's UI without specialized checks.
- */
-=======
   /**
    * restoreAllActiveQuests
    * Scans through all quests, retrieves their database records, and if a quest is marked
    * "active" and is not finished locally, calls its restoreUI() method. This provides a
    * universal approach to re-initialize any ongoing quest's UI without specialized checks.
    */
->>>>>>> parent of 272483a (Update QuestManager.js)
   restoreAllActiveQuests() {
     console.log("[QuestManager] Attempting to restore UI for all active quests...");
     this.quests.forEach(quest => {
       const record = this.app.databaseManager.getQuestRecord(quest.key);
-<<<<<<< HEAD
-      // Consider the quest active if DB status is "active" OR if status is "finished" but there are still stages left
-      if (
-        record &&
-        (record.status === "active" || (record.status === "finished" && quest.currentStage <= quest.totalStages)) &&
-        !quest.finished
-      ) {
-        console.log([QuestManager] Found active quest "${quest.key}". Restoring UI...);
-        if (typeof quest.restoreUI === "function") {
-          quest.restoreUI();
-        } else {
-          console.log([QuestManager] Quest "${quest.key}" does not implement restoreUI().);
-        }
-=======
       if (record && record.status === "active" && !quest.finished) {
         console.log(`[QuestManager] Found active quest "${quest.key}". Restoring UI...`);
         quest.restoreUI();
->>>>>>> parent of 272483a (Update QuestManager.js)
       }
     });
   }
-=======
->>>>>>> parent of 785a026 (laslsa)
-=======
->>>>>>> parent of 785a026 (laslsa)
-=======
->>>>>>> parent of 785a026 (laslsa)
-=======
->>>>>>> parent of 785a026 (laslsa)
 }

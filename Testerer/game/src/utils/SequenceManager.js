@@ -67,7 +67,7 @@ export class SequenceManager {
  * @returns {Promise<SequenceManager>}
  */
 export async function loadSequenceConfig() {
-  const response = await fetch('../config/eventSequence.json');
+  const response = await fetch('./src/config/eventSequence.json');
   if (!response.ok) {
     throw new Error('Failed to load event sequence configuration');
   }

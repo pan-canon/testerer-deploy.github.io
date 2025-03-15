@@ -8,14 +8,19 @@ import { loadSequenceConfig } from '../utils/SequenceManager.js';
 
 /**
  * GhostManager class
+ * 
  * Manages the list of ghosts and their state. Responsibilities include:
  * - Maintaining the active ghost and tracking its phenomenon (quest step) progress.
  * - Saving the ghost state via DatabaseManager.
  * - Triggering events (e.g., final event) via GameEventManager.
  *
- * NEW CHANGE:
+ * NEW CHANGES:
  * - The event-quest sequence is loaded from an external JSON configuration via SequenceManager.
  * - The active quest key is stored persistently using StateManager.
+ * - A unified method 'canStartQuest' is provided to ensure that a quest cannot be started if:
+ *    1) A non-finished record for the quest exists in the database.
+ *    2) There is already an active quest registered.
+ *    3) The quest key does not match the expected next quest in the sequence.
  * - Auto-launch of the first event (e.g., "welcome") is performed if registration is completed.
  */
 export class GhostManager {
@@ -64,7 +69,7 @@ export class GhostManager {
           if (firstEntry) {
             console.log(`Auto-launching initial event: ${firstEntry.eventKey}`);
             this.eventManager.activateEvent(firstEntry.eventKey);
-            // Сохраняем ключ активного квеста
+            // Save the active quest key
             this.activeQuestKey = firstEntry.questKey;
             StateManager.set("activeQuestKey", this.activeQuestKey);
           }
@@ -208,7 +213,8 @@ export class GhostManager {
   // --------------- New API: Sequential Event and Quest Management ---------------
 
   /**
-   * isNextInSequence - Checks if the provided quest key matches the expected quest
+   * isNextInSequence
+   * Checks if the provided quest key matches the expected quest
    * from the loaded sequence configuration.
    * @param {string} questKey - The quest key to check.
    * @returns {boolean} True if it matches the expected quest; otherwise, false.
@@ -218,7 +224,8 @@ export class GhostManager {
   }
 
   /**
-   * isNextEvent - Checks if the provided event key matches the expected event
+   * isNextEvent
+   * Checks if the provided event key matches the expected event
    * from the loaded sequence configuration.
    * @param {string} eventKey - The event key to check.
    * @returns {boolean} True if it matches the expected event; otherwise, false.
@@ -228,31 +235,68 @@ export class GhostManager {
   }
 
   /**
-   * startQuest - Starts a quest after verifying it is the next expected quest.
-   * Uses persistent storage to ensure only one active quest exists.
+   * canStartQuest - Unified method to determine if a quest can be started.
+   *
+   * This method performs several checks to ensure that starting a new quest is valid:
+   * 1. It checks if there is an existing record for the quest in the database that is not finished.
+   * 2. It verifies that there is no active quest already recorded in the StateManager.
+   * 3. It checks if the provided quest key matches the expected quest in the sequence via isNextInSequence.
+   *
+   * @param {string} questKey - The key of the quest to be started.
+   * @returns {boolean} True if the quest can be launched, false otherwise.
+   */
+  canStartQuest(questKey) {
+    // 1) Check if a record for the quest exists in the database and is not finished.
+    const record = this.app.databaseManager.getQuestRecord(questKey);
+    if (record && record.status !== "finished") {
+      console.warn(`Quest "${questKey}" is already active with status "${record.status}".`);
+      return false;
+    }
+
+    // 2) Check if there is an active quest already recorded in the StateManager.
+    const activeQuestKey = StateManager.get("activeQuestKey");
+    if (activeQuestKey) {
+      console.warn(`Another quest "${activeQuestKey}" is already active, cannot start quest "${questKey}".`);
+      return false;
+    }
+
+    // 3) Check if the quest key is the next expected quest in the sequence.
+    if (!this.isNextInSequence(questKey)) {
+      console.error(`Quest "${questKey}" is not the next expected quest in the sequence.`);
+      return false;
+    }
+
+    // All checks passed, quest can be started.
+    return true;
+  }
+
+  /**
+   * startQuest
+   * Starts a quest after verifying that it can be launched using the unified check.
+   * This method ensures that:
+   * - There is no active quest.
+   * - The quest is the next expected in the sequence.
+   * - There is no non-finished record for the quest in the database.
    *
    * @param {string} questKey - The quest key to start.
    */
   async startQuest(questKey) {
-    const activeQuestKey = StateManager.get("activeQuestKey");
-    if (activeQuestKey) {
-      console.error(`Active quest already set: ${activeQuestKey}. Cannot start a new quest.`);
-      return;
-    }
-    if (!this.isNextInSequence(questKey)) {
-      console.error(`Quest "${questKey}" is not next in sequence.`);
+    // Use the unified method to verify if the quest can be started.
+    if (!this.canStartQuest(questKey)) {
+      console.error(`Cannot start quest with key: ${questKey}. Unified check failed.`);
       return;
     }
     console.log(`GhostManager: Starting quest with key: ${questKey}`);
     await this.app.questManager.activateQuest(questKey);
     this.activeQuestKey = questKey;
     StateManager.set("activeQuestKey", questKey);
-    // Optionally, обновляем UI после запуска квеста
+    // Optionally update the UI after quest activation.
     await this.app.questManager.syncQuestState();
   }
 
   /**
-   * startEvent - Starts an event.
+   * startEvent
+   * Starts an event.
    *
    * @param {string} eventKey - The event key to start.
    * @param {boolean} [isFollowup=false] - If true, bypass the sequence check.
@@ -267,28 +311,35 @@ export class GhostManager {
   }
 
   /**
-   * handlePostButtonClick - Called when the "Post" button is clicked.
+   * handlePostButtonClick
+   * Called when the "Post" button is clicked.
    * If no quest is active, launches the next quest from the sequence.
+   *
+   * This method immediately disables the "Post" button to prevent repeated clicks,
+   * retrieves the next sequence entry, and uses the unified check to ensure that
+   * the quest can be started.
    */
   async handlePostButtonClick() {
-    // Немедленно блокируем кнопку «Пост» для предотвращения повторных кликов.
+    // Immediately disable the "Post" button to prevent repeated clicks.
     this.app.viewManager.setPostButtonEnabled(false);
 
-    if (StateManager.get("activeQuestKey")) {
-      console.error("Quest already launched. Please wait until the current quest completes.");
-      return;
-    }
     const nextEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
     if (!nextEntry) {
       console.warn("No next sequence entry found.");
       return;
     }
     console.log(`GhostManager: Handling Post button click. Next expected quest: ${nextEntry.questKey}`);
+
+    // Use the unified check to determine if the quest can be started.
+    if (!this.canStartQuest(nextEntry.questKey)) {
+      return;
+    }
     await this.startQuest(nextEntry.questKey);
   }
 
   /**
-   * onEventCompleted - Called when a game event completes.
+   * onEventCompleted
+   * Called when a game event completes.
    * If the completed event matches the expected event, increments the sequence index.
    *
    * @param {string} eventKey - The completed event key.
@@ -303,14 +354,15 @@ export class GhostManager {
   }
 
   /**
-   * onQuestCompleted - Called when a quest completes.
+   * onQuestCompleted
+   * Called when a quest completes.
    * For repeating quests, triggers a dynamic event; for non-repeating quests, starts the next event.
    *
    * @param {string} questKey - The completed quest key.
    */
   async onQuestCompleted(questKey) {
     console.log(`GhostManager: Quest completed with key: ${questKey}`);
-    // Clear the active quest key
+    // Clear the active quest key.
     this.activeQuestKey = null;
     StateManager.remove("activeQuestKey");
 

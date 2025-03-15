@@ -120,14 +120,10 @@ export class App {
 
     // Check if a user profile is already saved.
     if (await this.profileManager.isProfileSaved()) {
+      // If registration is completed
       const profile = await this.profileManager.getProfile();
       console.log("Profile found:", profile);
       await this.showMainScreen();
-
-      // If registration is completed, auto-launch the welcome event.
-      if (StateManager.get("registrationCompleted") === "true") {
-        this.gameEventManager.autoLaunchWelcomeEvent();
-      }
     } else {
       // If no profile is found, show the registration screen.
       console.log("Profile not found, showing registration screen.");

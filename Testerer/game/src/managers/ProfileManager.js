@@ -43,8 +43,9 @@ export class ProfileManager {
 
   /**
    * resetProfile – Resets the profile and all related data.
-   * Calls the DataManager to remove profile data along with ghost and quest progress.
-   * Also clears transient state keys using StateManager (all keys except language-related ones).
+   * Calls the DataManager to remove profile data along with ghost and quest progress,
+   * and clears all transient state keys from localStorage (except for the language key).
+   * Also resets the SQL database stored in IndexedDB.
    * After reset, the service worker cache is cleared and the page is reloaded.
    */
   resetProfile() {
@@ -52,24 +53,22 @@ export class ProfileManager {
       this.dataManager.resetProfile(),    // Deletes the 'profile' key.
       this.dataManager.resetDatabase()      // Deletes the SQL database saved under 'sqlite', fully clearing tables.
     ]).then(() => {
-      // Clear transient state keys via StateManager (exclude language-related key).
-      StateManager.remove("animatedDiaryIds");
-      StateManager.remove("isRepeatingCycle");
-      StateManager.remove("mirrorQuestReady");
-      StateManager.remove("regData");
-      StateManager.remove("registrationCompleted");
-      StateManager.remove("cameraButtonActive");
-      StateManager.remove("shootButtonActive");
-      StateManager.remove("quest_state_repeating_quest");
-      StateManager.remove("gameFinalized");
+      // Clear all keys from localStorage except the language-related key.
+      const preserveKeys = ["language"]; // Adjust this array if language key is stored under a different name.
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (!preserveKeys.includes(key)) {
+          localStorage.removeItem(key);
+        }
+      }
 
       // NEW: Clear Service Worker caches to force script update.
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({ action: 'CLEAR_CACHE' });
+      if ('sw' in navigator && navigator.sw.controller) {
+        navigator.sw.controller.postMessage({ action: 'CLEAR_CACHE' });
         console.log("Service Worker cache clear message sent.");
       }
 
-      console.log("Profile, database, and transient state reset. Reloading page...");
+      console.log("Profile, database, and transient state have been reset. Reloading page...");
       window.location.reload();
     }).catch((err) => {
       ErrorManager.logError(err, "resetProfile");

@@ -1,19 +1,17 @@
 /**
  * Determines whether a quest can be launched.
- * It checks if a quest is already active (using persistent storage) and optionally verifies
- * that the quest key matches the expected value from the sequence configuration.
+ * Checks if any quest is already active (via persistent flag) and, if a sequence manager is provided,
+ * verifies that the provided questKey matches the expected quest.
  *
  * @param {string} questKey - The quest key to launch.
- * @param {function} isQuestActiveFn - Функция, возвращающая true, если активен какой-либо квест.
- * @param {object} [sequenceManager] - (Необязательно) Экземпляр SequenceManager для проверки последовательности.
- * @returns {boolean} True if the quest can be launched; otherwise, false.
+ * @param {function} isQuestActiveFn - Function returning true if a quest is active.
+ * @param {object} [sequenceManager] - Optional SequenceManager instance.
+ * @returns {boolean} True if the quest can be launched, false otherwise.
  */
 export function canLaunchQuest(questKey, isQuestActiveFn, sequenceManager) {
-  // Если уже запущен квест, то запуск нового запрещён.
   if (isQuestActiveFn()) {
     return false;
   }
-  // Если передан sequenceManager, проверяем ожидаемый ключ.
   if (sequenceManager) {
     const currentEntry = sequenceManager.getCurrentEntry();
     if (currentEntry && currentEntry.questKey !== questKey) {

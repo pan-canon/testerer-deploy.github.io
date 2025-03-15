@@ -15,11 +15,6 @@ import { ErrorManager } from './ErrorManager.js';
  * It uses SQLiteDataManager for persistence (IndexedDB) and ensures that
  * entries (such as diary entries) are stored in a way that the event key checks
  * (via isEventLogged) work correctly.
- *
- * NOTE: Quest records now support multiple statuses:
- *       - "inactive": Quest is not active (awaiting activation via POST).
- *       - "active": Quest is currently active.
- *       - "finished": Quest has been completed.
  */
 export class DatabaseManager {
   /**
@@ -44,7 +39,7 @@ export class DatabaseManager {
     try {
       // Load SQL.js, providing a locateFile function to find necessary files.
       const SQL = await initSqlJs({
-        locateFile: file => `assets/libs/db/${file}`
+        locateFile: file => assets/libs/db/${file}
       });
       
       // Restore database from IndexedDB if saved, otherwise create a new instance.
@@ -129,7 +124,7 @@ export class DatabaseManager {
       return;
     }
     this.db.run("INSERT INTO quest_progress (quest_key, status) VALUES (?, ?)", [questKey, status]);
-    console.log(`✅ Quest progress added: ${questKey} - ${status}`);
+    console.log(✅ Quest progress added: ${questKey} - ${status});
     this.saveDatabase();
   }
 
@@ -165,7 +160,7 @@ export class DatabaseManager {
     const roomData = JSON.stringify(rooms);
     this.db.run("DELETE FROM apartment_plan WHERE floor_number = ?", [floor]);
     this.db.run("INSERT INTO apartment_plan (floor_number, room_data) VALUES (?, ?)", [floor, roomData]);
-    console.log(`✅ Apartment plan for floor ${floor} saved.`);
+    console.log(✅ Apartment plan for floor ${floor} saved.);
     this.saveDatabase();
   }
 
@@ -210,8 +205,8 @@ export class DatabaseManager {
       return;
     }
     this.db.run(
-      `INSERT OR REPLACE INTO ghosts (id, name, status, progress)
-       VALUES ((SELECT id FROM ghosts WHERE id = ?), ?, ?, ?)`,
+      INSERT OR REPLACE INTO ghosts (id, name, status, progress)
+       VALUES ((SELECT id FROM ghosts WHERE id = ?), ?, ?, ?),
       [ghost.id || null, ghost.name, ghost.status || "", ghost.progress || 0]
     );
     console.log("✅ Ghost state saved:", ghost);
@@ -248,8 +243,8 @@ export class DatabaseManager {
       return;
     }
     this.db.run(
-      `INSERT INTO events (event_key, event_text, timestamp, completed)
-       VALUES (?, ?, ?, ?)`,
+      INSERT INTO events (event_key, event_text, timestamp, completed)
+       VALUES (?, ?, ?, ?),
       [eventData.event_key, eventData.event_text, eventData.timestamp, eventData.completed ? 1 : 0]
     );
     console.log("✅ Event saved:", eventData);
@@ -282,11 +277,6 @@ export class DatabaseManager {
   /**
    * saveQuestRecord – Saves or updates a quest record in the quests table.
    *
-   * NOTE: Quest records now use the following statuses:
-   *       "inactive" – Quest is not active (awaiting activation via POST).
-   *       "active"   – Quest is currently active.
-   *       "finished" – Quest has been fully completed.
-   *
    * @param {Object} questData - Object with properties: quest_key, status, current_stage, total_stages.
    */
   saveQuestRecord(questData) {
@@ -295,8 +285,8 @@ export class DatabaseManager {
       return;
     }
     this.db.run(
-      `INSERT OR REPLACE INTO quests (id, quest_key, status, current_stage, total_stages)
-       VALUES ((SELECT id FROM quests WHERE quest_key = ?), ?, ?, ?, ?)`,
+      INSERT OR REPLACE INTO quests (id, quest_key, status, current_stage, total_stages)
+       VALUES ((SELECT id FROM quests WHERE quest_key = ?), ?, ?, ?, ?),
       [questData.quest_key, questData.quest_key, questData.status, questData.current_stage, questData.total_stages]
     );
     console.log("✅ Quest record saved:", questData);

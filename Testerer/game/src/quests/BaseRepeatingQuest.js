@@ -170,10 +170,53 @@ export class BaseRepeatingQuest extends BaseEvent {
    * IMPORTANT: After finishing a stage (if quest is not finished),
    * a "questCompleted" event is dispatched to notify GhostManager.
    */
+<<<<<<< HEAD
 async finishStage() {
   if (this.finished || !this.activated) {
     console.warn("[BaseRepeatingQuest] Finish stage called incorrectly.");
     return;
+=======
+  async finishStage() {
+    if (this.finished) return;
+
+    if (this.app.viewManager && typeof this.app.viewManager.setShootButtonActive === 'function') {
+      this.app.viewManager.setShootButtonActive(false);
+      console.log("[BaseRepeatingQuest] Shoot button disabled after click.");
+    }
+
+    const photoData = this.captureSimplePhoto();
+    console.log(`[BaseRepeatingQuest] Captured snapshot for stage ${this.currentStage}.`);
+
+    await this.eventManager.addDiaryEntry(
+      `repeating_stage_${this.currentStage} [photo attached]\n${photoData}`,
+      false
+    );
+    console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
+
+    this.currentStage++;
+    this.saveState();
+
+    if (this.currentStage <= this.totalStages) {
+      // For intermediate stages, force the quest record to be "finished" so that a new instance can be started.
+      await this.app.databaseManager.saveQuestRecord({
+        quest_key: this.key,
+        status: "finished",
+        current_stage: this.currentStage,
+        total_stages: this.totalStages
+      });
+      StateManager.set("mirrorQuestReady", "true");
+      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
+        this.app.viewManager.setPostButtonEnabled(true);
+        console.log("[BaseRepeatingQuest] Post button enabled for next stage.");
+      }
+      // Dispatch event to notify that a stage of the repeating quest is completed.
+      document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
+      console.log("[BaseRepeatingQuest] questCompleted event dispatched for repeating quest stage.");
+    } else {
+      // If the current stage exceeds the total stages, finish the quest completely.
+      await this.finishCompletely();
+    }
+>>>>>>> parent of 979e786 (Update BaseRepeatingQuest.js)
   }
 
   this.app.viewManager.setShootButtonActive(false);
@@ -205,9 +248,8 @@ async finishStage() {
 
 
   /**
-   * finishCompletely – Finalizes the repeating quest.
-   * Sets the quest as finished in the database, removes the quest state from StateManager,
-   * and dispatches the questCompleted event to signal full completion.
+   * finishCompletely - Finalizes the repeating quest.
+   * Sets the quest as finished in the database and dispatches the questCompleted event.
    */
   async finishCompletely() {
     this.finished = true;
@@ -217,7 +259,11 @@ async finishStage() {
       current_stage: this.currentStage,
       total_stages: this.totalStages
     });
+<<<<<<< HEAD
     StateManager.remove(quest_state_${this.key});
+=======
+    // Dispatch the questCompleted event to signal full completion.
+>>>>>>> parent of 979e786 (Update BaseRepeatingQuest.js)
     document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
     console.log([BaseRepeatingQuest] Quest completely finished. questCompleted event dispatched.);
   }
@@ -252,7 +298,8 @@ async finishStage() {
   }
 
   /**
-   * getCurrentQuestStatus – Retrieves the current status of the repeating quest.
+   * getCurrentQuestStatus
+   * Retrieves the current status of the repeating quest.
    * @returns {Promise<Object>} An object containing quest status information.
    */
   async getCurrentQuestStatus() {
@@ -269,7 +316,8 @@ async finishStage() {
   }
 
   /**
-   * getRandomLetter – Utility function that returns a random letter from the ghost's name.
+   * getRandomLetter
+   * Utility function: returns a random letter from the ghost's name.
    * @param {string} name - The ghost's name.
    * @returns {string} A random letter from the name.
    */

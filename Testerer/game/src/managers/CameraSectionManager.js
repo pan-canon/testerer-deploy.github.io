@@ -28,7 +28,7 @@ export class CameraSectionManager {
   attachTo(containerId, options = {}) {
     const container = document.getElementById(containerId);
     if (!container) {
-      ErrorManager.logError(`Container with id "${containerId}" not found!`, "attachTo");
+      ErrorManager.logError(Container with id "${containerId}" not found!, "attachTo");
       return;
     }
     if (!this.videoElement) {
@@ -72,7 +72,7 @@ export class CameraSectionManager {
       
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       const constraints = { video: { facingMode: isMobile ? "environment" : "user" } };
-      console.log(`🎥 Starting camera with facing mode: ${constraints.video.facingMode}`);
+      console.log(🎥 Starting camera with facing mode: ${constraints.video.facingMode});
       
       this.stream = await navigator.mediaDevices.getUserMedia(constraints);
       if (!this.videoElement) {

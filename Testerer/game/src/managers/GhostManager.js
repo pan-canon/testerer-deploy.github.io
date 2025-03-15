@@ -1,8 +1,9 @@
+// File: src/managers/GhostManager.js
+
 // --- Error and State Management ---
 import { ErrorManager } from './ErrorManager.js';
 import { StateManager } from './StateManager.js';
-
-// Import the sequence manager loader
+// Import the sequence configuration loader from utils
 import { loadSequenceConfig } from '../utils/SequenceManager.js';
 
 /**
@@ -14,23 +15,24 @@ import { loadSequenceConfig } from '../utils/SequenceManager.js';
  *
  * NEW CHANGE:
  * - The event-quest sequence is loaded from an external JSON configuration via SequenceManager.
- * - The first event (welcome) is automatically launched if registration is complete.
- * - A unified method for controlling quest launch is implemented via persistent state.
+ * - The active quest key is stored persistently using StateManager.
+ * - Auto-launch of the first event (e.g., "welcome") is performed if registration is completed.
  */
 export class GhostManager {
   /**
-   * @param {number} currentSequenceIndex - The starting index for the event-quest sequence (restored from StateManager).
+   * @param {number} currentSequenceIndex - Starting index for the event-quest sequence (from StateManager).
    * @param {ProfileManager} profileManager - Manager for saving profile/ghost progress.
    * @param {App} app - The main application instance.
    */
   constructor(currentSequenceIndex, profileManager, app) {
-    // Set the initial sequence index (will be overridden when loading the config)
+    // Set initial sequence index (will be updated after loading config)
     this.currentSequenceIndex = currentSequenceIndex;
     this.profileManager = profileManager;
     this.app = app;
 
-    // Tracks whether a quest is currently active (in-memory flag)
-    this.questActive = false;
+    // In-memory flag for active quest key (persistent value in StateManager)
+    this.activeQuestKey = StateManager.get("activeQuestKey") || null;
+    this.questActive = !!this.activeQuestKey; // true if an active quest key is stored
 
     // eventManager will be assigned externally (see App.js)
     this.eventManager = null;
@@ -39,9 +41,8 @@ export class GhostManager {
     this.ghosts = [];
     this.setupGhosts();
 
-    // Set the initial active ghost (ID = 1)
+    // Set the active ghost (default ID = 1)
     this.currentGhostId = 1;
-
     // Index of the current phenomenon (quest step) for the active ghost.
     this.currentPhenomenonIndex = 0;
 
@@ -52,17 +53,20 @@ export class GhostManager {
     loadSequenceConfig()
       .then(sequenceManager => {
         this.sequenceManager = sequenceManager;
-        // Restore the saved sequence index from StateManager, if available.
+        // Restore saved sequence index from StateManager (if any)
         const savedIndex = parseInt(StateManager.get(StateManager.KEYS.CURRENT_SEQUENCE_INDEX), 10) || 0;
         this.sequenceManager.currentIndex = savedIndex;
         console.log(`Sequence configuration loaded. Current index: ${this.sequenceManager.currentIndex}`);
 
-        // Auto-launch the first event if registration is completed and welcome event not yet done.
+        // Auto-launch the first event if registration is complete and welcome event is not done.
         if (StateManager.get("registrationCompleted") === "true" && StateManager.get("welcomeDone") !== "true") {
           const firstEntry = this.sequenceManager.getCurrentEntry();
           if (firstEntry) {
             console.log(`Auto-launching initial event: ${firstEntry.eventKey}`);
             this.eventManager.activateEvent(firstEntry.eventKey);
+            // Сохраняем ключ активного квеста
+            this.activeQuestKey = firstEntry.questKey;
+            StateManager.set("activeQuestKey", this.activeQuestKey);
           }
         }
       })
@@ -71,7 +75,6 @@ export class GhostManager {
       });
 
     // Subscribe to global events for completions.
-    // It is assumed that GameEventManager and QuestManager dispatch "gameEventCompleted" and "questCompleted" events with detail = key.
     document.addEventListener("gameEventCompleted", (e) => {
       this.onEventCompleted(e.detail);
     });
@@ -86,11 +89,10 @@ export class GhostManager {
    * CURRENT CHANGE: Only the default ghost is created.
    */
   setupGhosts() {
-    // Create a default ghost with ID 1.
     const defaultGhost = {
       id: 1,
       name: "призрак 1", // Default ghost name.
-      phenomenaCount: 3, // Fixed default number of phenomena (quest steps).
+      phenomenaCount: 3, // Fixed number of phenomena (quest steps).
       isFinished: false
     };
     this.ghosts = [defaultGhost];
@@ -107,7 +109,7 @@ export class GhostManager {
 
   /**
    * setCurrentGhost
-   * Sets the active ghost by the given ID and saves its state via DatabaseManager.
+   * Sets the active ghost by its ID and saves its state.
    * @param {number} ghostId - The ID of the ghost to activate.
    */
   async setCurrentGhost(ghostId) {
@@ -138,8 +140,8 @@ export class GhostManager {
 
   /**
    * isCurrentGhostFinished
-   * Checks whether the current active ghost is marked as finished.
-   * @returns {boolean} True if finished, otherwise false.
+   * Checks if the current ghost is finished.
+   * @returns {boolean} True if finished; otherwise, false.
    */
   isCurrentGhostFinished() {
     const ghost = this.getCurrentGhost();
@@ -149,9 +151,8 @@ export class GhostManager {
   /**
    * triggerNextPhenomenon
    * Initiates the next phenomenon (quest step) for the current ghost.
-   * If the phenomenon index is less than the total phenomena for the ghost, a diary entry is added
-   * and the progress is updated via ProfileManager. If all phenomena are completed, a final diary entry
-   * is logged and the final event is triggered.
+   * If the phenomenon index is less than the total count, adds a diary entry and updates progress.
+   * If all phenomena are completed, logs a final diary entry and triggers the final event.
    */
   async triggerNextPhenomenon() {
     const ghost = this.getCurrentGhost();
@@ -187,11 +188,8 @@ export class GhostManager {
 
   /**
    * resetGhostChain
-   * Resets the ghost chain:
-   * - Resets the active ghost to default.
-   * - Resets the phenomenon index.
-   * - Resets the ghost progress via ProfileManager.
-   * - Updates the database with the reset state.
+   * Resets the ghost chain: sets active ghost to default, resets phenomenon index,
+   * resets ghost progress, and updates the database.
    */
   async resetGhostChain() {
     this.currentGhostId = 1;
@@ -207,10 +205,11 @@ export class GhostManager {
     }
   }
 
-  // ------------------ New API for Sequential Event and Quest Management ------------------
+  // --------------- New API: Sequential Event and Quest Management ---------------
 
   /**
-   * isNextInSequence - Checks if the given questKey matches the expected quest from the sequence.
+   * isNextInSequence - Checks if the provided quest key matches the expected quest
+   * from the loaded sequence configuration.
    * @param {string} questKey - The quest key to check.
    * @returns {boolean} True if it matches the expected quest; otherwise, false.
    */
@@ -219,7 +218,8 @@ export class GhostManager {
   }
 
   /**
-   * isNextEvent - Checks if the given eventKey matches the expected event from the sequence.
+   * isNextEvent - Checks if the provided event key matches the expected event
+   * from the loaded sequence configuration.
    * @param {string} eventKey - The event key to check.
    * @returns {boolean} True if it matches the expected event; otherwise, false.
    */
@@ -228,15 +228,15 @@ export class GhostManager {
   }
 
   /**
-   * startQuest - Starts a quest after verifying that it is the next expected quest.
-   * This method checks both the in-memory flag and the persistent "questActive" flag.
+   * startQuest - Starts a quest after verifying it is the next expected quest.
+   * Uses persistent storage to ensure only one active quest exists.
    *
    * @param {string} questKey - The quest key to start.
    */
   async startQuest(questKey) {
-    // Check if a quest is already active (both in-memory and persistent).
-    if (this.questActive || StateManager.get("questActive") === "true") {
-      console.error("Quest already launched. Cannot start a new quest.");
+    const activeQuestKey = StateManager.get("activeQuestKey");
+    if (activeQuestKey) {
+      console.error(`Active quest already set: ${activeQuestKey}. Cannot start a new quest.`);
       return;
     }
     if (!this.isNextInSequence(questKey)) {
@@ -245,13 +245,14 @@ export class GhostManager {
     }
     console.log(`GhostManager: Starting quest with key: ${questKey}`);
     await this.app.questManager.activateQuest(questKey);
-    this.questActive = true;
-    StateManager.set("questActive", "true");
+    this.activeQuestKey = questKey;
+    StateManager.set("activeQuestKey", questKey);
+    // Optionally, обновляем UI после запуска квеста
+    await this.app.questManager.syncQuestState();
   }
 
   /**
    * startEvent - Starts an event.
-   * If triggered as a follow-up ghost event, bypasses the sequence check.
    *
    * @param {string} eventKey - The event key to start.
    * @param {boolean} [isFollowup=false] - If true, bypass the sequence check.
@@ -266,11 +267,11 @@ export class GhostManager {
   }
 
   /**
-   * handlePostButtonClick - Handler for the "Post" button.
+   * handlePostButtonClick - Called when the "Post" button is clicked.
    * If no quest is active, launches the next quest from the sequence.
    */
   async handlePostButtonClick() {
-    if (this.questActive) {
+    if (StateManager.get("activeQuestKey")) {
       console.error("Quest already launched. Please wait until the current quest completes.");
       return;
     }
@@ -285,7 +286,7 @@ export class GhostManager {
 
   /**
    * onEventCompleted - Called when a game event completes.
-   * If the completed event matches the expected next event, increments the sequence index.
+   * If the completed event matches the expected event, increments the sequence index.
    *
    * @param {string} eventKey - The completed event key.
    */
@@ -300,17 +301,16 @@ export class GhostManager {
 
   /**
    * onQuestCompleted - Called when a quest completes.
-   * For repeating quests, triggers a dynamic event based on the current stage;
-   * for non-repeating quests, starts the next ghost event.
+   * For repeating quests, triggers a dynamic event; for non-repeating quests, starts the next event.
    *
    * @param {string} questKey - The completed quest key.
    */
   async onQuestCompleted(questKey) {
     console.log(`GhostManager: Quest completed with key: ${questKey}`);
-    // Reset the active quest flag.
-    this.questActive = false;
-    StateManager.remove("questActive");
-    
+    // Clear the active quest key
+    this.activeQuestKey = null;
+    StateManager.remove("activeQuestKey");
+
     if (questKey === "repeating_quest") {
       const repeatingQuest = this.app.questManager.quests.find(q => q.key === "repeating_quest");
       const questStatus = repeatingQuest ? await repeatingQuest.getCurrentQuestStatus() : { finished: false, currentStage: 1 };
@@ -328,7 +328,7 @@ export class GhostManager {
         return;
       }
     }
-    
+
     const currentEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
     if (currentEntry && currentEntry.questKey === questKey && currentEntry.nextEventKey) {
       console.log(`GhostManager: Quest completed. Now starting ghost event: ${currentEntry.nextEventKey}`);

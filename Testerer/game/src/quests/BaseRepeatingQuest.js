@@ -170,7 +170,8 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.saveState();
 
     if (this.currentStage <= this.totalStages) {
-      // For intermediate stages, force the quest record to be "finished" so that a new instance can be started.
+      // For intermediate stages, force the quest record to be "finished"
+      // so that a new instance of the quest can be started.
       await this.app.databaseManager.saveQuestRecord({
         quest_key: this.key,
         status: "finished",
@@ -192,8 +193,9 @@ export class BaseRepeatingQuest extends BaseEvent {
   }
 
   /**
-   * finishCompletely - Finalizes the repeating quest.
-   * Sets the quest as finished in the database and dispatches the questCompleted event.
+   * finishCompletely – Finalizes the repeating quest.
+   * Sets the quest as finished in the database, removes the quest state from StateManager,
+   * and dispatches the questCompleted event to signal full completion.
    */
   async finishCompletely() {
     // Mark the quest as finished.
@@ -205,6 +207,8 @@ export class BaseRepeatingQuest extends BaseEvent {
       current_stage: this.currentStage,
       total_stages: this.totalStages
     });
+    // Remove the quest state from StateManager so that it doesn't get restored on page refresh.
+    StateManager.remove(`quest_state_${this.key}`);
     // Dispatch the questCompleted event to signal full completion.
     document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
     console.log(`[BaseRepeatingQuest] Quest completely finished. questCompleted event dispatched.`);
@@ -239,8 +243,7 @@ export class BaseRepeatingQuest extends BaseEvent {
   }
 
   /**
-   * getCurrentQuestStatus
-   * Retrieves the current status of the repeating quest.
+   * getCurrentQuestStatus – Retrieves the current status of the repeating quest.
    * @returns {Promise<Object>} An object containing quest status information.
    */
   async getCurrentQuestStatus() {
@@ -257,8 +260,7 @@ export class BaseRepeatingQuest extends BaseEvent {
   }
 
   /**
-   * getRandomLetter
-   * Utility function: returns a random letter from the ghost's name.
+   * getRandomLetter – Utility function that returns a random letter from the ghost's name.
    * @param {string} name - The ghost's name.
    * @returns {string} A random letter from the name.
    */

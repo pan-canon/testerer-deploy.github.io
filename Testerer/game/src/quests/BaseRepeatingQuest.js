@@ -204,11 +204,16 @@ export class BaseRepeatingQuest extends BaseEvent {
         this.app.viewManager.setPostButtonEnabled(true);
         console.log("[BaseRepeatingQuest] Post button enabled for next stage.");
       }
-      // Dispatch event so that GhostManager knows a stage is completed.
-      document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
-      console.log("[BaseRepeatingQuest] questCompleted event dispatched for repeating quest stage.");
-      // Reset local activated flag so that next stage requires a new POST activation.
-      this.activated = false;
+// Dispatch event to notify that a stage of the repeating quest is completed.
+document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
+console.log("[BaseRepeatingQuest] questCompleted event dispatched for repeating quest stage.");
+
+// Reset activated flag so that next stage requires explicit activation via POST.
+this.activated = false;
+
+// Add a 5-second delay before allowing new repeating event activation.
+await new Promise(resolve => setTimeout(resolve, 5000));
+
     } else {
       await this.finishCompletely();
     }

@@ -164,55 +164,57 @@ export class BaseRepeatingQuest extends BaseEvent {
     }
   }
 
-  /**
-   * finishStage – Completes one stage of the repeating quest.
-   * It disables the Shoot button, captures a snapshot, logs the stage completion,
-   * updates the quest state, and updates the database record.
-   * For intermediate stages, it sets the database record to "inactive" (allowing reactivation via POST).
-   * After the final stage, it finalizes the quest.
-   */
-  async finishStage() {
-    if (this.finished) return;
-    // Prevent finishing if quest not activated
-    if (!this.activated) {
-      console.log("[BaseRepeatingQuest] Quest not activated; finishStage call ignored.");
-      return;
-    }
-    if (this.app.viewManager && typeof this.app.viewManager.setShootButtonActive === 'function') {
-      this.app.viewManager.setShootButtonActive(false);
-      console.log("[BaseRepeatingQuest] Shoot button disabled after click.");
-    }
-    const photoData = this.captureSimplePhoto();
-    console.log(`[BaseRepeatingQuest] Captured snapshot for stage ${this.currentStage}.`);
-    await this.eventManager.addDiaryEntry(
-      `repeating_stage_${this.currentStage} [photo attached]\n${photoData}`,
-      false
-    );
-    console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
-    this.currentStage++;
-    this.saveState();
-    if (this.currentStage <= this.totalStages) {
-      // For intermediate stages, update DB record to "inactive" to allow new activation via POST.
-      await this.app.databaseManager.saveQuestRecord({
-        quest_key: this.key,
-        status: "inactive",
-        current_stage: this.currentStage,
-        total_stages: this.totalStages
-      });
-      StateManager.set("mirrorQuestReady", "true");
-      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
-        this.app.viewManager.setPostButtonEnabled(true);
-        console.log("[BaseRepeatingQuest] Post button enabled for next stage.");
-      }
-      // Dispatch event so that GhostManager knows a stage is completed.
-      document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
-      console.log("[BaseRepeatingQuest] questCompleted event dispatched for repeating quest stage.");
-      // Reset local activated flag so that next stage requires a new POST activation.
-      this.activated = false;
-    } else {
-      await this.finishCompletely();
-    }
+/**
+ * finishStage – Completes one stage of the repeating quest.
+ * It disables the Shoot button, captures a snapshot, logs the stage completion,
+ * updates the quest state, and updates the database record.
+ * For intermediate stages, it sets the database record to "inactive" (allowing reactivation via POST).
+ * After the final stage, it finalizes the quest.
+ */
+async finishStage() {
+  if (this.finished) return;
+  // Prevent finishing if quest not activated
+  if (!this.activated) {
+    console.log("[BaseRepeatingQuest] Quest not activated; finishStage call ignored.");
+    return;
   }
+  if (this.app.viewManager && typeof this.app.viewManager.setShootButtonActive === 'function') {
+    this.app.viewManager.setShootButtonActive(false);
+    console.log("[BaseRepeatingQuest] Shoot button disabled after click.");
+  }
+  const photoData = this.captureSimplePhoto();
+  console.log(`[BaseRepeatingQuest] Captured snapshot for stage ${this.currentStage}.`);
+  await this.eventManager.addDiaryEntry(
+    `repeating_stage_${this.currentStage} [photo attached]\n${photoData}`,
+    false
+  );
+  console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
+  this.currentStage++;
+  this.saveState();
+  if (this.currentStage <= this.totalStages) {
+    // For intermediate stages, update DB record to "inactive" to allow new activation via POST.
+    await this.app.databaseManager.saveQuestRecord({
+      quest_key: this.key,
+      status: "inactive",
+      current_stage: this.currentStage,
+      total_stages: this.totalStages
+    });
+    StateManager.set("mirrorQuestReady", "true");
+    if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
+      this.app.viewManager.setPostButtonEnabled(true);
+      console.log("[BaseRepeatingQuest] Post button enabled for next stage.");
+    }
+    // Add a delay of 5 seconds before dispatching the questCompleted event.
+    console.log("[BaseRepeatingQuest] Waiting 5 seconds before dispatching questCompleted event for repeating quest stage.");
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
+    console.log("[BaseRepeatingQuest] questCompleted event dispatched for repeating quest stage.");
+    // Reset local activated flag so that next stage requires a new POST activation.
+    this.activated = false;
+  } else {
+    await this.finishCompletely();
+  }
+}
 
   /**
    * finishCompletely – Finalizes the repeating quest.

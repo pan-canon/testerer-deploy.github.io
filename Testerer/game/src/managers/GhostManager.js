@@ -366,23 +366,39 @@ export class GhostManager {
     this.activeQuestKey = null;
     StateManager.remove("activeQuestKey");
 
-    if (questKey === "repeating_quest") {
-      const repeatingQuest = this.app.questManager.quests.find(q => q.key === "repeating_quest");
-      const questStatus = repeatingQuest ? await repeatingQuest.getCurrentQuestStatus() : { finished: false, currentStage: 1 };
-      console.log("Repeating quest status:", questStatus);
-      if (!questStatus.finished) {
-        const dynamicEventKey = `post_repeating_event_stage_${questStatus.currentStage}`;
-        console.log(`Repeating quest stage completed. Triggering ghost event: ${dynamicEventKey} without sequence increment.`);
-        await this.startEvent(dynamicEventKey, true);
-        return;
-      } else {
-        console.log("Repeating quest fully completed. Now starting ghost event: final_event");
-        await this.startEvent("final_event", true);
-        this.sequenceManager.increment();
-        StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
-        return;
-      }
-    }
+if (questKey === "repeating_quest") {
+  const repeatingQuest = this.app.questManager.quests.find(q => q.key === "repeating_quest");
+  // getCurrentQuestStatus() usually returns { finished, currentStage, dbStatus, ... }
+  const questStatus = repeatingQuest
+    ? await repeatingQuest.getCurrentQuestStatus()
+    : { finished: false, currentStage: 1, dbStatus: "not recorded" };
+
+  console.log("Repeating quest status:", questStatus);
+
+  // Check both the local 'finished' flag and the DB status, as well as repeatingQuest.activated
+  if (questStatus.dbStatus === "active" && !questStatus.finished && repeatingQuest.activated) {
+    // If the repeating quest is truly active and not finished, we can trigger the next dynamic event
+    const dynamicEventKey = `post_repeating_event_stage_${questStatus.currentStage}`;
+    console.log(
+      `Repeating quest stage completed. Triggering ghost event: ${dynamicEventKey} without sequence increment.`
+    );
+    await this.startEvent(dynamicEventKey, true);
+    return;
+  } else if (!questStatus.finished) {
+    // The quest is not in DB "active", or repeatingQuest.activated = false,
+    // but not marked finished => we skip launching the event
+    console.log(
+      "Repeating quest is not truly active (or not 'activated'); skipping dynamic event for this stage."
+    );
+    return;
+  } else {
+    console.log("Repeating quest fully completed. Now starting ghost event: final_event");
+    await this.startEvent("final_event", true);
+    this.sequenceManager.increment();
+    StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
+    return;
+  }
+}
 
     const currentEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
     if (currentEntry && currentEntry.questKey === questKey && currentEntry.nextEventKey) {

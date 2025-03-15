@@ -24,9 +24,6 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.currentStage = 1;
     this.finished = false;
 
-    // Flag to indicate if the quest has been activated
-    this.activated = false;
-
     // (Optional flag – not used further, can be removed if unnecessary)
     this.finalRepeatingQuestCompleted = false;
 
@@ -75,8 +72,6 @@ export class BaseRepeatingQuest extends BaseEvent {
    */
   async activate() {
     console.log(`Activating repeating quest: ${this.key}`);
-    // Set activated flag to true so that UI restoration is allowed
-    this.activated = true;
     await this.eventManager.addDiaryEntry(this.key, true);
     console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
     await this.app.databaseManager.saveQuestRecord({
@@ -117,7 +112,7 @@ export class BaseRepeatingQuest extends BaseEvent {
         stage: this.currentStage,
         totalStages: this.totalStages,
         onShoot: () => this.finishStage(),
-        quest: this // Pass the quest instance for UI check
+        quest: this // Pass the current quest instance for status checking.
       });
     } else {
       console.error("[BaseRepeatingQuest] ViewManager.startRepeatingQuestUI is not available.");
@@ -127,14 +122,9 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * restoreUI – Restores the UI for the repeating quest if a cycle is active.
-   * Only restores UI if the quest has been activated.
    */
   restoreUI() {
-    console.log("[BaseRepeatingQuest] Attempting to restore repeating quest UI...");
-    if (!this.activated) {
-      console.log("[BaseRepeatingQuest] Quest not activated; UI restoration skipped.");
-      return;
-    }
+    console.log("[BaseRepeatingQuest] Restoring repeating quest UI...");
     const restoreButtonState = () => {
       this.startCheckLoop();
       if (this.currentStage <= this.totalStages && this.app.isCameraOpen) {
@@ -197,9 +187,8 @@ export class BaseRepeatingQuest extends BaseEvent {
       // Dispatch event to notify that a stage of the repeating quest is completed.
       document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
       console.log("[BaseRepeatingQuest] questCompleted event dispatched for repeating quest stage.");
-      // Reset the activated flag so that new activation is required for next round
-      this.activated = false;
     } else {
+      // If the current stage exceeds the total stages, finish the quest completely.
       await this.finishCompletely();
     }
   }
@@ -250,7 +239,6 @@ export class BaseRepeatingQuest extends BaseEvent {
   resetCycle() {
     this.finished = false;
     this.currentStage = 1;
-    this.activated = false;
     console.log("[BaseRepeatingQuest] Quest state has been reset for a new cycle.");
     this.saveState();
   }

@@ -164,6 +164,7 @@ async syncQuestState() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 /**
@@ -206,6 +207,8 @@ async syncQuestState() {
       }
     });
   }
+=======
+>>>>>>> parent of 785a026 (laslsa)
 =======
 >>>>>>> parent of 785a026 (laslsa)
 =======

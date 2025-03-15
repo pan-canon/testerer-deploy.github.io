@@ -15,6 +15,11 @@ import { ErrorManager } from './ErrorManager.js';
  * It uses SQLiteDataManager for persistence (IndexedDB) and ensures that
  * entries (such as diary entries) are stored in a way that the event key checks
  * (via isEventLogged) work correctly.
+ *
+ * NOTE: Quest records now support multiple statuses:
+ *       - "inactive": Quest is not active (awaiting activation via POST).
+ *       - "active": Quest is currently active.
+ *       - "finished": Quest has been completed.
  */
 export class DatabaseManager {
   /**
@@ -276,6 +281,11 @@ export class DatabaseManager {
 
   /**
    * saveQuestRecord – Saves or updates a quest record in the quests table.
+   *
+   * NOTE: Quest records now use the following statuses:
+   *       "inactive" – Quest is not active (awaiting activation via POST).
+   *       "active"   – Quest is currently active.
+   *       "finished" – Quest has been fully completed.
    *
    * @param {Object} questData - Object with properties: quest_key, status, current_stage, total_stages.
    */

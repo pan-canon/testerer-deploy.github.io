@@ -21,6 +21,10 @@ import { loadSequenceConfig } from '../utils/SequenceManager.js';
  *    1) A non-finished record for the quest exists in the database.
  *    2) There is already an active quest registered.
  *    3) The quest key does not match the expected next quest in the sequence.
+ * - For the repeating quest, we now use DB statuses "active" and "inactive":
+ *    - When the user clicks POST, the record is updated to "active" and the quest UI is launched.
+ *    - After finishing a stage (via Shoot), the record is set to "inactive", so that the quest
+ *      does not automatically trigger the dynamic event.
  * - Auto-launch of the first event (e.g., "welcome") is performed if registration is completed.
  */
 export class GhostManager {
@@ -237,51 +241,46 @@ export class GhostManager {
   /**
    * canStartQuest - Unified method to determine if a quest can be started.
    *
-   * This method performs several checks to ensure that starting a new quest is valid:
-   * 1. It checks if there is an existing record for the quest in the database that is not finished.
-   * 2. It verifies that there is no active quest already recorded in the StateManager.
-   * 3. It checks if the provided quest key matches the expected quest in the sequence via isNextInSequence.
+   * For the repeating quest, we allow starting only if there is no record with status "active".
+   * A record with status "inactive" indicates a previous stage is complete and the quest can be reactivated.
    *
    * @param {string} questKey - The key of the quest to be started.
    * @returns {boolean} True if the quest can be launched, false otherwise.
    */
   canStartQuest(questKey) {
-    // 1) Check if a record for the quest exists in the database and is not finished.
     const record = this.app.databaseManager.getQuestRecord(questKey);
-    if (record && record.status !== "finished") {
-      console.warn(`Quest "${questKey}" is already active with status "${record.status}".`);
-      return false;
+    if (questKey === "repeating_quest") {
+      if (record && record.status === "active") {
+        console.warn(`Repeating quest "${questKey}" is already active.`);
+        return false;
+      }
+      // If record is "inactive" or absent, it is allowed.
+    } else {
+      if (record && record.status !== "finished") {
+        console.warn(`Quest "${questKey}" is already active with status "${record.status}".`);
+        return false;
+      }
     }
-
-    // 2) Check if there is an active quest already recorded in the StateManager.
     const activeQuestKey = StateManager.get("activeQuestKey");
     if (activeQuestKey) {
       console.warn(`Another quest "${activeQuestKey}" is already active, cannot start quest "${questKey}".`);
       return false;
     }
-
-    // 3) Check if the quest key is the next expected quest in the sequence.
     if (!this.isNextInSequence(questKey)) {
       console.error(`Quest "${questKey}" is not the next expected quest in the sequence.`);
       return false;
     }
-
-    // All checks passed, quest can be started.
     return true;
   }
 
   /**
    * startQuest
    * Starts a quest after verifying that it can be launched using the unified check.
-   * This method ensures that:
-   * - There is no active quest.
-   * - The quest is the next expected in the sequence.
-   * - There is no non-finished record for the quest in the database.
+   * This method updates the database record and StateManager accordingly.
    *
    * @param {string} questKey - The quest key to start.
    */
   async startQuest(questKey) {
-    // Use the unified method to verify if the quest can be started.
     if (!this.canStartQuest(questKey)) {
       console.error(`Cannot start quest with key: ${questKey}. Unified check failed.`);
       return;
@@ -290,7 +289,6 @@ export class GhostManager {
     await this.app.questManager.activateQuest(questKey);
     this.activeQuestKey = questKey;
     StateManager.set("activeQuestKey", questKey);
-    // Optionally update the UI after quest activation.
     await this.app.questManager.syncQuestState();
   }
 
@@ -313,11 +311,8 @@ export class GhostManager {
   /**
    * handlePostButtonClick
    * Called when the "Post" button is clicked.
-   * If no quest is active, launches the next quest from the sequence.
-   *
-   * This method immediately disables the "Post" button to prevent repeated clicks,
-   * retrieves the next sequence entry, and uses the unified check to ensure that
-   * the quest can be started.
+   * Retrieves the next sequence entry and uses the unified check to determine if the quest can be started.
+   * For the repeating quest, if the DB record is "inactive", it updates it to "active" before activation.
    */
   async handlePostButtonClick() {
     // Immediately disable the "Post" button to prevent repeated clicks.
@@ -330,9 +325,16 @@ export class GhostManager {
     }
     console.log(`GhostManager: Handling Post button click. Next expected quest: ${nextEntry.questKey}`);
 
-    // Use the unified check to determine if the quest can be started.
     if (!this.canStartQuest(nextEntry.questKey)) {
       return;
+    }
+    if (nextEntry.questKey === "repeating_quest") {
+      const record = this.app.databaseManager.getQuestRecord("repeating_quest");
+      if (record && record.status === "inactive") {
+        console.log("Re-activating repeating quest from inactive state.");
+        record.status = "active";
+        await this.app.databaseManager.saveQuestRecord(record);
+      }
     }
     await this.startQuest(nextEntry.questKey);
   }
@@ -340,7 +342,7 @@ export class GhostManager {
   /**
    * onEventCompleted
    * Called when a game event completes.
-   * If the completed event matches the expected event, increments the sequence index.
+   * If the completed event matches the expected event in the sequence, increments the sequence index.
    *
    * @param {string} eventKey - The completed event key.
    */
@@ -356,7 +358,8 @@ export class GhostManager {
   /**
    * onQuestCompleted
    * Called when a quest completes.
-   * For repeating quests, triggers a dynamic event; for non-repeating quests, starts the next event.
+   * For the repeating quest, if the DB record is active and the quest was activated,
+   * triggers the dynamic event for the current stage; if the quest is finished, triggers the final event.
    *
    * @param {string} questKey - The completed quest key.
    */
@@ -366,39 +369,32 @@ export class GhostManager {
     this.activeQuestKey = null;
     StateManager.remove("activeQuestKey");
 
-  if (questKey === "repeating_quest") {
-    const repeatingQuest = this.app.questManager.quests.find(q => q.key === "repeating_quest");
-    // getCurrentQuestStatus() usually returns { finished, currentStage, dbStatus, ... }
-    const questStatus = repeatingQuest
-      ? await repeatingQuest.getCurrentQuestStatus()
-      : { finished: false, currentStage: 1, dbStatus: "not recorded" };
+    if (questKey === "repeating_quest") {
+      const repeatingQuest = this.app.questManager.quests.find(q => q.key === "repeating_quest");
+      const questStatus = repeatingQuest
+        ? await repeatingQuest.getCurrentQuestStatus()
+        : { finished: false, currentStage: 1, dbStatus: "not recorded" };
 
-    console.log("Repeating quest status:", questStatus);
+      console.log("Repeating quest status:", questStatus);
 
-    // Check both the local 'finished' flag and the DB status, as well as repeatingQuest.activated
-    if (questStatus.dbStatus === "active" && !questStatus.finished && repeatingQuest.activated) {
-      // If the repeating quest is truly active and not finished, we can trigger the next dynamic event
-      const dynamicEventKey = `post_repeating_event_stage_${questStatus.currentStage}`;
-      console.log(
-        `Repeating quest stage completed. Triggering ghost event: ${dynamicEventKey} without sequence increment.`
-      );
-      await this.startEvent(dynamicEventKey, true);
-      return;
-    } else if (!questStatus.finished) {
-      // The quest is not in DB "active", or repeatingQuest.activated = false,
-      // but not marked finished => we skip launching the event
-      console.log(
-        "Repeating quest is not truly active (or not 'activated'); skipping dynamic event for this stage."
-      );
-      return;
-    } else {
-      console.log("Repeating quest fully completed. Now starting ghost event: final_event");
-      await this.startEvent("final_event", true);
-      this.sequenceManager.increment();
-      StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
-      return;
+      // For repeating quest, only trigger dynamic event if DB status is "active"
+      // and the quest was activated via POST.
+      if (questStatus.dbStatus === "active" && !questStatus.finished && repeatingQuest.activated) {
+        const dynamicEventKey = `post_repeating_event_stage_${questStatus.currentStage}`;
+        console.log(`Repeating quest stage completed. Triggering ghost event: ${dynamicEventKey} without sequence increment.`);
+        await this.startEvent(dynamicEventKey, true);
+        return;
+      } else if (!questStatus.finished) {
+        console.log("Repeating quest is not truly active (or not activated); skipping dynamic event for this stage.");
+        return;
+      } else {
+        console.log("Repeating quest fully completed. Now starting ghost event: final_event");
+        await this.startEvent("final_event", true);
+        this.sequenceManager.increment();
+        StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
+        return;
+      }
     }
-  }
 
     const currentEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
     if (currentEntry && currentEntry.questKey === questKey && currentEntry.nextEventKey) {

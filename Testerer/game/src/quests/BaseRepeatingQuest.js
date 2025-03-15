@@ -24,6 +24,9 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.currentStage = 1;
     this.finished = false;
 
+    // New flag: indicates if the quest was properly activated via POST
+    this.activated = false;
+
     // (Optional flag – not used further, can be removed if unnecessary)
     this.finalRepeatingQuestCompleted = false;
 
@@ -81,6 +84,9 @@ export class BaseRepeatingQuest extends BaseEvent {
       total_stages: this.totalStages
     });
 
+    // Set activated flag to true
+    this.activated = true;
+
     if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {
       this.app.viewManager.setCameraButtonActive(true);
     }
@@ -122,9 +128,23 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * restoreUI – Restores the UI for the repeating quest if a cycle is active.
+   * Only restores UI if the quest has been activated.
    */
   restoreUI() {
-    console.log("[BaseRepeatingQuest] Restoring repeating quest UI...");
+    console.log("[BaseRepeatingQuest] Attempting to restore repeating quest UI...");
+    if (!this.activated) {
+      console.log("[BaseRepeatingQuest] Quest not activated; UI restoration skipped.");
+      return;
+    }
+    if (this.finished) {
+      console.log("[BaseRepeatingQuest] Quest is finished; UI restoration skipped.");
+      return;
+    }
+    const record = this.app.databaseManager.getQuestRecord(this.key);
+    if (!record || record.status !== "active") {
+      console.log("[BaseRepeatingQuest] DB record is not active; UI restoration skipped.");
+      return;
+    }
     const restoreButtonState = () => {
       this.startCheckLoop();
       if (this.currentStage <= this.totalStages && this.app.isCameraOpen) {
@@ -152,6 +172,11 @@ export class BaseRepeatingQuest extends BaseEvent {
    */
   async finishStage() {
     if (this.finished) return;
+    // Prevent finishing stage if quest was not activated.
+    if (!this.activated) {
+      console.log("[BaseRepeatingQuest] Quest not activated; finishStage call ignored.");
+      return;
+    }
 
     if (this.app.viewManager && typeof this.app.viewManager.setShootButtonActive === 'function') {
       this.app.viewManager.setShootButtonActive(false);
@@ -171,8 +196,7 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.saveState();
 
     if (this.currentStage <= this.totalStages) {
-      // For intermediate stages, force the quest record to be "finished"
-      // so that a new instance of the quest can be started.
+      // For intermediate stages, save record as "finished" to allow new instance of the quest.
       await this.app.databaseManager.saveQuestRecord({
         quest_key: this.key,
         status: "finished",
@@ -187,8 +211,10 @@ export class BaseRepeatingQuest extends BaseEvent {
       // Dispatch event to notify that a stage of the repeating quest is completed.
       document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
       console.log("[BaseRepeatingQuest] questCompleted event dispatched for repeating quest stage.");
+      // Reset activated flag so that new stage requires explicit activation via POST.
+      this.activated = false;
     } else {
-      // If the current stage exceeds the total stages, finish the quest completely.
+      // If current stage exceeds total, finish quest completely.
       await this.finishCompletely();
     }
   }
@@ -199,18 +225,14 @@ export class BaseRepeatingQuest extends BaseEvent {
    * and dispatches the questCompleted event to signal full completion.
    */
   async finishCompletely() {
-    // Mark the quest as finished.
     this.finished = true;
-    // Save the final state in the database with status "finished".
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
       status: "finished",
       current_stage: this.currentStage,
       total_stages: this.totalStages
     });
-    // Remove the quest state from StateManager so that it doesn't get restored on page refresh.
     StateManager.remove(`quest_state_${this.key}`);
-    // Dispatch the questCompleted event to signal full completion.
     document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
     console.log(`[BaseRepeatingQuest] Quest completely finished. questCompleted event dispatched.`);
   }
@@ -239,6 +261,7 @@ export class BaseRepeatingQuest extends BaseEvent {
   resetCycle() {
     this.finished = false;
     this.currentStage = 1;
+    this.activated = false;
     console.log("[BaseRepeatingQuest] Quest state has been reset for a new cycle.");
     this.saveState();
   }

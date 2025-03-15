@@ -245,30 +245,26 @@ export class GhostManager {
    * @param {string} questKey - The key of the quest to be started.
    * @returns {boolean} True if the quest can be launched, false otherwise.
    */
-  canStartQuest(questKey) {
-    // 1) Check if a record for the quest exists in the database and is not finished.
-    const record = this.app.databaseManager.getQuestRecord(questKey);
-    if (record && record.status !== "finished") {
-      console.warn(Quest "${questKey}" is already active with status "${record.status}".);
-      return false;
-    }
-
-    // 2) Check if there is an active quest already recorded in the StateManager.
-    const activeQuestKey = StateManager.get("activeQuestKey");
-    if (activeQuestKey) {
-      console.warn(Another quest "${activeQuestKey}" is already active, cannot start quest "${questKey}".);
-      return false;
-    }
-
-    // 3) Check if the quest key is the next expected quest in the sequence.
-    if (!this.isNextInSequence(questKey)) {
-      console.error(Quest "${questKey}" is not the next expected quest in the sequence.);
-      return false;
-    }
-
-    // All checks passed, quest can be started.
-    return true;
+canStartQuest(questKey) {
+  const record = this.app.databaseManager.getQuestRecord(questKey);
+  if (record && record.status !== "finished") {
+    console.warn(`Quest "${questKey}" already active.`);
+    return false;
   }
+
+  if (this.activeQuestKey && this.activeQuestKey !== questKey) {
+    console.warn(`Another quest (${this.activeQuestKey}) is already active.`);
+    return false;
+  }
+
+  if (!this.isNextInSequence(questKey)) {
+    console.error(`Quest "${questKey}" is not next in the sequence.`);
+    return false;
+  }
+
+  return true;
+}
+
 
   /**
    * startQuest
@@ -361,49 +357,31 @@ export class GhostManager {
    * @param {string} questKey - The completed quest key.
    */
   async onQuestCompleted(questKey) {
-    console.log(GhostManager: Quest completed with key: ${questKey});
-    // Clear the active quest key.
-    this.activeQuestKey = null;
-    StateManager.remove("activeQuestKey");
+    const currentEntry = this.sequenceManager.getCurrentEntry();
 
-  if (questKey === "repeating_quest") {
-    const repeatingQuest = this.app.questManager.quests.find(q => q.key === "repeating_quest");
-    // getCurrentQuestStatus() usually returns { finished, currentStage, dbStatus, ... }
-    const questStatus = repeatingQuest
-      ? await repeatingQuest.getCurrentQuestStatus()
-      : { finished: false, currentStage: 1, dbStatus: "not recorded" };
+    if (questKey === "repeating_quest") {
+      const repeatingQuest = this.app.questManager.quests.find(q => q.key === "repeating_quest");
+      const questStatus = await repeatingQuest.getCurrentQuestStatus();
 
-    console.log("Repeating quest status:", questStatus);
-
-    // Check both the local 'finished' flag and the DB status, as well as repeatingQuest.activated
-    if (questStatus.dbStatus === "active" && !questStatus.finished && repeatingQuest.activated) {
-      // If the repeating quest is truly active and not finished, we can trigger the next dynamic event
-      const dynamicEventKey = post_repeating_event_stage_${questStatus.currentStage};
-      console.log(
-        Repeating quest stage completed. Triggering ghost event: ${dynamicEventKey} without sequence increment.
-      );
-      await this.startEvent(dynamicEventKey, true);
-      return;
-    } else if (!questStatus.finished) {
-      // The quest is not in DB "active", or repeatingQuest.activated = false,
-      // but not marked finished => we skip launching the event
-      console.log(
-        "Repeating quest is not truly active (or not 'activated'); skipping dynamic event for this stage."
-      );
-      return;
+      if (!questStatus.finished && questStatus.active) {
+        const dynamicEventKey = `post_repeating_event_stage_${questStatus.currentStage}`;
+        await this.startEvent(dynamicEventKey, true);
+        return;
+      } else if (questStatus.finished) {
+        this.sequenceManager.advanceToNext();
+        StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, this.sequenceManager.currentIndex);
+        const nextEvent = this.sequenceManager.getCurrentEntry().nextEventKey;
+        if (nextEvent) {
+          await this.startEvent(nextEvent, true);
+        }
+      }
     } else {
-      console.log("Repeating quest fully completed. Now starting ghost event: final_event");
-      await this.startEvent("final_event", true);
-      this.sequenceManager.increment();
-      StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
-      return;
-    }
-  }
-
-    const currentEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
-    if (currentEntry && currentEntry.questKey === questKey && currentEntry.nextEventKey) {
-      console.log(GhostManager: Quest completed. Now starting ghost event: ${currentEntry.nextEventKey});
-      await this.startEvent(currentEntry.nextEventKey, true);
+      const currentEntry = this.sequenceManager.getCurrentEntry();
+      if (currentEntry && currentEntry.questKey === questKey && currentEntry.nextEventKey) {
+        await this.startEvent(currentEntry.nextEventKey, true);
+        this.sequenceManager.currentIndex++;
+        StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, this.sequenceManager.currentIndex);
+      }
     }
   }
 }

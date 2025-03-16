@@ -9,6 +9,9 @@ export class CameraSectionManager {
    * - stream: Stores the MediaStream obtained from getUserMedia.
    * - onVideoReady: Callback invoked when the video stream is ready (after loadedmetadata event).
    * - onCameraClosed: Callback invoked after the camera is stopped.
+   *
+   * Extended functionality properties:
+   * - AI detection settings, recording timer, and default overlay.
    */
   constructor() {
     this.videoElement = null;
@@ -16,14 +19,19 @@ export class CameraSectionManager {
     this.onVideoReady = null;
     this.onCameraClosed = null;
 
-    // New properties for extended functionality
+    // Extended properties
     this.aiDetectionTimer = null;
     this.aiModel = null;
-    this.aiDetectionInterval = 5000; // 5 seconds default
-    this.currentDetectionConfig = null; // To be generated for repeating quests
+    this.aiDetectionInterval = 5000; // Default interval: 5 seconds
+    this.currentDetectionConfig = null; // For repeating quest configuration
 
     this.recordingStartTime = null;
     this.recordingTimerId = null;
+
+    // Canvas overlay for default animated corner frame (always visible)
+    this.overlayCanvas = null;
+    this.overlayCtx = null;
+    this.overlayAnimationId = null;
   }
 
   /**
@@ -45,11 +53,15 @@ export class CameraSectionManager {
       this.videoElement = document.createElement('video');
       this.videoElement.autoplay = true;
       this.videoElement.playsInline = true;
-      // Ensure global id for referencing in AR.js
+      // Set default scale as in the camera (default resolution)
+      this.videoElement.style.width = options.width || "640px";
+      this.videoElement.style.height = options.height || "480px";
+      // Ensure global id for AR.js reference
       this.videoElement.id = "global-camera-video";
     } else if (this.videoElement.parentNode) {
       this.videoElement.parentNode.removeChild(this.videoElement);
     }
+    // Apply additional style options if provided.
     for (const prop in options) {
       this.videoElement.style[prop] = options[prop];
     }
@@ -70,19 +82,20 @@ export class CameraSectionManager {
       return;
     }
     try {
-      // Automatically attach video element if not created yet.
+      // Automatically attach video element if not already created.
       if (!this.videoElement) {
         this.attachTo("global-camera", {
-          width: "100%",
-          height: "100%",
+          width: "640px",
+          height: "480px",
           filter: "grayscale(100%)"
         });
         console.log("Video element was not created; auto-attached to 'global-camera'.");
       }
       
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      const constraints = { video: { facingMode: isMobile ? "environment" : "user" } };
-      console.log(`Starting camera with facing mode: ${constraints.video.facingMode}`);
+      // Use default constraints; can be moved to a settings file later.
+      const constraints = { video: { width: 640, height: 480, facingMode: isMobile ? "environment" : "user" } };
+      console.log(`Starting camera with constraints:`, constraints);
       
       this.stream = await navigator.mediaDevices.getUserMedia(constraints);
       if (!this.videoElement) {
@@ -127,12 +140,10 @@ export class CameraSectionManager {
    * Activates AR mode by inserting an AR.js scene that uses the same video stream.
    */
   startARMode() {
-    // Use the global video element id for AR.js reference
     if (!this.videoElement || !this.stream) {
       console.warn("Camera is not active. AR mode cannot be started.");
       return;
     }
-    // Create AR scene markup with reference to the video element id
     const arMarkup = `
       <a-scene embedded arjs="sourceType: video; videoElement: #${this.videoElement.id}">
         <a-marker preset="hiro">
@@ -141,7 +152,6 @@ export class CameraSectionManager {
         <a-camera-static></a-camera-static>
       </a-scene>
     `;
-    // Insert AR scene into DOM (for example, at the end of the body)
     document.body.insertAdjacentHTML('beforeend', arMarkup);
     console.log("AR mode activated.");
   }
@@ -177,12 +187,11 @@ export class CameraSectionManager {
 
   /**
    * startRecordingTimer
-   * Starts a timer (via UI overlay managed externally) for recording duration.
+   * Starts a timer for recording duration.
+   * The timer is displayed via a UI overlay (assumed to have id "recording-timer").
    */
   startRecordingTimer() {
     this.recordingStartTime = Date.now();
-    // Here we assume that the UI overlay for timer is created by ViewManager.
-    // In case it is not, you can create a temporary element.
     const timerElem = document.getElementById("recording-timer");
     if (timerElem) {
       timerElem.style.display = "block";
@@ -235,7 +244,6 @@ export class CameraSectionManager {
    * @param {Object} [config] - Detection configuration, e.g. { target: 'eran' }.
    */
   async startAIDetection(config = null) {
-    // Save current detection config for repeating quest logic.
     this.currentDetectionConfig = config || this.generateDetectionConfig();
     if (!this.aiModel) {
       try {
@@ -266,8 +274,8 @@ export class CameraSectionManager {
 
   /**
    * handleAIPredictions
-   * Processes the predictions from the AI detection.
-   * Here, for each prediction above a threshold, an animated corner frame is displayed.
+   * Processes predictions from the AI detection.
+   * For each prediction with score > 0.6, draws an animated corner frame.
    * @param {Array} predictions - Array of prediction objects.
    */
   handleAIPredictions(predictions) {
@@ -281,6 +289,7 @@ export class CameraSectionManager {
   /**
    * animateCornerFrame
    * Creates an animated corner frame around the detected object's bounding box.
+   * This frame is mandatory and always displayed when detection occurs.
    * @param {Array} bbox - [x, y, width, height]
    */
   animateCornerFrame(bbox) {
@@ -312,8 +321,8 @@ export class CameraSectionManager {
 
   /**
    * generateDetectionConfig
-   * Generates a random detection configuration for the repeating quest.
-   * For example, chooses a random target from a set.
+   * Generates a random detection configuration for a repeating quest.
+   * For example, selects a random target from a preset list.
    * @returns {Object} Configuration object.
    */
   generateDetectionConfig() {
@@ -321,5 +330,92 @@ export class CameraSectionManager {
     const randomTarget = targets[Math.floor(Math.random() * targets.length)];
     console.log(`Detection config generated: target = ${randomTarget}`);
     return { detectionActive: true, target: randomTarget };
+  }
+
+  /**
+   * startDefaultFrameOverlay
+   * Starts a continuous overlay that displays animated corner markers on the video.
+   * This default overlay ensures that a semi-frame is always visible.
+   */
+  startDefaultFrameOverlay() {
+    // Create an overlay canvas if it doesn't exist
+    if (!this.overlayCanvas) {
+      this.overlayCanvas = document.createElement('canvas');
+      this.overlayCanvas.id = "default-frame-overlay";
+      // Position overlay over the global camera element
+      Object.assign(this.overlayCanvas.style, {
+        position: "absolute",
+        top: "0",
+        left: "0",
+        pointerEvents: "none",
+        zIndex: "2000"
+      });
+      // Append overlay to the same container as video or body
+      document.body.appendChild(this.overlayCanvas);
+      this.overlayCtx = this.overlayCanvas.getContext("2d");
+    }
+    // Adjust overlay size to match video element
+    const rect = this.videoElement.getBoundingClientRect();
+    this.overlayCanvas.width = rect.width;
+    this.overlayCanvas.height = rect.height;
+    this.overlayCanvas.style.top = rect.top + "px";
+    this.overlayCanvas.style.left = rect.left + "px";
+
+    const drawOverlay = () => {
+      if (!this.overlayCtx) return;
+      this.overlayCtx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
+      // Draw animated corner markers at each corner
+      const lineLength = 20;
+      const lineWidth = 3;
+      this.overlayCtx.lineWidth = lineWidth;
+      this.overlayCtx.strokeStyle = "red";
+      // Top-left corner
+      this.overlayCtx.beginPath();
+      this.overlayCtx.moveTo(0, lineLength);
+      this.overlayCtx.lineTo(0, 0);
+      this.overlayCtx.lineTo(lineLength, 0);
+      this.overlayCtx.stroke();
+      // Top-right corner
+      this.overlayCtx.beginPath();
+      this.overlayCtx.moveTo(this.overlayCanvas.width - lineLength, 0);
+      this.overlayCtx.lineTo(this.overlayCanvas.width, 0);
+      this.overlayCtx.lineTo(this.overlayCanvas.width, lineLength);
+      this.overlayCtx.stroke();
+      // Bottom-left corner
+      this.overlayCtx.beginPath();
+      this.overlayCtx.moveTo(0, this.overlayCanvas.height - lineLength);
+      this.overlayCtx.lineTo(0, this.overlayCanvas.height);
+      this.overlayCtx.lineTo(lineLength, this.overlayCanvas.height);
+      this.overlayCtx.stroke();
+      // Bottom-right corner
+      this.overlayCtx.beginPath();
+      this.overlayCtx.moveTo(this.overlayCanvas.width - lineLength, this.overlayCanvas.height);
+      this.overlayCtx.lineTo(this.overlayCanvas.width, this.overlayCanvas.height);
+      this.overlayCtx.lineTo(this.overlayCanvas.width, this.overlayCanvas.height - lineLength);
+      this.overlayCtx.stroke();
+
+      // Continue animation using requestAnimationFrame
+      this.overlayAnimationId = requestAnimationFrame(drawOverlay);
+    };
+
+    drawOverlay();
+    console.log("Default frame overlay started.");
+  }
+
+  /**
+   * stopDefaultFrameOverlay
+   * Stops the continuous default frame overlay and removes the overlay canvas.
+   */
+  stopDefaultFrameOverlay() {
+    if (this.overlayAnimationId) {
+      cancelAnimationFrame(this.overlayAnimationId);
+      this.overlayAnimationId = null;
+    }
+    if (this.overlayCanvas) {
+      this.overlayCanvas.remove();
+      this.overlayCanvas = null;
+      this.overlayCtx = null;
+    }
+    console.log("Default frame overlay stopped.");
   }
 }

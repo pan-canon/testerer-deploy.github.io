@@ -1,4 +1,4 @@
-import { DIContainer } from './DIContainer.js';
+import { DIContainer } from './container/DIContainer.js';
 const container = new DIContainer();
 const app = container.getApp();
 

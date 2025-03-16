@@ -1,3 +1,4 @@
+// ViewManager.js
 import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
 
@@ -66,7 +67,7 @@ export class ViewManager {
 
   /**
    * setCameraManager
-   * Sets the camera manager instance (e.g., an instance of cameraSectionManager)
+   * Sets the camera manager instance (e.g., an instance of CameraSectionManager)
    * to allow unified access to camera methods.
    */
   setCameraManager(cameraManager) {
@@ -160,7 +161,7 @@ export class ViewManager {
         app.completeRegistration();
       });
     }
-    // IMPORTANT: "Post" button click calls GhostManager.handlePostButtonClick()
+    // "Post" button click calls GhostManager.handlePostButtonClick()
     if (this.postBtn) {
       this.postBtn.addEventListener("click", () => {
         console.log("Post button clicked. Triggering GhostManager.handlePostButtonClick().");
@@ -458,7 +459,6 @@ export class ViewManager {
    * Enables or disables the "Post" button.
    *
    * This method updates the UI and persists the new state in StateManager.
-   * It takes into account flags such as gameFinalized and postButtonDisabled.
    *
    * @param {boolean} isEnabled - If true, the button should be enabled.
    */
@@ -472,7 +472,6 @@ export class ViewManager {
         console.log("[ViewManager] Game finalized. Post button disabled.");
       } else {
         postBtn.disabled = !isEnabled;
-        // Persist the new state: if isEnabled is true, then postButtonDisabled is "false".
         StateManager.set("postButtonDisabled", isEnabled ? "false" : "true");
         console.log(`[ViewManager] Post button set to ${isEnabled ? "enabled" : "disabled"}.`);
       }
@@ -587,33 +586,29 @@ export class ViewManager {
     console.log(`[ViewManager] Mirror quest status updated. Success: ${success}`);
   }
 
-  // CHANGED: Stopping Mirror UI now resets camera and shoot button states.
   stopMirrorQuestUI(statusElementId) {
     const statusElem = document.getElementById(statusElementId);
     if (statusElem) {
       statusElem.style.display = "none";
     }
-    // Reset camera and shoot button states.
     this.setCameraButtonActive(false);
     this.setShootButtonActive(false);
     console.log("[ViewManager] Mirror quest UI stopped.");
   }
 
   // ------------------ Repeating Quest UI ------------------
+
   /**
    * startRepeatingQuestUI
    * Initializes the UI for a repeating quest stage.
-   * It displays the status, enables the "Shoot" button, and attaches an onClick handler.
-   * The onClick handler first checks if the quest (passed via options.quest) is finished.
-   * If not finished, it disables the Shoot button and calls the provided onShoot callback.
    *
    * @param {object} options - Options including:
    *   - statusElementId: the ID of the status element.
    *   - shootButtonId: the ID of the Shoot button.
    *   - stage: current stage number.
    *   - totalStages: total number of stages.
-   *   - onShoot: callback to be executed when Shoot is pressed.
-   *   - quest: the current repeating quest instance (for checking its finished flag).
+   *   - onShoot: callback to execute when Shoot is pressed.
+   *   - quest: the current repeating quest instance.
    */
   startRepeatingQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
@@ -629,12 +624,10 @@ export class ViewManager {
       shootBtn.style.pointerEvents = "auto";
       shootBtn.onclick = null;
       shootBtn.onclick = () => {
-        // Extra check: if the quest is finished, ignore the click.
         if (options.quest && options.quest.finished) {
           console.log("[ViewManager] Quest is finished; Shoot button click ignored.");
           return;
         }
-        // Disable the Shoot button immediately.
         this.setShootButtonActive(false);
         if (typeof options.onShoot === "function") {
           options.onShoot();
@@ -655,28 +648,21 @@ export class ViewManager {
     }
   }
 
-  // CHANGED: Stopping Repeating UI now resets camera and shoot button states.
   stopRepeatingQuestUI(statusElementId) {
     const statusElem = document.getElementById(statusElementId);
     if (statusElem) {
       statusElem.style.display = "none";
     }
-    // Reset camera and shoot button states.
     this.setCameraButtonActive(false);
     this.setShootButtonActive(false);
     console.log("[ViewManager] Repeating quest UI stopped.");
   }
 
-  // ADDED: Convenient method for mass UI update after quest stage completion.
   /**
    * updateUIAfterQuestStage
-   * Allows simultaneous updating of "Post", "Open Camera", "Shoot", etc.
-   * Example usage:
-   *    this.app.viewManager.updateUIAfterQuestStage({
-   *      postEnabled: true,
-   *      cameraActive: false,
-   *      shootActive: false
-   *    });
+   * Updates multiple UI elements after a quest stage completion.
+   *
+   * @param {object} config - Configuration object with properties: postEnabled, cameraActive, shootActive.
    */
   updateUIAfterQuestStage({ postEnabled, cameraActive, shootActive }) {
     if (typeof postEnabled === 'boolean') {
@@ -689,6 +675,93 @@ export class ViewManager {
       this.setShootButtonActive(shootActive);
     }
     console.log("[ViewManager] UI updated after quest stage:", { postEnabled, cameraActive, shootActive });
+  }
+
+  // ------------------ Top Controls for Extended Camera Modes ------------------
+
+  /**
+   * createTopCameraControls
+   * Dynamically creates a top panel with buttons for AR mode, AI detection, and filter selection.
+   */
+  createTopCameraControls() {
+    // Remove existing top controls if present
+    const existing = document.getElementById("top-camera-controls");
+    if (existing) existing.remove();
+
+    const topControls = document.createElement("div");
+    topControls.id = "top-camera-controls";
+    Object.assign(topControls.style, {
+      position: "fixed",
+      top: "0",
+      left: "0",
+      width: "100%",
+      padding: "10px",
+      background: "rgba(0, 0, 0, 0.5)",
+      display: "flex",
+      justifyContent: "center",
+      zIndex: "2100"
+    });
+
+    // AR Mode Button
+    const arBtn = document.createElement("button");
+    arBtn.className = "button is-info";
+    arBtn.innerText = "AR Mode";
+    arBtn.onclick = () => {
+      if (this.cameraManager) {
+        this.cameraManager.startARMode();
+      }
+    };
+    topControls.appendChild(arBtn);
+
+    // AI Detection Button
+    const aiBtn = document.createElement("button");
+    aiBtn.className = "button is-primary";
+    aiBtn.style.marginLeft = "10px";
+    aiBtn.innerText = "Start AI Detection";
+    aiBtn.onclick = () => {
+      if (this.cameraManager) {
+        // Here, you could pass a detection configuration if needed.
+        this.cameraManager.startAIDetection();
+      }
+    };
+    topControls.appendChild(aiBtn);
+
+    // Filter Buttons
+    const nightVisionBtn = document.createElement("button");
+    nightVisionBtn.className = "button is-warning";
+    nightVisionBtn.style.marginLeft = "10px";
+    nightVisionBtn.innerText = "Night Vision";
+    nightVisionBtn.onclick = () => {
+      if (this.cameraManager) {
+        this.cameraManager.applyFilter('nightVision');
+      }
+    };
+    topControls.appendChild(nightVisionBtn);
+
+    const blackWhiteBtn = document.createElement("button");
+    blackWhiteBtn.className = "button is-warning";
+    blackWhiteBtn.style.marginLeft = "10px";
+    blackWhiteBtn.innerText = "Black & White";
+    blackWhiteBtn.onclick = () => {
+      if (this.cameraManager) {
+        this.cameraManager.applyFilter('blackWhite');
+      }
+    };
+    topControls.appendChild(blackWhiteBtn);
+
+    const clearFilterBtn = document.createElement("button");
+    clearFilterBtn.className = "button";
+    clearFilterBtn.style.marginLeft = "10px";
+    clearFilterBtn.innerText = "Clear Filter";
+    clearFilterBtn.onclick = () => {
+      if (this.cameraManager) {
+        this.cameraManager.applyFilter('');
+      }
+    };
+    topControls.appendChild(clearFilterBtn);
+
+    document.body.appendChild(topControls);
+    console.log("[ViewManager] Top camera controls created.");
   }
 
   // ------------------ Visual Effects and Notifications ------------------

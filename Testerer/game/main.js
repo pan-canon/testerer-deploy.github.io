@@ -1,4 +1,6 @@
-import { App } from './src/App.js';
+import { DIContainer } from './DIContainer.js';
+const container = new DIContainer();
+const app = container.getApp();
 
 // Wait until the DOM is fully loaded, then initialize the application.
 document.addEventListener("DOMContentLoaded", async () => {

@@ -12,7 +12,7 @@ import { ErrorManager } from './managers/ErrorManager.js';
 import { ViewManager } from './managers/ViewManager.js';
 
 import { LanguageManager } from './managers/LanguageManager.js';
-// Note: We now use the updated version of CameraSectionManager (with extended camera methods)
+// Use the updated version of CameraSectionManager (with extended camera methods)
 import { CameraSectionManager } from './managers/CameraSectionManager.js';
 import { ProfileManager } from './managers/ProfileManager.js';
 import { ApartmentPlanManager } from './managers/ApartmentPlanManager.js';
@@ -25,43 +25,45 @@ import { ShowProfileModal } from './managers/ShowProfileModal.js';
 /**
  * Main application class.
  * Responsible for initializing core managers, setting up the UI,
- * loading the persisted state, and handling primary navigation and events.
+ * loading persisted state, and handling primary navigation and events.
+ *
+ * Now the constructor accepts an optional dependency object to support DI.
+ * If a dependency is not provided, a new instance is created.
  *
  * NOTE: The new camera functionality is integrated into the updated CameraSectionManager,
  *       and the UI for extended camera modes is handled via the ViewManager (top controls).
  */
 export class App {
-  constructor() {
-    // Initialize ViewManager and bind UI events to the application instance.
-    this.viewManager = new ViewManager();
+  constructor(deps = {}) {
+    // Initialize or inject ViewManager and bind UI events.
+    this.viewManager = deps.viewManager || new ViewManager();
     this.viewManager.bindEvents(this);
 
-    // Create persistence managers for database operations.
-    this.sqliteDataManager = new SQLiteDataManager();
-    this.databaseManager = new DatabaseManager(this.sqliteDataManager);
+    // Create or inject persistence managers for database operations.
+    this.sqliteDataManager = deps.sqliteDataManager || new SQLiteDataManager();
+    this.databaseManager = deps.databaseManager || new DatabaseManager(this.sqliteDataManager);
 
     // Application state variables.
     this.isCameraOpen = false;
     this.selfieData = null;
 
-    // Initialize core domain managers.
-    this.languageManager = new LanguageManager('language-selector');
-    // Use the updated CameraSectionManager (with extended methods) instead of creating a new module.
-    this.cameraSectionManager = new CameraSectionManager();
+    // Initialize or inject core domain managers.
+    this.languageManager = deps.languageManager || new LanguageManager('language-selector');
+    // Use the updated CameraSectionManager (new camera code is integrated here).
+    this.cameraSectionManager = deps.cameraSectionManager || new CameraSectionManager();
     // Set camera manager reference in ViewManager to allow UI controls to call its methods.
     this.viewManager.setCameraManager(this.cameraSectionManager);
-    this.profileManager = new ProfileManager(this.sqliteDataManager);
+    this.profileManager = deps.profileManager || new ProfileManager(this.sqliteDataManager);
 
-    // Create VisualEffectsManager instance to handle UI visual effects.
-    this.visualEffectsManager = new VisualEffectsManager(this, this.viewManager.controlsPanel);
+    // Create or inject VisualEffectsManager instance.
+    this.visualEffectsManager = deps.visualEffectsManager || new VisualEffectsManager(this, this.viewManager.controlsPanel);
 
-    // Initialize GhostManager.
-    // Restore current sequence index from StateManager (default to 0 if not set).
+    // Initialize or inject GhostManager.
     const savedSequenceIndex = parseInt(StateManager.get('currentSequenceIndex'), 10) || 0;
-    this.ghostManager = new GhostManager(savedSequenceIndex, this.profileManager, this);
-    
-    // Create EventManager instance and pass required dependencies.
-    this.eventManager = new EventManager(
+    this.ghostManager = deps.ghostManager || new GhostManager(savedSequenceIndex, this.profileManager, this);
+
+    // Create or inject EventManager instance and pass required dependencies.
+    this.eventManager = deps.eventManager || new EventManager(
       this.databaseManager,
       this.languageManager,
       this.ghostManager,
@@ -71,12 +73,12 @@ export class App {
     this.eventManager.viewManager = this.viewManager;
     this.ghostManager.eventManager = this.eventManager;
 
-    // Initialize QuestManager and GameEventManager.
-    this.questManager = new QuestManager(this.eventManager, this);
-    this.gameEventManager = new GameEventManager(this.eventManager, this, this.languageManager);
-    
-    // Modal for profile display.
-    this.showProfileModal = new ShowProfileModal(this);
+    // Initialize or inject QuestManager and GameEventManager.
+    this.questManager = deps.questManager || new QuestManager(this.eventManager, this);
+    this.gameEventManager = deps.gameEventManager || new GameEventManager(this.eventManager, this, this.languageManager);
+
+    // Create or inject ShowProfileModal.
+    this.showProfileModal = deps.showProfileModal || new ShowProfileModal(this);
 
     // Temporary canvas used for processing selfie images.
     this.tempCanvas = document.createElement("canvas");
@@ -101,12 +103,10 @@ export class App {
 
   /**
    * init - Initializes the application.
-   * 
-   * This method first awaits the completion of the database initialization,
-   * then loads the saved application state (such as the active ghost) to ensure
-   * that any state-saving calls occur only after the database is fully ready.
-   * Finally, it synchronizes quest state from the database, updates the UI,
-   * and either displays the main screen (if a profile exists) or shows the registration screen.
+   *
+   * This method awaits the database initialization,
+   * then loads persisted state, synchronizes quest state, updates the UI,
+   * and displays either the main screen or the registration screen.
    */
   async init() {
     // Wait for database initialization to complete.
@@ -116,13 +116,13 @@ export class App {
     // Load persisted application state.
     this.loadAppState();
 
-    // Synchronize quest state from the database via QuestManager.
+    // Synchronize quest state via QuestManager.
     await this.questManager.syncQuestState();
 
     // Restore UI for all active quests.
     this.questManager.restoreAllActiveQuests();
 
-    // Update UI: show toggle camera button and update the diary display.
+    // Update UI: show toggle camera button and update diary display.
     this.viewManager.showToggleCameraButton();
     this.eventManager.updateDiaryDisplay();
 
@@ -141,7 +141,7 @@ export class App {
   }
 
   /**
-   * goToApartmentPlanScreen - Callback invoked by the ViewManager when registration form data is needed.
+   * goToApartmentPlanScreen - Callback invoked by the ViewManager when registration data is needed.
    * Retrieves registration data, saves it via StateManager, and switches to the apartment plan screen.
    */
   goToApartmentPlanScreen() {
@@ -150,7 +150,6 @@ export class App {
       ErrorManager.showError("Registration data missing.");
       return;
     }
-    // Save registration data as a JSON string.
     StateManager.set('regData', JSON.stringify(regData));
     this.viewManager.switchScreen('apartment-plan-screen', 'apartment-plan-buttons');
     if (!this.apartmentPlanManager) {
@@ -160,12 +159,11 @@ export class App {
 
   /**
    * goToSelfieScreen - Transitions the UI to the selfie capture screen.
-   * Shows the global camera view, starts the camera, and disables the complete registration button.
+   * Displays the global camera view, starts the camera, and disables the complete registration button.
    */
   goToSelfieScreen() {
     this.viewManager.switchScreen('selfie-screen', 'selfie-buttons');
     this.viewManager.showGlobalCamera();
-    // Start camera using the updated CameraSectionManager (which now includes extended methods)
     this.cameraSectionManager.startCamera();
     this.viewManager.disableCompleteButton();
   }
@@ -198,16 +196,16 @@ export class App {
       }
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       
-      // Convert captured frame to grayscale.
+      // Convert the captured frame to grayscale.
       const grayscaleData = ImageUtils.convertToGrayscale(canvas);
       
       // Update selfie preview via ViewManager.
       this.viewManager.updateSelfiePreview(grayscaleData);
       
-      // Enable "Complete Registration" button.
+      // Enable the "Complete Registration" button.
       this.viewManager.enableCompleteButton();
       
-      // Store processed selfie data.
+      // Save the processed selfie data.
       this.selfieData = grayscaleData;
       
       console.log("✅ Selfie captured successfully!");
@@ -250,13 +248,14 @@ export class App {
 
     await this.showMainScreen();
 
-    // Auto-launch welcome event after registration.
+    // Auto-launch the welcome event after registration.
     this.gameEventManager.autoLaunchWelcomeEvent();
   }
 
   /**
    * toggleCameraView - Toggles between camera view and diary view.
-   * If camera is not open, starts it and waits for metadata; otherwise, stops camera and shows diary.
+   * If the camera is not open, starts it and waits for metadata;
+   * otherwise, stops the camera and shows the diary.
    */
   async toggleCameraView() {
     if (!this.isCameraOpen) {
@@ -273,7 +272,6 @@ export class App {
       });
       console.log("Video ready:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
       this.isCameraOpen = true;
-      // Optionally, restore quest UI when switching to camera.
     } else {
       console.log("📓 Returning to diary view...");
       this.viewManager.showDiaryView();
@@ -284,7 +282,7 @@ export class App {
 
   /**
    * showMainScreen - Displays the main screen after successful registration.
-   * Switches to main screen, updates toggle camera button, and sets "Post" button state.
+   * Switches to the main screen, updates the toggle camera button, and sets the "Post" button state.
    */
   async showMainScreen() {
     this.viewManager.switchScreen('main-screen', 'main-buttons');

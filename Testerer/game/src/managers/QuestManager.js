@@ -1,4 +1,4 @@
-// --- Quest Classes ---
+// File: src/managers/QuestManager.js
 import { BaseMirrorQuest } from '../quests/BaseMirrorQuest.js';
 import { BaseRepeatingQuest } from '../quests/BaseRepeatingQuest.js';
 import { FinalQuest } from '../quests/FinalQuest.js';
@@ -71,39 +71,46 @@ export class QuestManager {
   }
 
   /**
-   * syncQuestState
-   * Synchronizes the current quest state from the database.
-   * - If the game is finalized, disable the Post button.
-   * - If an active quest is detected (mirror or repeating) and not finished, disable the Post button.
-   * - Otherwise, enable the Post button.
+   * syncQuestStateForQuest - Universal method to synchronize the state for a given quest.
+   * Checks global conditions and then verifies the quest record from the database.
+   * Enables or disables the Post button accordingly.
+   *
+   * @param {string} questKey - The key of the quest to synchronize.
    */
-  async syncQuestState() {
+  async syncQuestStateForQuest(questKey) {
     if (StateManager.get("gameFinalized") === "true" || StateManager.get("questActive") === "true") {
       StateManager.set("postButtonDisabled", "true");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(false);
       }
-      console.log("[QuestManager.syncQuestState] Game finalized; Post button disabled.");
+      console.log(`[QuestManager.syncQuestStateForQuest] Global condition met; Post button disabled for quest "${questKey}".`);
       return;
     }
-    const mirrorQuestRecord = this.app.databaseManager.getQuestRecord("mirror_quest");
-    const repeatingQuestRecord = this.app.databaseManager.getQuestRecord("repeating_quest");
-    console.log("[QuestManager.syncQuestState] mirrorQuestRecord:", mirrorQuestRecord);
-    console.log("[QuestManager.syncQuestState] repeatingQuestRecord:", repeatingQuestRecord);
-    const activeQuestRecord = mirrorQuestRecord || repeatingQuestRecord;
-    if (activeQuestRecord && activeQuestRecord.status !== "finished") {
+    const questRecord = this.app.databaseManager.getQuestRecord(questKey);
+    console.log(`[QuestManager.syncQuestStateForQuest] Quest record for "${questKey}":`, questRecord);
+    if (questRecord && questRecord.status !== "finished") {
       StateManager.set("postButtonDisabled", "true");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(false);
       }
-      console.log("[QuestManager.syncQuestState] Active quest detected; Post button disabled.");
+      console.log(`[QuestManager.syncQuestStateForQuest] Active quest "${questKey}" detected; Post button disabled.`);
     } else {
       StateManager.set("postButtonDisabled", "false");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(true);
       }
-      console.log("[QuestManager.syncQuestState] No active quest or quest finished; Post button enabled.");
+      console.log(`[QuestManager.syncQuestStateForQuest] No active quest "${questKey}" or quest finished; Post button enabled.`);
     }
+  }
+
+  /**
+   * syncQuestState
+   * Synchronizes the quest state for predefined quests (mirror and repeating).
+   * This method now delegates to the universal syncQuestStateForQuest.
+   */
+  async syncQuestState() {
+    await this.syncQuestStateForQuest("mirror_quest");
+    await this.syncQuestStateForQuest("repeating_quest");
   }
 
   /**
@@ -188,7 +195,6 @@ export class QuestManager {
     console.log("[QuestManager] Attempting to restore UI for all active quests...");
     this.quests.forEach(quest => {
       const record = this.app.databaseManager.getQuestRecord(quest.key);
-      // Consider the quest active if DB status is "active" OR if status is "finished" but there are still stages left
       if (
         record &&
         (record.status === "active" || (record.status === "finished" && quest.currentStage <= quest.totalStages)) &&

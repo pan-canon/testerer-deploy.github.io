@@ -41,21 +41,13 @@ export class DatabaseManager {
       const SQL = await initSqlJs({
         locateFile: file => `assets/libs/db/${file}`
       });
-      if (!SQL) {
-        throw new Error("Failed to load SQL.js module.");
-      }
       
       // Restore database from IndexedDB if saved, otherwise create a new instance.
       this.db = await this.dataManager.initDatabase(SQL);
-      if (!this.db) {
-        throw new Error("Failed to initialize the database instance.");
-      }
       
       console.log("📖 Database initialized!");
     } catch (error) {
       ErrorManager.logError(error, "DatabaseManager.initDatabase");
-      // Optionally rethrow error to propagate failure
-      throw error;
     }
   }
 
@@ -63,10 +55,7 @@ export class DatabaseManager {
    * saveDatabase – Exports the database to a base64 string and persists it via the DataManager.
    */
   async saveDatabase() {
-    if (!this.db) {
-      ErrorManager.logError("Database not initialized!", "saveDatabase");
-      return;
-    }
+    if (!this.db) return;
     const binaryData = this.db.export();
     let binaryStr = "";
     for (let i = 0; i < binaryData.length; i++) {

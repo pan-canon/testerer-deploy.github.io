@@ -24,6 +24,12 @@ export class LanguageManager {
 
     // Get the language selector element by its ID.
     this.selector = document.getElementById(selectorId);
+    
+    // Check if the selector exists; if not, log an error and return early.
+    if (!this.selector) {
+      console.error(`LanguageManager: Element with id "${selectorId}" not found. Ensure the template is loaded before initializing LanguageManager.`);
+      return;
+    }
 
     // Set the current language from localStorage, defaulting to 'en'.
     this.currentLanguage = localStorage.getItem('language') || 'en';

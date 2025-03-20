@@ -142,11 +142,11 @@ export class App {
     if (await this.profileManager.isProfileSaved()) {
       const profile = await this.profileManager.getProfile();
       console.log("Profile found:", profile);
-      // Load the main screen dynamically using the template "main-screen" (old id style).
+      // Load the main screen dynamically using the template "main-screen".
       await this.showMainScreen();
     } else {
       console.log("Profile not found, showing registration screen.");
-      // Load the registration screen dynamically using the template "registration-screen" (old id style).
+      // Load the registration screen dynamically using the template "registration-screen".
       this.showRegistrationScreen();
     }
   }
@@ -162,8 +162,8 @@ export class App {
       return;
     }
     StateManager.set('regData', JSON.stringify(regData));
-    // Switch to dynamic template "apartmentPlan"
-    this.viewManager.switchScreen('apartmentPlan', 'apartment-plan-buttons');
+    // Switch to dynamic template "apartment-plan-screen"
+    this.viewManager.switchScreen('apartment-plan-screen', 'apartment-plan-buttons');
     if (!this.apartmentPlanManager) {
       this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', this.databaseManager, this);
     }
@@ -174,8 +174,8 @@ export class App {
    * Displays the global camera view, starts the camera, and disables the complete registration button.
    */
   goToSelfieScreen() {
-    // Switch to dynamic template "selfie"
-    this.viewManager.switchScreen('selfie', 'selfie-buttons');
+    // Switch to dynamic template "selfie-screen"
+    this.viewManager.switchScreen('selfie-screen', 'selfie-buttons');
     this.viewManager.showGlobalCamera();
     this.cameraSectionManager.startCamera();
     this.viewManager.disableCompleteButton();
@@ -259,7 +259,7 @@ export class App {
     this.cameraSectionManager.stopCamera();
     this.viewManager.hideGlobalCamera();
 
-    // Load the main screen dynamically using the "main-screen" template (old id style).
+    // Load the main screen dynamically using the "main-screen" template.
     await this.showMainScreen();
 
     // Auto-launch the welcome event after registration.
@@ -300,7 +300,7 @@ export class App {
    * and sets the "Post" button state based on the mirror quest readiness.
    */
   async showMainScreen() {
-    // Load the main screen dynamically using the "main-screen" template (using old id naming convention).
+    // Load the main screen dynamically using the "main-screen" template.
     await this.viewManager.switchScreen('main-screen', 'main-buttons');
     this.viewManager.showToggleCameraButton();
     if (StateManager.get("mirrorQuestReady") === "true") {
@@ -326,7 +326,7 @@ export class App {
     StateManager.remove("regData");
     StateManager.remove("quest_state_repeating_quest");
 
-    // Load the registration screen dynamically using the "registration-screen" template (using old id naming convention).
+    // Load the registration screen dynamically using the "registration-screen" template.
     this.viewManager.switchScreen('registration-screen', 'registration-buttons');
   }
 

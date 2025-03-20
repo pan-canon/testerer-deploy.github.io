@@ -37,6 +37,8 @@ export class ViewManager {
     this.resetDataBtn = document.getElementById("reset-data");
     this.exportProfileBtn = document.getElementById("export-profile-btn");
     this.updateBtn = document.getElementById("update-btn");
+    // Static selfie preview (in controls panel)
+    this.selfiePreview = document.getElementById("selfie-thumbnail");
 
     // --- Camera Manager Reference (to be set externally) ---
     this.cameraManager = null;
@@ -105,7 +107,7 @@ export class ViewManager {
    * Asynchronously loads an HTML template from the src/templates directory by file name
    * (without extension) and inserts it into the dynamic content container.
    *
-   * @param {string} screenName - The name of the template (e.g., "registration", "apartmentPlan", "selfie", "main").
+   * @param {string} screenName - The name of the template (e.g., "registration-screen", "apartment-plan-screen", "selfie-screen", "main-screen").
    * @param {Object} [data={}] - An object containing data to be substituted in the template.
    * @returns {Promise<HTMLElement>} - A promise that resolves with the loaded screen element.
    *
@@ -123,16 +125,22 @@ export class ViewManager {
       // Replace the content of the dynamic container.
       this.contentContainer.innerHTML = renderedHTML;
       
-      // NEW: Update dynamic references to elements that are loaded with the template.
-      this.nameInput = document.getElementById('player-name');
-      this.genderSelect = document.getElementById('player-gender');
-      this.languageSelector = document.getElementById('language-selector');
-      this.diaryContainer = document.getElementById('diary');
-      this.profileNameElem = document.getElementById('profile-name');
-      this.profilePhotoElem = document.getElementById('profile-photo');
-      // These buttons may be present in certain screens (e.g., registration screen)
-      this.completeBtn = document.getElementById('complete-registration-btn');
-      this.captureBtn = document.getElementById('capture-btn');
+      // NEW: Update dynamic references to elements based on the loaded screen.
+      if (screenName.includes("registration-screen")) {
+        this.nameInput = document.getElementById('player-name');
+        this.genderSelect = document.getElementById('player-gender');
+        this.languageSelector = document.getElementById('language-selector');
+        this.nextStepBtn = document.getElementById('next-step-btn');
+        this.importFileInput = document.getElementById('import-file');
+      } else if (screenName.includes("selfie-screen")) {
+        this.captureBtn = document.getElementById('capture-btn');
+        this.completeBtn = document.getElementById('complete-registration');
+      } else if (screenName.includes("main-screen")) {
+        this.diaryContainer = document.getElementById('diary');
+        this.profileNameElem = document.getElementById('profile-name');
+        this.profilePhotoElem = document.getElementById('profile-photo');
+      }
+      
       // Add fade-in effect for smooth appearance.
       const screenElem = this.contentContainer.firstElementChild;
       if (screenElem) {
@@ -175,7 +183,7 @@ export class ViewManager {
           targetGroup.style.display = 'flex';
           targetGroup.style.pointerEvents = 'auto';
           // Special handling for main screen controls.
-          if (screenName === "main") {
+          if (screenName.includes("main-screen")) {
             const td = targetGroup.querySelector("#toggle-diary");
             if (td) {
               td.style.display = "none";
@@ -201,7 +209,8 @@ export class ViewManager {
    * @param {string} screenName - The name of the loaded screen.
    */
   initScreenEvents(screenName) {
-    if (screenName === "registration") {
+    // For registration screen, bind validation events.
+    if (screenName.indexOf("registration-screen") !== -1) {
       const nameInput = document.getElementById('player-name');
       const genderSelect = document.getElementById('player-gender');
       const languageSelector = document.getElementById('language-selector');
@@ -533,8 +542,7 @@ export class ViewManager {
    * @param {string} [buttonsGroupId] - Optional identifier for a specific group of control buttons.
    */
   switchScreen(screenId, buttonsGroupId) {
-    // Since screens are now loaded dynamically into contentContainer,
-    // we simply clear/hide all static sections (if any) and show the dynamic container.
+    // Hide all static sections.
     document.querySelectorAll('section').forEach(section => {
       section.style.display = 'none';
     });
@@ -557,7 +565,7 @@ export class ViewManager {
         targetGroup.style.display = 'flex';
         targetGroup.style.pointerEvents = 'auto';
         // Special handling for main screen controls.
-        if (screenId === "main") {
+        if (screenId.indexOf("main-screen") !== -1) {
           const td = targetGroup.querySelector("#toggle-diary");
           if (td) {
             td.style.display = "none";

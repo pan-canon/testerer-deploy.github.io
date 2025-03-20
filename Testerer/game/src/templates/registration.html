@@ -1,0 +1,46 @@
+<!-- registration.html -->
+<section id="registration-screen" class="fade-in">
+  <h1 class="title" data-i18n="welcome">Welcome!</h1>
+  <form id="registration-form">
+    <div class="field">
+      <label class="label" for="player-name" data-i18n="enter_name">Enter your name:</label>
+      <div class="control">
+        <input class="input" type="text" id="player-name" required>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label" for="player-gender" data-i18n="select_gender">Select your gender:</label>
+      <div class="control">
+        <div class="select">
+          <select id="player-gender" required>
+            <option value="" disabled selected>Select</option>
+            <option value="male" data-i18n="male">Male</option>
+            <option value="female" data-i18n="female">Female</option>
+            <option value="other" data-i18n="other">Other</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label" for="language-selector" data-i18n="select_language">Select Language:</label>
+      <div class="control">
+        <div class="select">
+          <select id="language-selector">
+            <option value="en">English</option>
+            <option value="ru">Русский</option>
+            <option value="uk">Українська</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </form>
+  <!-- Import Profile (alternative login) -->
+  <div id="import-profile-container" class="box">
+    <h2 class="subtitle" data-i18n="import_profile">Import Profile</h2>
+    <div class="field">
+      <div class="control">
+        <input class="input" type="file" id="import-file" accept=".json">
+      </div>
+    </div>
+  </div>
+</section>

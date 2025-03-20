@@ -68,8 +68,10 @@ export class GhostManager {
           const firstEntry = this.sequenceManager.getCurrentEntry();
           if (firstEntry) {
             console.log(`Auto-launching initial event: ${firstEntry.eventKey}`);
-            this.eventManager.activateEvent(firstEntry.eventKey);
-            // Save the active quest key
+            // FIX: теперь вызываем gameEventManager вместо eventManager
+            this.app.gameEventManager.activateEvent(firstEntry.eventKey);
+
+            // Сохраняем активный questKey
             this.activeQuestKey = firstEntry.questKey;
             StateManager.set("activeQuestKey", this.activeQuestKey);
           }
@@ -184,6 +186,7 @@ export class GhostManager {
         await this.eventManager.addDiaryEntry(finalEntry);
         console.log(finalEntry);
         console.log(`Triggering final event for ghost "${ghost.name}"...`);
+        // Correct usage of gameEventManager:
         await this.app.gameEventManager.activateEvent("ghost_final_event");
       }
     } else {
@@ -307,6 +310,7 @@ export class GhostManager {
       return;
     }
     console.log(`GhostManager: Starting event with key: ${eventKey}`);
+    // Correct usage of gameEventManager
     await this.app.gameEventManager.activateEvent(eventKey);
   }
 

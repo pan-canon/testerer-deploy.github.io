@@ -1,4 +1,3 @@
-// ViewManager.js
 import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
 // NEW: Import TemplateEngine from utils for rendering HTML templates
@@ -19,17 +18,19 @@ import { TemplateEngine } from '../utils/TemplateEngine.js';
  *
  * NOTE: Sequential linking of events and quests is handled by GhostManager.
  *       This module also persists button states to StateManager.
+ *
+ * NEW: Supports lazy loading of screens via templates.
  */
 export class ViewManager {
   constructor() {
     // --- Cache Static UI Elements ---
-    // Controls panel, global camera and dynamic content container remain in index.html
+    // Controls panel and global camera remain static in index.html.
     this.controlsPanel = document.getElementById("controls-panel");
     this.globalCamera = document.getElementById("global-camera");
-    // NEW: Container for dynamic screens loaded from templates
+    // NEW: Container for dynamic screens loaded from templates.
     this.contentContainer = document.getElementById("global-content");
 
-    // --- Previously Cached Toggle Buttons and Additional Controls (Static elements) ---
+    // --- Cached Toggle Buttons and Additional Controls (Static elements) ---
     this.toggleCameraBtn = document.getElementById("toggle-camera");
     this.toggleDiaryBtn = document.getElementById("toggle-diary");
     this.postBtn = document.getElementById("post-btn");
@@ -115,14 +116,15 @@ export class ViewManager {
         throw new Error(`Failed to load template: ${screenName}.html`);
       }
       const template = await response.text();
+      // Use TemplateEngine to render the template with provided data.
       const renderedHTML = TemplateEngine.render(template, data);
-      // Replace the content of the dynamic container
+      // Replace the content of the dynamic container.
       this.contentContainer.innerHTML = renderedHTML;
-      // Add fade-in effect for smooth appearance
+      // Add fade-in effect for smooth appearance.
       const screenElem = this.contentContainer.firstElementChild;
       if (screenElem) {
         screenElem.classList.add("fade-in");
-        // Delay to trigger the CSS transition
+        // Delay to trigger the CSS transition.
         setTimeout(() => {
           screenElem.classList.add("visible");
         }, 50);
@@ -137,15 +139,19 @@ export class ViewManager {
 
   /**
    * switchScreen
-   * Switches screens by loading a template into the dynamic container and updating control buttons.
+   * Switches screens by loading a template into the dynamic content container and updating control buttons.
    *
    * @param {string} screenName - The name of the template for the screen (without extension).
    * @param {string} [buttonsGroupId] - Optional identifier for a specific group of control buttons.
    */
   async switchScreen(screenName, buttonsGroupId) {
     try {
+      // Load the screen template dynamically.
       await this.loadScreen(screenName);
-      // Hide all button groups in the controls panel
+      // (Optional) Initialize screen-specific events.
+      this.initScreenEvents(screenName);
+
+      // Hide all button groups in the controls panel.
       document.querySelectorAll('#controls-panel > .buttons').forEach(group => {
         group.style.display = 'none';
         group.style.pointerEvents = 'none';
@@ -155,7 +161,7 @@ export class ViewManager {
         if (targetGroup) {
           targetGroup.style.display = 'flex';
           targetGroup.style.pointerEvents = 'auto';
-          // Special handling for main screen controls
+          // Special handling for main screen controls.
           if (screenName === "main") {
             const td = targetGroup.querySelector("#toggle-diary");
             if (td) {
@@ -505,15 +511,29 @@ export class ViewManager {
 
   // ------------------ Screen Switching (Static) ------------------
 
+  /**
+   * switchScreen
+   * Switches screens by hiding all pre-existing static sections and displaying the screen loaded in the dynamic container.
+   * NOTE: In our new approach, only the dynamic container (#global-content) is used for screen content.
+   *
+   * @param {string} screenId - The id of the screen (loaded template) to display.
+   * @param {string} [buttonsGroupId] - Optional identifier for a specific group of control buttons.
+   */
   switchScreen(screenId, buttonsGroupId) {
+    // Since screens are now loaded dynamically into contentContainer,
+    // we simply clear/hide all static sections (if any) and show the dynamic container.
     document.querySelectorAll('section').forEach(section => {
       section.style.display = 'none';
     });
+    // Instead of targeting a static element by id, we assume that the loaded template's root element has id=screenId.
     const targetScreen = document.getElementById(screenId);
     if (targetScreen) {
       targetScreen.style.display = 'block';
       console.log(`[ViewManager] Switched to screen: ${screenId}`);
+    } else {
+      console.warn(`[ViewManager] No static element with id "${screenId}" found. Using dynamic content.`);
     }
+    // Update control buttons if needed.
     document.querySelectorAll('#controls-panel > .buttons').forEach(group => {
       group.style.display = 'none';
       group.style.pointerEvents = 'none';
@@ -523,7 +543,8 @@ export class ViewManager {
       if (targetGroup) {
         targetGroup.style.display = 'flex';
         targetGroup.style.pointerEvents = 'auto';
-        if (screenId === "main-screen") {
+        // Special handling for main screen controls.
+        if (screenId === "main") {
           const td = targetGroup.querySelector("#toggle-diary");
           if (td) {
             td.style.display = "none";
@@ -770,7 +791,7 @@ export class ViewManager {
    * Dynamically creates a top panel with buttons for AR mode, AI detection, and filter selection.
    */
   createTopCameraControls() {
-    // Remove existing top controls if present
+    // Remove existing top controls if present.
     const existing = document.getElementById("top-camera-controls");
     if (existing) existing.remove();
 
@@ -788,7 +809,7 @@ export class ViewManager {
       zIndex: "2100"
     });
 
-    // AR Mode Button
+    // AR Mode Button.
     const arBtn = document.createElement("button");
     arBtn.className = "button is-info";
     arBtn.innerText = "AR Mode";
@@ -799,20 +820,20 @@ export class ViewManager {
     };
     topControls.appendChild(arBtn);
 
-    // AI Detection Button
+    // AI Detection Button.
     const aiBtn = document.createElement("button");
     aiBtn.className = "button is-primary";
     aiBtn.style.marginLeft = "10px";
     aiBtn.innerText = "Start AI Detection";
     aiBtn.onclick = () => {
       if (this.cameraManager) {
-        // Here, you could pass a detection configuration if needed.
+        // Optionally pass a detection configuration.
         this.cameraManager.startAIDetection();
       }
     };
     topControls.appendChild(aiBtn);
 
-    // Filter Buttons
+    // Filter Buttons.
     const nightVisionBtn = document.createElement("button");
     nightVisionBtn.className = "button is-warning";
     nightVisionBtn.style.marginLeft = "10px";

@@ -80,25 +80,33 @@ export class EventManager {
    * Retrieves diary entries from the database and instructs the ViewManager
    * to render them. Uses the current language from the LanguageManager.
    */
-  updateDiaryDisplay() {
-    if (this.viewManager && typeof this.viewManager.renderDiary === 'function') {
-      // Попытка получить элементы дневника из шаблона
-      const diaryContainer = document.getElementById('diary');
-      if (!diaryContainer) {
-        // Если контейнер не найден, повторить попытку через 100 мс.
-        console.warn("Diary container not found; delaying diary update.");
-        setTimeout(() => this.updateDiaryDisplay(), 100);
-        return;
-      }
-      const entries = this.databaseManager.getDiaryEntries();
-      const currentLanguage = this.languageManager.getLanguage();
-      // Передаём найденный контейнер в renderDiary (ViewManager обновляет свои ссылки в loadScreen)
-      this.viewManager.renderDiary(entries, currentLanguage, this.visualEffectsManager);
-    } else {
-      ErrorManager.logError("ViewManager is not available. Cannot update diary display.", "updateDiaryDisplay");
-      ErrorManager.showError("Unable to update diary display.");
-    }
+updateDiaryDisplay() {
+  // Если ViewManager не задан – ничего не делаем.
+  if (!(this.viewManager && typeof this.viewManager.renderDiary === 'function')) {
+    ErrorManager.logError("ViewManager is not available. Cannot update diary display.", "updateDiaryDisplay");
+    ErrorManager.showError("Unable to update diary display.");
+    return;
   }
+  
+  // Определяем, активен ли главный экран.
+  const activeScreen = this.viewManager.contentContainer.firstElementChild;
+  if (!activeScreen || activeScreen.id !== "main-screen") {
+    console.log("Active screen is not main-screen; skipping diary update.");
+    return;
+  }
+  
+  // Пытаемся получить контейнер дневника.
+  const diaryContainer = document.getElementById('diary');
+  if (!diaryContainer) {
+    console.warn("Diary container not found; delaying diary update.");
+    setTimeout(() => this.updateDiaryDisplay(), 100);
+    return;
+  }
+  
+  const entries = this.databaseManager.getDiaryEntries();
+  const currentLanguage = this.languageManager.getLanguage();
+  this.viewManager.renderDiary(entries, currentLanguage, this.visualEffectsManager);
+}
 
   /**
    * startGhostQuest

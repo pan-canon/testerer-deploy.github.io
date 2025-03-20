@@ -46,60 +46,65 @@ export class SQLiteDataManager {
    * @returns {Promise<SQL.Database>} Resolves to the SQL.js database instance.
    */
   async initDatabase(SQL) {
-    const savedDbBase64 = await this.loadDatabase();
-    let dbInstance;
-    if (savedDbBase64) {
-      // Restore database from saved base64 data.
-      const binaryStr = atob(savedDbBase64);
-      const binaryData = new Uint8Array(binaryStr.length);
-      for (let i = 0; i < binaryStr.length; i++) {
-        binaryData[i] = binaryStr.charCodeAt(i);
+    try {
+      const savedDbBase64 = await this.loadDatabase();
+      let dbInstance;
+      if (savedDbBase64) {
+        // Restore database from saved base64 data.
+        const binaryStr = atob(savedDbBase64);
+        const binaryData = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) {
+          binaryData[i] = binaryStr.charCodeAt(i);
+        }
+        dbInstance = new SQL.Database(binaryData);
+        console.log("Database restored from IndexedDB.");
+      } else {
+        // Create a new database instance and initialize tables.
+        dbInstance = new SQL.Database();
+        dbInstance.run(`
+          CREATE TABLE IF NOT EXISTS diary (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            entry TEXT,
+            timestamp TEXT
+          );
+          CREATE TABLE IF NOT EXISTS apartment_plan (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            floor_number INTEGER,
+            room_data TEXT
+          );
+          CREATE TABLE IF NOT EXISTS quest_progress (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            quest_key TEXT,
+            status TEXT
+          );
+          CREATE TABLE IF NOT EXISTS ghosts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            status TEXT,
+            progress INTEGER
+          );
+          CREATE TABLE IF NOT EXISTS events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_key TEXT,
+            event_text TEXT,
+            timestamp TEXT,
+            completed INTEGER
+          );
+          CREATE TABLE IF NOT EXISTS quests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            quest_key TEXT,
+            status TEXT,
+            current_stage INTEGER,
+            total_stages INTEGER
+          );
+        `);
+        console.log("New database created and tables initialized.");
       }
-      dbInstance = new SQL.Database(binaryData);
-      console.log("Database restored from IndexedDB.");
-    } else {
-      // Create a new database instance and initialize tables.
-      dbInstance = new SQL.Database();
-      dbInstance.run(`
-        CREATE TABLE IF NOT EXISTS diary (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          entry TEXT,
-          timestamp TEXT
-        );
-        CREATE TABLE IF NOT EXISTS apartment_plan (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          floor_number INTEGER,
-          room_data TEXT
-        );
-        CREATE TABLE IF NOT EXISTS quest_progress (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          quest_key TEXT,
-          status TEXT
-        );
-        CREATE TABLE IF NOT EXISTS ghosts (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT,
-          status TEXT,
-          progress INTEGER
-        );
-        CREATE TABLE IF NOT EXISTS events (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          event_key TEXT,
-          event_text TEXT,
-          timestamp TEXT,
-          completed INTEGER
-        );
-        CREATE TABLE IF NOT EXISTS quests (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          quest_key TEXT,
-          status TEXT,
-          current_stage INTEGER,
-          total_stages INTEGER
-        );
-      `);
-      console.log("New database created and tables initialized.");
+      return dbInstance;
+    } catch (error) {
+      console.error("Error in initDatabase:", error);
+      throw error;
     }
-    return dbInstance;
   }
 
   /**
@@ -109,24 +114,29 @@ export class SQLiteDataManager {
    * @returns {Promise<void>} Resolves when saving is complete.
    */
   async saveDatabase(base64Data) {
-    const db = await this.openDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], "readwrite");
-      transaction.oncomplete = () => {
-        console.log("Database saved successfully in IndexedDB.");
-        resolve();
-      };
-      transaction.onerror = event => {
-        console.error("Transaction error during saveDatabase:", event.target.error);
-        reject(event.target.error);
-      };
-      const store = transaction.objectStore(this.storeName);
-      const putRequest = store.put(base64Data, this.key);
-      putRequest.onerror = event => {
-        console.error("Error saving database data:", event.target.error);
-        reject(event.target.error);
-      };
-    });
+    try {
+      const db = await this.openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([this.storeName], "readwrite");
+        transaction.oncomplete = () => {
+          console.log("Database saved successfully in IndexedDB.");
+          resolve();
+        };
+        transaction.onerror = event => {
+          console.error("Transaction error during saveDatabase:", event.target.error);
+          reject(event.target.error);
+        };
+        const store = transaction.objectStore(this.storeName);
+        const putRequest = store.put(base64Data, this.key);
+        putRequest.onerror = event => {
+          console.error("Error saving database data:", event.target.error);
+          reject(event.target.error);
+        };
+      });
+    } catch (error) {
+      console.error("Error in saveDatabase:", error);
+      throw error;
+    }
   }
 
   /**
@@ -135,24 +145,29 @@ export class SQLiteDataManager {
    * @returns {Promise<string>} Resolves to the base64 string representing the database, or undefined if not found.
    */
   async loadDatabase() {
-    const db = await this.openDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], "readonly");
-      transaction.onerror = event => {
-        console.error("Transaction error during loadDatabase:", event.target.error);
-        reject(event.target.error);
-      };
-      const store = transaction.objectStore(this.storeName);
-      const getRequest = store.get(this.key);
-      getRequest.onsuccess = event => {
-        console.log("Database loaded successfully from IndexedDB.");
-        resolve(event.target.result);
-      };
-      getRequest.onerror = event => {
-        console.error("Error loading database data:", event.target.error);
-        reject(event.target.error);
-      };
-    });
+    try {
+      const db = await this.openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([this.storeName], "readonly");
+        transaction.onerror = event => {
+          console.error("Transaction error during loadDatabase:", event.target.error);
+          reject(event.target.error);
+        };
+        const store = transaction.objectStore(this.storeName);
+        const getRequest = store.get(this.key);
+        getRequest.onsuccess = event => {
+          console.log("Database loaded successfully from IndexedDB.");
+          resolve(event.target.result);
+        };
+        getRequest.onerror = event => {
+          console.error("Error loading database data:", event.target.error);
+          reject(event.target.error);
+        };
+      });
+    } catch (error) {
+      console.error("Error in loadDatabase:", error);
+      throw error;
+    }
   }
 
   /**
@@ -161,24 +176,29 @@ export class SQLiteDataManager {
    * @returns {Promise<void>} Resolves when the database data is successfully deleted.
    */
   async resetDatabase() {
-    const db = await this.openDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], "readwrite");
-      transaction.oncomplete = () => {
-        console.log("SQL database reset successfully in IndexedDB.");
-        resolve();
-      };
-      transaction.onerror = event => {
-        console.error("Transaction error during resetDatabase:", event.target.error);
-        reject(event.target.error);
-      };
-      const store = transaction.objectStore(this.storeName);
-      const deleteRequest = store.delete(this.key);
-      deleteRequest.onerror = event => {
-        console.error("Error deleting SQL database data:", event.target.error);
-        reject(event.target.error);
-      };
-    });
+    try {
+      const db = await this.openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([this.storeName], "readwrite");
+        transaction.oncomplete = () => {
+          console.log("SQL database reset successfully in IndexedDB.");
+          resolve();
+        };
+        transaction.onerror = event => {
+          console.error("Transaction error during resetDatabase:", event.target.error);
+          reject(event.target.error);
+        };
+        const store = transaction.objectStore(this.storeName);
+        const deleteRequest = store.delete(this.key);
+        deleteRequest.onerror = event => {
+          console.error("Error deleting SQL database data:", event.target.error);
+          reject(event.target.error);
+        };
+      });
+    } catch (error) {
+      console.error("Error in resetDatabase:", error);
+      throw error;
+    }
   }
 
   /**
@@ -189,24 +209,29 @@ export class SQLiteDataManager {
    */
   async saveProfile(profile) {
     const profileKey = 'profile';
-    const db = await this.openDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], "readwrite");
-      transaction.oncomplete = () => {
-        console.log("Profile saved successfully in IndexedDB.");
-        resolve();
-      };
-      transaction.onerror = event => {
-        console.error("Transaction error during saveProfile:", event.target.error);
-        reject(event.target.error);
-      };
-      const store = transaction.objectStore(this.storeName);
-      const putRequest = store.put(JSON.stringify(profile), profileKey);
-      putRequest.onerror = event => {
-        console.error("Error saving profile data:", event.target.error);
-        reject(event.target.error);
-      };
-    });
+    try {
+      const db = await this.openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([this.storeName], "readwrite");
+        transaction.oncomplete = () => {
+          console.log("Profile saved successfully in IndexedDB.");
+          resolve();
+        };
+        transaction.onerror = event => {
+          console.error("Transaction error during saveProfile:", event.target.error);
+          reject(event.target.error);
+        };
+        const store = transaction.objectStore(this.storeName);
+        const putRequest = store.put(JSON.stringify(profile), profileKey);
+        putRequest.onerror = event => {
+          console.error("Error saving profile data:", event.target.error);
+          reject(event.target.error);
+        };
+      });
+    } catch (error) {
+      console.error("Error in saveProfile:", error);
+      throw error;
+    }
   }
 
   /**
@@ -216,28 +241,33 @@ export class SQLiteDataManager {
    */
   async getProfile() {
     const profileKey = 'profile';
-    const db = await this.openDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], "readonly");
-      transaction.onerror = event => {
-        console.error("Transaction error during getProfile:", event.target.error);
-        reject(event.target.error);
-      };
-      const store = transaction.objectStore(this.storeName);
-      const getRequest = store.get(profileKey);
-      getRequest.onsuccess = event => {
-        const result = event.target.result;
-        if (result) {
-          resolve(JSON.parse(result));
-        } else {
-          resolve(null);
-        }
-      };
-      getRequest.onerror = event => {
-        console.error("Error loading profile data:", event.target.error);
-        reject(event.target.error);
-      };
-    });
+    try {
+      const db = await this.openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([this.storeName], "readonly");
+        transaction.onerror = event => {
+          console.error("Transaction error during getProfile:", event.target.error);
+          reject(event.target.error);
+        };
+        const store = transaction.objectStore(this.storeName);
+        const getRequest = store.get(profileKey);
+        getRequest.onsuccess = event => {
+          const result = event.target.result;
+          if (result) {
+            resolve(JSON.parse(result));
+          } else {
+            resolve(null);
+          }
+        };
+        getRequest.onerror = event => {
+          console.error("Error loading profile data:", event.target.error);
+          reject(event.target.error);
+        };
+      });
+    } catch (error) {
+      console.error("Error in getProfile:", error);
+      throw error;
+    }
   }
 
   /**
@@ -247,24 +277,29 @@ export class SQLiteDataManager {
    */
   async resetProfile() {
     const profileKey = 'profile';
-    const db = await this.openDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], "readwrite");
-      transaction.oncomplete = () => {
-        console.log("Profile reset successfully in IndexedDB.");
-        resolve();
-      };
-      transaction.onerror = event => {
-        console.error("Transaction error during resetProfile:", event.target.error);
-        reject(event.target.error);
-      };
-      const store = transaction.objectStore(this.storeName);
-      const deleteRequest = store.delete(profileKey);
-      deleteRequest.onerror = event => {
-        console.error("Error deleting profile:", event.target.error);
-        reject(event.target.error);
-      };
-    });
+    try {
+      const db = await this.openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([this.storeName], "readwrite");
+        transaction.oncomplete = () => {
+          console.log("Profile reset successfully in IndexedDB.");
+          resolve();
+        };
+        transaction.onerror = event => {
+          console.error("Transaction error during resetProfile:", event.target.error);
+          reject(event.target.error);
+        };
+        const store = transaction.objectStore(this.storeName);
+        const deleteRequest = store.delete(profileKey);
+        deleteRequest.onerror = event => {
+          console.error("Error deleting profile:", event.target.error);
+          reject(event.target.error);
+        };
+      });
+    } catch (error) {
+      console.error("Error in resetProfile:", error);
+      throw error;
+    }
   }
 
   // Additional methods for ghosts, events, quests can be added here:

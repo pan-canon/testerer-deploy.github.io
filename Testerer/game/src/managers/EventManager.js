@@ -80,33 +80,18 @@ export class EventManager {
    * Retrieves diary entries from the database and instructs the ViewManager
    * to render them. Uses the current language from the LanguageManager.
    */
-updateDiaryDisplay() {
-  // Если ViewManager не задан – ничего не делаем.
-  if (!(this.viewManager && typeof this.viewManager.renderDiary === 'function')) {
-    ErrorManager.logError("ViewManager is not available. Cannot update diary display.", "updateDiaryDisplay");
-    ErrorManager.showError("Unable to update diary display.");
-    return;
+  updateDiaryDisplay() {
+    if (this.viewManager && typeof this.viewManager.renderDiary === 'function') {
+      const entries = this.databaseManager.getDiaryEntries();
+      const currentLanguage = this.languageManager.getLanguage();
+      // Delegate rendering of the diary entries to the ViewManager.
+      this.viewManager.renderDiary(entries, currentLanguage, this.visualEffectsManager);
+    } else {
+      // Log and display an error if the viewManager is not available.
+      ErrorManager.logError("ViewManager is not available. Cannot update diary display.", "updateDiaryDisplay");
+      ErrorManager.showError("Unable to update diary display.");
+    }
   }
-  
-  // Определяем, активен ли главный экран.
-  const activeScreen = this.viewManager.contentContainer.firstElementChild;
-  if (!activeScreen || activeScreen.id !== "main-screen") {
-    console.log("Active screen is not main-screen; skipping diary update.");
-    return;
-  }
-  
-  // Пытаемся получить контейнер дневника.
-  const diaryContainer = document.getElementById('diary');
-  if (!diaryContainer) {
-    console.warn("Diary container not found; delaying diary update.");
-    setTimeout(() => this.updateDiaryDisplay(), 100);
-    return;
-  }
-  
-  const entries = this.databaseManager.getDiaryEntries();
-  const currentLanguage = this.languageManager.getLanguage();
-  this.viewManager.renderDiary(entries, currentLanguage, this.visualEffectsManager);
-}
 
   /**
    * startGhostQuest

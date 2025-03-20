@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>They're here</title>
   <link rel="manifest" href="manifest.json">
-  <!-- Подключаем Bulma CSS -->
+  <!-- Include Bulma CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <style>
-    /* Прелоадер занимает весь экран и имеет белый фон */
+    /* Preloader covers full screen with white background */
     #preloader {
       position: fixed;
       top: 0;
@@ -21,30 +21,28 @@
       justify-content: center;
       align-items: center;
     }
-
-    /* Пример простого спиннера */
+    /* Simple spinner example */
     .spinner {
-      border: 8px solid #f3f3f3; /* светлый фон */
-      border-top: 8px solid #3498db; /* цвет спиннера */
+      border: 8px solid #f3f3f3;
+      border-top: 8px solid #3498db;
       border-radius: 50%;
       width: 60px;
       height: 60px;
       animation: spin 1s linear infinite;
     }
-
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    /* Глобальный контейнер для контента с ограниченной шириной */
+    /* Global content container for dynamic screens */
     #global-content {
       max-width: 800px;
       margin: 0 auto;
       padding: 1rem;
     }
-    /* Контейнер для камеры – полноэкранный */
+    /* Global camera container (fullscreen) */
     #global-camera {
-      display: none; /* по умолчанию скрыт */
+      display: none;
       position: fixed;
       top: 0;
       left: 0;
@@ -53,7 +51,7 @@
       background: black;
       z-index: 1000;
     }
-    /* Панель управления – фиксированная внизу по центру, поверх всего */
+    /* Controls panel (fixed at the bottom center) */
     #controls-panel {
       position: fixed;
       bottom: 1rem;
@@ -64,106 +62,34 @@
       background: rgba(255, 255, 255, 0.9);
       border-radius: 5px;
     }
-#selfie-screen {
-  position: relative;
-  z-index: 1100; /* выше, чем у global-camera */
-}
-.active {box-shadow: 10px 5px 5px red;}
+    /* Fade-in effect for dynamically loaded screens */
+    .fade-in {
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+    }
+    .fade-in.visible {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
   <div id="preloader">
     <div class="spinner"></div>
   </div>
-  <!-- Глобальный контейнер для основного контента -->
-  <div id="global-content" class="container box">
-    <!-- Экран регистрации (Шаг 1) -->
-    <section id="registration-screen">
-      <h1 class="title" data-i18n="welcome">Welcome!</h1>
-      <form id="registration-form">
-        <div class="field">
-          <label class="label" for="player-name" data-i18n="enter_name">Enter your name:</label>
-          <div class="control">
-            <input class="input" type="text" id="player-name" required>
-          </div>
-        </div>
-        <div class="field">
-          <label class="label" for="player-gender" data-i18n="select_gender">Select your gender:</label>
-          <div class="control">
-            <div class="select">
-              <select id="player-gender" required>
-                <option value="" disabled selected>Select</option>
-                <option value="male" data-i18n="male">Male</option>
-                <option value="female" data-i18n="female">Female</option>
-                <option value="other" data-i18n="other">Other</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <div class="field">
-          <label class="label" for="language-selector" data-i18n="select_language">Select Language:</label>
-          <div class="control">
-            <div class="select">
-              <select id="language-selector">
-                <option value="en">English</option>
-                <option value="ru">Русский</option>
-                <option value="uk">Українська</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </form>
-      <!-- Импорт профиля (альтернативный вход) -->
-      <div id="import-profile-container" class="box">
-        <h2 class="subtitle" data-i18n="import_profile">Import Profile</h2>
-        <div class="field">
-          <div class="control">
-            <input class="input" type="file" id="import-file" accept=".json">
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <!-- Экран плана квартиры (Шаг 2) -->
-    <section id="apartment-plan-screen" style="display: none;">
-      <h2 class="title">План квартиры</h2>
-      <div id="apartment-plan-container">
-        <!-- Таблица создаётся динамически -->
-      </div>
-    </section>
-
-    <!-- Экран создания селфи (Шаг 3) -->
-    <section id="selfie-screen" style="display: none;">
-      <h1 class="title" data-i18n="take_selfie">Take a Selfie</h1>
-    </section>
-
-    <!-- Основной экран (например, блог/дневник) -->
-    <section id="main-screen" style="display: none;">
-      <h2 class="title" data-i18n="diary">Your Diary</h2>
-      <div id="profile-info" class="box">
-        <figure class="image is-128x128">
-          <img id="profile-photo" alt="Profile Photo" style="display: none; border-radius: 50%;">
-        </figure>
-        <p id="profile-name"></p>
-      </div>
-      <div id="diary" class="content"></div>
-    </section>
-  </div>
-
-  <!-- Глобальный контейнер для камеры -->
+  <!-- Dynamic content container: all screens will be loaded here -->
+  <div id="global-content"></div>
+  
+  <!-- Global camera container (remains static) -->
   <div id="global-camera">
-    <div id="mirror-quest-status" 
-     style="display:none; position:absolute; top:1rem; left:50%; transform:translateX(-50%); 
-            background:rgba(0,0,0,0.5); color:#fff; padding:0.5rem; z-index:999;"></div>
+    <div id="mirror-quest-status" style="display:none; position:absolute; top:1rem; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.5); color:#fff; padding:0.5rem; z-index:999;"></div>
     <div class="camera-inner">
-      <!-- Видеоэлемент и оверлеи создаются динамически -->
-      <div id="camera-controls-overlay">
-        <!-- Элементы управления камерой, если нужны -->
-      </div>
+      <!-- Video element and overlays will be created dynamically -->
+      <div id="camera-controls-overlay"></div>
     </div>
   </div>
-
-  <!-- Панель управления (все кнопки перемещены сюда) -->
+  
+  <!-- Controls panel (remains static) -->
   <div id="controls-panel" class="box">
     <img id="selfie-thumbnail" src="" alt="Selfie Thumbnail" style="display: none; width: 50px; height: 50px; border-radius: 50%;">
 
@@ -195,11 +121,9 @@
       <button class="button is-warning" type="button" id="update-btn">Update</button>
     </div>
   </div>
-
-  <!-- Скрипты -->
+  
+  <!-- Scripts -->
   <script src="assets/libs/db/sql-wasm.js"></script>
-  <!-- <script src="assets/libs/face-api.js"></script> -->
   <script type="module" src="main.js"></script>
-
 </body>
 </html>

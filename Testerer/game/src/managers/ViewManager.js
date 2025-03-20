@@ -113,7 +113,9 @@ export class ViewManager {
    */
   async loadScreen(screenName, data = {}) {
     try {
-      const response = await fetch(`${window.location.origin}/src/templates/${screenName}.html`);
+const basePath = window.location.pathname.split("/").slice(0, -1).join("/");
+const response = await fetch(`${basePath}/src/templates/${screenName}.html`);
+
       if (!response.ok) {
         throw new Error(`Failed to load template: ${screenName}.html`);
       }

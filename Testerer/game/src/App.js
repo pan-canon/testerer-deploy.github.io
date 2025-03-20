@@ -53,7 +53,7 @@ export class App {
 
     // Initialize core domain managers.
     // NOTE: LanguageManager is created with the id 'language-selector'.
-    // In the updated LanguageManager (see его версия), если элемент не найден – используется язык "en".
+    // In the updated LanguageManager (see its version), if the element is not found – default "en" is used.
     this.languageManager = deps.languageManager || new LanguageManager('language-selector');
     
     // Use the updated CameraSectionManager.
@@ -142,11 +142,11 @@ export class App {
     if (await this.profileManager.isProfileSaved()) {
       const profile = await this.profileManager.getProfile();
       console.log("Profile found:", profile);
-      // Load the main screen dynamically using the template "main".
+      // Load the main screen dynamically using the template "main-screen" (old id style).
       await this.showMainScreen();
     } else {
       console.log("Profile not found, showing registration screen.");
-      // Load the registration screen dynamically using the template "registration".
+      // Load the registration screen dynamically using the template "registration-screen" (old id style).
       this.showRegistrationScreen();
     }
   }
@@ -259,7 +259,7 @@ export class App {
     this.cameraSectionManager.stopCamera();
     this.viewManager.hideGlobalCamera();
 
-    // Load the main screen dynamically using the "main" template.
+    // Load the main screen dynamically using the "main-screen" template (old id style).
     await this.showMainScreen();
 
     // Auto-launch the welcome event after registration.
@@ -296,12 +296,12 @@ export class App {
 
   /**
    * showMainScreen - Displays the main screen after successful registration.
-   * Loads the main screen template ("main"), updates the toggle camera button,
+   * Loads the main screen template ("main-screen"), updates the toggle camera button,
    * and sets the "Post" button state based on the mirror quest readiness.
    */
   async showMainScreen() {
-    // Load the main screen dynamically using the "main" template.
-    await this.viewManager.switchScreen('main', 'main-buttons');
+    // Load the main screen dynamically using the "main-screen" template (using old id naming convention).
+    await this.viewManager.switchScreen('main-screen', 'main-buttons');
     this.viewManager.showToggleCameraButton();
     if (StateManager.get("mirrorQuestReady") === "true") {
       this.viewManager.setPostButtonEnabled(true);
@@ -317,7 +317,7 @@ export class App {
 
   /**
    * showRegistrationScreen - Displays the registration screen and resets transient state.
-   * Loads the registration screen template ("registration").
+   * Loads the registration screen template ("registration-screen").
    */
   showRegistrationScreen() {
     StateManager.remove("welcomeDone");
@@ -326,8 +326,8 @@ export class App {
     StateManager.remove("regData");
     StateManager.remove("quest_state_repeating_quest");
 
-    // Load the registration screen dynamically using the "registration" template.
-    this.viewManager.switchScreen('registration', 'registration-buttons');
+    // Load the registration screen dynamically using the "registration-screen" template (using old id naming convention).
+    this.viewManager.switchScreen('registration-screen', 'registration-buttons');
   }
 
   /**

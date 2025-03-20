@@ -108,6 +108,8 @@ export class ViewManager {
    * @param {string} screenName - The name of the template (e.g., "registration", "apartmentPlan", "selfie", "main").
    * @param {Object} [data={}] - An object containing data to be substituted in the template.
    * @returns {Promise<HTMLElement>} - A promise that resolves with the loaded screen element.
+   *
+   * NEW: Updates dynamic element references after the template is loaded.
    */
   async loadScreen(screenName, data = {}) {
     try {
@@ -120,6 +122,17 @@ export class ViewManager {
       const renderedHTML = TemplateEngine.render(template, data);
       // Replace the content of the dynamic container.
       this.contentContainer.innerHTML = renderedHTML;
+      
+      // NEW: Update dynamic references to elements that are loaded with the template.
+      this.nameInput = document.getElementById('player-name');
+      this.genderSelect = document.getElementById('player-gender');
+      this.languageSelector = document.getElementById('language-selector');
+      this.diaryContainer = document.getElementById('diary');
+      this.profileNameElem = document.getElementById('profile-name');
+      this.profilePhotoElem = document.getElementById('profile-photo');
+      // These buttons may be present in certain screens (e.g., registration screen)
+      this.completeBtn = document.getElementById('complete-registration-btn');
+      this.captureBtn = document.getElementById('capture-btn');
       // Add fade-in effect for smooth appearance.
       const screenElem = this.contentContainer.firstElementChild;
       if (screenElem) {

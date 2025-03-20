@@ -82,12 +82,19 @@ export class EventManager {
    */
   updateDiaryDisplay() {
     if (this.viewManager && typeof this.viewManager.renderDiary === 'function') {
+      // Попытка получить элементы дневника из шаблона
+      const diaryContainer = document.getElementById('diary');
+      if (!diaryContainer) {
+        // Если контейнер не найден, повторить попытку через 100 мс.
+        console.warn("Diary container not found; delaying diary update.");
+        setTimeout(() => this.updateDiaryDisplay(), 100);
+        return;
+      }
       const entries = this.databaseManager.getDiaryEntries();
       const currentLanguage = this.languageManager.getLanguage();
-      // Delegate rendering of the diary entries to the ViewManager.
+      // Передаём найденный контейнер в renderDiary (ViewManager обновляет свои ссылки в loadScreen)
       this.viewManager.renderDiary(entries, currentLanguage, this.visualEffectsManager);
     } else {
-      // Log and display an error if the viewManager is not available.
       ErrorManager.logError("ViewManager is not available. Cannot update diary display.", "updateDiaryDisplay");
       ErrorManager.showError("Unable to update diary display.");
     }

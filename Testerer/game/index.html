@@ -90,7 +90,37 @@
   </div>
   
   <!-- Controls panel (remains static) -->
-  <div id="controls-panel"></div>
+  <div id="controls-panel" class="box">
+    <img id="selfie-thumbnail" src="" alt="Selfie Thumbnail" style="display: none; width: 50px; height: 50px; border-radius: 50%;">
+
+    <!-- Кнопки для экрана регистрации -->
+    <div id="registration-buttons" class="buttons">
+      <button class="button is-link" type="button" id="next-step-btn" data-i18n="next" disabled>Next</button>
+      <button class="button is-info" type="button" id="import-profile-btn" data-i18n="import">Import Profile</button>
+    </div>
+    <!-- Кнопки для экрана плана квартиры -->
+    <div id="apartment-plan-buttons" class="buttons" style="display: none;">
+      <button class="button" type="button" id="prev-floor-btn">Предыдущий этаж</button>
+      <button class="button" type="button" id="next-floor-btn">Следующий этаж</button>
+      <button class="button is-link" type="button" id="apartment-plan-next-btn">Далее</button>
+    </div>
+    <!-- Кнопки для экрана создания селфи -->
+    <div id="selfie-buttons" class="buttons" style="display: none;">
+      <button class="button is-primary" type="button" id="capture-btn" data-i18n="capture">Capture</button>
+      <button class="button is-success" type="button" id="complete-registration" data-i18n="complete" disabled>Complete</button>
+    </div>
+    <!-- Кнопки для основного экрана (блог/дневник) -->
+    <div id="main-buttons" class="buttons" style="display: none;">
+      <button class="button" id="post-btn" disabled>Запостить</button>
+      <button class="button" type="button" id="btn_shoot" style="display:none;">Заснять</button>
+      <button class="button" type="button" id="toggle-camera" data-i18n="open_camera">Open Camera</button>
+      <button class="button" type="button" id="toggle-diary" data-i18n="open_diary">Open Diary</button>
+      <button id="install-btn" style="display:none;" class="button is-primary">Добавить на рабочий стол</button>
+      <button class="button is-danger" type="button" id="reset-data" data-i18n="reset">Reset Data</button>
+      <button class="button is-info" type="button" id="export-profile-btn" data-i18n="export">Export Profile</button>
+      <button class="button is-warning" type="button" id="update-btn">Update</button>
+    </div>
+  </div>
   
   <!-- Scripts -->
   <script src="assets/libs/db/sql-wasm.js"></script>

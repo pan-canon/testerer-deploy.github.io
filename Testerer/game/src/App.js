@@ -11,9 +11,7 @@ import { ErrorManager } from './managers/ErrorManager.js';
 
 import { ViewManager } from './managers/ViewManager.js';
 
-// IMPORTANT: LanguageManager now performs a check for the selector – if not found, it falls back to default "en"
 import { LanguageManager } from './managers/LanguageManager.js';
-
 // Use the updated version of CameraSectionManager (with extended camera methods)
 import { CameraSectionManager } from './managers/CameraSectionManager.js';
 import { ProfileManager } from './managers/ProfileManager.js';
@@ -29,13 +27,11 @@ import { ShowProfileModal } from './managers/ShowProfileModal.js';
  * Responsible for initializing core managers, setting up the UI,
  * loading persisted state, and handling primary navigation and events.
  *
- * The constructor accepts an optional dependency object to support DI.
+ * Now the constructor accepts an optional dependency object to support DI.
  * If a dependency is not provided, a new instance is created.
  *
- * NOTE:
- * - New camera functionality is integrated via the updated CameraSectionManager.
- * - UI for extended camera modes is now handled via ViewManager using dynamic templates.
- * - Screen content is loaded lazily from the templates in "src/templates".
+ * NOTE: The new camera functionality is integrated into the updated CameraSectionManager,
+ *       and the UI for extended camera modes is handled via the ViewManager (top controls).
  */
 export class App {
   constructor(deps = {}) {
@@ -51,12 +47,9 @@ export class App {
     this.isCameraOpen = false;
     this.selfieData = null;
 
-    // Initialize core domain managers.
-    // NOTE: LanguageManager is created with the id 'language-selector'.
-    // In the updated LanguageManager (see its version), if the element is not found – default "en" is used.
+    // Initialize or inject core domain managers.
     this.languageManager = deps.languageManager || new LanguageManager('language-selector');
-    
-    // Use the updated CameraSectionManager.
+    // Use the updated CameraSectionManager (new camera code is integrated here).
     this.cameraSectionManager = deps.cameraSectionManager || new CameraSectionManager();
     // Set camera manager reference in ViewManager to allow UI controls to call its methods.
     this.viewManager.setCameraManager(this.cameraSectionManager);
@@ -65,11 +58,11 @@ export class App {
     // Create or inject VisualEffectsManager instance.
     this.visualEffectsManager = deps.visualEffectsManager || new VisualEffectsManager(this, this.viewManager.controlsPanel);
 
-    // Initialize GhostManager.
+    // Initialize or inject GhostManager.
     const savedSequenceIndex = parseInt(StateManager.get('currentSequenceIndex'), 10) || 0;
     this.ghostManager = deps.ghostManager || new GhostManager(savedSequenceIndex, this.profileManager, this);
 
-    // Create or inject EventManager instance.
+    // Create or inject EventManager instance and pass required dependencies.
     this.eventManager = deps.eventManager || new EventManager(
       this.databaseManager,
       this.languageManager,
@@ -80,7 +73,7 @@ export class App {
     this.eventManager.viewManager = this.viewManager;
     this.ghostManager.eventManager = this.eventManager;
 
-    // Initialize QuestManager and GameEventManager.
+    // Initialize or inject QuestManager and GameEventManager.
     this.questManager = deps.questManager || new QuestManager(this.eventManager, this);
     this.gameEventManager = deps.gameEventManager || new GameEventManager(this.eventManager, this, this.languageManager);
 
@@ -111,11 +104,9 @@ export class App {
   /**
    * init - Initializes the application.
    *
-   * Waits for database initialization, then:
-   * - Loads persisted state.
-   * - Synchronizes quest state and restores active quest UI.
-   * - Updates UI (toggle camera button, diary display, top controls).
-   * - Depending on whether a user profile exists, loads the main or registration screen dynamically.
+   * This method awaits the database initialization,
+   * then loads persisted state, synchronizes quest state, updates the UI,
+   * and displays either the main screen or the registration screen.
    */
   async init() {
     // Wait for database initialization to complete.
@@ -135,25 +126,23 @@ export class App {
     this.viewManager.showToggleCameraButton();
     this.eventManager.updateDiaryDisplay();
 
-    // Create top controls for extended camera modes.
+    // Create top controls for extended camera modes (AR, AI detection, filters).
     this.viewManager.createTopCameraControls();
 
     // Check if a user profile is already saved.
     if (await this.profileManager.isProfileSaved()) {
       const profile = await this.profileManager.getProfile();
       console.log("Profile found:", profile);
-      // Load the main screen dynamically using the template "main-screen".
       await this.showMainScreen();
     } else {
       console.log("Profile not found, showing registration screen.");
-      // Load the registration screen dynamically using the template "registration-screen".
       this.showRegistrationScreen();
     }
   }
 
   /**
-   * goToApartmentPlanScreen - Called by ViewManager when registration data is needed.
-   * Retrieves registration data, saves it via StateManager, and switches to the apartment plan screen template.
+   * goToApartmentPlanScreen - Callback invoked by the ViewManager when registration data is needed.
+   * Retrieves registration data, saves it via StateManager, and switches to the apartment plan screen.
    */
   goToApartmentPlanScreen() {
     const regData = this.viewManager.getRegistrationData();
@@ -162,7 +151,6 @@ export class App {
       return;
     }
     StateManager.set('regData', JSON.stringify(regData));
-    // Switch to dynamic template "apartment-plan-screen"
     this.viewManager.switchScreen('apartment-plan-screen', 'apartment-plan-buttons');
     if (!this.apartmentPlanManager) {
       this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', this.databaseManager, this);
@@ -174,7 +162,6 @@ export class App {
    * Displays the global camera view, starts the camera, and disables the complete registration button.
    */
   goToSelfieScreen() {
-    // Switch to dynamic template "selfie-screen"
     this.viewManager.switchScreen('selfie-screen', 'selfie-buttons');
     this.viewManager.showGlobalCamera();
     this.cameraSectionManager.startCamera();
@@ -182,9 +169,9 @@ export class App {
   }
 
   /**
-   * captureSelfie - Captures an image from the active camera stream,
-   * converts it to grayscale, updates the selfie preview, enables the "Complete Registration" button,
-   * and stores the processed selfie data.
+   * captureSelfie - Captures an image from the active camera stream.
+   * Converts the frame to grayscale using ImageUtils, updates the selfie preview,
+   * enables the "Complete Registration" button, and stores the selfie data.
    */
   async captureSelfie() {
     console.log("📸 Attempting to capture selfie...");
@@ -230,9 +217,9 @@ export class App {
 
   /**
    * completeRegistration - Completes the registration process.
-   * Validates captured selfie and registration data, saves the profile via ProfileManager,
-   * stops the camera, hides the global camera view, loads the main screen template,
-   * and auto-launches the welcome event.
+   * Validates captured selfie and registration data, saves profile via ProfileManager,
+   * stops the camera, hides the global camera view, and shows the main screen.
+   * Finally, auto-launches the welcome event.
    */
   async completeRegistration() {
     const selfieSrc = this.viewManager.getSelfieSource();
@@ -259,7 +246,6 @@ export class App {
     this.cameraSectionManager.stopCamera();
     this.viewManager.hideGlobalCamera();
 
-    // Load the main screen dynamically using the "main-screen" template.
     await this.showMainScreen();
 
     // Auto-launch the welcome event after registration.
@@ -296,12 +282,10 @@ export class App {
 
   /**
    * showMainScreen - Displays the main screen after successful registration.
-   * Loads the main screen template ("main-screen"), updates the toggle camera button,
-   * and sets the "Post" button state based on the mirror quest readiness.
+   * Switches to the main screen, updates the toggle camera button, and sets the "Post" button state.
    */
   async showMainScreen() {
-    // Load the main screen dynamically using the "main-screen" template.
-    await this.viewManager.switchScreen('main-screen', 'main-buttons');
+    this.viewManager.switchScreen('main-screen', 'main-buttons');
     this.viewManager.showToggleCameraButton();
     if (StateManager.get("mirrorQuestReady") === "true") {
       this.viewManager.setPostButtonEnabled(true);
@@ -317,7 +301,6 @@ export class App {
 
   /**
    * showRegistrationScreen - Displays the registration screen and resets transient state.
-   * Loads the registration screen template ("registration-screen").
    */
   showRegistrationScreen() {
     StateManager.remove("welcomeDone");
@@ -326,7 +309,6 @@ export class App {
     StateManager.remove("regData");
     StateManager.remove("quest_state_repeating_quest");
 
-    // Load the registration screen dynamically using the "registration-screen" template.
     this.viewManager.switchScreen('registration-screen', 'registration-buttons');
   }
 

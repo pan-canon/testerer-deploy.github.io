@@ -1,7 +1,6 @@
+// ViewManager.js
 import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
-// NEW: Import TemplateEngine from utils for rendering HTML templates
-import { TemplateEngine } from '../utils/TemplateEngine.js';
 
 /**
  * ViewManager
@@ -18,27 +17,41 @@ import { TemplateEngine } from '../utils/TemplateEngine.js';
  *
  * NOTE: Sequential linking of events and quests is handled by GhostManager.
  *       This module also persists button states to StateManager.
- *
- * NEW: Supports lazy loading of screens via templates.
  */
 export class ViewManager {
   constructor() {
-    // --- Cache Static UI Elements ---
-    // Controls panel and global camera remain static in index.html.
+    // --- Cache Main UI Elements ---
+    this.diaryContainer = document.getElementById("diary");
     this.controlsPanel = document.getElementById("controls-panel");
-    this.globalCamera = document.getElementById("global-camera");
-    // NEW: Container for dynamic screens loaded from templates.
-    this.contentContainer = document.getElementById("global-content");
-
-    // --- Cached Toggle Buttons and Additional Controls (Static elements) ---
+    
+    // --- Registration Form Elements ---
+    this.nameInput = document.getElementById('player-name');
+    this.genderSelect = document.getElementById('player-gender');
+    this.languageSelector = document.getElementById('language-selector');
+    this.nextStepBtn = document.getElementById('next-step-btn');
+    
+    // --- Selfie Screen Elements ---
+    this.selfiePreview = document.getElementById('selfie-thumbnail');
+    this.captureBtn = document.getElementById('capture-btn');
+    this.completeBtn = document.getElementById('complete-registration');
+    
+    // --- Profile Display Elements ---
+    this.profileNameElem = document.getElementById('profile-name');
+    this.profilePhotoElem = document.getElementById('profile-photo');
+    
+    // --- Import File Input ---
+    this.importFileInput = document.getElementById('import-file');
+    
+    // --- Toggle Buttons and Global Camera ---
     this.toggleCameraBtn = document.getElementById("toggle-camera");
     this.toggleDiaryBtn = document.getElementById("toggle-diary");
+    this.globalCamera = document.getElementById("global-camera");
     this.postBtn = document.getElementById("post-btn");
+
+    // --- Additional Control Buttons ---
     this.resetDataBtn = document.getElementById("reset-data");
     this.exportProfileBtn = document.getElementById("export-profile-btn");
     this.updateBtn = document.getElementById("update-btn");
-    // Static selfie preview (in controls panel)
-    this.selfiePreview = document.getElementById("selfie-thumbnail");
 
     // --- Camera Manager Reference (to be set externally) ---
     this.cameraManager = null;
@@ -100,134 +113,7 @@ export class ViewManager {
     }
   }
 
-  // ------------------ Dynamic Screen Loading via Templates ------------------
-
-  /**
-   * loadScreen
-   * Asynchronously loads an HTML template from the src/templates directory by file name
-   * (without extension) and inserts it into the dynamic content container.
-   *
-   * @param {string} screenName - The name of the template (e.g., "registration-screen", "apartment-plan-screen", "selfie-screen", "main-screen").
-   * @param {Object} [data={}] - An object containing data to be substituted in the template.
-   * @returns {Promise<HTMLElement>} - A promise that resolves with the loaded screen element.
-   *
-   * NEW: Updates dynamic element references after the template is loaded.
-   */
-  async loadScreen(screenName, data = {}) {
-    try {
-      const response = await fetch(`../templates/${screenName}.html`);
-      if (!response.ok) {
-        throw new Error(`Failed to load template: ${screenName}.html`);
-      }
-      const template = await response.text();
-      // Use TemplateEngine to render the template with provided data.
-      const renderedHTML = TemplateEngine.render(template, data);
-      // Replace the content of the dynamic container.
-      this.contentContainer.innerHTML = renderedHTML;
-      
-      // NEW: Update dynamic references to elements based on the loaded screen.
-      if (screenName.includes("registration-screen")) {
-        this.nameInput = document.getElementById('player-name');
-        this.genderSelect = document.getElementById('player-gender');
-        this.languageSelector = document.getElementById('language-selector');
-        this.nextStepBtn = document.getElementById('next-step-btn');
-        this.importFileInput = document.getElementById('import-file');
-      } else if (screenName.includes("selfie-screen")) {
-        this.captureBtn = document.getElementById('capture-btn');
-        this.completeBtn = document.getElementById('complete-registration');
-      } else if (screenName.includes("main-screen")) {
-        this.diaryContainer = document.getElementById('diary');
-        this.profileNameElem = document.getElementById('profile-name');
-        this.profilePhotoElem = document.getElementById('profile-photo');
-      }
-      
-      // Add fade-in effect for smooth appearance.
-      const screenElem = this.contentContainer.firstElementChild;
-      if (screenElem) {
-        screenElem.classList.add("fade-in");
-        // Delay to trigger the CSS transition.
-        setTimeout(() => {
-          screenElem.classList.add("visible");
-        }, 50);
-      }
-      console.log(`[ViewManager] Screen "${screenName}" loaded.`);
-      return screenElem;
-    } catch (error) {
-      ErrorManager.logError(error, "loadScreen");
-      throw error;
-    }
-  }
-
-  /**
-   * switchScreen
-   * Switches screens by loading a template into the dynamic content container and updating control buttons.
-   *
-   * @param {string} screenName - The name of the template for the screen (without extension).
-   * @param {string} [buttonsGroupId] - Optional identifier for a specific group of control buttons.
-   */
-  async switchScreen(screenName, buttonsGroupId) {
-    try {
-      // Load the screen template dynamically.
-      await this.loadScreen(screenName);
-      // (Optional) Initialize screen-specific events.
-      this.initScreenEvents(screenName);
-
-      // Hide all button groups in the controls panel.
-      document.querySelectorAll('#controls-panel > .buttons').forEach(group => {
-        group.style.display = 'none';
-        group.style.pointerEvents = 'none';
-      });
-      if (buttonsGroupId) {
-        const targetGroup = document.getElementById(buttonsGroupId);
-        if (targetGroup) {
-          targetGroup.style.display = 'flex';
-          targetGroup.style.pointerEvents = 'auto';
-          // Special handling for main screen controls.
-          if (screenName.includes("main-screen")) {
-            const td = targetGroup.querySelector("#toggle-diary");
-            if (td) {
-              td.style.display = "none";
-            }
-            const shootBtn = targetGroup.querySelector("#btn_shoot");
-            if (shootBtn) {
-              shootBtn.style.display = "none";
-            }
-          }
-          console.log(`[ViewManager] Controls panel updated for group: ${buttonsGroupId}`);
-        }
-      }
-    } catch (error) {
-      console.error("Error in switchScreen:", error);
-    }
-  }
-
-  /**
-   * initScreenEvents
-   * (Optional) Initializes event bindings for dynamically loaded screens.
-   * For example, for the registration screen, bind input validation events.
-   *
-   * @param {string} screenName - The name of the loaded screen.
-   */
-  initScreenEvents(screenName) {
-    // For registration screen, bind validation events.
-    if (screenName.indexOf("registration-screen") !== -1) {
-      const nameInput = document.getElementById('player-name');
-      const genderSelect = document.getElementById('player-gender');
-      const languageSelector = document.getElementById('language-selector');
-      const nextStepBtn = document.getElementById('next-step-btn');
-      if (nameInput && genderSelect && languageSelector && nextStepBtn) {
-        const checkValidity = () => {
-          nextStepBtn.disabled = !(nameInput.value.trim() && genderSelect.value && languageSelector.value);
-        };
-        nameInput.addEventListener('input', checkValidity);
-        genderSelect.addEventListener('change', checkValidity);
-        languageSelector.addEventListener('change', checkValidity);
-      }
-    }
-    // Additional event bindings for other screens can be added here.
-  }
-
-  // ------------------ Event Binding (Static Elements) ------------------
+  // ------------------ Event Binding ------------------
 
   bindEvents(app) {
     const checkRegistrationValidity = () => {
@@ -308,7 +194,7 @@ export class ViewManager {
     }
   }
 
-  // ------------------ Registration Form Operations (Static) ------------------
+  // ------------------ Registration Form Operations ------------------
 
   getRegistrationData() {
     if (!this.nameInput || !this.genderSelect || !this.languageSelector) {
@@ -357,7 +243,7 @@ export class ViewManager {
     return null;
   }
 
-  // ------------------ Toggle Buttons and Camera Views (Static) ------------------
+  // ------------------ Toggle Buttons and Camera Views ------------------
 
   showToggleCameraButton() {
     if (this.toggleCameraBtn) {
@@ -434,7 +320,7 @@ export class ViewManager {
     }
   }
 
-  // ------------------ Profile Display Operations (Static) ------------------
+  // ------------------ Profile Display Operations ------------------
 
   updateProfileDisplay(profile) {
     if (this.profileNameElem) {
@@ -447,7 +333,7 @@ export class ViewManager {
     console.log("[ViewManager] Profile display updated.");
   }
 
-  // ------------------ Diary Rendering Operations (Static) ------------------
+  // ------------------ Diary Rendering Operations ------------------
 
   renderDiary(entries, currentLanguage, effectsManager) {
     if (!this.diaryContainer) {
@@ -531,30 +417,17 @@ export class ViewManager {
     console.log("[ViewManager] Diary updated.");
   }
 
-  // ------------------ Screen Switching (Static) ------------------
+  // ------------------ Screen Switching ------------------
 
-  /**
-   * switchScreen
-   * Switches screens by hiding all pre-existing static sections and displaying the screen loaded in the dynamic container.
-   * NOTE: In our new approach, only the dynamic container (#global-content) is used for screen content.
-   *
-   * @param {string} screenId - The id of the screen (loaded template) to display.
-   * @param {string} [buttonsGroupId] - Optional identifier for a specific group of control buttons.
-   */
   switchScreen(screenId, buttonsGroupId) {
-    // Hide all static sections.
     document.querySelectorAll('section').forEach(section => {
       section.style.display = 'none';
     });
-    // Instead of targeting a static element by id, we assume that the loaded template's root element has id=screenId.
     const targetScreen = document.getElementById(screenId);
     if (targetScreen) {
       targetScreen.style.display = 'block';
       console.log(`[ViewManager] Switched to screen: ${screenId}`);
-    } else {
-      console.warn(`[ViewManager] No static element with id "${screenId}" found. Using dynamic content.`);
     }
-    // Update control buttons if needed.
     document.querySelectorAll('#controls-panel > .buttons').forEach(group => {
       group.style.display = 'none';
       group.style.pointerEvents = 'none';
@@ -564,8 +437,7 @@ export class ViewManager {
       if (targetGroup) {
         targetGroup.style.display = 'flex';
         targetGroup.style.pointerEvents = 'auto';
-        // Special handling for main screen controls.
-        if (screenId.indexOf("main-screen") !== -1) {
+        if (screenId === "main-screen") {
           const td = targetGroup.querySelector("#toggle-diary");
           if (td) {
             td.style.display = "none";
@@ -580,7 +452,7 @@ export class ViewManager {
     }
   }
 
-  // ------------------ Button State Management (Static) ------------------
+  // ------------------ Button State Management ------------------
 
   /**
    * setPostButtonEnabled
@@ -661,7 +533,7 @@ export class ViewManager {
     console.log("[ViewManager] Shoot button state restored:", isActive);
   }
 
-  // ------------------ Apartment Plan UI (Static) ------------------
+  // ------------------ Apartment Plan UI ------------------
 
   setApartmentPlanNextButtonEnabled(isEnabled) {
     const nextBtn = document.getElementById("apartment-plan-next-btn");
@@ -673,7 +545,7 @@ export class ViewManager {
     }
   }
 
-  // ------------------ Mirror Quest UI (Static) ------------------
+  // ------------------ Mirror Quest UI ------------------
 
   startMirrorQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
@@ -724,7 +596,7 @@ export class ViewManager {
     console.log("[ViewManager] Mirror quest UI stopped.");
   }
 
-  // ------------------ Repeating Quest UI (Static) ------------------
+  // ------------------ Repeating Quest UI ------------------
 
   /**
    * startRepeatingQuestUI
@@ -805,14 +677,14 @@ export class ViewManager {
     console.log("[ViewManager] UI updated after quest stage:", { postEnabled, cameraActive, shootActive });
   }
 
-  // ------------------ Top Controls for Extended Camera Modes (Static) ------------------
+  // ------------------ Top Controls for Extended Camera Modes ------------------
 
   /**
    * createTopCameraControls
    * Dynamically creates a top panel with buttons for AR mode, AI detection, and filter selection.
    */
   createTopCameraControls() {
-    // Remove existing top controls if present.
+    // Remove existing top controls if present
     const existing = document.getElementById("top-camera-controls");
     if (existing) existing.remove();
 
@@ -830,7 +702,7 @@ export class ViewManager {
       zIndex: "2100"
     });
 
-    // AR Mode Button.
+    // AR Mode Button
     const arBtn = document.createElement("button");
     arBtn.className = "button is-info";
     arBtn.innerText = "AR Mode";
@@ -841,20 +713,20 @@ export class ViewManager {
     };
     topControls.appendChild(arBtn);
 
-    // AI Detection Button.
+    // AI Detection Button
     const aiBtn = document.createElement("button");
     aiBtn.className = "button is-primary";
     aiBtn.style.marginLeft = "10px";
     aiBtn.innerText = "Start AI Detection";
     aiBtn.onclick = () => {
       if (this.cameraManager) {
-        // Optionally pass a detection configuration.
+        // Here, you could pass a detection configuration if needed.
         this.cameraManager.startAIDetection();
       }
     };
     topControls.appendChild(aiBtn);
 
-    // Filter Buttons.
+    // Filter Buttons
     const nightVisionBtn = document.createElement("button");
     nightVisionBtn.className = "button is-warning";
     nightVisionBtn.style.marginLeft = "10px";
@@ -892,7 +764,7 @@ export class ViewManager {
     console.log("[ViewManager] Top camera controls created.");
   }
 
-  // ------------------ Visual Effects and Notifications (Static) ------------------
+  // ------------------ Visual Effects and Notifications ------------------
 
   applyBackgroundTransition(color, duration) {
     document.body.style.transition = `background ${duration}ms`;
@@ -952,7 +824,7 @@ export class ViewManager {
     console.log("[ViewManager] Notification shown:", message);
   }
 
-  // ------------------ Miscellaneous (Static) ------------------
+  // ------------------ Miscellaneous ------------------
 
   setControlsBlocked(shouldBlock) {
     if (this.controlsPanel) {

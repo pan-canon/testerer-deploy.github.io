@@ -1,11 +1,11 @@
-import locales from '../locales/locales.js';
-
 /**
  * LanguageManager is responsible for managing localization in the application.
  * It loads the translation dictionaries (locales), listens for changes on the language selector,
  * and updates all page elements that have the data-i18n attribute.
  * This class also saves the selected language in localStorage to preserve the choice between sessions.
  */
+import locales from '../locales/locales.js';
+
 export class LanguageManager {
   /**
    * Constructor for LanguageManager.
@@ -24,16 +24,6 @@ export class LanguageManager {
 
     // Get the language selector element by its ID.
     this.selector = document.getElementById(selectorId);
-
-    // If the element is not found, log an error and create a dummy element as fallback.
-    if (!this.selector) {
-      console.error(`LanguageManager: Element with id "${selectorId}" not found. Ensure the template is loaded before initializing LanguageManager.`);
-      // Optionally, create a dummy <select> element to avoid further errors.
-      this.selector = document.createElement('select');
-      this.selector.id = selectorId;
-      // You may choose to append the dummy to the body (or not) depending on your needs.
-      document.body.appendChild(this.selector);
-    }
 
     // Set the current language from localStorage, defaulting to 'en'.
     this.currentLanguage = localStorage.getItem('language') || 'en';

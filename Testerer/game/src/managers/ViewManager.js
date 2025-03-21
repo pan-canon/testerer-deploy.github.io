@@ -1,6 +1,6 @@
+// ViewManager.js
 import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
-import { TemplateEngine } from '../utils/TemplateEngine.js';
 
 /**
  * ViewManager
@@ -563,7 +563,7 @@ export class ViewManager {
       shootBtn.onclick = null;
       shootBtn.onclick = () => {
         this.setShootButtonActive(false);
-        if (typeof options.onShoot === "function") {
+        if (typeof options.onShoot === 'function') {
           options.onShoot();
         }
       };
@@ -839,48 +839,6 @@ export class ViewManager {
       console.log("Clear cache message sent to Service Worker.");
     } else {
       console.warn("No active Service Worker controller found.");
-    }
-  }
-
-  // ------------------ NEW: Dynamic Template Loading ------------------
-
-  /**
-   * loadScreenTemplate
-   * Dynamically loads an HTML template, renders it with the provided data using TemplateEngine,
-   * and inserts the rendered HTML into the container (element with class "screen-content")
-   * inside the target section identified by screenId.
-   *
-   * @param {string} screenId - The ID of the root section (e.g., 'registration-screen', 'main-screen', etc.)
-   * @param {string} templateFile - The filename of the HTML template (e.g., 'registration.html').
-   * @param {Object} data - Data object for template rendering.
-   */
-  async loadScreenTemplate(screenId, templateFile, data) {
-    try {
-      // Fetch the template content from the templates directory.
-      const response = await fetch(`src/templates/${templateFile}`);
-      if (!response.ok) {
-        throw new Error(`Failed to load template: ${templateFile}`);
-      }
-      const template = await response.text();
-      // Render the template with provided data using TemplateEngine.
-      const renderedHTML = TemplateEngine.render(template, data);
-      // Find the target section by its ID.
-      const section = document.getElementById(screenId);
-      if (!section) {
-        throw new Error(`Section with id "${screenId}" not found.`);
-      }
-      // Find the container for dynamic content inside the section.
-      const container = section.querySelector('.screen-content');
-      if (!container) {
-        throw new Error(`Container with class "screen-content" not found in section "${screenId}".`);
-      }
-      // Insert the rendered HTML into the container.
-      container.innerHTML = renderedHTML;
-      // Ensure the section is visible.
-      section.style.display = 'block';
-      console.log(`[ViewManager] Loaded template "${templateFile}" into screen "${screenId}".`);
-    } catch (error) {
-      ErrorManager.logError(error, "loadScreenTemplate");
     }
   }
 }

@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>They're here</title>
   <link rel="manifest" href="manifest.json">
-  <!-- Include Bulma CSS -->
+  <!-- Подключаем Bulma CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <style>
-    /* Preloader covers the entire screen with a white background */
+    /* Прелоадер занимает весь экран и имеет белый фон */
     #preloader {
       position: fixed;
       top: 0;
@@ -22,10 +22,10 @@
       align-items: center;
     }
 
-    /* Example simple spinner */
+    /* Пример простого спиннера */
     .spinner {
-      border: 8px solid #f3f3f3; /* light background */
-      border-top: 8px solid #3498db; /* spinner color */
+      border: 8px solid #f3f3f3; /* светлый фон */
+      border-top: 8px solid #3498db; /* цвет спиннера */
       border-radius: 50%;
       width: 60px;
       height: 60px;
@@ -36,15 +36,15 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    /* Global content container with fixed max width */
+    /* Глобальный контейнер для контента с ограниченной шириной */
     #global-content {
       max-width: 800px;
       margin: 0 auto;
       padding: 1rem;
     }
-    /* Fullscreen container for the camera */
+    /* Контейнер для камеры – полноэкранный */
     #global-camera {
-      display: none; /* hidden by default */
+      display: none; /* по умолчанию скрыт */
       position: fixed;
       top: 0;
       left: 0;
@@ -53,7 +53,7 @@
       background: black;
       z-index: 1000;
     }
-    /* Control panel fixed at the bottom center */
+    /* Панель управления – фиксированная внизу по центру, поверх всего */
     #controls-panel {
       position: fixed;
       bottom: 1rem;
@@ -64,79 +64,126 @@
       background: rgba(255, 255, 255, 0.9);
       border-radius: 5px;
     }
-    #selfie-screen {
-      position: relative;
-      z-index: 1100; /* above global-camera */
-    }
-    .active { box-shadow: 10px 5px 5px red; }
+#selfie-screen {
+  position: relative;
+  z-index: 1100; /* выше, чем у global-camera */
+}
+.active {box-shadow: 10px 5px 5px red;}
   </style>
 </head>
 <body>
-  <!-- Preloader -->
   <div id="preloader">
     <div class="spinner"></div>
   </div>
-  <!-- Global container for main content -->
+  <!-- Глобальный контейнер для основного контента -->
   <div id="global-content" class="container box">
-    <!-- Registration Screen (Step 1) -->
+    <!-- Экран регистрации (Шаг 1) -->
     <section id="registration-screen">
-      <!-- Container for dynamic content loaded from templates -->
-      <div class="screen-content"></div>
+      <h1 class="title" data-i18n="welcome">Welcome!</h1>
+      <form id="registration-form">
+        <div class="field">
+          <label class="label" for="player-name" data-i18n="enter_name">Enter your name:</label>
+          <div class="control">
+            <input class="input" type="text" id="player-name" required>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label" for="player-gender" data-i18n="select_gender">Select your gender:</label>
+          <div class="control">
+            <div class="select">
+              <select id="player-gender" required>
+                <option value="" disabled selected>Select</option>
+                <option value="male" data-i18n="male">Male</option>
+                <option value="female" data-i18n="female">Female</option>
+                <option value="other" data-i18n="other">Other</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label" for="language-selector" data-i18n="select_language">Select Language:</label>
+          <div class="control">
+            <div class="select">
+              <select id="language-selector">
+                <option value="en">English</option>
+                <option value="ru">Русский</option>
+                <option value="uk">Українська</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </form>
+      <!-- Импорт профиля (альтернативный вход) -->
+      <div id="import-profile-container" class="box">
+        <h2 class="subtitle" data-i18n="import_profile">Import Profile</h2>
+        <div class="field">
+          <div class="control">
+            <input class="input" type="file" id="import-file" accept=".json">
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- Apartment Plan Screen (Step 2) -->
+    <!-- Экран плана квартиры (Шаг 2) -->
     <section id="apartment-plan-screen" style="display: none;">
-      <!-- Container for dynamic content loaded from templates -->
-      <div class="screen-content"></div>
+      <h2 class="title">План квартиры</h2>
+      <div id="apartment-plan-container">
+        <!-- Таблица создаётся динамически -->
+      </div>
     </section>
 
-    <!-- Selfie Screen (Step 3) -->
+    <!-- Экран создания селфи (Шаг 3) -->
     <section id="selfie-screen" style="display: none;">
-      <!-- Container for dynamic content loaded from templates -->
-      <div class="screen-content"></div>
+      <h1 class="title" data-i18n="take_selfie">Take a Selfie</h1>
     </section>
 
-    <!-- Main Screen (e.g., Blog/Diary) -->
+    <!-- Основной экран (например, блог/дневник) -->
     <section id="main-screen" style="display: none;">
-      <!-- Container for dynamic content loaded from templates -->
-      <div class="screen-content"></div>
+      <h2 class="title" data-i18n="diary">Your Diary</h2>
+      <div id="profile-info" class="box">
+        <figure class="image is-128x128">
+          <img id="profile-photo" alt="Profile Photo" style="display: none; border-radius: 50%;">
+        </figure>
+        <p id="profile-name"></p>
+      </div>
+      <div id="diary" class="content"></div>
     </section>
   </div>
 
-  <!-- Global container for camera -->
+  <!-- Глобальный контейнер для камеры -->
   <div id="global-camera">
     <div id="mirror-quest-status" 
-         style="display:none; position:absolute; top:1rem; left:50%; transform:translateX(-50%);
-                background:rgba(0,0,0,0.5); color:#fff; padding:0.5rem; z-index:999;"></div>
+     style="display:none; position:absolute; top:1rem; left:50%; transform:translateX(-50%); 
+            background:rgba(0,0,0,0.5); color:#fff; padding:0.5rem; z-index:999;"></div>
     <div class="camera-inner">
-      <!-- Video element and overlays will be created dynamically -->
+      <!-- Видеоэлемент и оверлеи создаются динамически -->
       <div id="camera-controls-overlay">
-        <!-- Camera control elements if needed -->
+        <!-- Элементы управления камерой, если нужны -->
       </div>
     </div>
   </div>
 
-  <!-- Control panel (static buttons remain) -->
+  <!-- Панель управления (все кнопки перемещены сюда) -->
   <div id="controls-panel" class="box">
     <img id="selfie-thumbnail" src="" alt="Selfie Thumbnail" style="display: none; width: 50px; height: 50px; border-radius: 50%;">
 
-    <!-- Buttons for Registration Screen -->
+    <!-- Кнопки для экрана регистрации -->
     <div id="registration-buttons" class="buttons">
       <button class="button is-link" type="button" id="next-step-btn" data-i18n="next" disabled>Next</button>
       <button class="button is-info" type="button" id="import-profile-btn" data-i18n="import">Import Profile</button>
     </div>
-    <!-- Buttons for Apartment Plan Screen -->
+    <!-- Кнопки для экрана плана квартиры -->
     <div id="apartment-plan-buttons" class="buttons" style="display: none;">
       <button class="button" type="button" id="prev-floor-btn">Предыдущий этаж</button>
       <button class="button" type="button" id="next-floor-btn">Следующий этаж</button>
       <button class="button is-link" type="button" id="apartment-plan-next-btn">Далее</button>
     </div>
-    <!-- Buttons for Selfie Screen -->
+    <!-- Кнопки для экрана создания селфи -->
     <div id="selfie-buttons" class="buttons" style="display: none;">
       <button class="button is-primary" type="button" id="capture-btn" data-i18n="capture">Capture</button>
       <button class="button is-success" type="button" id="complete-registration" data-i18n="complete" disabled>Complete</button>
     </div>
-    <!-- Buttons for Main Screen (Blog/Diary) -->
+    <!-- Кнопки для основного экрана (блог/дневник) -->
     <div id="main-buttons" class="buttons" style="display: none;">
       <button class="button" id="post-btn" disabled>Запостить</button>
       <button class="button" type="button" id="btn_shoot" style="display:none;">Заснять</button>
@@ -149,9 +196,10 @@
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Скрипты -->
   <script src="assets/libs/db/sql-wasm.js"></script>
   <!-- <script src="assets/libs/face-api.js"></script> -->
   <script type="module" src="main.js"></script>
+
 </body>
 </html>

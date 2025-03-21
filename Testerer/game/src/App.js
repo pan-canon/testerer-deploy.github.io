@@ -151,8 +151,7 @@ export class App {
       return;
     }
     StateManager.set('regData', JSON.stringify(regData));
-    // Load the Apartment Plan Screen template dynamically
-    this.viewManager.loadScreenTemplate('apartment-plan-screen', 'apartmentPlan.html', {});
+    this.viewManager.switchScreen('apartment-plan-screen', 'apartment-plan-buttons');
     if (!this.apartmentPlanManager) {
       this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', this.databaseManager, this);
     }
@@ -163,8 +162,7 @@ export class App {
    * Displays the global camera view, starts the camera, and disables the complete registration button.
    */
   goToSelfieScreen() {
-    // Load the Selfie Screen template dynamically
-    this.viewManager.loadScreenTemplate('selfie-screen', 'selfie.html', {});
+    this.viewManager.switchScreen('selfie-screen', 'selfie-buttons');
     this.viewManager.showGlobalCamera();
     this.cameraSectionManager.startCamera();
     this.viewManager.disableCompleteButton();
@@ -284,11 +282,10 @@ export class App {
 
   /**
    * showMainScreen - Displays the main screen after successful registration.
-   * Loads the main screen template dynamically, updates the toggle camera button, and sets the "Post" button state.
+   * Switches to the main screen, updates the toggle camera button, and sets the "Post" button state.
    */
   async showMainScreen() {
-    // Load the Main Screen template dynamically
-    this.viewManager.loadScreenTemplate('main-screen', 'main.html', {});
+    this.viewManager.switchScreen('main-screen', 'main-buttons');
     this.viewManager.showToggleCameraButton();
     if (StateManager.get("mirrorQuestReady") === "true") {
       this.viewManager.setPostButtonEnabled(true);
@@ -305,16 +302,14 @@ export class App {
   /**
    * showRegistrationScreen - Displays the registration screen and resets transient state.
    */
-  async showRegistrationScreen() {
+  showRegistrationScreen() {
     StateManager.remove("welcomeDone");
     StateManager.remove("mirrorQuestReady");
     StateManager.remove("postButtonEnabled");
     StateManager.remove("regData");
     StateManager.remove("quest_state_repeating_quest");
 
-    await this.viewManager.loadScreenTemplate('registration-screen', 'registration.html', {});
-    // Now the language selector element is present in the DOM – initialize it.
-    this.languageManager.initialize('language-selector');
+    this.viewManager.switchScreen('registration-screen', 'registration-buttons');
   }
 
   /**

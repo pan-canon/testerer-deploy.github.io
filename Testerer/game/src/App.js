@@ -305,15 +305,16 @@ export class App {
   /**
    * showRegistrationScreen - Displays the registration screen and resets transient state.
    */
-  showRegistrationScreen() {
+  async showRegistrationScreen() {
     StateManager.remove("welcomeDone");
     StateManager.remove("mirrorQuestReady");
     StateManager.remove("postButtonEnabled");
     StateManager.remove("regData");
     StateManager.remove("quest_state_repeating_quest");
 
-    // Load the Registration Screen template dynamically
-    this.viewManager.loadScreenTemplate('registration-screen', 'registration.html', {});
+    await this.viewManager.loadScreenTemplate('registration-screen', 'registration.html', {});
+    // Now the language selector element is present in the DOM – initialize it.
+    this.languageManager.initialize('language-selector');
   }
 
   /**

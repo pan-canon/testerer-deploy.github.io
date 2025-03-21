@@ -151,7 +151,8 @@ export class App {
       return;
     }
     StateManager.set('regData', JSON.stringify(regData));
-    this.viewManager.switchScreen('apartment-plan-screen', 'apartment-plan-buttons');
+    // Load the Apartment Plan Screen template dynamically
+    this.viewManager.loadScreenTemplate('apartment-plan-screen', 'apartmentPlan.html', {});
     if (!this.apartmentPlanManager) {
       this.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', this.databaseManager, this);
     }
@@ -162,7 +163,8 @@ export class App {
    * Displays the global camera view, starts the camera, and disables the complete registration button.
    */
   goToSelfieScreen() {
-    this.viewManager.switchScreen('selfie-screen', 'selfie-buttons');
+    // Load the Selfie Screen template dynamically
+    this.viewManager.loadScreenTemplate('selfie-screen', 'selfie.html', {});
     this.viewManager.showGlobalCamera();
     this.cameraSectionManager.startCamera();
     this.viewManager.disableCompleteButton();
@@ -282,10 +284,11 @@ export class App {
 
   /**
    * showMainScreen - Displays the main screen after successful registration.
-   * Switches to the main screen, updates the toggle camera button, and sets the "Post" button state.
+   * Loads the main screen template dynamically, updates the toggle camera button, and sets the "Post" button state.
    */
   async showMainScreen() {
-    this.viewManager.switchScreen('main-screen', 'main-buttons');
+    // Load the Main Screen template dynamically
+    this.viewManager.loadScreenTemplate('main-screen', 'main.html', {});
     this.viewManager.showToggleCameraButton();
     if (StateManager.get("mirrorQuestReady") === "true") {
       this.viewManager.setPostButtonEnabled(true);
@@ -309,7 +312,8 @@ export class App {
     StateManager.remove("regData");
     StateManager.remove("quest_state_repeating_quest");
 
-    this.viewManager.switchScreen('registration-screen', 'registration-buttons');
+    // Load the Registration Screen template dynamically
+    this.viewManager.loadScreenTemplate('registration-screen', 'registration.html', {});
   }
 
   /**

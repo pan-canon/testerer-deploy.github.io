@@ -11,6 +11,7 @@ import { ErrorManager } from './ErrorManager.js';
  * - Ghost states
  * - Events
  * - Quests
+ * - Chat messages (new)
  *
  * It uses SQLiteDataManager for persistence (IndexedDB) and ensures that
  * entries (such as diary entries) are stored in a way that the event key checks
@@ -316,5 +317,46 @@ export class DatabaseManager {
       };
     }
     return null;
+  }
+
+  // ===== New Methods for Chat Integration =====
+
+  /**
+   * addChatMessage – Inserts a new chat message record into the chat_messages table.
+   *
+   * @param {string} sender - The sender of the message (e.g., 'user' or 'spirit').
+   * @param {string} message - The chat message text.
+   * @param {string} [timestamp] - Optional timestamp; if not provided, current ISO string is used.
+   */
+  addChatMessage(sender, message, timestamp = new Date().toISOString()) {
+    if (!this.db) {
+      ErrorManager.logError("Database not initialized!", "addChatMessage");
+      return;
+    }
+    this.db.run("INSERT INTO chat_messages (sender, message, timestamp) VALUES (?, ?, ?)", [sender, message, timestamp]);
+    console.log(`✅ Chat message added: [${sender}] ${message}`);
+    this.saveDatabase();
+  }
+
+  /**
+   * getChatMessages – Retrieves all chat message records from the chat_messages table.
+   *
+   * @returns {Array} Array of chat message objects: { id, sender, message, timestamp }.
+   */
+  getChatMessages() {
+    if (!this.db) {
+      ErrorManager.logError("Database not initialized!", "getChatMessages");
+      return [];
+    }
+    const result = this.db.exec("SELECT * FROM chat_messages ORDER BY timestamp ASC");
+    if (result.length > 0) {
+      return result[0].values.map(row => ({
+        id: row[0],
+        sender: row[1],
+        message: row[2],
+        timestamp: row[3]
+      }));
+    }
+    return [];
   }
 }

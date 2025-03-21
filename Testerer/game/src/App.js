@@ -22,6 +22,10 @@ import { QuestManager } from './managers/QuestManager.js';
 import { GameEventManager } from './managers/GameEventManager.js';
 import { ShowProfileModal } from './managers/ShowProfileModal.js';
 
+// NEW IMPORTS FOR CHAT MODULE
+import { ChatManager } from './managers/ChatManager.js';
+import { ChatScenarioManager } from './managers/ChatScenarioManager.js';
+
 /**
  * Main application class.
  * Responsible for initializing core managers, setting up the UI,
@@ -84,6 +88,18 @@ export class App {
     this.tempCanvas = document.createElement("canvas");
     this.tempCtx = this.tempCanvas.getContext("2d");
 
+    // ================================
+    // NEW: Initialize ChatManager for independent chat functionality.
+    // This module manages the chat section which is embedded in index.html.
+    // The chat module uses the TemplateEngine to load a chat fragment and update its content dynamically.
+    this.chatManager = deps.chatManager || new ChatManager({
+      templateUrl: '/src/templates/chat_template.html', // URL for the chat template fragment
+      mode: 'full' // 'full' mode for complete chat functionality; can be set to 'board-only'
+    });
+    // Optionally, initialize ChatScenarioManager if a scenario configuration is provided later.
+    // this.chatScenarioManager = deps.chatScenarioManager || new ChatScenarioManager(this.chatManager);
+    // ================================
+
     // Begin application initialization.
     this.init();
   }
@@ -128,6 +144,9 @@ export class App {
 
     // Create top controls for extended camera modes (AR, AI detection, filters).
     this.viewManager.createTopCameraControls();
+
+    // NEW: Initialize ChatManager by loading the chat template into the designated chat section.
+    await this.chatManager.init();
 
     // Check if a user profile is already saved.
     if (await this.profileManager.isProfileSaved()) {
@@ -329,5 +348,21 @@ export class App {
       return;
     }
     this.profileManager.importProfileData(file, this.databaseManager, this.apartmentPlanManager);
+  }
+
+  /**
+   * toggleChat - Toggles the display of the chat section.
+   * When the chat button is clicked, this method shows or hides the chat interface.
+   */
+  toggleChat() {
+    if (this.chatManager && this.chatManager.container) {
+      if (this.chatManager.container.style.display === 'block') {
+        this.chatManager.hide();
+      } else {
+        this.chatManager.show();
+      }
+    } else {
+      console.error("ChatManager is not initialized or chat container not found.");
+    }
   }
 }

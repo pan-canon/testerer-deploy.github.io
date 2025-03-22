@@ -19,7 +19,8 @@ export class ChatManager {
    *  - mode: 'full' (default) for full chat, or 'board-only' for displaying only the spirit board.
    */
   constructor(options = {}) {
-    this.templateUrl = options.templateUrl || '../templates/chat_template.html';
+    const basePath = document.querySelector('base')?.href || '/';
+    this.templateUrl = options.templateUrl || `${basePath}src/templates/chat_template.html`;
     this.mode = options.mode || 'full';
     this.container = null; // DOM element for the chat section
   }

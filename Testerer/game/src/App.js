@@ -31,7 +31,7 @@ import { ChatScenarioManager } from './managers/ChatScenarioManager.js';
  * Responsible for initializing core managers, setting up the UI,
  * loading persisted state, and handling primary navigation and events.
  *
- * Now the constructor accepts an optional dependency object to support DI.
+ * The constructor accepts an optional dependency object to support DI.
  * If a dependency is not provided, a new instance is created.
  *
  * NOTE: The new camera functionality is integrated into the updated CameraSectionManager,
@@ -39,6 +39,11 @@ import { ChatScenarioManager } from './managers/ChatScenarioManager.js';
  */
 export class App {
   constructor(deps = {}) {
+    // Define global base path for resource URLs
+    this.BASE_PATH = window.location.hostname.includes("github.io")
+      ? "/testerer-deploy.github.io/Testerer/game"
+      : "";
+    
     // Initialize or inject ViewManager and bind UI events.
     this.viewManager = deps.viewManager || new ViewManager();
     this.viewManager.bindEvents(this);
@@ -90,10 +95,9 @@ export class App {
 
     // ================================
     // NEW: Initialize ChatManager for independent chat functionality.
-    // This module manages the chat section which is embedded in index.html.
     // The chat module uses the TemplateEngine to load a chat fragment and update its content dynamically.
     this.chatManager = deps.chatManager || new ChatManager({
-      templateUrl: '/src/templates/chat_template.html', // URL for the chat template fragment
+      templateUrl: `${this.BASE_PATH}/src/templates/chat_template.html`, // dynamic path for chat template
       mode: 'full' // 'full' mode for complete chat functionality; can be set to 'board-only'
     });
     // Optionally, initialize ChatScenarioManager if a scenario configuration is provided later.
@@ -148,6 +152,14 @@ export class App {
     // NEW: Initialize ChatManager by loading the chat template into the designated chat section.
     await this.chatManager.init();
 
+    // For unregistered users, animate chat panel appearance (slide-up animation)
+    if (!(await this.profileManager.isProfileSaved())) {
+      const chatPanel = document.getElementById("chat-button-container");
+      if (chatPanel && this.visualEffectsManager.slideUpElement) {
+        this.visualEffectsManager.slideUpElement(chatPanel, 1000);
+      }
+    }
+
     // Check if a user profile is already saved.
     if (await this.profileManager.isProfileSaved()) {
       const profile = await this.profileManager.getProfile();
@@ -193,7 +205,7 @@ export class App {
    * enables the "Complete Registration" button, and stores the selfie data.
    */
   async captureSelfie() {
-    console.log("📸 Attempting to capture selfie...");
+    console.log("Attempting to capture selfie...");
     const video = this.cameraSectionManager.videoElement;
     if (!video || !video.srcObject) {
       ErrorManager.logError("Camera is not active!", "captureSelfie");
@@ -227,7 +239,7 @@ export class App {
       // Save the processed selfie data.
       this.selfieData = grayscaleData;
       
-      console.log("✅ Selfie captured successfully!");
+      console.log("Selfie captured successfully!");
     } catch (error) {
       ErrorManager.logError(error, "captureSelfie");
       ErrorManager.showError("Error capturing selfie! Please try again.");
@@ -278,7 +290,7 @@ export class App {
    */
   async toggleCameraView() {
     if (!this.isCameraOpen) {
-      console.log("📸 Switching to camera view...");
+      console.log("Switching to camera view...");
       this.viewManager.showCameraView();
       await this.cameraSectionManager.startCamera();
       await new Promise(resolve => {
@@ -292,7 +304,7 @@ export class App {
       console.log("Video ready:", this.cameraSectionManager.videoElement.videoWidth, this.cameraSectionManager.videoElement.videoHeight);
       this.isCameraOpen = true;
     } else {
-      console.log("📓 Returning to diary view...");
+      console.log("Returning to diary view...");
       this.viewManager.showDiaryView();
       this.cameraSectionManager.stopCamera();
       this.isCameraOpen = false;

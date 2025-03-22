@@ -450,6 +450,13 @@ export class ViewManager {
         console.log(`[ViewManager] Controls panel updated for group: ${buttonsGroupId}`);
       }
     }
+    // Ensure chat button container is always visible regardless of registration status
+    const chatContainer = document.getElementById("chat-button-container");
+    if (chatContainer) {
+      chatContainer.style.display = 'flex';
+      chatContainer.style.pointerEvents = 'auto';
+      console.log("[ViewManager] Chat button container set to visible.");
+    }
   }
 
   // ------------------ Button State Management ------------------
@@ -720,7 +727,6 @@ export class ViewManager {
     aiBtn.innerText = "Start AI Detection";
     aiBtn.onclick = () => {
       if (this.cameraManager) {
-        // Here, you could pass a detection configuration if needed.
         this.cameraManager.startAIDetection();
       }
     };

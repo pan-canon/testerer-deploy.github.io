@@ -12,15 +12,23 @@
 import { TemplateEngine } from '../utils/TemplateEngine.js';
 import { animateText } from '../utils/SpiritBoardUtils.js';
 
+// Dynamically determine the base path without fixed values.
+function getBasePath() {
+  const loc = window.location;
+  const path = loc.pathname.substring(0, loc.pathname.lastIndexOf('/'));
+  return loc.origin + path;
+}
+
 export class ChatManager {
   /**
    * @param {Object} options - Configuration options for the chat.
-   *  - templateUrl: URL to fetch the chat template fragment (default: '/src/templates/chat_template.html')
+   *  - templateUrl: URL to fetch the chat template fragment (default: dynamic base path + '/src/templates/chat_template.html')
    *  - mode: 'full' (default) for full chat, or 'board-only' for displaying only the spirit board.
+   *  - basePath: (optional) override for the base path.
    */
   constructor(options = {}) {
-    const basePath = document.querySelector('base')?.href || '/';
-    this.templateUrl = options.templateUrl || `${basePath}src/templates/chat_template.html`;
+    const basePath = options.basePath || getBasePath();
+    this.templateUrl = options.templateUrl || `${basePath}/src/templates/chat_template.html`;
     this.mode = options.mode || 'full';
     this.container = null; // DOM element for the chat section
   }

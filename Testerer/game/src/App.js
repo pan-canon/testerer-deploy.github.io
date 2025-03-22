@@ -31,7 +31,7 @@ import { ChatScenarioManager } from './managers/ChatScenarioManager.js';
  * Responsible for initializing core managers, setting up the UI,
  * loading persisted state, and handling primary navigation and events.
  *
- * Now the constructor accepts an optional dependency object to support DI.
+ * The constructor accepts an optional dependency object to support DI.
  * If a dependency is not provided, a new instance is created.
  *
  * NOTE: The new camera functionality is integrated into the updated CameraSectionManager,
@@ -53,9 +53,9 @@ export class App {
 
     // Initialize or inject core domain managers.
     this.languageManager = deps.languageManager || new LanguageManager('language-selector');
-    // Use the updated CameraSectionManager (new camera code is integrated here).
+    // Use the updated CameraSectionManager.
     this.cameraSectionManager = deps.cameraSectionManager || new CameraSectionManager();
-    // Set camera manager reference in ViewManager to allow UI controls to call its methods.
+    // Set camera manager reference in ViewManager.
     this.viewManager.setCameraManager(this.cameraSectionManager);
     this.profileManager = deps.profileManager || new ProfileManager(this.sqliteDataManager);
 
@@ -90,11 +90,10 @@ export class App {
 
     // ================================
     // NEW: Initialize ChatManager for independent chat functionality.
-    // This module manages the chat section which is embedded in index.html.
     // The chat module uses the TemplateEngine to load a chat fragment and update its content dynamically.
     this.chatManager = deps.chatManager || new ChatManager({
-      templateUrl: '/src/templates/chat_template.html', // URL for the chat template fragment
-      mode: 'full' // 'full' mode for complete chat functionality; can be set to 'board-only'
+      templateUrl: `${this.getBasePath()}/src/templates/chat_template.html`, // dynamic path determined by getBasePath()
+      mode: 'full'
     });
     // Optionally, initialize ChatScenarioManager if a scenario configuration is provided later.
     // this.chatScenarioManager = deps.chatScenarioManager || new ChatScenarioManager(this.chatManager);
@@ -102,6 +101,19 @@ export class App {
 
     // Begin application initialization.
     this.init();
+  }
+
+  /**
+   * getBasePath - Returns the base path dynamically based on the current location.
+   * No fixed paths are used.
+   *
+   * @returns {string} The base URL (origin + path without the file name).
+   */
+  getBasePath() {
+    const loc = window.location;
+    // Remove the last segment (filename) from pathname
+    const path = loc.pathname.substring(0, loc.pathname.lastIndexOf('/'));
+    return loc.origin + path;
   }
 
   /**
@@ -142,10 +154,10 @@ export class App {
     this.viewManager.showToggleCameraButton();
     this.eventManager.updateDiaryDisplay();
 
-    // Create top controls for extended camera modes (AR, AI detection, filters).
+    // Create top controls for extended camera modes.
     this.viewManager.createTopCameraControls();
 
-    // NEW: Initialize ChatManager by loading the chat template into the designated chat section.
+    // Initialize ChatManager by loading the chat template.
     await this.chatManager.init();
 
     // Check if a user profile is already saved.

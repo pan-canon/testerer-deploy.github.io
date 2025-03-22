@@ -279,4 +279,38 @@ export class VisualEffectsManager {
       onChar
     );
   }
+
+  /**
+   * slideUpPanel
+   * Animates the appearance of a panel by sliding it up from the bottom.
+   *
+   * @param {HTMLElement} panel - The panel element to animate.
+   * @param {number} duration - Animation duration in milliseconds.
+   * @param {string} soundPath - Path to the sound to play during the animation.
+   */
+  slideUpPanel(panel, duration = 1000, soundPath = 'assets/audio/panel_slide.mp3') {
+    if (!panel) return;
+    // Set initial state: slide the panel out of view (translateY(100%)) and transparent.
+    panel.style.transition = `transform ${duration}ms ease-out, opacity ${duration}ms ease-out`;
+    panel.style.transform = "translateY(100%)";
+    panel.style.opacity = "0";
+    // Force reflow.
+    panel.offsetHeight;
+    // Play slide-up sound.
+    this.playAudioWithStop(soundPath, duration);
+    // Animate panel into view.
+    panel.style.transform = "translateY(0)";
+    panel.style.opacity = "1";
+  }
+
+  /**
+   * showControlsPanelForUnregistered
+   * If the user is not registered (i.e. registrationCompleted flag is not "true"),
+   * animates the controls panel by sliding it up from the bottom with sound.
+   */
+  showControlsPanelForUnregistered() {
+    if (StateManager.get("registrationCompleted") !== "true") {
+      this.slideUpPanel(this.controlsPanel, 1000, 'assets/audio/panel_slide.mp3');
+    }
+  }
 }

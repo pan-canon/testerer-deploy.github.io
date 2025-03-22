@@ -720,6 +720,7 @@ export class ViewManager {
     aiBtn.innerText = "Start AI Detection";
     aiBtn.onclick = () => {
       if (this.cameraManager) {
+        // Here, you could pass a detection configuration if needed.
         this.cameraManager.startAIDetection();
       }
     };

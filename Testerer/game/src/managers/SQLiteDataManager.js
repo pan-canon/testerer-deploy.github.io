@@ -40,7 +40,7 @@ export class SQLiteDataManager {
    * If saved database data is found in IndexedDB, restores it.
    * Otherwise, creates a new database instance and sets up the required tables.
    *
-   * Tables: diary, apartment_plan, quest_progress, ghosts, events, quests.
+   * Tables: diary, apartment_plan, quest_progress, ghosts, events, quests, chat_messages.
    *
    * @param {Object} SQL - The SQL.js module.
    * @returns {Promise<SQL.Database>} Resolves to the SQL.js database instance.
@@ -95,6 +95,12 @@ export class SQLiteDataManager {
           status TEXT,
           current_stage INTEGER,
           total_stages INTEGER
+        );
+        CREATE TABLE IF NOT EXISTS chat_messages (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          sender TEXT,
+          message TEXT,
+          timestamp TEXT
         );
       `);
       console.log("New database created and tables initialized.");

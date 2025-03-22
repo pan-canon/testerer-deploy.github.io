@@ -53,6 +53,10 @@ export class ViewManager {
     this.exportProfileBtn = document.getElementById("export-profile-btn");
     this.updateBtn = document.getElementById("update-btn");
 
+    // --- Chat Button Container ---
+    // (Обязательно должна быть вёрстка с id "chat-btn" внутри контейнера "chat-button-container")
+    // Мы не будем скрывать контейнер чата здесь – он всегда виден.
+
     // --- Camera Manager Reference (to be set externally) ---
     this.cameraManager = null;
 
@@ -113,8 +117,12 @@ export class ViewManager {
     }
   }
 
-  // ------------------ Event Binding ------------------
-
+  /**
+   * bindEvents
+   * Binds event listeners for UI elements.
+   *
+   * @param {App} app - The main application instance.
+   */
   bindEvents(app) {
     const checkRegistrationValidity = () => {
       const nameValid = this.nameInput && this.nameInput.value.trim().length > 0;
@@ -192,10 +200,24 @@ export class ViewManager {
     if (this.toggleDiaryBtn) {
       this.toggleDiaryBtn.addEventListener("click", () => app.toggleCameraView());
     }
+    // ---- Bind chat button event ----
+    const chatBtn = document.getElementById("chat-btn");
+    if (chatBtn) {
+      chatBtn.addEventListener("click", () => {
+        console.log("Chat button clicked. Triggering app.toggleChat().");
+        app.toggleChat();
+      });
+    } else {
+      console.error("Chat button (id='chat-btn') not found in the DOM.");
+    }
   }
 
-  // ------------------ Registration Form Operations ------------------
-
+  /**
+   * getRegistrationData
+   * Retrieves registration data from the form.
+   *
+   * @returns {Object|null} Registration data object or null if form elements are missing.
+   */
   getRegistrationData() {
     if (!this.nameInput || !this.genderSelect || !this.languageSelector) {
       ErrorManager.logError("Registration form elements not found.", "getRegistrationData");
@@ -208,6 +230,12 @@ export class ViewManager {
     };
   }
 
+  /**
+   * updateSelfiePreview
+   * Updates the selfie preview image.
+   *
+   * @param {string} imageData - Data URL for the selfie image.
+   */
   updateSelfiePreview(imageData) {
     if (this.selfiePreview) {
       this.selfiePreview.src = imageData;
@@ -218,6 +246,10 @@ export class ViewManager {
     }
   }
 
+  /**
+   * enableCompleteButton
+   * Enables the "Complete Registration" button.
+   */
   enableCompleteButton() {
     if (this.completeBtn) {
       this.completeBtn.disabled = false;
@@ -225,6 +257,10 @@ export class ViewManager {
     }
   }
 
+  /**
+   * disableCompleteButton
+   * Disables the "Complete Registration" button.
+   */
   disableCompleteButton() {
     if (this.completeBtn) {
       this.completeBtn.disabled = true;
@@ -232,10 +268,22 @@ export class ViewManager {
     }
   }
 
+  /**
+   * getSelfieSource
+   * Returns the current selfie image source.
+   *
+   * @returns {string} Data URL of the selfie image.
+   */
   getSelfieSource() {
     return this.selfiePreview ? this.selfiePreview.src : "";
   }
 
+  /**
+   * getImportFile
+   * Retrieves the selected file for profile import.
+   *
+   * @returns {File|null} The selected file or null if none.
+   */
   getImportFile() {
     if (this.importFileInput && this.importFileInput.files.length > 0) {
       return this.importFileInput.files[0];
@@ -245,6 +293,10 @@ export class ViewManager {
 
   // ------------------ Toggle Buttons and Camera Views ------------------
 
+  /**
+   * showToggleCameraButton
+   * Displays the toggle camera button.
+   */
   showToggleCameraButton() {
     if (this.toggleCameraBtn) {
       this.toggleCameraBtn.style.display = 'inline-block';
@@ -252,6 +304,10 @@ export class ViewManager {
     }
   }
 
+  /**
+   * showPostButton
+   * Displays the Post button.
+   */
   showPostButton() {
     if (this.postBtn) {
       this.postBtn.style.display = 'inline-block';
@@ -259,6 +315,10 @@ export class ViewManager {
     }
   }
 
+  /**
+   * hidePostButton
+   * Hides the Post button.
+   */
   hidePostButton() {
     if (this.postBtn) {
       this.postBtn.style.display = 'none';
@@ -266,6 +326,10 @@ export class ViewManager {
     }
   }
 
+  /**
+   * showDiaryView
+   * Switches the view to show the diary and hides the global camera.
+   */
   showDiaryView() {
     const diary = document.getElementById("diary");
     if (diary && this.globalCamera) {
@@ -284,6 +348,10 @@ export class ViewManager {
     }
   }
 
+  /**
+   * showCameraView
+   * Switches the view to show the global camera and hides the diary.
+   */
   showCameraView() {
     const diary = document.getElementById("diary");
     if (diary && this.globalCamera) {
@@ -302,6 +370,10 @@ export class ViewManager {
     }
   }
 
+  /**
+   * showGlobalCamera
+   * Displays the global camera element.
+   */
   showGlobalCamera() {
     if (this.globalCamera) {
       this.globalCamera.style.display = 'block';
@@ -311,6 +383,10 @@ export class ViewManager {
     }
   }
 
+  /**
+   * hideGlobalCamera
+   * Hides the global camera element.
+   */
   hideGlobalCamera() {
     if (this.globalCamera) {
       this.globalCamera.style.display = 'none';
@@ -322,6 +398,12 @@ export class ViewManager {
 
   // ------------------ Profile Display Operations ------------------
 
+  /**
+   * updateProfileDisplay
+   * Updates the profile display with the given profile data.
+   *
+   * @param {Object} profile - The profile data.
+   */
   updateProfileDisplay(profile) {
     if (this.profileNameElem) {
       this.profileNameElem.textContent = profile.name;
@@ -335,6 +417,14 @@ export class ViewManager {
 
   // ------------------ Diary Rendering Operations ------------------
 
+  /**
+   * renderDiary
+   * Renders the diary entries.
+   *
+   * @param {Array} entries - Array of diary entry objects.
+   * @param {string} currentLanguage - The current language code.
+   * @param {Object} effectsManager - The VisualEffectsManager instance.
+   */
   renderDiary(entries, currentLanguage, effectsManager) {
     if (!this.diaryContainer) {
       ErrorManager.logError("Diary container not found!", "renderDiary");
@@ -419,6 +509,13 @@ export class ViewManager {
 
   // ------------------ Screen Switching ------------------
 
+  /**
+   * switchScreen
+   * Hides all sections and shows the target screen.
+   *
+   * @param {string} screenId - The ID of the screen to show.
+   * @param {string} buttonsGroupId - The ID of the controls group to display.
+   */
   switchScreen(screenId, buttonsGroupId) {
     document.querySelectorAll('section').forEach(section => {
       section.style.display = 'none';
@@ -772,6 +869,13 @@ export class ViewManager {
 
   // ------------------ Visual Effects and Notifications ------------------
 
+  /**
+   * applyBackgroundTransition
+   * Applies a background transition to the body.
+   *
+   * @param {string} color - Target background color.
+   * @param {number} duration - Transition duration in milliseconds.
+   */
   applyBackgroundTransition(color, duration) {
     document.body.style.transition = `background ${duration}ms`;
     document.body.style.background = color;
@@ -781,6 +885,12 @@ export class ViewManager {
     console.log(`[ViewManager] Applied background transition with color ${color} for ${duration}ms.`);
   }
 
+  /**
+   * showGhostAppearanceEffect
+   * Displays a ghost appearance effect.
+   *
+   * @param {string} ghostId - Identifier for the ghost image.
+   */
   showGhostAppearanceEffect(ghostId) {
     const ghostEffect = document.createElement("div");
     Object.assign(ghostEffect.style, {
@@ -801,6 +911,12 @@ export class ViewManager {
     console.log(`[ViewManager] Ghost appearance effect triggered for ghost ${ghostId}.`);
   }
 
+  /**
+   * showNotification
+   * Displays a notification message.
+   *
+   * @param {string} message - Notification message.
+   */
   showNotification(message) {
     const notification = document.createElement("div");
     notification.textContent = message;
@@ -832,6 +948,12 @@ export class ViewManager {
 
   // ------------------ Miscellaneous ------------------
 
+  /**
+   * setControlsBlocked
+   * Blocks or unblocks interaction with the controls panel.
+   *
+   * @param {boolean} shouldBlock - True to block, false to unblock.
+   */
   setControlsBlocked(shouldBlock) {
     if (this.controlsPanel) {
       this.controlsPanel.style.pointerEvents = shouldBlock ? "none" : "auto";
@@ -839,6 +961,10 @@ export class ViewManager {
     }
   }
 
+  /**
+   * clearCache
+   * Sends a message to clear the service worker cache.
+   */
   clearCache() {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({ action: 'CLEAR_CACHE' });

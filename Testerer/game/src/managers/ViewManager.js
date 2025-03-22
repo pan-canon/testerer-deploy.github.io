@@ -63,6 +63,8 @@ export class ViewManager {
       StateManager.set("postButtonDisabled", "true");
       console.log("[ViewManager] Post button disabled on initialization.");
     }
+
+    this.chatBtn = document.getElementById("chat-btn"); // new chat button element
   }
 
   /**
@@ -450,7 +452,14 @@ export class ViewManager {
         console.log(`[ViewManager] Controls panel updated for group: ${buttonsGroupId}`);
       }
     }
+    this.showChatButton(); // always display chat button after screen switch
   }
+
+showChatButton() {
+  if (this.chatBtn) {
+    this.chatBtn.style.display = 'inline-block';
+  }
+}
 
   // ------------------ Button State Management ------------------
 

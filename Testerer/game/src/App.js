@@ -303,33 +303,37 @@ export class App {
    * showMainScreen - Displays the main screen after successful registration.
    * Switches to the main screen, updates the toggle camera button, and sets the "Post" button state.
    */
-  async showMainScreen() {
-    this.viewManager.switchScreen('main-screen', 'main-buttons');
-    this.viewManager.showToggleCameraButton();
-    if (StateManager.get("mirrorQuestReady") === "true") {
-      this.viewManager.setPostButtonEnabled(true);
-    } else {
-      this.viewManager.setPostButtonEnabled(false);
-    }
-    const profile = await this.profileManager.getProfile();
-    if (profile) {
-      this.viewManager.updateProfileDisplay(profile);
-      this.selfieData = profile.selfie;
-    }
+
+async showMainScreen() {
+  this.viewManager.switchScreen('main-screen', 'main-buttons');
+  this.viewManager.showToggleCameraButton();
+  this.viewManager.showChatButton(); // new line
+  if (StateManager.get("mirrorQuestReady") === "true") {
+    this.viewManager.setPostButtonEnabled(true);
+  } else {
+    this.viewManager.setPostButtonEnabled(false);
   }
+  const profile = await this.profileManager.getProfile();
+  if (profile) {
+    this.viewManager.updateProfileDisplay(profile);
+    this.selfieData = profile.selfie;
+  }
+}
 
   /**
    * showRegistrationScreen - Displays the registration screen and resets transient state.
    */
-  showRegistrationScreen() {
-    StateManager.remove("welcomeDone");
-    StateManager.remove("mirrorQuestReady");
-    StateManager.remove("postButtonEnabled");
-    StateManager.remove("regData");
-    StateManager.remove("quest_state_repeating_quest");
+showRegistrationScreen() {
+  StateManager.remove("welcomeDone");
+  StateManager.remove("mirrorQuestReady");
+  StateManager.remove("postButtonEnabled");
+  StateManager.remove("regData");
+  StateManager.remove("quest_state_repeating_quest");
 
-    this.viewManager.switchScreen('registration-screen', 'registration-buttons');
-  }
+  this.viewManager.switchScreen('registration-screen', 'registration-buttons');
+  this.viewManager.showChatButton(); // new line
+}
+
 
   /**
    * exportProfile - Exports the profile data.

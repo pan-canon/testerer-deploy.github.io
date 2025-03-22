@@ -1,0 +1,96 @@
+{
+  "dialogues": [
+    {
+      "messages": [
+        {
+          "sender": "spirit",
+          "text": "chat_welcome_message",
+          "animateOnBoard": true
+        }
+      ],
+      "options": [
+        {
+          "text": "chat_option_1",
+          "nextDialogueIndex": 1
+        },
+        {
+          "text": "chat_option_2",
+          "nextDialogueIndex": 2
+        },
+        {
+          "text": "chat_option_3",
+          "nextDialogueIndex": 3
+        }
+      ]
+    },
+    {
+      "messages": [
+        {
+          "sender": "user",
+          "text": "chat_user_reply_1",
+          "animateOnBoard": false
+        },
+        {
+          "sender": "spirit",
+          "text": "chat_spirit_response_1",
+          "animateOnBoard": true
+        }
+      ],
+      "options": [
+        {
+          "text": "chat_option_1_1",
+          "nextDialogueIndex": 4
+        },
+        {
+          "text": "chat_option_1_2",
+          "nextDialogueIndex": 4
+        }
+      ]
+    },
+    {
+      "messages": [
+        {
+          "sender": "user",
+          "text": "chat_user_reply_2",
+          "animateOnBoard": false
+        },
+        {
+          "sender": "spirit",
+          "text": "chat_spirit_response_2",
+          "animateOnBoard": true
+        }
+      ],
+      "options": [
+        {
+          "text": "chat_option_2_1",
+          "nextDialogueIndex": 4
+        }
+      ]
+    },
+    {
+      "messages": [
+        {
+          "sender": "user",
+          "text": "chat_user_reply_3",
+          "animateOnBoard": false
+        },
+        {
+          "sender": "spirit",
+          "text": "chat_spirit_response_3",
+          "animateOnBoard": true
+        }
+      ],
+      "options": []
+    },
+    {
+      "messages": [
+        {
+          "sender": "spirit",
+          "text": "chat_end_message",
+          "animateOnBoard": true
+        }
+      ],
+      "options": []
+    }
+  ]
+}

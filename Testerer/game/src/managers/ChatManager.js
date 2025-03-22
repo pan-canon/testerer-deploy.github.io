@@ -4,7 +4,8 @@
  * This module manages the independent chat section.
  * It fetches the chat template fragment from an external file,
  * renders it using the TemplateEngine with provided data, and injects it into the chat section.
- * It provides methods to show/hide the chat and to update the dialogue content dynamically.
+ * It provides methods to show/hide the chat, send an initial localized message,
+ * and to update the dialogue content dynamically.
  *
  * The module assumes that the main database integration is handled elsewhere.
  */
@@ -102,9 +103,28 @@ export class ChatManager {
   }
 
   /**
+   * Sends the initial localized message to the chat.
+   *
+   * @param {string} localizedText - The localized text to send as the first message.
+   */
+  sendInitialMessage(localizedText) {
+    if (!this.container) {
+      console.error('ChatManager is not initialized.');
+      return;
+    }
+    const messagesEl = this.container.querySelector('#chat-messages');
+    if (messagesEl) {
+      // Create a ghost message element (messages from "spirit" will be aligned left)
+      const messageHTML = `<div class="chat-message spirit" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${localizedText}</div>`;
+      messagesEl.innerHTML += messageHTML;
+      console.log('Initial message sent:', localizedText);
+    }
+  }
+
+  /**
    * Loads a dialogue configuration and updates the chat content.
-   * @param {Object} dialogueConfig - Configuration for the dialogue flow.
-   * Expected format:
+   *
+   * The expected format of dialogueConfig:
    * {
    *   messages: [
    *     { sender: 'spirit'|'user', text: '...', animateOnBoard: true|false },
@@ -115,6 +135,10 @@ export class ChatManager {
    *     ...
    *   ]
    * }
+   *
+   * If the number of options is greater than 3, the options container will be made scrollable.
+   *
+   * @param {Object} dialogueConfig - The dialogue configuration object.
    */
   loadDialogue(dialogueConfig) {
     if (!this.container) {
@@ -125,6 +149,7 @@ export class ChatManager {
     // Build HTML for messages
     let messagesHTML = '';
     dialogueConfig.messages.forEach(msg => {
+      // The message element uses a class equal to the sender (e.g. "spirit" or "user")
       messagesHTML += `<div class="chat-message ${msg.sender}" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${msg.text}</div>`;
       // Animate text on the spirit board if required
       if (msg.animateOnBoard) {
@@ -140,20 +165,30 @@ export class ChatManager {
     if (dialogueConfig.options && dialogueConfig.options.length > 0) {
       dialogueConfig.options.forEach(option => {
         // Create a button for each option; event listeners will be attached after rendering
-        optionsHTML += `<button class="button is-link dialogue-option">${option.text}</button>`;
+        optionsHTML += `<button class="button is-link dialogue-option" style="margin-bottom: 0.5rem;">${option.text}</button>`;
       });
     }
 
-    // Update the relevant parts of the chat container with new data
+    // Update the messages container
     const messagesEl = this.container.querySelector('#chat-messages');
     if (messagesEl) {
       messagesEl.innerHTML = messagesHTML;
     }
+
+    // Update the options container and make it scrollable if there are more than 3 options
     const optionsEl = this.container.querySelector('#chat-options');
     if (optionsEl) {
+      if (dialogueConfig.options && dialogueConfig.options.length > 3) {
+        optionsEl.style.maxHeight = '200px';
+        optionsEl.style.overflowY = 'auto';
+      } else {
+        optionsEl.style.maxHeight = '';
+        optionsEl.style.overflowY = '';
+      }
       optionsEl.innerHTML = optionsHTML;
     }
-    // Optionally reset or update the spirit board content
+
+    // Optionally clear/update the spirit board content
     const boardEl = this.container.querySelector('#spirit-board');
     if (boardEl) {
       boardEl.innerHTML = ''; // Clear previous content
@@ -177,6 +212,7 @@ export class ChatManager {
 
   /**
    * Sets the display mode for the chat.
+   *
    * @param {string} mode - 'full' for full chat, or 'board-only' to show only the spirit board.
    */
   setMode(mode) {

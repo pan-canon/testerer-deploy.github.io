@@ -21,7 +21,6 @@ export class TemplateEngine {
    * @returns {string} - The rendered HTML string with placeholders replaced by data values.
    */
   static render(template, data) {
-    window.TemplateEngine = TemplateEngine;
     return template.replace(/{{\s*([^}]+)\s*}}/g, (match, key) => {
       // If the key exists in the data object, replace the placeholder; otherwise, keep it unchanged.
       return data.hasOwnProperty(key) ? data[key] : match;

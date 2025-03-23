@@ -26,7 +26,7 @@ export class ChatManager {
    *  - templateUrl: URL to fetch the chat template fragment (default: dynamic base path + '/src/templates/chat_template.html')
    *  - mode: 'full' (default) for full chat, or 'board-only' for displaying only the spirit board.
    *  - basePath: (optional) override for the base path.
-   *  - databaseManager: (optional) instance of DatabaseManager to fetch chat messages.
+   *  - databaseManager: (optional) instance of DatabaseManager to load chat messages.
    */
   constructor(options = {}) {
     const basePath = options.basePath || getBasePath();
@@ -38,60 +38,56 @@ export class ChatManager {
 
   /**
    * Initializes the ChatManager by fetching the chat template fragment,
-   * rendering it using the TemplateEngine with provided data (including messages from DB),
+   * rendering it using the TemplateEngine with initial data (including messages from DB if available),
    * and inserting it into the chat section in index.html.
    * @returns {Promise<void>}
    */
   async init() {
     try {
-      // Fetch the chat template fragment from the external file
+      // Fetch the chat template fragment from the external file.
       const response = await fetch(this.templateUrl);
       if (!response.ok) {
         throw new Error(`Failed to fetch template from ${this.templateUrl}`);
       }
       const templateText = await response.text();
 
-      // Prepare messages content from Database (if available)
-      let messagesHTML = '';
+      // Prepare initial messages string.
+      let messagesStr = "";
       if (this.databaseManager) {
-        const messagesArray = this.databaseManager.getChatMessages();
-        if (messagesArray && messagesArray.length > 0) {
-          // Generate HTML for each message.
-          messagesHTML = messagesArray
-            .map(msg => {
-              // Use different styling based on sender ("spirit" messages aligned left, "user" right)
-              const alignment = msg.sender === 'spirit' ? 'left' : 'right';
-              return `<div class="chat-message ${msg.sender}" style="text-align: ${alignment}; margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${msg.message}</div>`;
-            })
-            .join('');
+        const chatMessages = this.databaseManager.getChatMessages();
+        if (chatMessages && chatMessages.length > 0) {
+          messagesStr = chatMessages
+            .map(msg => `<div class="chat-message ${msg.sender}" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${msg.message}</div>`)
+            .join("");
+        } else {
+          // Default initial message if no records in DB.
+          messagesStr = `<div class="chat-message spirit" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">Hello Chat!</div>`;
         }
-      }
-      // Если из БД ничего не получено, можно задать дефолтное значение (например, пустую строку)
-      if (!messagesHTML) {
-        messagesHTML = ''; // или, например, "<div>No messages yet</div>"
+      } else {
+        messagesStr = `<div class="chat-message spirit" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">Hello Chat!</div>`;
       }
 
-      // Prepare initial data for rendering the template
+      // Prepare initial data for rendering the template.
       const data = {
-        messages: messagesHTML,
-        spiritBoardContent: 'Spirit Board', // Default spirit board text
-        options: '' // Initially, no dialogue options
+        messages: messagesStr,
+        spiritBoardContent: 'Spirit Board', // Можно заменить на локализованное значение.
+        options: '' // Initially, no dialogue options.
       };
 
-      // Render the template using TemplateEngine
+      // Render the template using TemplateEngine.
       const renderedHTML = TemplateEngine.render(templateText, data);
 
-      // Get the chat section container from index.html
+      // Get the chat section container from index.html.
       this.container = document.getElementById('chat-section');
       if (!this.container) {
         throw new Error('Chat section container (id="chat-section") not found in index.html');
       }
-      // Insert the rendered HTML into the chat section
+      // Insert the rendered HTML into the chat section.
       this.container.innerHTML = renderedHTML;
-      // Initially hide the chat section
+      // Initially hide the chat section.
       this.container.style.display = 'none';
 
-      // If mode is 'board-only', hide the options section
+      // If mode is 'board-only', hide the options section.
       if (this.mode === 'board-only') {
         const optionsEl = this.container.querySelector('#chat-options');
         if (optionsEl) {
@@ -137,7 +133,7 @@ export class ChatManager {
     }
     const messagesEl = this.container.querySelector('#chat-messages');
     if (messagesEl) {
-      // Create a ghost message element (messages from "spirit" will be aligned left)
+      // Create a ghost message element (messages from "spirit" will be aligned left).
       const messageHTML = `<div class="chat-message spirit" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${localizedText}</div>`;
       messagesEl.innerHTML += messageHTML;
       console.log('Initial message sent:', localizedText);
@@ -169,7 +165,7 @@ export class ChatManager {
       return;
     }
 
-    // Build HTML for messages
+    // Build HTML for messages.
     let messagesHTML = '';
     dialogueConfig.messages.forEach(msg => {
       messagesHTML += `<div class="chat-message ${msg.sender}" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${msg.text}</div>`;
@@ -181,7 +177,7 @@ export class ChatManager {
       }
     });
 
-    // Build HTML for options
+    // Build HTML for options.
     let optionsHTML = '';
     if (dialogueConfig.options && dialogueConfig.options.length > 0) {
       dialogueConfig.options.forEach(option => {
@@ -189,13 +185,13 @@ export class ChatManager {
       });
     }
 
-    // Update the messages container
+    // Update the messages container.
     const messagesEl = this.container.querySelector('#chat-messages');
     if (messagesEl) {
       messagesEl.innerHTML = messagesHTML;
     }
 
-    // Update the options container (with scroll if more than 3 options)
+    // Update the options container and make it scrollable if needed.
     const optionsEl = this.container.querySelector('#chat-options');
     if (optionsEl) {
       if (dialogueConfig.options && dialogueConfig.options.length > 3) {
@@ -208,13 +204,13 @@ export class ChatManager {
       optionsEl.innerHTML = optionsHTML;
     }
 
-    // Clear/update the spirit board content
+    // Clear/update the spirit board content.
     const boardEl = this.container.querySelector('#spirit-board');
     if (boardEl) {
       boardEl.innerHTML = '';
     }
 
-    // Attach event listeners to the dialogue option buttons
+    // Attach event listeners to dialogue option buttons.
     const optionButtons = this.container.querySelectorAll('.dialogue-option');
     optionButtons.forEach((btn, index) => {
       btn.addEventListener('click', () => {

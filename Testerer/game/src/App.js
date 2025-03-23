@@ -91,13 +91,11 @@ export class App {
     // ================================
     // NEW: Initialize ChatManager for independent chat functionality.
     // The chat module uses the TemplateEngine to load a chat fragment and update its content dynamically.
-    // Pass databaseManager so that ChatManager can fetch chat messages from the DB.
     this.chatManager = deps.chatManager || new ChatManager({
       templateUrl: `${this.getBasePath()}/src/templates/chat_template.html`, // dynamic path determined by getBasePath()
-      mode: 'full',
-      databaseManager: this.databaseManager
+      mode: 'full'
     });
-    // Optionally, initialize ChatScenarioManager if a scenario configuration is provided:
+    // Optionally, initialize ChatScenarioManager if a scenario configuration is provided later.
     // this.chatScenarioManager = deps.chatScenarioManager || new ChatScenarioManager(this.chatManager);
     // ================================
 

@@ -21,9 +21,9 @@ export class TemplateEngine {
    * @returns {string} - The rendered HTML string with placeholders replaced by data values.
    */
   static render(template, data) {
-    return template.replace(/{{\s*([^}]+)\s*}}/g, (match, key) => {
-      // If the key exists in the data object, replace the placeholder; otherwise, keep it unchanged.
-      return data.hasOwnProperty(key) ? data[key] : match;
+    return template.replace(/{{\s*([\s\S]+?)\s*}}/g, (match, key) => {
+      const trimmedKey = key.trim();
+      return data.hasOwnProperty(trimmedKey) ? data[trimmedKey] : match;
     });
   }
 }

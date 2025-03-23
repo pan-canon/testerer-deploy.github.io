@@ -48,12 +48,11 @@ export class ChatManager {
       }
       const templateText = await response.text();
 
-      // Prepare initial data for rendering the template.
-      // For testing purposes we fill data with sample values.
+      // Prepare initial data for rendering the template
       const data = {
-        messages: "Hello Chat!",                        // Sample initial message
-        spiritBoardContent: "Welcome to our Chat!",     // Sample spirit board text
-        options: "<button class='btn'>Option 1</button> <button class='btn'>Option 2</button> <button class='btn'>Option 3</button>" // Sample options buttons HTML
+        messages: '',             // Initially, no messages
+        spiritBoardContent: 'Spirit Board', // Default spirit board text
+        options: ''               // Initially, no dialogue options
       };
 
       // Render the template using TemplateEngine

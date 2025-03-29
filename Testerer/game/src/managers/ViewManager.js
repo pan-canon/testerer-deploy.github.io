@@ -537,10 +537,16 @@ export class ViewManager {
   /**
    * switchUniversalSection - Universally switches between blog, camera, and chat sections.
    * When one of these sections is opened, the other two are automatically hidden.
+   * Also ensures that the registration screen is hidden.
    *
    * @param {string} sectionId - The ID of the section to display ("main-screen", "global-camera", or "chat-section").
    */
   switchUniversalSection(sectionId) {
+    // Hide registration screen if present.
+    const registration = document.getElementById("registration-screen");
+    if (registration) {
+      registration.style.display = "none";
+    }
     const blog = document.getElementById("main-screen");
     const chat = document.getElementById("chat-section");
     const camera = document.getElementById("global-camera");

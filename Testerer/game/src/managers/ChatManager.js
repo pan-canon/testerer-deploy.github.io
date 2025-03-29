@@ -1,13 +1,13 @@
 /**
  * ChatManager.js
  *
- * This module manages the independent chat functionality.
+ * This module manages the independent chat section.
  * It fetches the chat template fragment from an external file,
- * renders it using the TemplateEngine with provided data, and
- * processes dialogue configurations.
- * All direct UI (DOM) manipulation has been moved to ViewManager.
+ * renders it using the TemplateEngine with provided data, and injects it into the chat section.
+ * It provides methods to show/hide the chat, send an initial localized message,
+ * and to update the dialogue content dynamically.
  *
- * The module assumes that main database integration is handled elsewhere.
+ * The module assumes that the main database integration is handled elsewhere.
  */
 
 import { TemplateEngine } from '../utils/TemplateEngine.js';
@@ -32,17 +32,17 @@ export class ChatManager {
     const basePath = options.basePath || getBasePath();
     this.templateUrl = options.templateUrl || `${basePath}/src/templates/chat_template.html`;
     this.mode = options.mode || 'full';
+    this.container = null; // DOM element for the chat section
     this.databaseManager = options.databaseManager || null;
-    this.renderedHTML = ""; // Will store the initial rendered HTML for the chat UI.
   }
 
   /**
-   * Fetches the chat template fragment and renders it with initial data.
-   * Returns the rendered HTML string without inserting it into the DOM.
-   *
-   * @returns {Promise<string>} The rendered chat template HTML.
+   * Initializes the ChatManager by fetching the chat template fragment,
+   * rendering it using the TemplateEngine with initial data (including messages from DB if available),
+   * and inserting it into the chat section in index.html.
+   * @returns {Promise<void>}
    */
-  async fetchTemplate() {
+  async init() {
     try {
       // Fetch the chat template fragment from the external file.
       const response = await fetch(this.templateUrl);
@@ -57,10 +57,7 @@ export class ChatManager {
         const chatMessages = this.databaseManager.getChatMessages();
         if (chatMessages && chatMessages.length > 0) {
           messagesStr = chatMessages
-            .map(
-              msg =>
-                `<div class="chat-message ${msg.sender}" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${msg.message}</div>`
-            )
+            .map(msg => `<div class="chat-message ${msg.sender}" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${msg.message}</div>`)
             .join("");
         } else {
           // Default initial message if no records in DB.
@@ -73,31 +70,78 @@ export class ChatManager {
       // Prepare initial data for rendering the template.
       const data = {
         messages: messagesStr,
-        spiritBoardContent: 'Spirit Board', // Can be replaced with a localized value.
+        spiritBoardContent: 'Spirit Board', // Можно заменить на локализованное значение.
         options: '' // Initially, no dialogue options.
       };
 
       // Render the template using TemplateEngine.
-      this.renderedHTML = TemplateEngine.render(templateText, data);
-      console.log("ChatManager template fetched and rendered.");
-      return this.renderedHTML;
+      const renderedHTML = TemplateEngine.render(templateText, data);
+
+      // Get the chat section container from index.html.
+      this.container = document.getElementById('chat-section');
+      if (!this.container) {
+        throw new Error('Chat section container (id="chat-section") not found in index.html');
+      }
+      // Insert the rendered HTML into the chat section.
+      this.container.innerHTML = renderedHTML;
+      // Initially hide the chat section.
+      this.container.style.display = 'none';
+
+      // If mode is 'board-only', hide the options section.
+      if (this.mode === 'board-only') {
+        const optionsEl = this.container.querySelector('#chat-options');
+        if (optionsEl) {
+          optionsEl.style.display = 'none';
+        }
+      }
+
+      console.log('ChatManager initialized.');
     } catch (error) {
-      console.error("Error fetching chat template:", error);
-      throw error;
+      console.error('Error initializing ChatManager:', error);
     }
   }
 
   /**
-   * Returns the previously rendered initial chat HTML.
-   *
-   * @returns {string} The rendered HTML string.
+   * Shows the chat section.
    */
-  getInitialChatHTML() {
-    return this.renderedHTML;
+  show() {
+    if (this.container) {
+      this.container.style.display = 'block';
+      console.log('ChatManager is now visible.');
+    }
   }
 
   /**
-   * Processes a dialogue configuration and returns the generated HTML.
+   * Hides the chat section.
+   */
+  hide() {
+    if (this.container) {
+      this.container.style.display = 'none';
+      console.log('ChatManager is now hidden.');
+    }
+  }
+
+  /**
+   * Sends the initial localized message to the chat.
+   *
+   * @param {string} localizedText - The localized text to send as the first message.
+   */
+  sendInitialMessage(localizedText) {
+    if (!this.container) {
+      console.error('ChatManager is not initialized.');
+      return;
+    }
+    const messagesEl = this.container.querySelector('#chat-messages');
+    if (messagesEl) {
+      // Create a ghost message element (messages from "spirit" will be aligned left).
+      const messageHTML = `<div class="chat-message spirit" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${localizedText}</div>`;
+      messagesEl.innerHTML += messageHTML;
+      console.log('Initial message sent:', localizedText);
+    }
+  }
+
+  /**
+   * Loads a dialogue configuration and updates the chat content.
    *
    * The expected format of dialogueConfig:
    * {
@@ -111,16 +155,29 @@ export class ChatManager {
    *   ]
    * }
    *
+   * If the number of options is greater than 3, the options container will be made scrollable.
+   *
    * @param {Object} dialogueConfig - The dialogue configuration object.
-   * @returns {Object} An object containing messagesHTML and optionsHTML.
    */
-  processDialogue(dialogueConfig) {
+  loadDialogue(dialogueConfig) {
+    if (!this.container) {
+      console.error('ChatManager is not initialized.');
+      return;
+    }
+
+    // Build HTML for messages.
     let messagesHTML = '';
     dialogueConfig.messages.forEach(msg => {
       messagesHTML += `<div class="chat-message ${msg.sender}" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${msg.text}</div>`;
-      // Note: Any animation (e.g. using animateText) will be handled by UI logic in ViewManager.
+      if (msg.animateOnBoard) {
+        const boardEl = this.container.querySelector('#spirit-board');
+        if (boardEl) {
+          animateText(boardEl, msg.text);
+        }
+      }
     });
 
+    // Build HTML for options.
     let optionsHTML = '';
     if (dialogueConfig.options && dialogueConfig.options.length > 0) {
       dialogueConfig.options.forEach(option => {
@@ -128,7 +185,62 @@ export class ChatManager {
       });
     }
 
-    console.log("ChatManager processed dialogue configuration.");
-    return { messagesHTML, optionsHTML };
+    // Update the messages container.
+    const messagesEl = this.container.querySelector('#chat-messages');
+    if (messagesEl) {
+      messagesEl.innerHTML = messagesHTML;
+    }
+
+    // Update the options container and make it scrollable if needed.
+    const optionsEl = this.container.querySelector('#chat-options');
+    if (optionsEl) {
+      if (dialogueConfig.options && dialogueConfig.options.length > 3) {
+        optionsEl.style.maxHeight = '200px';
+        optionsEl.style.overflowY = 'auto';
+      } else {
+        optionsEl.style.maxHeight = '';
+        optionsEl.style.overflowY = '';
+      }
+      optionsEl.innerHTML = optionsHTML;
+    }
+
+    // Clear/update the spirit board content.
+    const boardEl = this.container.querySelector('#spirit-board');
+    if (boardEl) {
+      boardEl.innerHTML = '';
+    }
+
+    // Attach event listeners to dialogue option buttons.
+    const optionButtons = this.container.querySelectorAll('.dialogue-option');
+    optionButtons.forEach((btn, index) => {
+      btn.addEventListener('click', () => {
+        const option = dialogueConfig.options[index];
+        if (typeof option.onSelect === 'function') {
+          option.onSelect();
+        } else {
+          console.log(`Option selected: ${option.text}`);
+        }
+      });
+    });
+
+    console.log('Dialogue loaded in ChatManager.');
+  }
+
+  /**
+   * Sets the display mode for the chat.
+   *
+   * @param {string} mode - 'full' for full chat, or 'board-only' to show only the spirit board.
+   */
+  setMode(mode) {
+    this.mode = mode;
+    if (this.container) {
+      const optionsEl = this.container.querySelector('#chat-options');
+      if (mode === 'board-only' && optionsEl) {
+        optionsEl.style.display = 'none';
+      } else if (optionsEl) {
+        optionsEl.style.display = 'block';
+      }
+    }
+    console.log(`ChatManager mode set to: ${mode}`);
   }
 }

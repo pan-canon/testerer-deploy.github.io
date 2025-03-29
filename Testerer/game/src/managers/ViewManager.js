@@ -5,10 +5,18 @@ import { ErrorManager } from './ErrorManager.js';
 /**
  * ViewManager
  *
- * Central UI module responsible for switching screens, managing button states,
- * updating profile display, rendering diary entries, and handling all UI effects.
- * This class now also manages all App–related UI operations (screen transitions, etc.)
- * as well as chat UI operations.
+ * Central UI module responsible for:
+ * - Switching screens.
+ * - Managing button states.
+ * - Updating profile display.
+ * - Rendering the diary.
+ * - Handling UI effects and notifications.
+ *
+ * All UI updates must be performed exclusively through these methods,
+ * ensuring a single source of truth for UI operations.
+ *
+ * NOTE: Sequential linking of events and quests is handled by GhostManager.
+ *       This module also persists button states to StateManager.
  */
 export class ViewManager {
   constructor() {
@@ -45,34 +53,36 @@ export class ViewManager {
     this.exportProfileBtn = document.getElementById("export-profile-btn");
     this.updateBtn = document.getElementById("update-btn");
 
-    // Chat button container should include an element with id "chat-btn".
-    // It remains visible at all times.
+    // --- Chat Button Container ---
+    // (Обязательно должна быть вёрстка с id "chat-btn" внутри контейнера "chat-button-container")
+    // Мы не будем скрывать контейнер чата здесь – он всегда виден.
 
-    // Manager references (set externally)
+    // --- Camera Manager Reference (to be set externally) ---
     this.cameraManager = null;
-    this.chatManager = null;
 
-    // Disable "Post" button by default.
+    // By default, disable the "Post" button after registration.
     if (this.postBtn) {
       this.postBtn.disabled = true;
+      // Persist state: post button is initially disabled.
       StateManager.set("postButtonDisabled", "true");
       console.log("[ViewManager] Post button disabled on initialization.");
     }
   }
 
-  // Methods to set external manager references.
+  /**
+   * setCameraManager
+   * Sets the camera manager instance (e.g., an instance of CameraSectionManager)
+   * to allow unified access to camera methods.
+   */
   setCameraManager(cameraManager) {
     this.cameraManager = cameraManager;
     console.log("[ViewManager] Camera manager set.");
   }
-  
-  setChatManager(chatManager) {
-    this.chatManager = chatManager;
-    console.log("[ViewManager] Chat manager set.");
-  }
-  
-  // ------------------ Generic UI Methods ------------------
-  
+
+  /**
+   * startCameraWithOptions
+   * Wrapper method to start the camera with given options.
+   */
   startCameraWithOptions(options = {}) {
     if (this.cameraManager) {
       this.cameraManager.attachTo("global-camera", options);
@@ -82,7 +92,11 @@ export class ViewManager {
       ErrorManager.logError("Camera Manager is not set.", "startCameraWithOptions");
     }
   }
-  
+
+  /**
+   * stopCamera
+   * Wrapper method to stop the camera via the camera manager.
+   */
   stopCamera() {
     if (this.cameraManager) {
       this.cameraManager.stopCamera();
@@ -91,14 +105,24 @@ export class ViewManager {
       ErrorManager.logError("Camera Manager is not set.", "stopCamera");
     }
   }
-  
+
+  /**
+   * hidePostButton
+   * Hides the "Post" button by setting its display style to 'none'.
+   */
   hidePostButton() {
     if (this.postBtn) {
       this.postBtn.style.display = 'none';
       console.log("[ViewManager] Post button hidden.");
     }
   }
-  
+
+  /**
+   * bindEvents
+   * Binds event listeners for UI elements.
+   *
+   * @param {App} app - The main application instance.
+   */
   bindEvents(app) {
     const checkRegistrationValidity = () => {
       const nameValid = this.nameInput && this.nameInput.value.trim().length > 0;
@@ -108,7 +132,7 @@ export class ViewManager {
         this.nextStepBtn.disabled = !(nameValid && genderValid && languageValid);
       }
     };
-  
+
     if (this.nameInput) {
       this.nameInput.addEventListener('input', () => {
         console.log("Name input changed:", this.nameInput.value);
@@ -145,6 +169,7 @@ export class ViewManager {
         app.completeRegistration();
       });
     }
+    // "Post" button click calls GhostManager.handlePostButtonClick()
     if (this.postBtn) {
       this.postBtn.addEventListener("click", () => {
         console.log("Post button clicked. Triggering GhostManager.handlePostButtonClick().");
@@ -175,6 +200,7 @@ export class ViewManager {
     if (this.toggleDiaryBtn) {
       this.toggleDiaryBtn.addEventListener("click", () => app.toggleCameraView());
     }
+    // ---- Bind chat button event ----
     const chatBtn = document.getElementById("chat-btn");
     if (chatBtn) {
       chatBtn.addEventListener("click", () => {
@@ -185,7 +211,13 @@ export class ViewManager {
       console.error("Chat button (id='chat-btn') not found in the DOM.");
     }
   }
-  
+
+  /**
+   * getRegistrationData
+   * Retrieves registration data from the form.
+   *
+   * @returns {Object|null} Registration data object or null if form elements are missing.
+   */
   getRegistrationData() {
     if (!this.nameInput || !this.genderSelect || !this.languageSelector) {
       ErrorManager.logError("Registration form elements not found.", "getRegistrationData");
@@ -197,7 +229,13 @@ export class ViewManager {
       language: this.languageSelector.value
     };
   }
-  
+
+  /**
+   * updateSelfiePreview
+   * Updates the selfie preview image.
+   *
+   * @param {string} imageData - Data URL for the selfie image.
+   */
   updateSelfiePreview(imageData) {
     if (this.selfiePreview) {
       this.selfiePreview.src = imageData;
@@ -207,55 +245,91 @@ export class ViewManager {
       ErrorManager.logError("Selfie preview element not found.", "updateSelfiePreview");
     }
   }
-  
+
+  /**
+   * enableCompleteButton
+   * Enables the "Complete Registration" button.
+   */
   enableCompleteButton() {
     if (this.completeBtn) {
       this.completeBtn.disabled = false;
       console.log("[ViewManager] Complete button enabled.");
     }
   }
-  
+
+  /**
+   * disableCompleteButton
+   * Disables the "Complete Registration" button.
+   */
   disableCompleteButton() {
     if (this.completeBtn) {
       this.completeBtn.disabled = true;
       console.log("[ViewManager] Complete button disabled.");
     }
   }
-  
+
+  /**
+   * getSelfieSource
+   * Returns the current selfie image source.
+   *
+   * @returns {string} Data URL of the selfie image.
+   */
   getSelfieSource() {
     return this.selfiePreview ? this.selfiePreview.src : "";
   }
-  
+
+  /**
+   * getImportFile
+   * Retrieves the selected file for profile import.
+   *
+   * @returns {File|null} The selected file or null if none.
+   */
   getImportFile() {
     if (this.importFileInput && this.importFileInput.files.length > 0) {
       return this.importFileInput.files[0];
     }
     return null;
   }
-  
+
   // ------------------ Toggle Buttons and Camera Views ------------------
-  
+
+  /**
+   * showToggleCameraButton
+   * Displays the toggle camera button.
+   */
   showToggleCameraButton() {
     if (this.toggleCameraBtn) {
       this.toggleCameraBtn.style.display = 'inline-block';
       console.log("[ViewManager] Toggle Camera button shown.");
     }
   }
-  
+
+  /**
+   * showPostButton
+   * Displays the Post button.
+   */
   showPostButton() {
     if (this.postBtn) {
       this.postBtn.style.display = 'inline-block';
       console.log("[ViewManager] Post button shown.");
     }
   }
-  
+
+  /**
+   * hidePostButton
+   * Hides the Post button.
+   */
   hidePostButton() {
     if (this.postBtn) {
       this.postBtn.style.display = 'none';
       console.log("[ViewManager] Post button hidden.");
     }
   }
-  
+
+  /**
+   * showDiaryView
+   * Switches the view to show the diary and hides the global camera.
+   */
   showDiaryView() {
     const diary = document.getElementById("diary");
     if (diary && this.globalCamera) {
@@ -273,7 +347,11 @@ export class ViewManager {
       console.log("[ViewManager] Switched to diary view.");
     }
   }
-  
+
+  /**
+   * showCameraView
+   * Switches the view to show the global camera and hides the diary.
+   */
   showCameraView() {
     const diary = document.getElementById("diary");
     if (diary && this.globalCamera) {
@@ -291,20 +369,11 @@ export class ViewManager {
       console.log("[ViewManager] Switched to camera view.");
     }
   }
-  
-  // Added asynchronous camera view switch to wait for video metadata.
-  async showCameraViewAsync() {
-    this.showCameraView();
-    return new Promise(resolve => {
-      const vid = this.cameraManager.videoElement;
-      if (vid.readyState >= 2) {
-        resolve();
-      } else {
-        vid.onloadedmetadata = () => resolve();
-      }
-    });
-  }
-  
+
+  /**
+   * showGlobalCamera
+   * Displays the global camera element.
+   */
   showGlobalCamera() {
     if (this.globalCamera) {
       this.globalCamera.style.display = 'block';
@@ -313,7 +382,11 @@ export class ViewManager {
       ErrorManager.logError("Global camera element not found.", "showGlobalCamera");
     }
   }
-  
+
+  /**
+   * hideGlobalCamera
+   * Hides the global camera element.
+   */
   hideGlobalCamera() {
     if (this.globalCamera) {
       this.globalCamera.style.display = 'none';
@@ -322,9 +395,15 @@ export class ViewManager {
       ErrorManager.logError("Global camera element not found.", "hideGlobalCamera");
     }
   }
-  
+
   // ------------------ Profile Display Operations ------------------
-  
+
+  /**
+   * updateProfileDisplay
+   * Updates the profile display with the given profile data.
+   *
+   * @param {Object} profile - The profile data.
+   */
   updateProfileDisplay(profile) {
     if (this.profileNameElem) {
       this.profileNameElem.textContent = profile.name;
@@ -335,9 +414,17 @@ export class ViewManager {
     }
     console.log("[ViewManager] Profile display updated.");
   }
-  
+
   // ------------------ Diary Rendering Operations ------------------
-  
+
+  /**
+   * renderDiary
+   * Renders the diary entries.
+   *
+   * @param {Array} entries - Array of diary entry objects.
+   * @param {string} currentLanguage - The current language code.
+   * @param {Object} effectsManager - The VisualEffectsManager instance.
+   */
   renderDiary(entries, currentLanguage, effectsManager) {
     if (!this.diaryContainer) {
       ErrorManager.logError("Diary container not found!", "renderDiary");
@@ -419,9 +506,16 @@ export class ViewManager {
     StateManager.set("animatedDiaryIds", JSON.stringify(animatedIds));
     console.log("[ViewManager] Diary updated.");
   }
-  
+
   // ------------------ Screen Switching ------------------
-  
+
+  /**
+   * switchScreen
+   * Hides all sections and shows the target screen.
+   *
+   * @param {string} screenId - The ID of the screen to show.
+   * @param {string} buttonsGroupId - The ID of the controls group to display.
+   */
   switchScreen(screenId, buttonsGroupId) {
     document.querySelectorAll('section').forEach(section => {
       section.style.display = 'none';
@@ -453,7 +547,7 @@ export class ViewManager {
         console.log(`[ViewManager] Controls panel updated for group: ${buttonsGroupId}`);
       }
     }
-    // Ensure chat button container is visible.
+    // Ensure chat button container is always visible regardless of registration status
     const chatContainer = document.getElementById("chat-button-container");
     if (chatContainer) {
       chatContainer.style.display = 'flex';
@@ -461,9 +555,17 @@ export class ViewManager {
       console.log("[ViewManager] Chat button container set to visible.");
     }
   }
-  
+
   // ------------------ Button State Management ------------------
-  
+
+  /**
+   * setPostButtonEnabled
+   * Enables or disables the "Post" button.
+   *
+   * This method updates the UI and persists the new state in StateManager.
+   *
+   * @param {boolean} isEnabled - If true, the button should be enabled.
+   */
   setPostButtonEnabled(isEnabled) {
     const postBtn = document.getElementById("post-btn");
     if (postBtn) {
@@ -479,7 +581,7 @@ export class ViewManager {
       }
     }
   }
-  
+
   setCameraButtonHighlight(isActive) {
     const cameraBtn = document.getElementById("toggle-camera");
     if (cameraBtn) {
@@ -491,7 +593,7 @@ export class ViewManager {
       console.log(`[ViewManager] Camera button highlight ${isActive ? "added" : "removed"}.`);
     }
   }
-  
+
   setCameraButtonActive(isActive) {
     const cameraBtn = document.getElementById("toggle-camera");
     if (cameraBtn) {
@@ -504,14 +606,14 @@ export class ViewManager {
       console.log(`[ViewManager] Camera button active state set to ${isActive}.`);
     }
   }
-  
+
   restoreCameraButtonState() {
     const stored = StateManager.get("cameraButtonActive");
     const isActive = stored ? JSON.parse(stored) : false;
     this.setCameraButtonActive(isActive);
     console.log("[ViewManager] Camera button state restored:", isActive);
   }
-  
+
   setShootButtonActive(isActive) {
     const shootBtn = document.getElementById("btn_shoot");
     if (shootBtn) {
@@ -527,16 +629,16 @@ export class ViewManager {
       ErrorManager.logError("Shoot button not found.", "setShootButtonActive");
     }
   }
-  
+
   restoreShootButtonState() {
     const stored = StateManager.get("shootButtonActive");
     const isActive = stored ? JSON.parse(stored) : false;
     this.setShootButtonActive(isActive);
     console.log("[ViewManager] Shoot button state restored:", isActive);
   }
-  
+
   // ------------------ Apartment Plan UI ------------------
-  
+
   setApartmentPlanNextButtonEnabled(isEnabled) {
     const nextBtn = document.getElementById("apartment-plan-next-btn");
     if (nextBtn) {
@@ -546,9 +648,9 @@ export class ViewManager {
       ErrorManager.logError("Apartment plan Next button not found.", "setApartmentPlanNextButtonEnabled");
     }
   }
-  
+
   // ------------------ Mirror Quest UI ------------------
-  
+
   startMirrorQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
     if (statusElem) {
@@ -574,7 +676,7 @@ export class ViewManager {
       ErrorManager.logError("Shoot button not found in the DOM.", "startMirrorQuestUI");
     }
   }
-  
+
   updateMirrorQuestStatus(success, statusElementId, shootButtonId) {
     const statusElem = document.getElementById(statusElementId);
     if (statusElem) {
@@ -587,7 +689,7 @@ export class ViewManager {
     }
     console.log(`[ViewManager] Mirror quest status updated. Success: ${success}`);
   }
-  
+
   stopMirrorQuestUI(statusElementId) {
     const statusElem = document.getElementById(statusElementId);
     if (statusElem) {
@@ -597,9 +699,21 @@ export class ViewManager {
     this.setShootButtonActive(false);
     console.log("[ViewManager] Mirror quest UI stopped.");
   }
-  
+
   // ------------------ Repeating Quest UI ------------------
-  
+
+  /**
+   * startRepeatingQuestUI
+   * Initializes the UI for a repeating quest stage.
+   *
+   * @param {object} options - Options including:
+   *   - statusElementId: the ID of the status element.
+   *   - shootButtonId: the ID of the Shoot button.
+   *   - stage: current stage number.
+   *   - totalStages: total number of stages.
+   *   - onShoot: callback to execute when Shoot is pressed.
+   *   - quest: the current repeating quest instance.
+   */
   startRepeatingQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
     if (statusElem) {
@@ -628,7 +742,7 @@ export class ViewManager {
       ErrorManager.logError("Shoot button not found in the DOM.", "startRepeatingQuestUI");
     }
   }
-  
+
   disableShootButton(shootButtonId) {
     const shootBtn = document.getElementById(shootButtonId);
     if (shootBtn) {
@@ -637,7 +751,7 @@ export class ViewManager {
       console.log("[ViewManager] Shoot button disabled.");
     }
   }
-  
+
   stopRepeatingQuestUI(statusElementId) {
     const statusElem = document.getElementById(statusElementId);
     if (statusElem) {
@@ -647,7 +761,13 @@ export class ViewManager {
     this.setShootButtonActive(false);
     console.log("[ViewManager] Repeating quest UI stopped.");
   }
-  
+
+  /**
+   * updateUIAfterQuestStage
+   * Updates multiple UI elements after a quest stage completion.
+   *
+   * @param {object} config - Configuration object with properties: postEnabled, cameraActive, shootActive.
+   */
   updateUIAfterQuestStage({ postEnabled, cameraActive, shootActive }) {
     if (typeof postEnabled === 'boolean') {
       this.setPostButtonEnabled(postEnabled);
@@ -660,13 +780,18 @@ export class ViewManager {
     }
     console.log("[ViewManager] UI updated after quest stage:", { postEnabled, cameraActive, shootActive });
   }
-  
+
   // ------------------ Top Controls for Extended Camera Modes ------------------
-  
+
+  /**
+   * createTopCameraControls
+   * Dynamically creates a top panel with buttons for AR mode, AI detection, and filter selection.
+   */
   createTopCameraControls() {
+    // Remove existing top controls if present
     const existing = document.getElementById("top-camera-controls");
     if (existing) existing.remove();
-  
+
     const topControls = document.createElement("div");
     topControls.id = "top-camera-controls";
     Object.assign(topControls.style, {
@@ -680,7 +805,8 @@ export class ViewManager {
       justifyContent: "center",
       zIndex: "2100"
     });
-  
+
+    // AR Mode Button
     const arBtn = document.createElement("button");
     arBtn.className = "button is-info";
     arBtn.innerText = "AR Mode";
@@ -690,7 +816,8 @@ export class ViewManager {
       }
     };
     topControls.appendChild(arBtn);
-  
+
+    // AI Detection Button
     const aiBtn = document.createElement("button");
     aiBtn.className = "button is-primary";
     aiBtn.style.marginLeft = "10px";
@@ -701,7 +828,8 @@ export class ViewManager {
       }
     };
     topControls.appendChild(aiBtn);
-  
+
+    // Filter Buttons
     const nightVisionBtn = document.createElement("button");
     nightVisionBtn.className = "button is-warning";
     nightVisionBtn.style.marginLeft = "10px";
@@ -712,7 +840,7 @@ export class ViewManager {
       }
     };
     topControls.appendChild(nightVisionBtn);
-  
+
     const blackWhiteBtn = document.createElement("button");
     blackWhiteBtn.className = "button is-warning";
     blackWhiteBtn.style.marginLeft = "10px";
@@ -723,7 +851,7 @@ export class ViewManager {
       }
     };
     topControls.appendChild(blackWhiteBtn);
-  
+
     const clearFilterBtn = document.createElement("button");
     clearFilterBtn.className = "button";
     clearFilterBtn.style.marginLeft = "10px";
@@ -734,13 +862,20 @@ export class ViewManager {
       }
     };
     topControls.appendChild(clearFilterBtn);
-  
+
     document.body.appendChild(topControls);
     console.log("[ViewManager] Top camera controls created.");
   }
-  
+
   // ------------------ Visual Effects and Notifications ------------------
-  
+
+  /**
+   * applyBackgroundTransition
+   * Applies a background transition to the body.
+   *
+   * @param {string} color - Target background color.
+   * @param {number} duration - Transition duration in milliseconds.
+   */
   applyBackgroundTransition(color, duration) {
     document.body.style.transition = `background ${duration}ms`;
     document.body.style.background = color;
@@ -749,7 +884,13 @@ export class ViewManager {
     }, duration);
     console.log(`[ViewManager] Applied background transition with color ${color} for ${duration}ms.`);
   }
-  
+
+  /**
+   * showGhostAppearanceEffect
+   * Displays a ghost appearance effect.
+   *
+   * @param {string} ghostId - Identifier for the ghost image.
+   */
   showGhostAppearanceEffect(ghostId) {
     const ghostEffect = document.createElement("div");
     Object.assign(ghostEffect.style, {
@@ -769,7 +910,13 @@ export class ViewManager {
     setTimeout(() => { ghostEffect.remove(); }, 5000);
     console.log(`[ViewManager] Ghost appearance effect triggered for ghost ${ghostId}.`);
   }
-  
+
+  /**
+   * showNotification
+   * Displays a notification message.
+   *
+   * @param {string} message - Notification message.
+   */
   showNotification(message) {
     const notification = document.createElement("div");
     notification.textContent = message;
@@ -798,91 +945,32 @@ export class ViewManager {
     }, 3000);
     console.log("[ViewManager] Notification shown:", message);
   }
-  
+
   // ------------------ Miscellaneous ------------------
-  
+
+  /**
+   * setControlsBlocked
+   * Blocks or unblocks interaction with the controls panel.
+   *
+   * @param {boolean} shouldBlock - True to block, false to unblock.
+   */
   setControlsBlocked(shouldBlock) {
     if (this.controlsPanel) {
       this.controlsPanel.style.pointerEvents = shouldBlock ? "none" : "auto";
       console.log(`[ViewManager] Controls ${shouldBlock ? "blocked" : "unblocked"}.`);
     }
   }
-  
+
+  /**
+   * clearCache
+   * Sends a message to clear the service worker cache.
+   */
   clearCache() {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({ action: 'CLEAR_CACHE' });
       console.log("Clear cache message sent to Service Worker.");
     } else {
       console.warn("No active Service Worker controller found.");
-    }
-  }
-  
-  // ------------------ App UI Management ------------------
-  // The following methods delegate UI operations for the main application screens.
-  
-  /**
-   * showApartmentPlanScreen - Switches to the apartment plan screen.
-   */
-  showApartmentPlanScreen() {
-    this.switchScreen('apartment-plan-screen', 'apartment-plan-buttons');
-    console.log("Apartment plan screen displayed.");
-  }
-  
-  /**
-   * showSelfieScreen - Switches to the selfie capture screen.
-   */
-  showSelfieScreen() {
-    this.switchScreen('selfie-screen', 'selfie-buttons');
-    this.showGlobalCamera();
-    console.log("Selfie screen displayed.");
-  }
-  
-  /**
-   * showMainScreen - Switches to the main screen.
-   */
-  showMainScreen() {
-    this.switchScreen('main-screen', 'main-buttons');
-    this.showToggleCameraButton();
-    console.log("Main screen displayed.");
-  }
-  
-  /**
-   * showRegistrationScreen - Switches to the registration screen.
-   */
-  showRegistrationScreen() {
-    // Clear transient state.
-    StateManager.remove("welcomeDone");
-    StateManager.remove("mirrorQuestReady");
-    StateManager.remove("postButtonEnabled");
-    StateManager.remove("regData");
-    StateManager.remove("quest_state_repeating_quest");
-    this.switchScreen('registration-screen', 'registration-buttons');
-    console.log("Registration screen displayed.");
-  }
-  
-  /**
-   * toggleChatSection - Toggles the visibility of the chat section and updates the chat button state.
-   */
-  toggleChatSection() {
-    const chatSection = document.getElementById("chat-section");
-    if (!chatSection) {
-      console.error("Chat section container not found.");
-      return;
-    }
-    if (chatSection.style.display === 'block') {
-      chatSection.style.display = 'none';
-      const chatBtn = document.getElementById("chat-btn");
-      if (chatBtn) {
-        chatBtn.disabled = false;
-      }
-      console.log("Chat section hidden and chat button re-enabled.");
-    } else {
-      chatSection.style.display = 'block';
-      const chatBtn = document.getElementById("chat-btn");
-      if (chatBtn) {
-        chatBtn.disabled = true;
-      }
-      console.log("Chat section shown and chat button disabled.");
     }
   }
 }

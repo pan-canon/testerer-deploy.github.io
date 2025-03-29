@@ -363,14 +363,19 @@ export class App {
   }
 
   /**
-   * toggleChat - Toggles the display of the chat section.
-   * When the chat button is clicked, this method shows or hides the chat interface.
+   * toggleChat - Activates the chat section by hiding other sections.
+   * Repeated clicks on the chat button will not hide the chat.
    */
   toggleChat() {
     if (this.chatManager && this.chatManager.container) {
-      if (this.chatManager.container.style.display === 'block') {
-        this.chatManager.hide();
-      } else {
+      // Hide all sections except the chat section.
+      document.querySelectorAll('section').forEach(section => {
+        if (section.id !== 'chat-section') {
+          section.style.display = 'none';
+        }
+      });
+      // Always show the chat section if it isn't already visible.
+      if (this.chatManager.container.style.display !== 'block') {
         this.chatManager.show();
       }
     } else {

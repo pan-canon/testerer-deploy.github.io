@@ -61,7 +61,8 @@ export class ChatManager {
             .join("");
         } else {
           // Default initial message if no records in DB.
-          messagesStr = `<div class="chat-message spirit" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">Hello Chat!</div>`;
+          const greeting = (window.chatLocales && window.chatLocales.greeting) ? window.chatLocales.greeting : "Hello Chat!";
+          messagesStr = `<div class="chat-message spirit" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${greeting}</div>`;
         }
       } else {
         messagesStr = `<div class="chat-message spirit" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">Hello Chat!</div>`;

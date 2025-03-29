@@ -54,8 +54,8 @@ export class ViewManager {
     this.updateBtn = document.getElementById("update-btn");
 
     // --- Chat Button Container ---
-    // (There must be an element with id "chat-btn" inside the container "chat-button-container")
-    // The chat container remains visible by default.
+    // (Обязательно должна быть вёрстка с id "chat-btn" внутри контейнера "chat-button-container")
+    // Мы не будем скрывать контейнер чата здесь – он всегда виден.
 
     // --- Camera Manager Reference (to be set externally) ---
     this.cameraManager = null;
@@ -73,8 +73,6 @@ export class ViewManager {
    * setCameraManager
    * Sets the camera manager instance (e.g., an instance of CameraSectionManager)
    * to allow unified access to camera methods.
-   *
-   * @param {Object} cameraManager - The camera manager instance.
    */
   setCameraManager(cameraManager) {
     this.cameraManager = cameraManager;
@@ -84,8 +82,6 @@ export class ViewManager {
   /**
    * startCameraWithOptions
    * Wrapper method to start the camera with given options.
-   *
-   * @param {Object} options - CSS style properties for the video element.
    */
   startCameraWithOptions(options = {}) {
     if (this.cameraManager) {
@@ -112,7 +108,7 @@ export class ViewManager {
 
   /**
    * hidePostButton
-   * Hides the "Post" button.
+   * Hides the "Post" button by setting its display style to 'none'.
    */
   hidePostButton() {
     if (this.postBtn) {
@@ -157,20 +153,20 @@ export class ViewManager {
     }
     if (this.nextStepBtn) {
       this.nextStepBtn.addEventListener('click', () => {
-        app.viewManager.goToApartmentPlanScreen(app);
+        app.goToApartmentPlanScreen();
         console.log("[ViewManager] Next step button clicked.");
       });
     }
     if (this.captureBtn) {
       this.captureBtn.addEventListener("click", () => {
         console.log("Capture button clicked. Triggering captureSelfie().");
-        app.viewManager.captureSelfie(app);
+        app.captureSelfie();
       });
     }
     if (this.completeBtn) {
       this.completeBtn.addEventListener("click", () => {
         console.log("Complete Registration button clicked. Triggering completeRegistration().");
-        app.viewManager.completeRegistration(app);
+        app.completeRegistration();
       });
     }
     // "Post" button click calls GhostManager.handlePostButtonClick()
@@ -189,7 +185,7 @@ export class ViewManager {
     if (this.exportProfileBtn) {
       this.exportProfileBtn.addEventListener("click", () => {
         console.log("Export Profile button clicked.");
-        app.viewManager.exportProfile(app);
+        app.exportProfile();
       });
     }
     if (this.updateBtn) {
@@ -199,17 +195,17 @@ export class ViewManager {
       });
     }
     if (this.toggleCameraBtn) {
-      this.toggleCameraBtn.addEventListener("click", () => app.viewManager.toggleCameraView(app));
+      this.toggleCameraBtn.addEventListener("click", () => app.toggleCameraView());
     }
     if (this.toggleDiaryBtn) {
-      this.toggleDiaryBtn.addEventListener("click", () => app.viewManager.toggleCameraView(app));
+      this.toggleDiaryBtn.addEventListener("click", () => app.toggleCameraView());
     }
-    // Bind chat button event.
+    // ---- Bind chat button event ----
     const chatBtn = document.getElementById("chat-btn");
     if (chatBtn) {
       chatBtn.addEventListener("click", () => {
-        console.log("Chat button clicked. Triggering toggleChat().");
-        app.viewManager.toggleChat(app);
+        console.log("Chat button clicked. Triggering app.toggleChat().");
+        app.toggleChat();
       });
     } else {
       console.error("Chat button (id='chat-btn') not found in the DOM.");
@@ -332,20 +328,46 @@ export class ViewManager {
 
   /**
    * showDiaryView
-   * Switches the view to show the diary.
+   * Switches the view to show the diary and hides the global camera.
    */
   showDiaryView() {
-    this.switchUniversalSection("main-screen");
-    console.log("[ViewManager] Diary view shown.");
+    const diary = document.getElementById("diary");
+    if (diary && this.globalCamera) {
+      diary.style.display = "block";
+      this.globalCamera.style.display = "none";
+      if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = 'inline-block';
+      if (this.toggleDiaryBtn) {
+        this.toggleDiaryBtn.style.display = "none";
+      }
+      const shootBtn = document.getElementById("btn_shoot");
+      if (shootBtn) {
+        shootBtn.style.display = "none";
+      }
+      this.showPostButton();
+      console.log("[ViewManager] Switched to diary view.");
+    }
   }
 
   /**
    * showCameraView
-   * Switches the view to show the global camera.
+   * Switches the view to show the global camera and hides the diary.
    */
   showCameraView() {
-    this.switchUniversalSection("global-camera");
-    console.log("[ViewManager] Camera view shown.");
+    const diary = document.getElementById("diary");
+    if (diary && this.globalCamera) {
+      diary.style.display = "none";
+      this.globalCamera.style.display = "flex";
+      if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = 'none';
+      if (this.toggleDiaryBtn) this.toggleDiaryBtn.style.display = 'inline-block';
+      this.hidePostButton();
+      const shootBtn = document.getElementById("btn_shoot");
+      if (shootBtn) {
+        shootBtn.style.display = "inline-block";
+        shootBtn.disabled = true;
+        shootBtn.style.pointerEvents = "none";
+      }
+      console.log("[ViewManager] Switched to camera view.");
+    }
   }
 
   /**
@@ -534,33 +556,13 @@ export class ViewManager {
     }
   }
 
-  /**
-   * switchUniversalSection - Universally switches between blog, camera, and chat sections.
-   * When one of these sections is opened, the other two are automatically hidden.
-   * Also ensures that the registration screen is hidden.
-   *
-   * @param {string} sectionId - The ID of the section to display ("main-screen", "global-camera", or "chat-section").
-   */
-  switchUniversalSection(sectionId) {
-    // Hide registration screen if present.
-    const registration = document.getElementById("registration-screen");
-    if (registration) {
-      registration.style.display = "none";
-    }
-    const blog = document.getElementById("main-screen");
-    const chat = document.getElementById("chat-section");
-    const camera = document.getElementById("global-camera");
-    if (blog) blog.style.display = (sectionId === "main-screen") ? "block" : "none";
-    if (chat) chat.style.display = (sectionId === "chat-section") ? "block" : "none";
-    if (camera) camera.style.display = (sectionId === "global-camera") ? "block" : "none";
-    console.log(`[ViewManager] Universal section switched to: ${sectionId}`);
-  }
-
   // ------------------ Button State Management ------------------
 
   /**
    * setPostButtonEnabled
    * Enables or disables the "Post" button.
+   *
+   * This method updates the UI and persists the new state in StateManager.
    *
    * @param {boolean} isEnabled - If true, the button should be enabled.
    */
@@ -971,243 +973,4 @@ export class ViewManager {
       console.warn("No active Service Worker controller found.");
     }
   }
-
-  // -------------- Moved UI Methods from App.js --------------
-
-  /**
-   * goToApartmentPlanScreen
-   * Transitions UI to the apartment plan screen.
-   *
-   * @param {App} app - The main application instance.
-   */
-  goToApartmentPlanScreen(app) {
-    const regData = this.getRegistrationData();
-    if (!regData) {
-      ErrorManager.showError("Registration data missing.");
-      return;
-    }
-    StateManager.set('regData', JSON.stringify(regData));
-    this.switchScreen('apartment-plan-screen', 'apartment-plan-buttons');
-    if (!app.apartmentPlanManager) {
-      app.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', app.databaseManager, app);
-    }
-    console.log("[ViewManager] Navigated to Apartment Plan screen.");
-  }
-
-  /**
-   * goToSelfieScreen
-   * Transitions UI to the selfie capture screen.
-   *
-   * @param {App} app - The main application instance.
-   */
-  goToSelfieScreen(app) {
-    this.switchScreen('selfie-screen', 'selfie-buttons');
-    this.showGlobalCamera();
-    app.cameraSectionManager.startCamera();
-    this.disableCompleteButton();
-    console.log("[ViewManager] Navigated to Selfie Capture screen.");
-  }
-
-  /**
-   * captureSelfie
-   * Captures a selfie from the active camera stream,
-   * converts it to grayscale, updates the selfie preview,
-   * and enables the "Complete Registration" button.
-   *
-   * @param {App} app - The main application instance.
-   */
-  async captureSelfie(app) {
-    console.log("📸 Attempting to capture selfie...");
-    const video = app.cameraSectionManager.videoElement;
-    if (!video || !video.srcObject) {
-      ErrorManager.logError("Camera is not active!", "captureSelfie");
-      ErrorManager.showError("Error: Camera is not active.");
-      return;
-    }
-    if (video.readyState < 2) {
-      ErrorManager.logError("Camera is not ready yet.", "captureSelfie");
-      ErrorManager.showError("Please wait for the camera to load.");
-      return;
-    }
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 480;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        throw new Error("Failed to get 2D drawing context.");
-      }
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      
-      // Convert the captured frame to grayscale.
-      const grayscaleData = ImageUtils.convertToGrayscale(canvas);
-      
-      // Update selfie preview.
-      this.updateSelfiePreview(grayscaleData);
-      
-      // Enable the "Complete Registration" button.
-      this.enableCompleteButton();
-      
-      // Save the processed selfie data.
-      app.selfieData = grayscaleData;
-      
-      console.log("✅ Selfie captured successfully!");
-    } catch (error) {
-      ErrorManager.logError(error, "captureSelfie");
-      ErrorManager.showError("Error capturing selfie! Please try again.");
-    }
-  }
-
-  /**
-   * completeRegistration
-   * Completes user registration by validating data, saving the profile,
-   * stopping the camera, and transitioning to the main screen.
-   *
-   * @param {App} app - The main application instance.
-   */
-  async completeRegistration(app) {
-    const selfieSrc = this.getSelfieSource();
-    if (!selfieSrc || selfieSrc === "") {
-      ErrorManager.showError("Please capture your selfie before completing registration.");
-      return;
-    }
-    const regDataStr = StateManager.get('regData');
-    if (!regDataStr) {
-      ErrorManager.showError("Registration data missing.");
-      return;
-    }
-    const regData = JSON.parse(regDataStr);
-    const profile = {
-      name: regData.name,
-      gender: regData.gender,
-      language: regData.language,
-      selfie: selfieSrc
-    };
-    await app.profileManager.saveProfile(profile);
-    StateManager.set("registrationCompleted", "true");
-    app.cameraSectionManager.stopCamera();
-    this.hideGlobalCamera();
-    await this.showMainScreen(app);
-    app.gameEventManager.autoLaunchWelcomeEvent();
-    console.log("[ViewManager] Registration completed, transitioned to Main screen.");
-  }
-
-  /**
-   * toggleCameraView
-   * Toggles between camera view and diary view.
-   *
-   * @param {App} app - The main application instance.
-   */
-  async toggleCameraView(app) {
-    if (!app.isCameraOpen) {
-      console.log("📸 Switching to camera view...");
-      this.switchUniversalSection("global-camera");
-      await app.cameraSectionManager.startCamera();
-      await new Promise(resolve => {
-        const vid = app.cameraSectionManager.videoElement;
-        if (vid.readyState >= 2) {
-          resolve();
-        } else {
-          vid.onloadedmetadata = () => resolve();
-        }
-      });
-      console.log("Video ready:", app.cameraSectionManager.videoElement.videoWidth, app.cameraSectionManager.videoElement.videoHeight);
-      app.isCameraOpen = true;
-    } else {
-      console.log("📓 Returning to diary view...");
-      this.switchUniversalSection("main-screen");
-      app.cameraSectionManager.stopCamera();
-      app.isCameraOpen = false;
-    }
-  }
-
-  /**
-   * showMainScreen
-   * Displays the main (blog/diary) screen.
-   *
-   * @param {App} app - The main application instance.
-   */
-  async showMainScreen(app) {
-    this.switchUniversalSection("main-screen");
-    this.showToggleCameraButton();
-    if (StateManager.get("mirrorQuestReady") === "true") {
-      this.setPostButtonEnabled(true);
-    } else {
-      this.setPostButtonEnabled(false);
-    }
-    const profile = await app.profileManager.getProfile();
-    if (profile) {
-      this.updateProfileDisplay(profile);
-      app.selfieData = profile.selfie;
-    }
-    console.log("[ViewManager] Main screen displayed.");
-  }
-
-  /**
-   * showRegistrationScreen
-   * Displays the registration screen.
-   *
-   * @param {App} app - The main application instance.
-   */
-  showRegistrationScreen(app) {
-    StateManager.remove("welcomeDone");
-    StateManager.remove("mirrorQuestReady");
-    StateManager.remove("postButtonEnabled");
-    StateManager.remove("regData");
-    StateManager.remove("quest_state_repeating_quest");
-    this.switchScreen('registration-screen', 'registration-buttons');
-    console.log("[ViewManager] Registration screen displayed.");
-  }
-
-  /**
-   * exportProfile
-   * Initiates profile export.
-   *
-   * @param {App} app - The main application instance.
-   */
-  exportProfile(app) {
-    app.profileManager.exportProfileData(app.databaseManager, app.apartmentPlanManager);
-    console.log("[ViewManager] Profile export initiated.");
-  }
-
-  /**
-   * importProfile
-   * Initiates profile import from a selected file.
-   *
-   * @param {App} app - The main application instance.
-   */
-  importProfile(app) {
-    const file = this.getImportFile();
-    if (!file) {
-      ErrorManager.showError("Please select a profile file to import.");
-      return;
-    }
-    app.profileManager.importProfileData(file, app.databaseManager, app.apartmentPlanManager);
-    console.log("[ViewManager] Profile import initiated.");
-  }
-
-  /**
-   * toggleChat
-   * Toggles the display of the chat section.
-   *
-   * @param {App} app - The main application instance.
-   */
-  toggleChat(app) {
-    if (app.chatManager && app.chatManager.container) {
-      if (app.chatManager.container.style.display === 'block') {
-        app.chatManager.hide();
-        console.log("[ViewManager] Chat section hidden.");
-      } else {
-        this.switchUniversalSection("chat-section");
-        app.chatManager.show();
-        console.log("[ViewManager] Chat section displayed.");
-      }
-    } else {
-      console.error("ChatManager is not initialized or chat container not found.");
-    }
-  }
-  
-  // ------------------ End of Moved UI Methods ------------------
-  
-  // (The rest of the file remains unchanged.)
 }

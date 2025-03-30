@@ -171,6 +171,98 @@ export class ViewManager {
     }
   }
 
+  // ------------------ Diary Rendering Operations ------------------
+
+  /**
+   * renderDiary
+   * Renders the diary entries.
+   *
+   * @param {Array} entries - Array of diary entry objects.
+   * @param {string} currentLanguage - The current language code.
+   * @param {Object} effectsManager - The VisualEffectsManager instance.
+   */
+  renderDiary(entries, currentLanguage, effectsManager) {
+    if (!this.diaryContainer) {
+      ErrorManager.logError("Diary container not found!", "renderDiary");
+      return;
+    }
+    this.diaryContainer.innerHTML = "";
+    const animatedIds = JSON.parse(StateManager.get("animatedDiaryIds") || "[]");
+    const seen = new Set();
+    
+    entries.forEach(entryObj => {
+      if (seen.has(entryObj.id)) return;
+      seen.add(entryObj.id);
+      
+      const articleElem = document.createElement("article");
+      articleElem.classList.add(entryObj.postClass);
+      
+      let mainText = entryObj.entry;
+      let imageData = null;
+      if (entryObj.entry.includes("[photo attached]")) {
+        const parts = entryObj.entry.split("[photo attached]");
+        mainText = parts[0].trim();
+        if (parts.length >= 2) {
+          imageData = parts[1].trim();
+          if (!/^data:/.test(imageData)) {
+            imageData = "data:image/png;base64," + imageData;
+          }
+        }
+      }
+      
+      const localizedText = window.localization &&
+                            window.localization[currentLanguage] &&
+                            window.localization[currentLanguage][mainText]
+                            ? window.localization[currentLanguage][mainText]
+                            : mainText;
+      
+      const cleanedText = localizedText.replace(/^user_post_success:\s*/, '').replace(/^user_post_failed:\s*/, '');
+      const formattedTimestamp = entryObj.timestamp.replace(/\.\d+Z$/, '');
+      const fullText = `${cleanedText} (${formattedTimestamp})`;
+      
+      const textContainer = document.createElement("p");
+      if (imageData) {
+        const img = document.createElement("img");
+        img.src = imageData;
+        img.alt = (window.localization &&
+                   window.localization[currentLanguage] &&
+                   window.localization[currentLanguage]["photo_attached"]) || "Photo attached";
+        img.style.maxWidth = "100%";
+        articleElem.appendChild(img);
+      }
+      articleElem.appendChild(textContainer);
+      
+      let messageText = fullText;
+      const dateMatch = fullText.match(/(\(\d{4}-\d{2}-\d{2}.*\))$/);
+      if (dateMatch) {
+        const dateText = dateMatch[1].trim();
+        messageText = fullText.replace(dateText, "").trim() + "<br>" + dateText;
+      }
+      
+      const isAlreadyAnimated = animatedIds.includes(entryObj.id);
+      if (isAlreadyAnimated) {
+        textContainer.innerHTML = messageText;
+      } else {
+        const animatedSpan = document.createElement("span");
+        textContainer.innerHTML = "";
+        textContainer.appendChild(animatedSpan);
+        
+        if (entryObj.postClass === "ghost-post") {
+          effectsManager.triggerGhostTextEffect(animatedSpan, messageText);
+        } else {
+          effectsManager.triggerUserTextEffect(animatedSpan, messageText);
+        }
+        
+        animatedIds.push(entryObj.id);
+      }
+      
+      this.diaryContainer.appendChild(articleElem);
+    });
+    
+    StateManager.set("animatedDiaryIds", JSON.stringify(animatedIds));
+    console.log("[ViewManager] Diary updated.");
+  }
+
   // ---------- Registration and Screen Switching Methods ----------
 
   getRegistrationData() {

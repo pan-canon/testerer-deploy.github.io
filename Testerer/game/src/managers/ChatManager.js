@@ -1,15 +1,3 @@
-/**
- * ChatManager.js
- *
- * This module manages the independent chat section.
- * It fetches the chat template fragment from an external file,
- * renders it using the TemplateEngine with provided data, and injects it into the chat section.
- * It provides methods to show/hide the chat, send an initial localized message,
- * and to update the dialogue content dynamically.
- *
- * The module assumes that the main database integration is handled elsewhere.
- */
-
 import { TemplateEngine } from '../utils/TemplateEngine.js';
 import { animateText } from '../utils/SpiritBoardUtils.js';
 
@@ -34,6 +22,8 @@ export class ChatManager {
     this.mode = options.mode || 'full';
     this.container = null; // DOM element for the chat section
     this.databaseManager = options.databaseManager || null;
+    // We'll store the scenario manager here if needed.
+    this.scenarioManager = null;
   }
 
   /**
@@ -70,7 +60,7 @@ export class ChatManager {
       // Prepare initial data for rendering the template.
       const data = {
         messages: messagesStr,
-        spiritBoardContent: 'Spirit Board', // Можно заменить на локализованное значение.
+        spiritBoardContent: 'Spirit Board', // Can be replaced with localized value.
         options: '' // Initially, no dialogue options.
       };
 
@@ -96,6 +86,16 @@ export class ChatManager {
       }
 
       console.log('ChatManager initialized.');
+      
+      // Automatically initialize ChatScenarioManager if not already set.
+      try {
+        const module = await import('./ChatScenarioManager.js');
+        this.scenarioManager = new module.ChatScenarioManager(this, null);
+        await this.scenarioManager.init();
+      } catch (e) {
+        console.error("Failed to initialize ChatScenarioManager:", e);
+      }
+      
     } catch (error) {
       console.error('Error initializing ChatManager:', error);
     }
@@ -133,7 +133,6 @@ export class ChatManager {
     }
     const messagesEl = this.container.querySelector('#chat-messages');
     if (messagesEl) {
-      // Create a ghost message element (messages from "spirit" will be aligned left).
       const messageHTML = `<div class="chat-message spirit" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${localizedText}</div>`;
       messagesEl.innerHTML += messageHTML;
       console.log('Initial message sent:', localizedText);
@@ -165,7 +164,6 @@ export class ChatManager {
       return;
     }
 
-    // Build HTML for messages.
     let messagesHTML = '';
     dialogueConfig.messages.forEach(msg => {
       messagesHTML += `<div class="chat-message ${msg.sender}" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${msg.text}</div>`;
@@ -177,7 +175,6 @@ export class ChatManager {
       }
     });
 
-    // Build HTML for options.
     let optionsHTML = '';
     if (dialogueConfig.options && dialogueConfig.options.length > 0) {
       dialogueConfig.options.forEach(option => {
@@ -185,13 +182,11 @@ export class ChatManager {
       });
     }
 
-    // Update the messages container.
     const messagesEl = this.container.querySelector('#chat-messages');
     if (messagesEl) {
       messagesEl.innerHTML = messagesHTML;
     }
 
-    // Update the options container and make it scrollable if needed.
     const optionsEl = this.container.querySelector('#chat-options');
     if (optionsEl) {
       if (dialogueConfig.options && dialogueConfig.options.length > 3) {
@@ -204,13 +199,11 @@ export class ChatManager {
       optionsEl.innerHTML = optionsHTML;
     }
 
-    // Clear/update the spirit board content.
     const boardEl = this.container.querySelector('#spirit-board');
     if (boardEl) {
       boardEl.innerHTML = '';
     }
 
-    // Attach event listeners to dialogue option buttons.
     const optionButtons = this.container.querySelectorAll('.dialogue-option');
     optionButtons.forEach((btn, index) => {
       btn.addEventListener('click', () => {

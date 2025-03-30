@@ -1,12 +1,3 @@
-/**
- * ChatScenarioManager.js
- *
- * This module manages chat scenarios for the independent chat module.
- * It is responsible for loading dialogue configurations from a config file,
- * tracking the current dialogue state, and advancing the dialogue flow based on user choices.
- * It interacts with ChatManager to update the chat interface accordingly.
- */
-
 export class ChatScenarioManager {
   /**
    * @param {ChatManager} chatManager - An instance of ChatManager that handles the chat UI.
@@ -37,19 +28,33 @@ export class ChatScenarioManager {
   }
 
   /**
-   * Initializes the scenario manager.
-   * If a valid scenario configuration is provided, it loads the first dialogue.
+   * Asynchronously initializes the scenario manager.
+   * If no configuration is provided, it fetches the configuration from a default JSON file.
    */
-  init() {
+  async init() {
+    // If no configuration is provided, attempt to fetch it from default URL.
+    if (!this.scenarioConfig) {
+      try {
+        const loc = window.location;
+        const basePath = loc.origin + loc.pathname.substring(0, loc.pathname.lastIndexOf('/'));
+        const response = await fetch(`${basePath}/chatDialogueConfig.json`);
+        if (!response.ok) {
+          throw new Error("Failed to load dialogue configuration");
+        }
+        this.scenarioConfig = await response.json();
+      } catch (error) {
+        console.error("Error loading dialogue configuration:", error);
+        return;
+      }
+    }
     if (
-      this.scenarioConfig &&
       Array.isArray(this.scenarioConfig.dialogues) &&
       this.scenarioConfig.dialogues.length > 0
     ) {
       this.currentDialogueIndex = 0;
       this.loadCurrentDialogue();
     } else {
-      console.warn("No valid scenario configuration provided for ChatScenarioManager.");
+      console.warn("No valid dialogue configuration provided for ChatScenarioManager.");
     }
   }
 
@@ -66,8 +71,6 @@ export class ChatScenarioManager {
       console.warn("No dialogue found at the current index.");
       return;
     }
-    // Load the current dialogue into ChatManager.
-    // The dialogue object is expected to be in the new config format.
     this.chatManager.loadDialogue(dialogue);
   }
 
@@ -89,12 +92,10 @@ export class ChatScenarioManager {
       console.error("Invalid option index.");
       return;
     }
-    // Optionally execute any onSelect handler defined in the config.
     const selectedOption = currentDialogue.options[optionIndex];
     if (selectedOption && typeof selectedOption.onSelect === "function") {
       selectedOption.onSelect();
     }
-    // Check if a next dialogue is defined
     if (selectedOption && typeof selectedOption.nextDialogueIndex === "number") {
       this.currentDialogueIndex = selectedOption.nextDialogueIndex;
       this.loadCurrentDialogue();

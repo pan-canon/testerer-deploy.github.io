@@ -164,6 +164,7 @@ export class ChatManager {
       return;
     }
 
+    // Build HTML for messages.
     let messagesHTML = '';
     dialogueConfig.messages.forEach(msg => {
       messagesHTML += `<div class="chat-message ${msg.sender}" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${msg.text}</div>`;
@@ -175,6 +176,7 @@ export class ChatManager {
       }
     });
 
+    // Build HTML for options.
     let optionsHTML = '';
     if (dialogueConfig.options && dialogueConfig.options.length > 0) {
       dialogueConfig.options.forEach(option => {
@@ -182,11 +184,13 @@ export class ChatManager {
       });
     }
 
+    // Update the messages container.
     const messagesEl = this.container.querySelector('#chat-messages');
     if (messagesEl) {
       messagesEl.innerHTML = messagesHTML;
     }
 
+    // Update the options container and make it scrollable if needed.
     const optionsEl = this.container.querySelector('#chat-options');
     if (optionsEl) {
       if (dialogueConfig.options && dialogueConfig.options.length > 3) {
@@ -199,18 +203,22 @@ export class ChatManager {
       optionsEl.innerHTML = optionsHTML;
     }
 
+    // Clear/update the spirit board content.
     const boardEl = this.container.querySelector('#spirit-board');
     if (boardEl) {
       boardEl.innerHTML = '';
     }
 
+    // Attach event listeners to dialogue option buttons.
     const optionButtons = this.container.querySelectorAll('.dialogue-option');
     optionButtons.forEach((btn, index) => {
       btn.addEventListener('click', () => {
-        const option = dialogueConfig.options[index];
-        if (typeof option.onSelect === 'function') {
-          option.onSelect();
+        // If the ChatScenarioManager is available, use it to advance the dialogue.
+        if (this.scenarioManager && typeof this.scenarioManager.advanceDialogue === 'function') {
+          this.scenarioManager.advanceDialogue(index);
         } else {
+          // Fallback: log the selected option.
+          const option = dialogueConfig.options[index];
           console.log(`Option selected: ${option.text}`);
         }
       });

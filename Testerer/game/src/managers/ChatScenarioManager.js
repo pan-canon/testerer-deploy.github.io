@@ -32,14 +32,12 @@ export class ChatScenarioManager {
    * If no configuration is provided, it fetches the configuration from a default JSON file.
    */
   async init() {
-    // If no configuration is provided, attempt to fetch it from default URL.
+    // If no configuration is provided, attempt to fetch it from the 'config' directory.
     if (!this.scenarioConfig) {
       try {
-        const loc = window.location;
-        const basePath = loc.origin + loc.pathname.substring(0, loc.pathname.lastIndexOf('/'));
-        const response = await fetch(`${basePath}/chatDialogueConfig.json`);
+        const response = await fetch('config/chatDialogueConfig.json');
         if (!response.ok) {
-          throw new Error("Failed to load dialogue configuration");
+          throw new Error("Failed to load dialogue configuration from 'config/chatDialogueConfig.json'");
         }
         this.scenarioConfig = await response.json();
       } catch (error) {

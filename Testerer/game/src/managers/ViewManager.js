@@ -206,12 +206,6 @@ export class ViewManager {
       chatBtn.addEventListener("click", () => {
         console.log("Chat button clicked. Triggering app.toggleChat().");
         app.toggleChat();
-        // Disable chat button and related buttons to prevent re-triggering.
-        chatBtn.disabled = true;
-        const blogBtn = document.getElementById("blog-btn");
-        if (blogBtn) blogBtn.disabled = true;
-        const cameraBtn = document.getElementById("toggle-camera");
-        if (cameraBtn) cameraBtn.disabled = true;
       });
     } else {
       console.error("Chat button (id='chat-btn') not found in the DOM.");

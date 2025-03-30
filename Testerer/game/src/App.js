@@ -91,9 +91,11 @@ export class App {
     // ================================
     // NEW: Initialize ChatManager for independent chat functionality.
     // The chat module uses the TemplateEngine to load a chat fragment and update its content dynamically.
+    // Pass the databaseManager instance so that ChatManager can load chat messages from the database.
     this.chatManager = deps.chatManager || new ChatManager({
       templateUrl: `${this.getBasePath()}/src/templates/chat_template.html`, // dynamic path determined by getBasePath()
-      mode: 'full'
+      mode: 'full',
+      databaseManager: this.databaseManager
     });
     // Optionally, initialize ChatScenarioManager if a scenario configuration is provided later.
     // this.chatScenarioManager = deps.chatScenarioManager || new ChatScenarioManager(this.chatManager);
@@ -363,19 +365,14 @@ export class App {
   }
 
   /**
-   * toggleChat - Activates the chat section by hiding other sections.
-   * Repeated clicks on the chat button will not hide the chat.
+   * toggleChat - Toggles the display of the chat section.
+   * When the chat button is clicked, this method shows or hides the chat interface.
    */
   toggleChat() {
     if (this.chatManager && this.chatManager.container) {
-      // Hide all sections except the chat section.
-      document.querySelectorAll('section').forEach(section => {
-        if (section.id !== 'chat-section') {
-          section.style.display = 'none';
-        }
-      });
-      // Always show the chat section if it isn't already visible.
-      if (this.chatManager.container.style.display !== 'block') {
+      if (this.chatManager.container.style.display === 'block') {
+        this.chatManager.hide();
+      } else {
         this.chatManager.show();
       }
     } else {

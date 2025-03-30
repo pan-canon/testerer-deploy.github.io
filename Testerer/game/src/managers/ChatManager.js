@@ -68,7 +68,7 @@ export class ChatManager {
       this.container.innerHTML = renderedHTML;
       this.container.style.display = 'none';
 
-      // If mode is 'board-only', hide options.
+      // If mode is 'board-only', hide the options container.
       if (this.mode === 'board-only') {
         const optionsEl = this.container.querySelector('#chat-options');
         if (optionsEl) {
@@ -78,7 +78,7 @@ export class ChatManager {
 
       console.log('ChatManager initialized.');
 
-      // Если сообщений нет, запускаем сценарий диалога.
+      // Если в БД не найдено сообщений, запускаем сценарий.
       if (!messagesStr) {
         try {
           const module = await import('./ChatScenarioManager.js');
@@ -135,8 +135,8 @@ export class ChatManager {
   }
 
   /**
-   * Saves a chat message using DatabaseManager.
-   * @param {Object} msg - Object with properties: sender and text.
+   * Saves a chat message using the DatabaseManager.
+   * @param {Object} msg - An object with properties: sender and text.
    */
   async saveMessage(msg) {
     if (this.databaseManager && typeof this.databaseManager.addChatMessage === 'function') {
@@ -189,6 +189,7 @@ export class ChatManager {
 
     const messagesEl = this.container.querySelector('#chat-messages');
     if (messagesEl) {
+      // Append new messages (history is preserved).
       messagesEl.innerHTML += messagesHTML;
     }
 
@@ -201,6 +202,7 @@ export class ChatManager {
         optionsEl.style.maxHeight = '';
         optionsEl.style.overflowY = '';
       }
+      // Replace options to show current choices.
       optionsEl.innerHTML = optionsHTML;
     }
 

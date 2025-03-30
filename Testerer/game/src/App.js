@@ -93,7 +93,8 @@ export class App {
     // The chat module uses the TemplateEngine to load a chat fragment and update its content dynamically.
     this.chatManager = deps.chatManager || new ChatManager({
       templateUrl: `${this.getBasePath()}/src/templates/chat_template.html`, // dynamic path determined by getBasePath()
-      mode: 'full'
+      mode: 'full',
+      databaseManager: this.databaseManager
     });
     // Optionally, initialize ChatScenarioManager if a scenario configuration is provided later.
     // this.chatScenarioManager = deps.chatScenarioManager || new ChatScenarioManager(this.chatManager);

@@ -28,7 +28,7 @@ export class ChatManager {
 
   /**
    * Initializes the ChatManager by fetching the chat template fragment,
-   * rendering it using the TemplateEngine with initial data (including messages from DB if available),
+   * rendering it using the TemplateEngine with initial data (loading messages from DB if available),
    * and inserting it into the chat section in index.html.
    * @returns {Promise<void>}
    */
@@ -41,7 +41,7 @@ export class ChatManager {
       }
       const templateText = await response.text();
 
-      // Prepare initial messages string.
+      // Prepare initial messages string from the database.
       let messagesStr = "";
       if (this.databaseManager) {
         const chatMessages = this.databaseManager.getChatMessages();
@@ -50,7 +50,6 @@ export class ChatManager {
             .map(msg => `<div class="chat-message ${msg.sender}" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${msg.message}</div>`)
             .join("");
         }
-        // Если сообщений нет, оставляем строку пустой
       }
 
       // Prepare initial data for rendering the template.
@@ -82,14 +81,18 @@ export class ChatManager {
       }
 
       console.log('ChatManager initialized.');
-      
-      // Automatically initialize ChatScenarioManager if not already set.
-      try {
-        const module = await import('./ChatScenarioManager.js');
-        this.scenarioManager = new module.ChatScenarioManager(this, null);
-        await this.scenarioManager.init();
-      } catch (e) {
-        console.error("Failed to initialize ChatScenarioManager:", e);
+
+      // If there are no saved messages, initialize the dialogue scenario.
+      if (!messagesStr) {
+        try {
+          const module = await import('./ChatScenarioManager.js');
+          this.scenarioManager = new module.ChatScenarioManager(this, null);
+          await this.scenarioManager.init();
+        } catch (e) {
+          console.error("Failed to initialize ChatScenarioManager:", e);
+        }
+      } else {
+        console.log("Loaded saved chat messages from database; skipping scenario initialization.");
       }
       
     } catch (error) {
@@ -193,13 +196,13 @@ export class ChatManager {
       });
     }
 
-    // Append new messages to the chat messages container instead of replacing.
+    // Append new messages to the chat messages container (cumulative conversation).
     const messagesEl = this.container.querySelector('#chat-messages');
     if (messagesEl) {
       messagesEl.innerHTML += messagesHTML;
     }
 
-    // Update the options container.
+    // Update the options container with current choices.
     const optionsEl = this.container.querySelector('#chat-options');
     if (optionsEl) {
       if (dialogueConfig.options && dialogueConfig.options.length > 3) {
@@ -209,7 +212,6 @@ export class ChatManager {
         optionsEl.style.maxHeight = '';
         optionsEl.style.overflowY = '';
       }
-      // Replace options (to show current choices).
       optionsEl.innerHTML = optionsHTML;
     }
 

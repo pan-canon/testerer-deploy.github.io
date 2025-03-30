@@ -25,8 +25,6 @@ import { ShowProfileModal } from './managers/ShowProfileModal.js';
 // NEW IMPORTS FOR CHAT MODULE
 import { ChatManager } from './managers/ChatManager.js';
 import { ChatScenarioManager } from './managers/ChatScenarioManager.js';
-// Import chat dialogue configuration JSON
-import chatDialogueConfig from './chatDialogueConfig.json';
 
 /**
  * Main application class.
@@ -93,14 +91,12 @@ export class App {
     // ================================
     // NEW: Initialize ChatManager for independent chat functionality.
     // The chat module uses the TemplateEngine to load a chat fragment and update its content dynamically.
-    // Pass the databaseManager instance so that ChatManager can load chat messages from the database.
     this.chatManager = deps.chatManager || new ChatManager({
       templateUrl: `${this.getBasePath()}/src/templates/chat_template.html`, // dynamic path determined by getBasePath()
-      mode: 'full',
-      databaseManager: this.databaseManager
+      mode: 'full'
     });
-    // Initialize ChatScenarioManager with dialogue configuration.
-    this.chatScenarioManager = deps.chatScenarioManager || new ChatScenarioManager(this.chatManager, chatDialogueConfig);
+    // Optionally, initialize ChatScenarioManager if a scenario configuration is provided later.
+    // this.chatScenarioManager = deps.chatScenarioManager || new ChatScenarioManager(this.chatManager);
     // ================================
 
     // Begin application initialization.
@@ -163,11 +159,6 @@ export class App {
 
     // Initialize ChatManager by loading the chat template.
     await this.chatManager.init();
-
-    // NEW: Initialize ChatScenarioManager to load the dialogue configuration.
-    if (this.chatScenarioManager) {
-      this.chatScenarioManager.init();
-    }
 
     // Check if a user profile is already saved.
     if (await this.profileManager.isProfileSaved()) {

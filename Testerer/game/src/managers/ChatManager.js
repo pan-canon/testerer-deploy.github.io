@@ -82,7 +82,7 @@ export class ChatManager {
 
       console.log('ChatManager initialized.');
 
-      // If there are no saved messages, initialize the dialogue scenario.
+      // If no saved messages exist, initialize the dialogue scenario.
       if (!messagesStr) {
         try {
           const module = await import('./ChatScenarioManager.js');
@@ -168,7 +168,7 @@ export class ChatManager {
    *
    * @param {Object} dialogueConfig - The dialogue configuration object.
    */
-  loadDialogue(dialogueConfig) {
+  async loadDialogue(dialogueConfig) {
     if (!this.container) {
       console.error('ChatManager is not initialized.');
       return;
@@ -176,7 +176,7 @@ export class ChatManager {
 
     // Build HTML for messages.
     let messagesHTML = '';
-    dialogueConfig.messages.forEach(msg => {
+    for (const msg of dialogueConfig.messages) {
       messagesHTML += `<div class="chat-message ${msg.sender}" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${msg.text}</div>`;
       if (msg.animateOnBoard) {
         const boardEl = this.container.querySelector('#spirit-board');
@@ -184,25 +184,24 @@ export class ChatManager {
           animateText(boardEl, msg.text);
         }
       }
-      // Save each message to the database.
-      this.saveMessage(msg);
-    });
+      await this.saveMessage(msg);
+    }
 
     // Build HTML for options.
     let optionsHTML = '';
     if (dialogueConfig.options && dialogueConfig.options.length > 0) {
-      dialogueConfig.options.forEach(option => {
+      for (const option of dialogueConfig.options) {
         optionsHTML += `<button class="button is-link dialogue-option" style="margin-bottom: 0.5rem;">${option.text}</button>`;
-      });
+      }
     }
 
-    // Append new messages to the chat messages container (cumulative conversation).
+    // Append new messages to the chat messages container.
     const messagesEl = this.container.querySelector('#chat-messages');
     if (messagesEl) {
       messagesEl.innerHTML += messagesHTML;
     }
 
-    // Update the options container with current choices.
+    // Update the options container.
     const optionsEl = this.container.querySelector('#chat-options');
     if (optionsEl) {
       if (dialogueConfig.options && dialogueConfig.options.length > 3) {
@@ -212,6 +211,7 @@ export class ChatManager {
         optionsEl.style.maxHeight = '';
         optionsEl.style.overflowY = '';
       }
+      // Replace options (to show current choices).
       optionsEl.innerHTML = optionsHTML;
     }
 
@@ -225,7 +225,6 @@ export class ChatManager {
     const optionButtons = this.container.querySelectorAll('.dialogue-option');
     optionButtons.forEach((btn, index) => {
       btn.addEventListener('click', () => {
-        // Use the ChatScenarioManager to advance dialogue.
         if (this.scenarioManager && typeof this.scenarioManager.advanceDialogue === 'function') {
           this.scenarioManager.advanceDialogue(index);
         } else {

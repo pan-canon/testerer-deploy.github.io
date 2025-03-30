@@ -44,7 +44,7 @@ export class ApartmentPlanManager {
       nextBtn.addEventListener("click", () => {
         // Optionally disable the button to prevent double-clicks.
         nextBtn.disabled = true;
-        // Transition to the selfie screen via ViewManager.
+        // Delegate transition to the selfie screen via ViewManager.
         this.app.viewManager.goToSelfieScreen(this.app);
       });
     } else {

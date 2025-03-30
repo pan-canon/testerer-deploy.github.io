@@ -1,4 +1,3 @@
-// ViewManager.js
 import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
 import { ImageUtils } from '../utils/ImageUtils.js';
@@ -693,7 +692,6 @@ export class ViewManager {
     this.switchScreen('apartment-plan-screen', 'apartment-plan-buttons');
     if (!app.apartmentPlanManager) {
       // Instantiate ApartmentPlanManager if not already created.
-      // Note: ApartmentPlanManager still handles some DOM operations; consider moving its UI further if needed.
       app.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', app.databaseManager, app);
     }
   }
@@ -812,5 +810,89 @@ export class ViewManager {
     } else {
       console.error("ChatManager is not initialized or chat container not found.");
     }
+  }
+
+  // ---------- New Method: showLocationTypeModal ----------
+  /**
+   * showLocationTypeModal – Displays a modal window for selecting the location type.
+   * @param {Function} onConfirm - Callback invoked with the selected type.
+   * @param {Function} onCancel - Callback invoked if selection is cancelled.
+   */
+  showLocationTypeModal(onConfirm, onCancel) {
+    const modalOverlay = document.createElement("div");
+    modalOverlay.id = "location-type-modal-overlay";
+    Object.assign(modalOverlay.style, {
+      position: "fixed",
+      top: "0",
+      left: "0",
+      width: "100%",
+      height: "100%",
+      backgroundColor: "rgba(0,0,0,0.5)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: "3000"
+    });
+    
+    const modal = document.createElement("div");
+    modal.id = "location-type-modal";
+    Object.assign(modal.style, {
+      backgroundColor: "#fff",
+      padding: "20px",
+      borderRadius: "8px",
+      maxWidth: "400px",
+      width: "90%",
+      textAlign: "center"
+    });
+    
+    const title = document.createElement("h3");
+    title.textContent = "Select location type";
+    modal.appendChild(title);
+    
+    const selectElem = document.createElement("select");
+    const locationTypes = [
+      "Kitchen", "Bedroom", "Living Room", "Bathroom", "Corridor", "Other",
+      "Entrance", "Office", "Library", "Kids Room", "Storage", "Garage"
+    ];
+    locationTypes.forEach(type => {
+      const option = document.createElement("option");
+      option.value = type;
+      option.textContent = type;
+      selectElem.appendChild(option);
+    });
+    selectElem.value = "Other";
+    selectElem.style.marginBottom = "15px";
+    selectElem.style.display = "block";
+    selectElem.style.width = "100%";
+    modal.appendChild(selectElem);
+    
+    const btnContainer = document.createElement("div");
+    btnContainer.style.marginTop = "15px";
+    
+    const confirmBtn = document.createElement("button");
+    confirmBtn.textContent = "Confirm";
+    confirmBtn.style.marginRight = "10px";
+    confirmBtn.addEventListener("click", () => {
+      console.log("Confirm button clicked, selected type:", selectElem.value);
+      const selectedType = selectElem.value;
+      if (onConfirm) onConfirm(selectedType);
+      setTimeout(() => {
+        modalOverlay.remove();
+      }, 50);
+    });
+    btnContainer.appendChild(confirmBtn);
+    
+    const cancelBtn = document.createElement("button");
+    cancelBtn.textContent = "Cancel";
+    cancelBtn.addEventListener("click", () => {
+      console.log("Cancel button clicked.");
+      if (onCancel) onCancel();
+      modalOverlay.remove();
+    });
+    btnContainer.appendChild(cancelBtn);
+    
+    modal.appendChild(btnContainer);
+    modalOverlay.appendChild(modal);
+    document.body.appendChild(modalOverlay);
   }
 }

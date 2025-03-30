@@ -34,14 +34,14 @@ export class ChatManager {
    */
   async init() {
     try {
-      // Fetch the chat template fragment from the external file.
+      // Fetch the chat template fragment.
       const response = await fetch(this.templateUrl);
       if (!response.ok) {
         throw new Error(`Failed to fetch template from ${this.templateUrl}`);
       }
       const templateText = await response.text();
 
-      // Prepare initial messages string from the database.
+      // Load saved messages from DB.
       let messagesStr = "";
       if (this.databaseManager) {
         const chatMessages = this.databaseManager.getChatMessages();
@@ -52,27 +52,23 @@ export class ChatManager {
         }
       }
 
-      // Prepare initial data for rendering the template.
+      // Render the template.
       const data = {
         messages: messagesStr,
-        spiritBoardContent: 'Spirit Board', // Can be replaced with localized value.
-        options: '' // Initially, no dialogue options.
+        spiritBoardContent: 'Spirit Board', // Can be localized.
+        options: '' // Initially no dialogue options.
       };
-
-      // Render the template using TemplateEngine.
       const renderedHTML = TemplateEngine.render(templateText, data);
 
-      // Get the chat section container from index.html.
+      // Insert rendered HTML into chat container.
       this.container = document.getElementById('chat-section');
       if (!this.container) {
         throw new Error('Chat section container (id="chat-section") not found in index.html');
       }
-      // Insert the rendered HTML into the chat section.
       this.container.innerHTML = renderedHTML;
-      // Initially hide the chat section.
       this.container.style.display = 'none';
 
-      // If mode is 'board-only', hide the options section.
+      // If mode is 'board-only', hide options.
       if (this.mode === 'board-only') {
         const optionsEl = this.container.querySelector('#chat-options');
         if (optionsEl) {
@@ -82,7 +78,7 @@ export class ChatManager {
 
       console.log('ChatManager initialized.');
 
-      // If no saved messages exist, initialize the dialogue scenario.
+      // Если сообщений нет, запускаем сценарий диалога.
       if (!messagesStr) {
         try {
           const module = await import('./ChatScenarioManager.js');
@@ -92,7 +88,7 @@ export class ChatManager {
           console.error("Failed to initialize ChatScenarioManager:", e);
         }
       } else {
-        console.log("Loaded saved chat messages from database; skipping scenario initialization.");
+        console.log("Loaded saved chat messages from DB; skipping dialogue initialization.");
       }
       
     } catch (error) {
@@ -121,9 +117,9 @@ export class ChatManager {
   }
 
   /**
-   * Sends the initial localized message to the chat.
+   * Sends an initial localized message to the chat.
    *
-   * @param {string} localizedText - The localized text to send as the first message.
+   * @param {string} localizedText - The text to send.
    */
   sendInitialMessage(localizedText) {
     if (!this.container) {
@@ -139,8 +135,8 @@ export class ChatManager {
   }
 
   /**
-   * Saves a chat message using the DatabaseManager.
-   * @param {Object} msg - An object with properties: sender and text.
+   * Saves a chat message using DatabaseManager.
+   * @param {Object} msg - Object with properties: sender and text.
    */
   async saveMessage(msg) {
     if (this.databaseManager && typeof this.databaseManager.addChatMessage === 'function') {
@@ -152,7 +148,7 @@ export class ChatManager {
   /**
    * Loads a dialogue configuration and updates the chat content.
    *
-   * The expected format of dialogueConfig:
+   * The expected dialogueConfig format:
    * {
    *   messages: [
    *     { sender: 'spirit'|'user', text: '...', animateOnBoard: true|false },
@@ -164,8 +160,6 @@ export class ChatManager {
    *   ]
    * }
    *
-   * If the number of options is greater than 3, the options container will be made scrollable.
-   *
    * @param {Object} dialogueConfig - The dialogue configuration object.
    */
   async loadDialogue(dialogueConfig) {
@@ -174,7 +168,6 @@ export class ChatManager {
       return;
     }
 
-    // Build HTML for messages.
     let messagesHTML = '';
     for (const msg of dialogueConfig.messages) {
       messagesHTML += `<div class="chat-message ${msg.sender}" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${msg.text}</div>`;
@@ -187,7 +180,6 @@ export class ChatManager {
       await this.saveMessage(msg);
     }
 
-    // Build HTML for options.
     let optionsHTML = '';
     if (dialogueConfig.options && dialogueConfig.options.length > 0) {
       for (const option of dialogueConfig.options) {
@@ -195,13 +187,11 @@ export class ChatManager {
       }
     }
 
-    // Append new messages to the chat messages container.
     const messagesEl = this.container.querySelector('#chat-messages');
     if (messagesEl) {
       messagesEl.innerHTML += messagesHTML;
     }
 
-    // Update the options container.
     const optionsEl = this.container.querySelector('#chat-options');
     if (optionsEl) {
       if (dialogueConfig.options && dialogueConfig.options.length > 3) {
@@ -211,17 +201,14 @@ export class ChatManager {
         optionsEl.style.maxHeight = '';
         optionsEl.style.overflowY = '';
       }
-      // Replace options (to show current choices).
       optionsEl.innerHTML = optionsHTML;
     }
 
-    // Clear/update the spirit board content.
     const boardEl = this.container.querySelector('#spirit-board');
     if (boardEl) {
       boardEl.innerHTML = '';
     }
 
-    // Attach event listeners to dialogue option buttons.
     const optionButtons = this.container.querySelectorAll('.dialogue-option');
     optionButtons.forEach((btn, index) => {
       btn.addEventListener('click', () => {
@@ -240,7 +227,7 @@ export class ChatManager {
   /**
    * Sets the display mode for the chat.
    *
-   * @param {string} mode - 'full' for full chat, or 'board-only' to show only the spirit board.
+   * @param {string} mode - 'full' for full chat, or 'board-only' for only the spirit board.
    */
   setMode(mode) {
     this.mode = mode;

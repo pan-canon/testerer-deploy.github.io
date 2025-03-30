@@ -49,12 +49,8 @@ export class ChatManager {
           messagesStr = chatMessages
             .map(msg => `<div class="chat-message ${msg.sender}" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${msg.message}</div>`)
             .join("");
-        } else {
-          // Default initial message if no records in DB.
-          messagesStr = `<div class="chat-message spirit" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">Hello Chat!</div>`;
         }
-      } else {
-        messagesStr = `<div class="chat-message spirit" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">Hello Chat!</div>`;
+        // Если сообщений нет, оставляем строку пустой
       }
 
       // Prepare initial data for rendering the template.
@@ -140,6 +136,17 @@ export class ChatManager {
   }
 
   /**
+   * Saves a chat message using the DatabaseManager.
+   * @param {Object} msg - An object with properties: sender and text.
+   */
+  async saveMessage(msg) {
+    if (this.databaseManager && typeof this.databaseManager.addChatMessage === 'function') {
+      await this.databaseManager.addChatMessage(msg.sender, msg.text);
+      console.log(`Message saved: [${msg.sender}] ${msg.text}`);
+    }
+  }
+
+  /**
    * Loads a dialogue configuration and updates the chat content.
    *
    * The expected format of dialogueConfig:
@@ -174,6 +181,8 @@ export class ChatManager {
           animateText(boardEl, msg.text);
         }
       }
+      // Save each message to the database.
+      this.saveMessage(msg);
     });
 
     // Build HTML for options.
@@ -200,7 +209,7 @@ export class ChatManager {
         optionsEl.style.maxHeight = '';
         optionsEl.style.overflowY = '';
       }
-      // Replace options (т.к. выбор должен быть актуальным для текущего шага).
+      // Replace options (to show current choices).
       optionsEl.innerHTML = optionsHTML;
     }
 

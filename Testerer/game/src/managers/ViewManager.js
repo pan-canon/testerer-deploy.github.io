@@ -1,6 +1,7 @@
 import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
 import { ImageUtils } from '../utils/ImageUtils.js';
+import { ApartmentPlanManager } from './ApartmentPlanManager.js';  // NEW: Import ApartmentPlanManager
 
 /**
  * ViewManager
@@ -691,7 +692,6 @@ export class ViewManager {
     StateManager.set('regData', JSON.stringify(regData));
     this.switchScreen('apartment-plan-screen', 'apartment-plan-buttons');
     if (!app.apartmentPlanManager) {
-      // Instantiate ApartmentPlanManager if not already created.
       app.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', app.databaseManager, app);
     }
   }

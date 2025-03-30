@@ -35,7 +35,7 @@ export class ChatScenarioManager {
     // If no configuration is provided, attempt to fetch it from the 'config' directory.
     if (!this.scenarioConfig) {
       try {
-        const response = await fetch('config/chatDialogueConfig.json');
+        const response = await fetch('src/config/chatDialogueConfig.json');
         if (!response.ok) {
           throw new Error("Failed to load dialogue configuration from 'config/chatDialogueConfig.json'");
         }

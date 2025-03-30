@@ -1,103 +1,3 @@
-// ChatScenarioManager.js
-
-// Default dialogue configuration (using the JSON provided)
-const DEFAULT_SCENARIO_CONFIG = {
-  "dialogues": [
-    {
-      "messages": [
-        {
-          "sender": "spirit",
-          "text": "chat_welcome_message",
-          "animateOnBoard": true
-        }
-      ],
-      "options": [
-        {
-          "text": "chat_option_1",
-          "nextDialogueIndex": 1
-        },
-        {
-          "text": "chat_option_2",
-          "nextDialogueIndex": 2
-        },
-        {
-          "text": "chat_option_3",
-          "nextDialogueIndex": 3
-        }
-      ]
-    },
-    {
-      "messages": [
-        {
-          "sender": "user",
-          "text": "chat_user_reply_1",
-          "animateOnBoard": false
-        },
-        {
-          "sender": "spirit",
-          "text": "chat_spirit_response_1",
-          "animateOnBoard": true
-        }
-      ],
-      "options": [
-        {
-          "text": "chat_option_1_1",
-          "nextDialogueIndex": 4
-        },
-        {
-          "text": "chat_option_1_2",
-          "nextDialogueIndex": 4
-        }
-      ]
-    },
-    {
-      "messages": [
-        {
-          "sender": "user",
-          "text": "chat_user_reply_2",
-          "animateOnBoard": false
-        },
-        {
-          "sender": "spirit",
-          "text": "chat_spirit_response_2",
-          "animateOnBoard": true
-        }
-      ],
-      "options": [
-        {
-          "text": "chat_option_2_1",
-          "nextDialogueIndex": 4
-        }
-      ]
-    },
-    {
-      "messages": [
-        {
-          "sender": "user",
-          "text": "chat_user_reply_3",
-          "animateOnBoard": false
-        },
-        {
-          "sender": "spirit",
-          "text": "chat_spirit_response_3",
-          "animateOnBoard": true
-        }
-      ],
-      "options": []
-    },
-    {
-      "messages": [
-        {
-          "sender": "spirit",
-          "text": "chat_end_message",
-          "animateOnBoard": true
-        }
-      ],
-      "options": []
-    }
-  ]
-};
-
 export class ChatScenarioManager {
   /**
    * @param {ChatManager} chatManager - An instance of ChatManager that handles the chat UI.
@@ -129,15 +29,28 @@ export class ChatScenarioManager {
 
   /**
    * Asynchronously initializes the scenario manager.
-   * If no configuration is provided, the default configuration is used.
+   * If no configuration is provided, it fetches the configuration from a default JSON file.
    */
   async init() {
+    // If no configuration is provided, attempt to fetch it from default URL.
     if (!this.scenarioConfig) {
-      // Instead of fetching from a URL, use the default configuration
-      this.scenarioConfig = DEFAULT_SCENARIO_CONFIG;
-      console.log("Default dialogue configuration loaded.");
+      try {
+        const loc = window.location;
+        const basePath = loc.origin + loc.pathname.substring(0, loc.pathname.lastIndexOf('/'));
+        const response = await fetch(`${basePath}/chatDialogueConfig.json`);
+        if (!response.ok) {
+          throw new Error("Failed to load dialogue configuration");
+        }
+        this.scenarioConfig = await response.json();
+      } catch (error) {
+        console.error("Error loading dialogue configuration:", error);
+        return;
+      }
     }
-    if (Array.isArray(this.scenarioConfig.dialogues) && this.scenarioConfig.dialogues.length > 0) {
+    if (
+      Array.isArray(this.scenarioConfig.dialogues) &&
+      this.scenarioConfig.dialogues.length > 0
+    ) {
       this.currentDialogueIndex = 0;
       this.loadCurrentDialogue();
     } else {
@@ -158,7 +71,6 @@ export class ChatScenarioManager {
       console.warn("No dialogue found at the current index.");
       return;
     }
-    // Load the current dialogue into ChatManager.
     this.chatManager.loadDialogue(dialogue);
   }
 

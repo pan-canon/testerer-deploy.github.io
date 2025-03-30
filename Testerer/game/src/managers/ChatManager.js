@@ -184,13 +184,13 @@ export class ChatManager {
       });
     }
 
-    // Update the messages container.
+    // Append new messages to the chat messages container instead of replacing.
     const messagesEl = this.container.querySelector('#chat-messages');
     if (messagesEl) {
-      messagesEl.innerHTML = messagesHTML;
+      messagesEl.innerHTML += messagesHTML;
     }
 
-    // Update the options container and make it scrollable if needed.
+    // Update the options container.
     const optionsEl = this.container.querySelector('#chat-options');
     if (optionsEl) {
       if (dialogueConfig.options && dialogueConfig.options.length > 3) {
@@ -200,6 +200,7 @@ export class ChatManager {
         optionsEl.style.maxHeight = '';
         optionsEl.style.overflowY = '';
       }
+      // Replace options (т.к. выбор должен быть актуальным для текущего шага).
       optionsEl.innerHTML = optionsHTML;
     }
 
@@ -213,11 +214,10 @@ export class ChatManager {
     const optionButtons = this.container.querySelectorAll('.dialogue-option');
     optionButtons.forEach((btn, index) => {
       btn.addEventListener('click', () => {
-        // If the ChatScenarioManager is available, use it to advance the dialogue.
+        // Use the ChatScenarioManager to advance dialogue.
         if (this.scenarioManager && typeof this.scenarioManager.advanceDialogue === 'function') {
           this.scenarioManager.advanceDialogue(index);
         } else {
-          // Fallback: log the selected option.
           const option = dialogueConfig.options[index];
           console.log(`Option selected: ${option.text}`);
         }

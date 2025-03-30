@@ -1,3 +1,5 @@
+import { StateManager } from './StateManager.js';
+
 export class ChatScenarioManager {
   /**
    * @param {ChatManager} chatManager - An instance of ChatManager that handles the chat UI.
@@ -32,12 +34,12 @@ export class ChatScenarioManager {
    * If no configuration is provided, it fetches the configuration from a default JSON file.
    */
   async init() {
-    // If no configuration is provided, attempt to fetch it from the 'config' directory.
+    // If no configuration is provided, attempt to fetch it from the 'src/config' directory.
     if (!this.scenarioConfig) {
       try {
         const response = await fetch('src/config/chatDialogueConfig.json');
         if (!response.ok) {
-          throw new Error("Failed to load dialogue configuration from 'config/chatDialogueConfig.json'");
+          throw new Error("Failed to load dialogue configuration from 'src/config/chatDialogueConfig.json'");
         }
         this.scenarioConfig = await response.json();
       } catch (error) {
@@ -45,10 +47,12 @@ export class ChatScenarioManager {
         return;
       }
     }
-    if (
-      Array.isArray(this.scenarioConfig.dialogues) &&
-      this.scenarioConfig.dialogues.length > 0
-    ) {
+    // Check if the conversation has already been completed.
+    if (StateManager.get('chat_conversation_completed') === 'true') {
+      console.log("Chat conversation already completed, skipping dialogue initialization.");
+      return;
+    }
+    if (Array.isArray(this.scenarioConfig.dialogues) && this.scenarioConfig.dialogues.length > 0) {
       this.currentDialogueIndex = 0;
       this.loadCurrentDialogue();
     } else {
@@ -99,6 +103,8 @@ export class ChatScenarioManager {
       this.loadCurrentDialogue();
     } else {
       console.log("No next dialogue defined; scenario may have ended.");
+      // Mark the conversation as completed so it won't restart after reload.
+      StateManager.set('chat_conversation_completed', 'true');
       if (typeof this.onScenarioEnd === "function") {
         this.onScenarioEnd();
       }

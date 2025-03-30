@@ -61,7 +61,8 @@ export class ChatScenarioManager {
   }
 
   /**
-   * Loads the current dialogue configuration and passes it to ChatManager to render.
+   * Loads the current dialogue configuration, saves its messages to the database,
+   * and passes the dialogue to ChatManager to render.
    */
   loadCurrentDialogue() {
     if (!this.scenarioConfig || !this.scenarioConfig.dialogues) {
@@ -73,6 +74,12 @@ export class ChatScenarioManager {
       console.warn("No dialogue found at the current index.");
       return;
     }
+    // Save each new message to the database.
+    dialogue.messages.forEach(msg => {
+      // The ChatManager must implement a saveMessage() method that calls the DatabaseManager.
+      this.chatManager.saveMessage(msg);
+    });
+    // Render the dialogue in the chat UI.
     this.chatManager.loadDialogue(dialogue);
   }
 
@@ -80,7 +87,8 @@ export class ChatScenarioManager {
    * Advances the dialogue based on the user's choice.
    *
    * If the selected option defines a nextDialogueIndex, the scenario advances accordingly.
-   * Otherwise, the scenario is considered complete and the onScenarioEnd callback is invoked (if defined).
+   * Otherwise, the scenario is considered complete and the onScenarioEnd callback is invoked (if defined),
+   * and a flag is set to prevent re-running the dialogue on subsequent reloads.
    *
    * @param {number} optionIndex - The index of the chosen option.
    */

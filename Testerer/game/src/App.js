@@ -25,6 +25,8 @@ import { ShowProfileModal } from './managers/ShowProfileModal.js';
 // NEW IMPORTS FOR CHAT MODULE
 import { ChatManager } from './managers/ChatManager.js';
 import { ChatScenarioManager } from './managers/ChatScenarioManager.js';
+// Import chat dialogue configuration JSON
+import chatDialogueConfig from './chatDialogueConfig.json';
 
 /**
  * Main application class.
@@ -97,8 +99,8 @@ export class App {
       mode: 'full',
       databaseManager: this.databaseManager
     });
-    // Optionally, initialize ChatScenarioManager if a scenario configuration is provided later.
-    // this.chatScenarioManager = deps.chatScenarioManager || new ChatScenarioManager(this.chatManager);
+    // Initialize ChatScenarioManager with dialogue configuration.
+    this.chatScenarioManager = deps.chatScenarioManager || new ChatScenarioManager(this.chatManager, chatDialogueConfig);
     // ================================
 
     // Begin application initialization.
@@ -161,6 +163,11 @@ export class App {
 
     // Initialize ChatManager by loading the chat template.
     await this.chatManager.init();
+
+    // NEW: Initialize ChatScenarioManager to load the dialogue configuration.
+    if (this.chatScenarioManager) {
+      this.chatScenarioManager.init();
+    }
 
     // Check if a user profile is already saved.
     if (await this.profileManager.isProfileSaved()) {

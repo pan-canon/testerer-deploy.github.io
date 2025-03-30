@@ -38,14 +38,14 @@ export class ApartmentPlanManager {
       this.loadFromDB();
     });
 
-    // Bind event listener for the "Далее" button on the apartment plan screen.
+    // Bind event listener for the "Next" button on the apartment plan screen.
     const nextBtn = document.getElementById("apartment-plan-next-btn");
     if (nextBtn) {
       nextBtn.addEventListener("click", () => {
         // Optionally disable the button to prevent double-clicks.
         nextBtn.disabled = true;
-        // Transition to the selfie screen.
-        this.app.goToSelfieScreen();
+        // Transition to the selfie screen via ViewManager.
+        this.app.viewManager.goToSelfieScreen(this.app);
       });
     } else {
       ErrorManager.logError("Apartment plan Next button not found during initialization.", "ApartmentPlanManager");
@@ -161,7 +161,8 @@ export class ApartmentPlanManager {
         this.startCell = { row: 0, col: 0 };
         this.endCell = { row: this.gridRows - 1, col: this.gridCols - 1 };
       }
-      this.showLocationTypeModal(
+      // Delegate modal display to ViewManager.
+      this.app.viewManager.showLocationTypeModal(
         (selectedType) => {
           // Confirm callback: save location type and add room.
           if (this.app && this.app.profileManager) {
@@ -184,10 +185,10 @@ export class ApartmentPlanManager {
           }
         },
         () => {
-          // Cancel callback: use default type "Другое".
-          console.log("Локация не выбрана, выбран тип по умолчанию: 'Другое'.");
+          // Cancel callback: use default type "Other".
+          console.log("No location selected, default type 'Other' chosen.");
           if (this.app && this.app.profileManager) {
-            this.app.profileManager.saveLocationType("Другое");
+            this.app.profileManager.saveLocationType("Other");
           }
           const room = {
             floor: this.currentFloor,
@@ -195,7 +196,7 @@ export class ApartmentPlanManager {
             startCol: Math.min(this.startCell.col, this.endCell.col),
             endRow: Math.max(this.startCell.row, this.endCell.row),
             endCol: Math.max(this.startCell.col, this.endCell.col),
-            type: "Другое"
+            type: "Other"
           };
           this.rooms.push(room);
           this.saveToDB();
@@ -250,7 +251,7 @@ export class ApartmentPlanManager {
    */
   saveToDB() {
     const currentRooms = this.rooms.filter(room => room.floor === this.currentFloor);
-    console.log("Сохраняем в БД комнаты: ", currentRooms);
+    console.log("Saving rooms to DB: ", currentRooms);
     this.dbManager.addApartmentRooms(this.currentFloor, currentRooms);
   }
 
@@ -258,12 +259,12 @@ export class ApartmentPlanManager {
    * loadFromDB – Loads the apartment plan data for the current floor from the database.
    */
   loadFromDB() {
-    console.log("Загружаем данные для этажа:", this.currentFloor);
+    console.log("Loading data for floor: ", this.currentFloor);
     this.dbManager.getApartmentPlan(this.currentFloor, (rooms) => {
       if (!rooms || rooms.length === 0) {
-        console.log(`Локации для этажа ${this.currentFloor} не созданы, выбран дефолт.`);
+        console.log(`No rooms found for floor ${this.currentFloor}, using default.`);
       } else {
-        console.log(`Найденные локации для этажа ${this.currentFloor}: `, rooms);
+        console.log(`Rooms found for floor ${this.currentFloor}: `, rooms);
       }
       this.rooms = rooms;
       this.renderRooms();
@@ -274,7 +275,7 @@ export class ApartmentPlanManager {
    * nextFloor – Switches to the next floor and loads its data.
    */
   nextFloor() {
-    console.log("Переключаем на следующий этаж");
+    console.log("Switching to next floor");
     this.currentFloor++;
     this.loadFromDB();
   }
@@ -284,92 +285,9 @@ export class ApartmentPlanManager {
    */
   prevFloor() {
     if (this.currentFloor > 1) {
-      console.log("Переключаем на предыдущий этаж");
+      console.log("Switching to previous floor");
       this.currentFloor--;
       this.loadFromDB();
     }
-  }
-
-  /**
-   * showLocationTypeModal – Displays a modal window for selecting the location type.
-   * @param {Function} onConfirm - Callback invoked with the selected type.
-   * @param {Function} onCancel - Callback invoked if selection is cancelled.
-   */
-  showLocationTypeModal(onConfirm, onCancel) {
-    const modalOverlay = document.createElement("div");
-    modalOverlay.id = "location-type-modal-overlay";
-    Object.assign(modalOverlay.style, {
-      position: "fixed",
-      top: "0",
-      left: "0",
-      width: "100%",
-      height: "100%",
-      backgroundColor: "rgba(0,0,0,0.5)",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      zIndex: "3000"
-    });
-    
-    const modal = document.createElement("div");
-    modal.id = "location-type-modal";
-    Object.assign(modal.style, {
-      backgroundColor: "#fff",
-      padding: "20px",
-      borderRadius: "8px",
-      maxWidth: "400px",
-      width: "90%",
-      textAlign: "center"
-    });
-    
-    const title = document.createElement("h3");
-    title.textContent = "Выберите тип помещения";
-    modal.appendChild(title);
-    
-    const selectElem = document.createElement("select");
-    const locationTypes = [
-      "Кухня", "Спальня", "Гостиная", "Ванная", "Коридор", "Другое",
-      "Подъезд", "Кабинет", "Библиотека", "Детская", "Кладовая", "Гараж"
-    ];
-    locationTypes.forEach(type => {
-      const option = document.createElement("option");
-      option.value = type;
-      option.textContent = type;
-      selectElem.appendChild(option);
-    });
-    selectElem.value = "Другое";
-    selectElem.style.marginBottom = "15px";
-    selectElem.style.display = "block";
-    selectElem.style.width = "100%";
-    modal.appendChild(selectElem);
-    
-    const btnContainer = document.createElement("div");
-    btnContainer.style.marginTop = "15px";
-    
-    const confirmBtn = document.createElement("button");
-    confirmBtn.textContent = "Подтвердить";
-    confirmBtn.style.marginRight = "10px";
-    confirmBtn.addEventListener("click", () => {
-      console.log("Нажата кнопка Подтвердить, выбран тип:", selectElem.value);
-      const selectedType = selectElem.value;
-      if (onConfirm) onConfirm(selectedType);
-      setTimeout(() => {
-        modalOverlay.remove();
-      }, 50);
-    });
-    btnContainer.appendChild(confirmBtn);
-    
-    const cancelBtn = document.createElement("button");
-    cancelBtn.textContent = "Отмена";
-    cancelBtn.addEventListener("click", () => {
-      console.log("Нажата кнопка Отмена");
-      if (onCancel) onCancel();
-      modalOverlay.remove();
-    });
-    btnContainer.appendChild(cancelBtn);
-    
-    modal.appendChild(btnContainer);
-    modalOverlay.appendChild(modal);
-    document.body.appendChild(modalOverlay);
   }
 }

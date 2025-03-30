@@ -1,7 +1,8 @@
+// ViewManager.js
 import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
 import { ImageUtils } from '../utils/ImageUtils.js';
-import { ApartmentPlanManager } from './ApartmentPlanManager.js';  // NEW: Import ApartmentPlanManager
+import { ApartmentPlanManager } from './ApartmentPlanManager.js'; // Import from the managers folder
 
 /**
  * ViewManager
@@ -13,7 +14,7 @@ import { ApartmentPlanManager } from './ApartmentPlanManager.js';  // NEW: Impor
  * - Rendering the diary.
  * - Handling UI effects and notifications.
  *
- * NOTE: All UI updates and DOM manipulations are centralized here.
+ * All UI updates and DOM manipulations are centralized here.
  */
 export class ViewManager {
   constructor() {
@@ -691,6 +692,7 @@ export class ViewManager {
     }
     StateManager.set('regData', JSON.stringify(regData));
     this.switchScreen('apartment-plan-screen', 'apartment-plan-buttons');
+    // Instantiate ApartmentPlanManager if not already created.
     if (!app.apartmentPlanManager) {
       app.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', app.databaseManager, app);
     }
@@ -813,6 +815,7 @@ export class ViewManager {
   }
 
   // ---------- New Method: showLocationTypeModal ----------
+
   /**
    * showLocationTypeModal – Displays a modal window for selecting the location type.
    * @param {Function} onConfirm - Callback invoked with the selected type.

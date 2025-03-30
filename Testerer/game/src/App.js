@@ -15,7 +15,8 @@ import { LanguageManager } from './managers/LanguageManager.js';
 // Use the updated version of CameraSectionManager (with extended camera methods)
 import { CameraSectionManager } from './managers/CameraSectionManager.js';
 import { ProfileManager } from './managers/ProfileManager.js';
-import { ApartmentPlanManager } from './managers/ApartmentPlanManager.js';
+// Note: The ApartmentPlanManager import is now removed from App.js,
+// because all apartment plan UI logic is delegated to the ViewManager.
 import { GhostManager } from './managers/GhostManager.js';
 import { EventManager } from './managers/EventManager.js';
 import { QuestManager } from './managers/QuestManager.js';
@@ -95,7 +96,6 @@ export class App {
 
   /**
    * getBasePath - Returns the base path dynamically based on the current location.
-   * No fixed paths are used.
    *
    * @returns {string} The base URL (origin + path without the file name).
    */
@@ -107,7 +107,6 @@ export class App {
 
   /**
    * loadAppState - Loads previously saved application state.
-   * Retrieves the saved ghost ID from StateManager and sets the active ghost accordingly.
    */
   loadAppState() {
     const savedGhostId = StateManager.get('currentGhostId');
@@ -120,9 +119,6 @@ export class App {
 
   /**
    * init - Initializes the application.
-   *
-   * Waits for database initialization, loads state, synchronizes quests,
-   * updates UI via ViewManager, and displays either the main or registration screen.
    */
   async init() {
     await this.databaseManager.initDatabasePromise;

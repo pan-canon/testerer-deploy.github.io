@@ -351,3 +351,19 @@ export class ChatManager {
     console.log(`Chat cleared for section: ${sectionKey || 'global'}`);
   }
 }
+
+/**
+ * Wrapper function to create a ChatManager instance with default options.
+ * This simplifies the instantiation from other parts of the application (e.g., App.js)
+ * by merging default settings with any provided options.
+ *
+ * @param {Object} options - Custom options to override default values.
+ * @returns {ChatManager} A new instance of ChatManager.
+ */
+export function createChatManagerWrapper(options = {}) {
+  const defaultOptions = {
+    templateUrl: `${getBasePath()}/src/templates/chat_template.html`,
+    mode: 'full'
+  };
+  return new ChatManager({ ...defaultOptions, ...options });
+}

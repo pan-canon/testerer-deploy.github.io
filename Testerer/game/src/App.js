@@ -20,15 +20,15 @@ import { QuestManager } from './managers/QuestManager.js';
 import { GameEventManager } from './managers/GameEventManager.js';
 import { ShowProfileModal } from './managers/ShowProfileModal.js';
 
-// NEW IMPORTS FOR CHAT MODULE
-import { ChatManager } from './managers/ChatManager.js';
+// NEW IMPORTS FOR CHAT MODULE using the wrapper for simplified instantiation
+import { createChatManagerWrapper } from './managers/ChatManager.js';
 
 /**
  * Main application class.
  * This class initializes core managers, sets up the UI,
  * loads persisted state, and launches the test chat section ("support").
  *
- * All chat-related logic (state management, conversation flow, localization)
+ * All chat-related logic (state management, dialogue, localization)
  * is encapsulated within ChatManager.
  */
 export class App {
@@ -65,11 +65,9 @@ export class App {
     this.gameEventManager = deps.gameEventManager || new GameEventManager(this.eventManager, this, this.languageManager);
     this.showProfileModal = deps.showProfileModal || new ShowProfileModal(this);
 
-    // Initialize ChatManager for the "support" chat section.
+    // Initialize ChatManager for the "support" chat section using the wrapper.
     // All chat logic (state, dialogue, localization) is handled within ChatManager.
-    this.chatManager = deps.chatManager || new ChatManager({
-      templateUrl: `${this.getBasePath()}/src/templates/chat_template.html`,
-      mode: 'full',
+    this.chatManager = deps.chatManager || createChatManagerWrapper({
       databaseManager: this.databaseManager,
       languageManager: this.languageManager,
       sectionKey: 'support'
@@ -120,6 +118,9 @@ export class App {
 
     // Initialize the chat section for "support"
     await this.chatManager.init();
+
+    // Schedule support chat conversation to start after 5 seconds.
+    this.chatManager.scheduleConversationRestart(5000);
 
     if (await this.profileManager.isProfileSaved()) {
       const profile = await this.profileManager.getProfile();

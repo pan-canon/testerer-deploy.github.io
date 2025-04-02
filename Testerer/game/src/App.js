@@ -154,4 +154,13 @@ export class App {
       this.viewManager.switchScreen('registration-screen', 'registration-buttons');
     }
   }
+
+  /**
+   * triggerChatRestart - Triggers a chat conversation restart after a 5-second delay.
+   * This method calls ChatManager.scheduleConversationRestart(5000) to initiate a new independent conversation.
+   */
+  triggerChatRestart() {
+    console.log("Triggering chat conversation restart in 5 seconds...");
+    this.chatManager.scheduleConversationRestart(5000);
+  }
 }

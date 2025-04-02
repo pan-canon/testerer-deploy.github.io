@@ -11,7 +11,9 @@ const chatLocales_uk = {
   "user_message_prefix": "Ви: ",
   "spirit_message_prefix": "Дух: ",
   // Повідомлення про завершення діалогу
-  "end_of_conversation": "Дякуємо за розмову!"
+  "end_of_conversation": "Дякуємо за розмову!",
+  // Назва секції чату підтримки
+  "chat_support": "Підтримка"
 };
 
 export default chatLocales_uk;

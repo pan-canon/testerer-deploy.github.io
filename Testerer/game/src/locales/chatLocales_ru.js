@@ -11,7 +11,9 @@ const chatLocales_ru = {
   "user_message_prefix": "Вы: ",
   "spirit_message_prefix": "Призрак: ",
   // Сообщение завершения диалога
-  "end_of_conversation": "Спасибо за беседу!"
+  "end_of_conversation": "Спасибо за беседу!",
+  // Название секции чата поддержки
+  "chat_support": "Служба поддержки"
 };
 
 export default chatLocales_ru;

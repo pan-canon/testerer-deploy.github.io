@@ -17,6 +17,7 @@ export class ChatManager {
    *  - basePath: (optional) override for the base path.
    *  - databaseManager: (optional) instance of DatabaseManager to load chat messages.
    *  - languageManager: (optional) instance of LanguageManager for locale integration.
+   *  - sectionKey: (optional) unique identifier for the chat section.
    */
   constructor(options = {}) {
     const basePath = options.basePath || getBasePath();
@@ -26,8 +27,20 @@ export class ChatManager {
     this.databaseManager = options.databaseManager || null;
     // Optional language manager for localized strings.
     this.languageManager = options.languageManager || null;
+    // Optional unique key to identify a chat section.
+    this.sectionKey = options.sectionKey || null;
     // We'll store the scenario manager here if needed.
     this.scenarioManager = null;
+  }
+
+  /**
+   * Returns the full state key by combining the section key (if provided) with the base key.
+   *
+   * @param {string} baseKey - The base key string (e.g. 'chat_started').
+   * @returns {string} The composite state key.
+   */
+  getStateKey(baseKey) {
+    return this.sectionKey ? `${this.sectionKey}_${baseKey}` : baseKey;
   }
 
   /**
@@ -109,9 +122,9 @@ export class ChatManager {
 
       console.log('ChatManager initialized.');
 
-      // --- FIX: Prevent auto-start unless conversation was explicitly started ---
-      const conversationStarted = StateManager.get('chat_started') === 'true';
-      const conversationCompleted = StateManager.get('chat_conversation_completed') === 'true';
+      // --- Prevent auto-start unless conversation was explicitly started ---
+      const conversationStarted = StateManager.get(this.getStateKey('chat_started')) === 'true';
+      const conversationCompleted = StateManager.get(this.getStateKey('chat_conversation_completed')) === 'true';
       if (conversationStarted && !conversationCompleted) {
         try {
           const module = await import('./ChatScenarioManager.js');
@@ -287,10 +300,10 @@ export class ChatManager {
    */
   async restartConversation() {
     // Mark conversation as started.
-    StateManager.set('chat_started', 'true');
+    StateManager.set(this.getStateKey('chat_started'), 'true');
     // Clear conversation state in StateManager.
-    StateManager.remove('chat_conversation_completed');
-    StateManager.remove('chat_currentDialogueIndex');
+    StateManager.remove(this.getStateKey('chat_conversation_completed'));
+    StateManager.remove(this.getStateKey('chat_currentDialogueIndex'));
 
     // Clear chat messages container to prevent duplicate messages.
     if (this.container) {
@@ -305,7 +318,7 @@ export class ChatManager {
       const module = await import('./ChatScenarioManager.js');
       this.scenarioManager = new module.ChatScenarioManager(this, null);
       await this.scenarioManager.init();
-      console.log('Conversation restarted.');
+      console.log('Conversation restarted for section:', this.sectionKey || '(global)');
     } catch (e) {
       console.error("Failed to restart conversation:", e);
     }
@@ -321,5 +334,20 @@ export class ChatManager {
       this.restartConversation();
     }, delay);
     console.log(`Conversation restart scheduled in ${delay} ms.`);
+  }
+
+  /**
+   * Clears the chat state.
+   * If a sectionKey is provided as an argument, clears only that section.
+   * Otherwise, clears the global chat state.
+   *
+   * @param {string} [sectionKey] - Optional section key to clear.
+   */
+  clearChat(sectionKey) {
+    const prefix = sectionKey ? `${sectionKey}_` : '';
+    StateManager.remove(`${prefix}chat_started`);
+    StateManager.remove(`${prefix}chat_currentDialogueIndex`);
+    StateManager.remove(`${prefix}chat_conversation_completed`);
+    console.log(`Chat cleared for section: ${sectionKey || 'global'}`);
   }
 }

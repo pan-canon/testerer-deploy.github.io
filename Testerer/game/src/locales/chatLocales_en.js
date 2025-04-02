@@ -11,7 +11,9 @@ const chatLocales_en = {
   "user_message_prefix": "You: ",
   "spirit_message_prefix": "Spirit: ",
   // End-of-conversation message
-  "end_of_conversation": "Thank you for chatting!"
+  "end_of_conversation": "Thank you for chatting!",
+  // Conversation section name for support chat
+  "chat_support": "Support Chat"
 };
 
 export default chatLocales_en;

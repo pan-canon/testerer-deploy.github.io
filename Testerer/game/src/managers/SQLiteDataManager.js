@@ -38,9 +38,11 @@ export class SQLiteDataManager {
   /**
    * initDatabase – Initializes the SQL.js database.
    * If saved database data is found in IndexedDB, restores it.
-   * Otherwise, creates a new database instance and sets up the required tables.
+   * Otherwise, creates a new database instance.
    *
-   * Tables: diary, apartment_plan, quest_progress, ghosts, events, quests, chat_messages.
+   * After restoration or creation, migration queries are executed
+   * to ensure that all required tables (diary, apartment_plan, quest_progress,
+   * ghosts, events, quests, chat_messages) exist.
    *
    * @param {Object} SQL - The SQL.js module.
    * @returns {Promise<SQL.Database>} Resolves to the SQL.js database instance.
@@ -58,54 +60,72 @@ export class SQLiteDataManager {
       dbInstance = new SQL.Database(binaryData);
       console.log("Database restored from IndexedDB.");
     } else {
-      // Create a new database instance and initialize tables.
+      // Create a new database instance.
       dbInstance = new SQL.Database();
-      dbInstance.run(`
-        CREATE TABLE IF NOT EXISTS diary (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          entry TEXT,
-          timestamp TEXT
-        );
-        CREATE TABLE IF NOT EXISTS apartment_plan (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          floor_number INTEGER,
-          room_data TEXT
-        );
-        CREATE TABLE IF NOT EXISTS quest_progress (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          quest_key TEXT,
-          status TEXT
-        );
-        CREATE TABLE IF NOT EXISTS ghosts (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT,
-          status TEXT,
-          progress INTEGER
-        );
-        CREATE TABLE IF NOT EXISTS events (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          event_key TEXT,
-          event_text TEXT,
-          timestamp TEXT,
-          completed INTEGER
-        );
-        CREATE TABLE IF NOT EXISTS quests (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          quest_key TEXT,
-          status TEXT,
-          current_stage INTEGER,
-          total_stages INTEGER
-        );
-        CREATE TABLE IF NOT EXISTS chat_messages (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          sender TEXT,
-          message TEXT,
-          timestamp TEXT
-        );
-      `);
+      console.log("New database instance created.");
+    }
+    
+    // Run migration queries to ensure all required tables exist.
+    this.migrateDatabase(dbInstance);
+    
+    if (!savedDbBase64) {
       console.log("New database created and tables initialized.");
+    } else {
+      console.log("Database migration complete.");
     }
     return dbInstance;
+  }
+
+  /**
+   * migrateDatabase – Runs migration queries to update the database schema.
+   * Ensures that all required tables exist.
+   *
+   * @param {SQL.Database} dbInstance - The SQL.js database instance.
+   */
+  migrateDatabase(dbInstance) {
+    dbInstance.run(`
+      CREATE TABLE IF NOT EXISTS diary (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entry TEXT,
+        timestamp TEXT
+      );
+      CREATE TABLE IF NOT EXISTS apartment_plan (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        floor_number INTEGER,
+        room_data TEXT
+      );
+      CREATE TABLE IF NOT EXISTS quest_progress (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        quest_key TEXT,
+        status TEXT
+      );
+      CREATE TABLE IF NOT EXISTS ghosts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        status TEXT,
+        progress INTEGER
+      );
+      CREATE TABLE IF NOT EXISTS events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_key TEXT,
+        event_text TEXT,
+        timestamp TEXT,
+        completed INTEGER
+      );
+      CREATE TABLE IF NOT EXISTS quests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        quest_key TEXT,
+        status TEXT,
+        current_stage INTEGER,
+        total_stages INTEGER
+      );
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sender TEXT,
+        message TEXT,
+        timestamp TEXT
+      );
+    `);
   }
 
   /**

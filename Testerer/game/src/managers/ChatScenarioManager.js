@@ -60,8 +60,8 @@ export class ChatScenarioManager {
   }
 
   /**
-   * Loads the current dialogue configuration, saves its messages to the DB,
-   * and passes the dialogue to ChatManager to render.
+   * Loads the current dialogue configuration and passes the dialogue to ChatManager to render.
+   * Message saving is handled within ChatManager.loadDialogue() to avoid duplicate entries.
    */
   loadCurrentDialogue() {
     if (!this.scenarioConfig || !this.scenarioConfig.dialogues) {
@@ -73,11 +73,7 @@ export class ChatScenarioManager {
       console.warn("No dialogue found at the current index.");
       return;
     }
-    // Save each message to the DB.
-    dialogue.messages.forEach(msg => {
-      this.chatManager.saveMessage(msg);
-    });
-    // Render the dialogue.
+    // Render the dialogue. Saving of messages is now handled in ChatManager.loadDialogue().
     this.chatManager.loadDialogue(dialogue);
   }
 

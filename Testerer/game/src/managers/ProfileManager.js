@@ -77,8 +77,8 @@ export class ProfileManager {
 
   /**
    * exportProfileData – Exports the profile along with diary entries, apartment plan,
-   * and quest progress to a JSON file.
-   * @param {Object} databaseManager - The database manager for retrieving diary and quest data.
+   * quest progress, and chat messages to a JSON file.
+   * @param {Object} databaseManager - The database manager for retrieving diary, quest, and chat data.
    * @param {Object} apartmentPlanManager - The apartment plan manager.
    */
   exportProfileData(databaseManager, apartmentPlanManager) {
@@ -97,6 +97,8 @@ export class ProfileManager {
 
       // Retrieve diary entries.
       const diaryEntries = databaseManager.getDiaryEntries();
+      // Retrieve chat messages.
+      const chatMessages = databaseManager.getChatMessages();
       // Retrieve apartment plan data if available.
       const apartmentPlanData = apartmentPlanManager ? apartmentPlanManager.rooms : [];
       
@@ -111,12 +113,13 @@ export class ProfileManager {
         }));
       }
   
-      // Form the export object.
+      // Form the export object including chat messages.
       const exportData = {
         profile: filteredProfile,
         diary: diaryEntries,
         apartment: apartmentPlanData,
-        quests: questProgressData
+        quests: questProgressData,
+        chat: chatMessages
       };
   
       // Create a Blob from the JSON string.
@@ -134,7 +137,7 @@ export class ProfileManager {
 
   /**
    * importProfileData – Imports profile data from the selected JSON file.
-   * After import, updates the profile, diary, apartment plan, and quest progress, then reloads the page.
+   * After import, updates the profile, diary, apartment plan, quest progress, and chat messages, then reloads the page.
    * @param {File} file - The file containing the profile data.
    * @param {Object} databaseManager - The database manager.
    * @param {Object} apartmentPlanManager - The apartment plan manager.
@@ -181,6 +184,19 @@ export class ProfileManager {
               databaseManager.addQuestProgress(progress.quest_key, progress.status);
             }
           });
+        }
+  
+        // Import chat messages.
+        if (importedData.chat && Array.isArray(importedData.chat)) {
+          importedData.chat.forEach(msg => {
+            if (msg.sender && msg.message && msg.timestamp) {
+              databaseManager.db.run(
+                "INSERT INTO chat_messages (sender, message, timestamp) VALUES (?, ?, ?)",
+                [msg.sender, msg.message, msg.timestamp]
+              );
+            }
+          });
+          databaseManager.saveDatabase();
         }
   
         // Clear transient state keys using StateManager.

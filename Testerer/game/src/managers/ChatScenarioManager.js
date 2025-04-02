@@ -2,6 +2,14 @@ import { StateManager } from './StateManager.js';
 
 export class ChatScenarioManager {
   /**
+   * ChatScenarioManager is responsible for managing the dialogue flow of the chat.
+   * It loads dialogue stages from a configuration file and advances the conversation
+   * based on user selections. All dialogue texts (both messages and options) are expected
+   * to be localization keys, which are converted to localized strings by ChatManager.
+   *
+   * With the new conversation independence functionality, the dialogue state can be reset
+   * independently via ChatManager's restartConversation() method.
+   *
    * @param {ChatManager} chatManager - An instance of ChatManager that handles the chat UI.
    * @param {Object} scenarioConfig - A JSON object representing the chat scenario.
    * Expected format:
@@ -31,7 +39,9 @@ export class ChatScenarioManager {
 
   /**
    * Asynchronously initializes the scenario manager.
-   * If no configuration is provided, fetch it from 'src/config/chatDialogueConfig.json'.
+   * If no configuration is provided, it fetches the dialogue configuration from
+   * 'src/config/chatDialogueConfig.json'. This method also restores any saved dialogue
+   * state unless the conversation has been marked as completed.
    */
   async init() {
     if (!this.scenarioConfig) {
@@ -46,12 +56,12 @@ export class ChatScenarioManager {
         return;
       }
     }
-    // Check if conversation is already completed.
+    // Check if the conversation is already completed.
     if (StateManager.get('chat_conversation_completed') === 'true') {
       console.log("Chat conversation already completed, skipping dialogue initialization.");
       return;
     }
-    // Restore current dialogue index if available; default to 0.
+    // Restore the current dialogue index if available; default to 0.
     const savedIndex = StateManager.get('chat_currentDialogueIndex');
     this.currentDialogueIndex = savedIndex !== null ? parseInt(savedIndex, 10) : 0;
     this.loadCurrentDialogue();
@@ -59,7 +69,8 @@ export class ChatScenarioManager {
 
   /**
    * Loads the current dialogue configuration and passes the dialogue to ChatManager to render.
-   * Message saving is handled within ChatManager.loadDialogue() to avoid duplicate entries.
+   * The dialogue texts (messages and options) are expected to be localization keys,
+   * and ChatManager will convert them into localized strings.
    */
   loadCurrentDialogue() {
     if (!this.scenarioConfig || !this.scenarioConfig.dialogues) {
@@ -71,15 +82,15 @@ export class ChatScenarioManager {
       console.warn("No dialogue found at the current index.");
       return;
     }
-    // Render the dialogue. Saving of messages is now handled in ChatManager.loadDialogue().
+    // Render the dialogue. Message saving is handled in ChatManager.loadDialogue().
     this.chatManager.loadDialogue(dialogue);
   }
 
   /**
-   * Advances the dialogue based on the user's choice.
+   * Advances the dialogue based on the user's selected option.
    *
-   * If the selected option defines a nextDialogueIndex, advance accordingly.
-   * Otherwise, mark conversation as completed so it won’t restart after reload.
+   * If the selected option defines a nextDialogueIndex, the conversation advances accordingly.
+   * Otherwise, the conversation is marked as completed and the saved dialogue index is removed.
    *
    * @param {number} optionIndex - The index of the chosen option.
    */
@@ -94,6 +105,7 @@ export class ChatScenarioManager {
       return;
     }
     const selectedOption = currentDialogue.options[optionIndex];
+    // Execute the onSelect callback if provided.
     if (selectedOption && typeof selectedOption.onSelect === "function") {
       selectedOption.onSelect();
     }
@@ -104,7 +116,7 @@ export class ChatScenarioManager {
       this.loadCurrentDialogue();
     } else {
       console.log("No next dialogue defined; scenario may have ended.");
-      // Mark conversation as completed and remove the saved dialogue index.
+      // Mark the conversation as completed and remove the saved dialogue index.
       StateManager.set('chat_conversation_completed', 'true');
       StateManager.remove('chat_currentDialogueIndex');
       if (typeof this.onScenarioEnd === "function") {
@@ -115,6 +127,7 @@ export class ChatScenarioManager {
 
   /**
    * Sets a new scenario configuration and resets the dialogue index.
+   * This facilitates conversation independence by allowing a fresh dialogue session.
    *
    * @param {Object} scenarioConfig - The new scenario configuration.
    */
@@ -126,7 +139,7 @@ export class ChatScenarioManager {
   }
 
   /**
-   * Registers a callback function to be called when the scenario ends.
+   * Registers a callback function to be executed when the dialogue scenario ends.
    *
    * @param {Function} callback - The callback function.
    */

@@ -16,6 +16,7 @@ export class ChatManager {
    *  - mode: 'full' (default) for full chat, or 'board-only' for displaying only the spirit board.
    *  - basePath: (optional) override for the base path.
    *  - databaseManager: (optional) instance of DatabaseManager to load chat messages.
+   *  - languageManager: (optional) instance of LanguageManager for locale integration.
    */
   constructor(options = {}) {
     const basePath = options.basePath || getBasePath();
@@ -23,14 +24,40 @@ export class ChatManager {
     this.mode = options.mode || 'full';
     this.container = null; // DOM element for the chat section
     this.databaseManager = options.databaseManager || null;
+    // Optional language manager for localized strings.
+    this.languageManager = options.languageManager || null;
     // We'll store the scenario manager here if needed.
     this.scenarioManager = null;
+  }
+
+  /**
+   * Helper method to fetch a localized string by key.
+   * If a languageManager is provided and contains the key, it returns the localized value.
+   * Otherwise, returns the defaultValue.
+   *
+   * @param {string} key - The localization key.
+   * @param {string} defaultValue - The fallback value if no localization is found.
+   * @returns {string} Localized string.
+   */
+  getLocalizedString(key, defaultValue) {
+    if (
+      this.languageManager &&
+      this.languageManager.locales &&
+      typeof this.languageManager.getLanguage === 'function'
+    ) {
+      const lang = this.languageManager.getLanguage();
+      if (this.languageManager.locales[lang] && this.languageManager.locales[lang][key]) {
+        return this.languageManager.locales[lang][key];
+      }
+    }
+    return defaultValue;
   }
 
   /**
    * Initializes the ChatManager by fetching the chat template fragment,
    * rendering it using the TemplateEngine with initial data (loading messages from DB if available),
    * and inserting it into the chat section in index.html.
+   * Also initializes the conversation if not marked as completed.
    * @returns {Promise<void>}
    */
   async init() {
@@ -53,10 +80,13 @@ export class ChatManager {
         }
       }
 
+      // Get localized string for the spirit board content.
+      const localizedSpiritBoardContent = this.getLocalizedString('spirit_board', 'Spirit Board');
+
       // Render the template.
       const data = {
         messages: messagesStr,
-        spiritBoardContent: 'Spirit Board', // Can be localized.
+        spiritBoardContent: localizedSpiritBoardContent,
         options: '' // Initially no dialogue options.
       };
       const renderedHTML = TemplateEngine.render(templateText, data);
@@ -173,20 +203,24 @@ export class ChatManager {
 
     let messagesHTML = '';
     for (const msg of dialogueConfig.messages) {
-      messagesHTML += `<div class="chat-message ${msg.sender}" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${msg.text}</div>`;
+      // Get localized message text if available.
+      const localizedMsg = this.getLocalizedString(msg.text, msg.text);
+      messagesHTML += `<div class="chat-message ${msg.sender}" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${localizedMsg}</div>`;
       if (msg.animateOnBoard) {
         const boardEl = this.container.querySelector('#spirit-board');
         if (boardEl) {
-          animateText(boardEl, msg.text);
+          animateText(boardEl, localizedMsg);
         }
       }
-      await this.saveMessage(msg);
+      await this.saveMessage({ sender: msg.sender, text: localizedMsg });
     }
 
     let optionsHTML = '';
     if (dialogueConfig.options && dialogueConfig.options.length > 0) {
       for (const option of dialogueConfig.options) {
-        optionsHTML += `<button class="button is-link dialogue-option" style="margin-bottom: 0.5rem;">${option.text}</button>`;
+        // Get localized option text if available.
+        const localizedOptionText = this.getLocalizedString(option.text, option.text);
+        optionsHTML += `<button class="button is-link dialogue-option" style="margin-bottom: 0.5rem;">${localizedOptionText}</button>`;
       }
     }
 
@@ -245,5 +279,45 @@ export class ChatManager {
       }
     }
     console.log(`ChatManager mode set to: ${mode}`);
+  }
+
+  /**
+   * Resets the current conversation by clearing saved state and reinitializing the dialogue.
+   * This allows for independent conversation sessions without restarting the entire chat.
+   */
+  async restartConversation() {
+    // Clear conversation state in StateManager.
+    StateManager.remove('chat_conversation_completed');
+    StateManager.remove('chat_currentDialogueIndex');
+
+    // Optionally clear chat messages container.
+    if (this.container) {
+      const messagesEl = this.container.querySelector('#chat-messages');
+      if (messagesEl) {
+        messagesEl.innerHTML = '';
+      }
+    }
+
+    // Reinitialize the scenario manager to start the dialogue from the beginning.
+    try {
+      const module = await import('./ChatScenarioManager.js');
+      this.scenarioManager = new module.ChatScenarioManager(this, null);
+      await this.scenarioManager.init();
+      console.log('Conversation restarted.');
+    } catch (e) {
+      console.error("Failed to restart conversation:", e);
+    }
+  }
+
+  /**
+   * Schedules a conversation restart after a specified delay.
+   *
+   * @param {number} delay - Delay in milliseconds before restarting the conversation (default: 5000 ms).
+   */
+  scheduleConversationRestart(delay = 5000) {
+    setTimeout(() => {
+      this.restartConversation();
+    }, delay);
+    console.log(`Conversation restart scheduled in ${delay} ms.`);
   }
 }

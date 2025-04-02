@@ -1,11 +1,11 @@
+import locales from '../locales/locales.js';
+
 /**
  * LanguageManager is responsible for managing localization in the application.
  * It loads the translation dictionaries (locales), listens for changes on the language selector,
  * and updates all page elements that have the data-i18n attribute.
  * This class also saves the selected language in localStorage to preserve the choice between sessions.
  */
-import locales from '../locales/locales.js';
-
 export class LanguageManager {
   /**
    * Constructor for LanguageManager.
@@ -19,27 +19,33 @@ export class LanguageManager {
    */
   constructor(selectorId) {
     // Load the localization dictionaries (translations).
-    // It is assumed that the variable 'locales' is defined globally or imported.
     this.locales = locales;
 
     // Get the language selector element by its ID.
     this.selector = document.getElementById(selectorId);
+    if (!this.selector) {
+      console.error(`Language selector with id "${selectorId}" not found.`);
+    }
 
     // Set the current language from localStorage, defaulting to 'en'.
     this.currentLanguage = localStorage.getItem('language') || 'en';
 
     // Update the selector to reflect the current language.
-    this.selector.value = this.currentLanguage;
+    if (this.selector) {
+      this.selector.value = this.currentLanguage;
+    }
 
     // Apply the selected language to all elements with the data-i18n attribute.
     this.applyLanguage();
 
     // Add an event listener to update the language when the selector's value changes.
-    this.selector.addEventListener('change', () => {
-      this.currentLanguage = this.selector.value;
-      localStorage.setItem('language', this.currentLanguage);
-      this.applyLanguage();
-    });
+    if (this.selector) {
+      this.selector.addEventListener('change', () => {
+        this.currentLanguage = this.selector.value;
+        localStorage.setItem('language', this.currentLanguage);
+        this.applyLanguage();
+      });
+    }
   }
 
   /**
@@ -65,5 +71,19 @@ export class LanguageManager {
    */
   getLanguage() {
     return this.currentLanguage;
+  }
+
+  /**
+   * translate – Returns the localized text for the given key.
+   *
+   * @param {string} key - The localization key.
+   * @param {string} [defaultValue=key] - The default value if no translation is found.
+   * @returns {string} The localized text.
+   */
+  translate(key, defaultValue = key) {
+    if (this.locales[this.currentLanguage] && this.locales[this.currentLanguage][key]) {
+      return this.locales[this.currentLanguage][key];
+    }
+    return defaultValue;
   }
 }

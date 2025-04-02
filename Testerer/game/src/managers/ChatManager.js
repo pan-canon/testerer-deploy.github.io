@@ -122,7 +122,7 @@ export class ChatManager {
 
       console.log('ChatManager initialized.');
 
-      // --- Prevent auto-start unless conversation was explicitly started ---
+      // --- Resume conversation only if it was started and not completed ---
       const conversationStarted = StateManager.get(this.getStateKey('chat_started')) === 'true';
       const conversationCompleted = StateManager.get(this.getStateKey('chat_conversation_completed')) === 'true';
       if (conversationStarted && !conversationCompleted) {
@@ -140,6 +140,19 @@ export class ChatManager {
     } catch (error) {
       console.error('Error initializing ChatManager:', error);
     }
+  }
+
+  /**
+   * Returns true if a conversation is already active,
+   * i.e. the chat has been started and there are messages in the chat.
+   *
+   * @returns {boolean}
+   */
+  isConversationActive() {
+    const conversationStarted = StateManager.get(this.getStateKey('chat_started')) === 'true';
+    const messagesEl = this.container && this.container.querySelector('#chat-messages');
+    const hasMessages = messagesEl && messagesEl.children.length > 0;
+    return conversationStarted && hasMessages;
   }
 
   /**
@@ -326,12 +339,17 @@ export class ChatManager {
 
   /**
    * Schedules a conversation restart after a specified delay.
+   * Automatically checks if a conversation is already active and aborts restart if so.
    *
    * @param {number} delay - Delay in milliseconds before restarting the conversation (default: 5000 ms).
    */
-  scheduleConversationRestart(delay = 5000) {
+  scheduleConversationStartIfInactive(delay = 5000) {
     setTimeout(() => {
-      this.restartConversation();
+      if (!this.isConversationActive()) {
+        this.restartConversation();
+      } else {
+        console.log('Conversation is already active; restart aborted.');
+      }
     }, delay);
     console.log(`Conversation restart scheduled in ${delay} ms.`);
   }

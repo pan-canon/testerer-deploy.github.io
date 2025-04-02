@@ -120,7 +120,7 @@ export class App {
     await this.chatManager.init();
 
     // Schedule support chat conversation to start after 5 seconds.
-    this.chatManager.scheduleConversationRestart(5000);
+    this.chatManager.scheduleConversationStartIfInactive(5000);
 
     if (await this.profileManager.isProfileSaved()) {
       const profile = await this.profileManager.getProfile();

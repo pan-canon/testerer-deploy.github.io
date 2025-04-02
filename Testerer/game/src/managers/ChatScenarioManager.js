@@ -51,12 +51,10 @@ export class ChatScenarioManager {
       console.log("Chat conversation already completed, skipping dialogue initialization.");
       return;
     }
-    if (Array.isArray(this.scenarioConfig.dialogues) && this.scenarioConfig.dialogues.length > 0) {
-      this.currentDialogueIndex = 0;
-      this.loadCurrentDialogue();
-    } else {
-      console.warn("No valid dialogue configuration provided for ChatScenarioManager.");
-    }
+    // Restore current dialogue index if available; default to 0.
+    const savedIndex = StateManager.get('chat_currentDialogueIndex');
+    this.currentDialogueIndex = savedIndex !== null ? parseInt(savedIndex, 10) : 0;
+    this.loadCurrentDialogue();
   }
 
   /**
@@ -101,10 +99,14 @@ export class ChatScenarioManager {
     }
     if (selectedOption && typeof selectedOption.nextDialogueIndex === "number") {
       this.currentDialogueIndex = selectedOption.nextDialogueIndex;
+      // Persist the updated dialogue index.
+      StateManager.set('chat_currentDialogueIndex', this.currentDialogueIndex);
       this.loadCurrentDialogue();
     } else {
       console.log("No next dialogue defined; scenario may have ended.");
+      // Mark conversation as completed and remove the saved dialogue index.
       StateManager.set('chat_conversation_completed', 'true');
+      StateManager.remove('chat_currentDialogueIndex');
       if (typeof this.onScenarioEnd === "function") {
         this.onScenarioEnd();
       }
@@ -119,6 +121,7 @@ export class ChatScenarioManager {
   setScenario(scenarioConfig) {
     this.scenarioConfig = scenarioConfig;
     this.currentDialogueIndex = 0;
+    StateManager.set('chat_currentDialogueIndex', this.currentDialogueIndex);
     this.loadCurrentDialogue();
   }
 

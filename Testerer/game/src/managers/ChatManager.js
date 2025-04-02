@@ -1,5 +1,6 @@
 import { TemplateEngine } from '../utils/TemplateEngine.js';
 import { animateText } from '../utils/SpiritBoardUtils.js';
+import { StateManager } from './StateManager.js';
 
 // Dynamically determine the base path without fixed values.
 function getBasePath() {
@@ -78,8 +79,10 @@ export class ChatManager {
 
       console.log('ChatManager initialized.');
 
-      // Если в БД не найдено сообщений, запускаем сценарий.
-      if (!messagesStr) {
+      // Check if the conversation is marked as completed.
+      const conversationCompleted = StateManager.get('chat_conversation_completed') === 'true';
+      // If conversation is not complete, initialize/resume the dialogue.
+      if (!conversationCompleted) {
         try {
           const module = await import('./ChatScenarioManager.js');
           this.scenarioManager = new module.ChatScenarioManager(this, null);
@@ -88,7 +91,7 @@ export class ChatManager {
           console.error("Failed to initialize ChatScenarioManager:", e);
         }
       } else {
-        console.log("Loaded saved chat messages from DB; skipping dialogue initialization.");
+        console.log("Loaded saved chat messages from DB; dialogue completed.");
       }
       
     } catch (error) {

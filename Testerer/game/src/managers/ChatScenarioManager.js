@@ -42,6 +42,8 @@ export class ChatScenarioManager {
    * If no configuration is provided, it fetches the dialogue configuration from
    * 'src/config/chatDialogueConfig.json'. This method also restores any saved dialogue
    * state unless the conversation has been marked as completed.
+   * Additionally, it checks if chat messages already exist in the database,
+   * and if so, skips the dialogue initialization.
    */
   async init() {
     if (!this.scenarioConfig) {
@@ -59,6 +61,12 @@ export class ChatScenarioManager {
     // Check if the conversation is already completed for this section.
     if (StateManager.get(this.chatManager.getStateKey('chat_conversation_completed')) === 'true') {
       console.log("Chat conversation already completed, skipping dialogue initialization.");
+      return;
+    }
+    // Check if there are existing chat messages in the database.
+    const existingMessages = this.chatManager.databaseManager.getChatMessages();
+    if (existingMessages && existingMessages.length > 0) {
+      console.log("Existing chat messages found; skipping dialogue initialization.");
       return;
     }
     // Restore the current dialogue index if available; default to 0.

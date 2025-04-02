@@ -109,19 +109,19 @@ export class ChatManager {
 
       console.log('ChatManager initialized.');
 
-      // Check if the conversation is marked as completed.
+      // --- FIX: Prevent auto-start unless conversation was explicitly started ---
+      const conversationStarted = StateManager.get('chat_started') === 'true';
       const conversationCompleted = StateManager.get('chat_conversation_completed') === 'true';
-      // If conversation is not complete, initialize/resume the dialogue.
-      if (!conversationCompleted) {
+      if (conversationStarted && !conversationCompleted) {
         try {
           const module = await import('./ChatScenarioManager.js');
           this.scenarioManager = new module.ChatScenarioManager(this, null);
           await this.scenarioManager.init();
         } catch (e) {
-          console.error("Failed to initialize ChatScenarioManager:", e);
+          console.error("Failed to resume ChatScenarioManager:", e);
         }
       } else {
-        console.log("Loaded saved chat messages from DB; dialogue completed.");
+        console.log("No active conversation found. Chat remains idle.");
       }
       
     } catch (error) {
@@ -286,11 +286,13 @@ export class ChatManager {
    * This allows for independent conversation sessions without restarting the entire chat.
    */
   async restartConversation() {
+    // Mark conversation as started.
+    StateManager.set('chat_started', 'true');
     // Clear conversation state in StateManager.
     StateManager.remove('chat_conversation_completed');
     StateManager.remove('chat_currentDialogueIndex');
 
-    // Optionally clear chat messages container.
+    // Clear chat messages container to prevent duplicate messages.
     if (this.container) {
       const messagesEl = this.container.querySelector('#chat-messages');
       if (messagesEl) {

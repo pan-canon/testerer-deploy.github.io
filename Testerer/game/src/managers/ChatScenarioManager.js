@@ -105,7 +105,6 @@ export class ChatScenarioManager {
       return;
     }
     const selectedOption = currentDialogue.options[optionIndex];
-    // Execute the onSelect callback if provided.
     if (selectedOption && typeof selectedOption.onSelect === "function") {
       selectedOption.onSelect();
     }
@@ -116,9 +115,11 @@ export class ChatScenarioManager {
       this.loadCurrentDialogue();
     } else {
       console.log("No next dialogue defined; scenario may have ended.");
-      // Mark the conversation as completed and remove the saved dialogue index.
+      // Mark conversation as completed and remove the saved dialogue index.
       StateManager.set('chat_conversation_completed', 'true');
       StateManager.remove('chat_currentDialogueIndex');
+      // Remove the 'chat_started' flag so that conversation is not auto-resumed on reload.
+      StateManager.remove('chat_started');
       if (typeof this.onScenarioEnd === "function") {
         this.onScenarioEnd();
       }

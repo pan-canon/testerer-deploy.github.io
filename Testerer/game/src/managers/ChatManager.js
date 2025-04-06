@@ -243,8 +243,12 @@ export class ChatManager {
 
     const messagesEl = this.container.querySelector('#chat-messages');
     if (messagesEl) {
-      // Append new messages (history is preserved).
-      messagesEl.innerHTML += messagesHTML;
+      // Append messages only if the container is currently empty to avoid duplicates.
+      if (messagesEl.children.length === 0) {
+        messagesEl.innerHTML += messagesHTML;
+      } else {
+        console.log("Chat messages already present, skipping appending dialogue messages to avoid duplicates.");
+      }
     }
 
     // Update dialogue options using the new method.

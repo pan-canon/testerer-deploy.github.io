@@ -241,24 +241,43 @@ export class ChatManager {
       await this.saveMessage({ sender: msg.sender, text: localizedMsg });
     }
 
-    let optionsHTML = '';
-    if (dialogueConfig.options && dialogueConfig.options.length > 0) {
-      for (const option of dialogueConfig.options) {
-        // Get localized option text if available.
-        const localizedOptionText = this.getLocalizedString(option.text, option.text);
-        optionsHTML += `<button class="button is-link dialogue-option" style="margin-bottom: 0.5rem;">${localizedOptionText}</button>`;
-      }
-    }
-
     const messagesEl = this.container.querySelector('#chat-messages');
     if (messagesEl) {
       // Append new messages (history is preserved).
       messagesEl.innerHTML += messagesHTML;
     }
 
+    // Update dialogue options using the new method.
+    this.updateDialogueOptions(dialogueConfig.options);
+
+    const boardEl = this.container.querySelector('#spirit-board');
+    if (boardEl) {
+      boardEl.innerHTML = '';
+    }
+
+    console.log('Dialogue loaded in ChatManager.');
+  }
+
+  /**
+   * Updates the dialogue options block with the given options array.
+   * This method re-renders the options block with localized option texts
+   * and attaches click event listeners for each option.
+   *
+   * @param {Array} options - Array of dialogue option objects.
+   */
+  updateDialogueOptions(options) {
     const optionsEl = this.container.querySelector('#chat-options');
     if (optionsEl) {
-      if (dialogueConfig.options && dialogueConfig.options.length > 3) {
+      let optionsHTML = '';
+      if (options && options.length > 0) {
+        options.forEach((option, index) => {
+          // Get localized option text if available.
+          const localizedOptionText = this.getLocalizedString(option.text, option.text);
+          optionsHTML += `<button class="button is-link dialogue-option" style="margin-bottom: 0.5rem;">${localizedOptionText}</button>`;
+        });
+      }
+      // Set maxHeight if there are many options.
+      if (options && options.length > 3) {
         optionsEl.style.maxHeight = '200px';
         optionsEl.style.overflowY = 'auto';
       } else {
@@ -267,26 +286,23 @@ export class ChatManager {
       }
       // Replace options to show current choices.
       optionsEl.innerHTML = optionsHTML;
-    }
 
-    const boardEl = this.container.querySelector('#spirit-board');
-    if (boardEl) {
-      boardEl.innerHTML = '';
-    }
-
-    const optionButtons = this.container.querySelectorAll('.dialogue-option');
-    optionButtons.forEach((btn, index) => {
-      btn.addEventListener('click', () => {
-        if (this.scenarioManager && typeof this.scenarioManager.advanceDialogue === 'function') {
-          this.scenarioManager.advanceDialogue(index);
-        } else {
-          const option = dialogueConfig.options[index];
-          console.log(`Option selected: ${option.text}`);
-        }
+      // Attach click event listeners to each option.
+      const optionButtons = optionsEl.querySelectorAll('.dialogue-option');
+      optionButtons.forEach((btn, index) => {
+        btn.addEventListener('click', () => {
+          if (this.scenarioManager && typeof this.scenarioManager.advanceDialogue === 'function') {
+            this.scenarioManager.advanceDialogue(index);
+          } else {
+            const option = options[index];
+            console.log(`Option selected: ${option.text}`);
+          }
+        });
       });
-    });
-
-    console.log('Dialogue loaded in ChatManager.');
+      console.log('Dialogue options updated in ChatManager.');
+    } else {
+      console.error('Options container not found in ChatManager.');
+    }
   }
 
   /**

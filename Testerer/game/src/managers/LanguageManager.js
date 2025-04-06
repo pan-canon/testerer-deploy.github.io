@@ -66,6 +66,22 @@ export class LanguageManager {
   }
 
   /**
+   * updateContainerLanguage – Updates the text content of all elements with the data-i18n attribute
+   * within a specific container. This is useful for dynamically inserted content.
+   *
+   * @param {HTMLElement} container - The container element in which to update localized text.
+   */
+  updateContainerLanguage(container) {
+    if (!container) return;
+    container.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (this.locales[this.currentLanguage] && this.locales[this.currentLanguage][key]) {
+        el.textContent = this.locales[this.currentLanguage][key];
+      }
+    });
+  }
+
+  /**
    * getLanguage – Returns the currently selected language.
    * @returns {string} The current language (e.g., 'en', 'ru', 'uk').
    */

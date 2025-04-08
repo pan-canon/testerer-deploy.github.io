@@ -1,9 +1,5 @@
 // File: src/managers/QuestManager.js
 
-import { BaseMirrorQuest } from '../quests/BaseMirrorQuest.js';
-import { BaseRepeatingQuest } from '../quests/BaseRepeatingQuest.js';
-import { FinalQuest } from '../quests/FinalQuest.js';
-
 import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
 import { loadGameEntitiesConfig } from '../utils/GameEntityLoader.js';
@@ -12,7 +8,7 @@ import { loadGameEntitiesConfig } from '../utils/GameEntityLoader.js';
  * QuestManager class
  * 
  * Responsible for managing quest activation, state updates, and UI restoration.
- * It now loads quest definitions from a unified JSON configuration.
+ * It loads quest definitions dynamically from a unified JSON configuration.
  */
 export class QuestManager {
   /**
@@ -24,37 +20,43 @@ export class QuestManager {
     this.app = appInstance;
     this.quests = [];
 
-    // Mapping of quest class names to their implementations.
-    this._questClasses = {
-      "BaseMirrorQuest": BaseMirrorQuest,
-      "BaseRepeatingQuest": BaseRepeatingQuest,
-      "FinalQuest": FinalQuest
-    };
-
-    // Load the unified configuration and instantiate quests.
+    // Load the unified configuration and instantiate quests dynamically.
     loadGameEntitiesConfig()
-      .then(config => {
-        config.quests.forEach(questCfg => {
-          // Map dependency names to actual objects.
+      .then(async config => {
+        for (const questCfg of config.quests) {
+          // Build dependency mapping.
           const dependencyMapping = {
             "eventManager": this.eventManager,
             "app": this.app
           };
           const params = questCfg.dependencies.map(dep => dependencyMapping[dep]);
-          // Append quest-specific configuration if available.
+          // If quest-specific configuration exists, append it.
           if (questCfg.config) {
             params.push(questCfg.config);
           }
-          const QuestClass = this._questClasses[questCfg.className];
-          if (!QuestClass) {
-            ErrorManager.logError(`Quest class "${questCfg.className}" is not registered.`, "QuestManager");
-            return;
+          // Dynamically import the quest class from ../quests/<ClassName>.js
+          const modulePath = `../quests/${questCfg.className}.js`;
+          try {
+            const module = await import(modulePath);
+            const QuestClass = module[questCfg.className];
+            if (!QuestClass) {
+              ErrorManager.logError(
+                `Quest class "${questCfg.className}" is not exported from ${modulePath}.`,
+                "QuestManager"
+              );
+              continue;
+            }
+            const instance = new QuestClass(...params);
+            // Set the key as specified in the configuration.
+            instance.key = questCfg.key;
+            this.quests.push(instance);
+          } catch (error) {
+            ErrorManager.logError(
+              `Failed to import quest class "${questCfg.className}" from ${modulePath}: ${error.message}`,
+              "QuestManager"
+            );
           }
-          const instance = new QuestClass(...params);
-          // Ensure the instance has its key set.
-          instance.key = questCfg.key;
-          this.quests.push(instance);
-        });
+        }
         console.log("Quests loaded from configuration:", this.quests.map(q => q.key));
       })
       .catch(error => {

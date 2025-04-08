@@ -1,10 +1,5 @@
 // File: src/managers/GameEventManager.js
 
-import { WelcomeEvent } from '../events/WelcomeEvent.js';
-import { PostMirrorEvent } from '../events/PostMirrorEvent.js';
-import { PostRepeatingEvent } from '../events/PostRepeatingEvent.js';
-import { FinalEvent } from '../events/FinalEvent.js';
-
 import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
 import { loadGameEntitiesConfig } from '../utils/GameEntityLoader.js';
@@ -12,7 +7,10 @@ import { loadGameEntitiesConfig } from '../utils/GameEntityLoader.js';
 /**
  * GameEventManager class
  * 
- * Manages one-time game events. It now loads event definitions from a unified JSON configuration.
+ * Manages one-time game events. It loads event definitions dynamically from
+ * a unified JSON configuration. The configuration (including event class names,
+ * dependencies and keys) is defined entirely in the config file.
+ *
  * NOTE: Sequential linking of events and quests is now handled by GhostManager.
  */
 export class GameEventManager {
@@ -27,35 +25,41 @@ export class GameEventManager {
     this.languageManager = languageManager;
     this.events = [];
 
-    // Mapping of event class names to their implementations.
-    this._eventClasses = {
-      "WelcomeEvent": WelcomeEvent,
-      "PostMirrorEvent": PostMirrorEvent,
-      "PostRepeatingEvent": PostRepeatingEvent,
-      "FinalEvent": FinalEvent
-    };
-
-    // Load the unified configuration and instantiate events.
+    // Load the unified configuration and instantiate events dynamically.
     loadGameEntitiesConfig()
-      .then(config => {
-        config.events.forEach(eventCfg => {
-          // Map dependency names to actual objects.
+      .then(async config => {
+        for (const eventCfg of config.events) {
+          // Build dependency mapping.
           const dependencyMapping = {
             "eventManager": this.eventManager,
             "app": this.app,
             "languageManager": this.languageManager
           };
           const params = eventCfg.dependencies.map(dep => dependencyMapping[dep]);
-          const EventClass = this._eventClasses[eventCfg.className];
-          if (!EventClass) {
-            ErrorManager.logError(`Event class "${eventCfg.className}" is not registered.`, "GameEventManager");
-            return;
+
+          // Dynamically import the event class from ../events/<ClassName>.js
+          const modulePath = `../events/${eventCfg.className}.js`;
+          try {
+            const module = await import(modulePath);
+            const EventClass = module[eventCfg.className];
+            if (!EventClass) {
+              ErrorManager.logError(
+                `Event class "${eventCfg.className}" is not exported from ${modulePath}.`,
+                "GameEventManager"
+              );
+              continue;
+            }
+            const instance = new EventClass(...params);
+            // Set the key as specified in the config.
+            instance.key = eventCfg.key;
+            this.events.push(instance);
+          } catch (error) {
+            ErrorManager.logError(
+              `Failed to import event class "${eventCfg.className}" from ${modulePath}: ${error.message}`,
+              "GameEventManager"
+            );
           }
-          const instance = new EventClass(...params);
-          // Ensure that the instance has its key set.
-          instance.key = eventCfg.key;
-          this.events.push(instance);
-        });
+        }
         console.log("Game events loaded from configuration:", this.events.map(e => e.key));
       })
       .catch(error => {
@@ -69,7 +73,7 @@ export class GameEventManager {
    */
   async activateEvent(key) {
     let event = this.events.find(e => e.key === key);
-    // If dynamic keys (e.g. "post_repeating_event_stage_X") are used, fallback to the PostRepeatingEvent instance.
+    // Fallback for dynamic keys (e.g. "post_repeating_event_stage_X")
     if (!event && key.startsWith("post_repeating_event")) {
       event = this.events.find(e => e.key === "post_repeating_event");
     }

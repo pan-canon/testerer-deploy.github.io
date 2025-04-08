@@ -2,13 +2,6 @@ import { TemplateEngine } from '../utils/TemplateEngine.js';
 import { animateText } from '../utils/SpiritBoardUtils.js';
 import { StateManager } from './StateManager.js';
 
-// Dynamically determine the base path without fixed values.
-function getBasePath() {
-  const loc = window.location;
-  const path = loc.pathname.substring(0, loc.pathname.lastIndexOf('/'));
-  return loc.origin + path;
-}
-
 export class ChatManager {
   /**
    * @param {Object} options - Configuration options for the chat.
@@ -20,7 +13,7 @@ export class ChatManager {
    *  - sectionKey: (optional) unique identifier for the chat section.
    */
   constructor(options = {}) {
-    const basePath = options.basePath || getBasePath();
+    const basePath = options.basePath || ChatManager.getBasePath();
     this.templateUrl = options.templateUrl || `${basePath}/src/templates/chat_template.html`;
     this.mode = options.mode || 'full';
     this.container = null; // DOM element for the chat section
@@ -31,6 +24,31 @@ export class ChatManager {
     this.sectionKey = options.sectionKey || null;
     // We'll store the scenario manager here if needed.
     this.scenarioManager = null;
+  }
+
+  /**
+   * Static method to get the base URL dynamically.
+   *
+   * @returns {string} The base URL (origin + path without the file name).
+   */
+  static getBasePath() {
+    const loc = window.location;
+    const path = loc.pathname.substring(0, loc.pathname.lastIndexOf('/'));
+    return loc.origin + path;
+  }
+
+  /**
+   * Static method to create a ChatManager instance with default options merged with any provided overrides.
+   *
+   * @param {Object} options - Custom options to override default values.
+   * @returns {ChatManager} A new instance of ChatManager.
+   */
+  static createChatManagerWrapper(options = {}) {
+    const defaultOptions = {
+      templateUrl: `${ChatManager.getBasePath()}/src/templates/chat_template.html`,
+      mode: 'full'
+    };
+    return new ChatManager({ ...defaultOptions, ...options });
   }
 
   /**
@@ -71,6 +89,7 @@ export class ChatManager {
    * rendering it using the TemplateEngine with initial data (loading messages from DB if available),
    * and inserting it into the chat section in index.html.
    * Also initializes the conversation if not marked as completed.
+   *
    * @returns {Promise<void>}
    */
   async init() {
@@ -82,13 +101,16 @@ export class ChatManager {
       }
       const templateText = await response.text();
 
-      // Load saved messages from DB.
+      // Load saved messages from the DatabaseManager.
       let messagesStr = "";
       if (this.databaseManager) {
         const chatMessages = this.databaseManager.getChatMessages();
         if (chatMessages && chatMessages.length > 0) {
           messagesStr = chatMessages
-            .map(msg => `<div class="chat-message ${msg.sender}" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${msg.message}</div>`)
+            .map(
+              msg =>
+                `<div class="chat-message ${msg.sender}" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; max-width: 80%; word-wrap: break-word;">${msg.message}</div>`
+            )
             .join("");
         }
       }
@@ -122,10 +144,9 @@ export class ChatManager {
 
       console.log('ChatManager initialized.');
 
-      // --- Resume conversation only if it was started and not completed ---
-      const conversationStarted = StateManager.get(this.getStateKey('chat_started')) === 'true';
-      const conversationCompleted = StateManager.get(this.getStateKey('chat_conversation_completed')) === 'true';
-      if (conversationStarted && !conversationCompleted) {
+      // --- Resume conversation only if it was started and not completed,
+      // and only if no messages are currently shown (to avoid duplicate append) ---
+      if (!this.isConversationActive()) {
         try {
           const module = await import('./ChatScenarioManager.js');
           this.scenarioManager = new module.ChatScenarioManager(this, null);
@@ -134,7 +155,7 @@ export class ChatManager {
           console.error("Failed to resume ChatScenarioManager:", e);
         }
       } else {
-        console.log("No active conversation found. Chat remains idle.");
+        console.log("Conversation already active; skipping dialogue load to prevent duplicates.");
       }
       
     } catch (error) {
@@ -384,20 +405,4 @@ export class ChatManager {
     StateManager.remove(`${prefix}chat_conversation_completed`);
     console.log(`Chat cleared for section: ${sectionKey || 'global'}`);
   }
-}
-
-/**
- * Wrapper function to create a ChatManager instance with default options.
- * This simplifies the instantiation from other parts of the application (e.g., App.js)
- * by merging default settings with any provided options.
- *
- * @param {Object} options - Custom options to override default values.
- * @returns {ChatManager} A new instance of ChatManager.
- */
-export function createChatManagerWrapper(options = {}) {
-  const defaultOptions = {
-    templateUrl: `${getBasePath()}/src/templates/chat_template.html`,
-    mode: 'full'
-  };
-  return new ChatManager({ ...defaultOptions, ...options });
 }

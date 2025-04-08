@@ -21,7 +21,7 @@ import { GameEventManager } from './managers/GameEventManager.js';
 import { ShowProfileModal } from './managers/ShowProfileModal.js';
 
 // NEW IMPORTS FOR CHAT MODULE using the wrapper for simplified instantiation
-import { createChatManagerWrapper } from './managers/ChatManager.js';
+import { ChatManager } from './managers/ChatManager.js';
 
 /**
  * Main application class.
@@ -67,7 +67,7 @@ export class App {
 
     // Initialize ChatManager for the "support" chat section using the wrapper.
     // All chat logic (state, dialogue, localization) is handled within ChatManager.
-    this.chatManager = deps.chatManager || createChatManagerWrapper({
+    this.chatManager = deps.chatManager || ChatManager.createChatManagerWrapper({
       databaseManager: this.databaseManager,
       languageManager: this.languageManager,
       sectionKey: 'support'

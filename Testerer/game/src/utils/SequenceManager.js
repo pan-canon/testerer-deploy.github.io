@@ -1,16 +1,17 @@
 /**
+ * SequenceManager.js
+ * 
+ * Provides methods to manage the event–quest sequence.
+ *
  * @typedef {Object} SequenceEntry
- * @property {string} eventKey - Ключ события.
- * @property {string} questKey - Ключ квеста, который запускается после события.
- * @property {string|null} nextEventKey - Ключ следующего события (или null, если последовательность завершена).
+ * @property {string} eventKey - The event key.
+ * @property {string} questKey - The quest key that will be started after the event.
+ * @property {string|null} nextEventKey - The key of the next event (or null if the sequence is complete).
  */
 
-/**
- * SequenceManager provides methods to manage the event-quest sequence.
- */
 export class SequenceManager {
   /**
-   * @param {SequenceEntry[]} sequenceList - Список элементов последовательности.
+   * @param {SequenceEntry[]} sequenceList - The list of sequence entries.
    */
   constructor(sequenceList) {
     this.sequenceList = sequenceList;
@@ -18,7 +19,7 @@ export class SequenceManager {
   }
 
   /**
-   * Возвращает текущую запись последовательности.
+   * Returns the current sequence entry.
    * @returns {SequenceEntry|null}
    */
   getCurrentEntry() {
@@ -26,8 +27,8 @@ export class SequenceManager {
   }
 
   /**
-   * Проверяет, совпадает ли переданный ключ квеста с ожидаемым.
-   * @param {string} questKey
+   * Checks if the provided quest key matches the expected quest in the current sequence entry.
+   * @param {string} questKey 
    * @returns {boolean}
    */
   isNextQuest(questKey) {
@@ -36,8 +37,8 @@ export class SequenceManager {
   }
 
   /**
-   * Проверяет, совпадает ли переданный ключ события с ожидаемым.
-   * @param {string} eventKey
+   * Checks if the provided event key matches the expected event in the current sequence entry.
+   * @param {string} eventKey 
    * @returns {boolean}
    */
   isNextEvent(eventKey) {
@@ -46,7 +47,7 @@ export class SequenceManager {
   }
 
   /**
-   * Инкрементирует индекс последовательности.
+   * Increments the sequence index if not at the end.
    */
   increment() {
     if (this.currentIndex < this.sequenceList.length - 1) {
@@ -55,22 +56,9 @@ export class SequenceManager {
   }
 
   /**
-   * Сбрасывает индекс последовательности.
+   * Resets the sequence index to the beginning.
    */
   reset() {
     this.currentIndex = 0;
   }
-}
-
-/**
- * Loads the sequence configuration from a JSON file.
- * @returns {Promise<SequenceManager>}
- */
-export async function loadSequenceConfig() {
-  const response = await fetch('./src/config/eventSequence.json');
-  if (!response.ok) {
-    throw new Error('Failed to load event sequence configuration');
-  }
-  const sequenceList = await response.json();
-  return new SequenceManager(sequenceList);
 }

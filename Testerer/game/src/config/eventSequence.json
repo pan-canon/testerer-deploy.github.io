@@ -1,5 +1,0 @@
-[
-  { "eventKey": "welcome", "questKey": "mirror_quest", "nextEventKey": "post_repeating_event" },
-  { "eventKey": "post_repeating_event", "questKey": "repeating_quest", "nextEventKey": "final_event" },
-  { "eventKey": "final_event", "questKey": "final_quest", "nextEventKey": null }
-]

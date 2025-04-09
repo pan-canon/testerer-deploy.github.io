@@ -119,17 +119,16 @@ export class App {
 
     // Initialize the chat section for "support"
     await this.chatManager.init();
-
     // Schedule support chat conversation to start after 5 seconds.
     this.chatManager.scheduleConversationStartIfInactive(5000);
 
     // If a profile exists, switch to main screen (and only then re-call updateDiaryDisplay).
+    // IMPORTANT: Pass `this` as the third param so `ViewManager` can reference your main app instance.
     if (await this.profileManager.isProfileSaved()) {
       const profile = await this.profileManager.getProfile();
       console.log("Profile found:", profile);
 
-      // IMPORTANT: use await to ensure main-screen is fully loaded before re-rendering diary
-      await this.viewManager.switchScreen('main-screen', 'main-buttons');
+      await this.viewManager.switchScreen('main-screen', 'main-buttons', this);
       this.viewManager.showToggleCameraButton();
 
       if (StateManager.get("mirrorQuestReady") === "true") {
@@ -145,8 +144,8 @@ export class App {
     } else {
       console.log("Profile not found, showing landing screen.");
 
-      // Also await so the landing template is loaded before any other step
-      await this.viewManager.switchScreen('landing-screen', 'landing-buttons');
+      // ALSO pass `this` here. Without it, `app` will be undefined in `ViewManager`.
+      await this.viewManager.switchScreen('landing-screen', 'landing-buttons', this);
     }
   }
 }

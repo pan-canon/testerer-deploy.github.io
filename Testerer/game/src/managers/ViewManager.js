@@ -31,7 +31,6 @@ export class ViewManager {
     this.updateBtn = document.getElementById("update-btn");
     
     // Initially, we assign the diaryContainer from the hidden placeholder
-    // so that EventManager can update the diary even before main-screen loads.
     this.diaryContainer = document.getElementById("diary");
 
     this.cameraManager = null;

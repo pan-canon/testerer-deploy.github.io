@@ -226,7 +226,31 @@ export class ViewManager {
       }
     }
 
-    // If apartment-plan-screen, add event listeners to the floor buttons
+    // Если экран создания селфи: поскольку кнопки (capture и complete)
+    // создаются статически в index, используем document.getElementById для их привязки.
+    if (screenId === "selfie-screen") {
+      const captureBtn = document.getElementById('capture-btn');
+      if (captureBtn) {
+        captureBtn.onclick = () => {
+          console.log("Capture button clicked. Capturing selfie...");
+          this.captureSelfie(app);
+        };
+      } else {
+        console.error("Capture button (id='capture-btn') not found in the DOM.");
+      }
+      const completeBtn = document.getElementById('complete-registration');
+      if (completeBtn) {
+        completeBtn.onclick = () => {
+          console.log("Complete registration button clicked.");
+          this.completeRegistration(app);
+        };
+      } else {
+        console.error("Complete registration button (id='complete-registration') not found in the DOM.");
+      }
+    }
+
+    // Если экран апартаментов и прочие экраны, где кнопки находятся внутри динамических шаблонов,
+    // продолжаем использовать targetScreen.querySelector (оставляем существующую логику для других экранов)
     if (screenId === "apartment-plan-screen" && app) {
       const prevFloorBtn = document.getElementById("prev-floor-btn");
       if (prevFloorBtn) {
@@ -244,9 +268,17 @@ export class ViewManager {
           }
         });
       }
+      // Привязываем кнопку "apartment-plan-next-btn" для перехода на экран селфи
+      const planNextBtn = targetScreen.querySelector('#apartment-plan-next-btn');
+      if (planNextBtn) {
+        planNextBtn.addEventListener('click', () => {
+          console.log("Apartment Plan next button clicked. Going to selfie screen.");
+          this.goToSelfieScreen(app);
+        });
+      }
     }
 
-    // Hide all groups of buttons in controls panel, then show the target group
+    // Скрываем все группы кнопок в панели управления, затем показываем целевую группу
     document.querySelectorAll('#controls-panel > .buttons').forEach(group => {
       group.style.display = 'none';
       group.style.pointerEvents = 'none';
@@ -256,7 +288,7 @@ export class ViewManager {
       if (targetGroup) {
         targetGroup.style.display = 'flex';
         targetGroup.style.pointerEvents = 'auto';
-        // For main-screen, hide toggle-diary and shoot to avoid confusion.
+        // Для main-screen скрываем toggle-diary и btn_shoot чтобы не создавать путаницы.
         if (screenId === "main-screen") {
           const td = targetGroup.querySelector("#toggle-diary");
           if (td) td.style.display = "none";
@@ -267,7 +299,7 @@ export class ViewManager {
       }
     }
 
-    // Make the chat button visible
+    // Делаем кнопку чата видимой
     const chatContainer = document.getElementById("chat-button-container");
     if (chatContainer) {
       chatContainer.style.display = 'flex';
@@ -275,7 +307,7 @@ export class ViewManager {
       console.log("[ViewManager] Chat button container set to visible.");
     }
 
-    // Show/hide global language container depending on screen
+    // Показываем/скрываем глобальный контейнер языка в зависимости от экрана
     const languageContainer = document.getElementById("language-container");
     if (languageContainer) {
       if (screenId === "landing-screen") {

@@ -68,7 +68,7 @@
       border-radius: 5px;
     }
 
-    /* Selfie screen positioning */
+    /* Selfie screen styling if needed later */
     #selfie-screen {
       position: relative;
       z-index: 1100; /* higher than global-camera */
@@ -82,84 +82,10 @@
     <div class="spinner"></div>
   </div>
   
-  <!-- Global container for main content -->
+  <!-- Global container for dynamic main content -->
+  <!-- This container will be populated with templates (landing, registration, main interface, etc.) -->
   <div id="global-content" class="container box">
-    <!-- Registration Screen (Step 1) -->
-    <section id="registration-screen">
-      <h1 class="title" data-i18n="welcome">Welcome!</h1>
-      <form id="registration-form">
-        <div class="field">
-          <label class="label" for="player-name" data-i18n="enter_name">Enter your name:</label>
-          <div class="control">
-            <input class="input" type="text" id="player-name" required>
-          </div>
-        </div>
-        <div class="field">
-          <label class="label" for="player-gender" data-i18n="select_gender">Select your gender:</label>
-          <div class="control">
-            <div class="select">
-              <select id="player-gender" required>
-                <option value="" disabled selected>Select</option>
-                <option value="male" data-i18n="male">Male</option>
-                <option value="female" data-i18n="female">Female</option>
-                <option value="other" data-i18n="other">Other</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <div class="field">
-          <label class="label" for="language-selector" data-i18n="select_language">Select Language:</label>
-          <div class="control">
-            <div class="select">
-              <select id="language-selector">
-                <option value="en">English</option>
-                <option value="ru">Русский</option>
-                <option value="uk">Українська</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </form>
-      <!-- Import Profile (Alternative Entry) -->
-      <div id="import-profile-container" class="box">
-        <h2 class="subtitle" data-i18n="import_profile">Import Profile</h2>
-        <div class="field">
-          <div class="control">
-            <input class="input" type="file" id="import-file" accept=".json">
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Apartment Plan Screen (Step 2) -->
-    <section id="apartment-plan-screen" style="display: none;">
-      <h2 class="title">Apartment Plan</h2>
-      <div id="apartment-plan-container">
-        <!-- Table will be generated dynamically -->
-      </div>
-    </section>
-
-    <!-- Selfie Creation Screen (Step 3) -->
-    <section id="selfie-screen" style="display: none;">
-      <h1 class="title" data-i18n="take_selfie">Take a Selfie</h1>
-    </section>
-
-    <!-- Main Screen (e.g., Blog/Diary) -->
-    <section id="main-screen" style="display: none;">
-      <h2 class="title" data-i18n="diary">Your Diary</h2>
-      <div id="profile-info" class="box">
-        <figure class="image is-128x128">
-          <img id="profile-photo" alt="Profile Photo" style="display: none; border-radius: 50%;">
-        </figure>
-        <p id="profile-name"></p>
-      </div>
-      <div id="diary" class="content"></div>
-    </section>
-    
-    <!-- Chat Section (initially hidden) -->
-    <section id="chat-section" style="display: none;">
-      <!-- Chat content will be loaded dynamically via TemplateEngine -->
-    </section>
+    <!-- Dynamic templates will be inserted here via ViewManager.loadTemplate() -->
   </div>
 
   <!-- Global container for camera -->
@@ -179,23 +105,20 @@
   <div id="controls-panel" class="box">
     <img id="selfie-thumbnail" src="" alt="Selfie Thumbnail" style="display: none; width: 50px; height: 50px; border-radius: 50%;">
     
-    <!-- Registration Screen Buttons -->
+    <!-- These control button groups can be shown/hidden by ViewManager.switchScreen() -->
     <div id="registration-buttons" class="buttons">
       <button class="button is-link" type="button" id="next-step-btn" data-i18n="next" disabled>Next</button>
       <button class="button is-info" type="button" id="import-profile-btn" data-i18n="import">Import Profile</button>
     </div>
-    <!-- Apartment Plan Buttons -->
     <div id="apartment-plan-buttons" class="buttons" style="display: none;">
       <button class="button" type="button" id="prev-floor-btn">Previous Floor</button>
       <button class="button" type="button" id="next-floor-btn">Next Floor</button>
       <button class="button is-link" type="button" id="apartment-plan-next-btn">Next</button>
     </div>
-    <!-- Selfie Screen Buttons -->
     <div id="selfie-buttons" class="buttons" style="display: none;">
       <button class="button is-primary" type="button" id="capture-btn" data-i18n="capture">Capture</button>
       <button class="button is-success" type="button" id="complete-registration" data-i18n="complete" disabled>Complete</button>
     </div>
-    <!-- Main Screen Buttons (Blog/Diary) -->
     <div id="main-buttons" class="buttons" style="display: none;">
       <button class="button" id="post-btn" disabled>Post</button>
       <button class="button" type="button" id="btn_shoot" style="display: none;">Shoot</button>

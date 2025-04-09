@@ -135,8 +135,9 @@ export class App {
       this.viewManager.updateProfileDisplay(profile);
       this.selfieData = profile.selfie;
     } else {
-      console.log("Profile not found, showing registration screen.");
-      this.viewManager.switchScreen('registration-screen', 'registration-buttons');
+      console.log("Profile not found, showing landing screen.");
+      // Если профиль не найден, сначала показываем лендинговую секцию.
+      this.viewManager.switchScreen('landing-screen', 'landing-buttons');
     }
   }
 }

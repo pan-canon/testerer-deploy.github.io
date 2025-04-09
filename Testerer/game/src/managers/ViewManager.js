@@ -3,6 +3,7 @@ import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
 import { ImageUtils } from '../utils/ImageUtils.js';
 import { ApartmentPlanManager } from './ApartmentPlanManager.js'; // Import from the managers folder
+import { TemplateEngine } from '../utils/TemplateEngine.js'; // NEW: Import TemplateEngine for rendering templates
 
 /**
  * ViewManager
@@ -171,6 +172,105 @@ export class ViewManager {
     }
   }
 
+  // ------------------ Dynamic Template Loading Methods ------------------
+
+  /**
+   * loadTemplate
+   * Dynamically loads an HTML template from the templates folder.
+   * The file name format is "src/templates/[screenId]_template.html".
+   * It uses fetch to load the template text, renders it using TemplateEngine,
+   * and inserts the resulting HTML into the global content container.
+   *
+   * @param {string} screenId - The id of the screen/template to load.
+   * @param {Object} [data={}] - Optional data for template rendering.
+   * @returns {Promise<HTMLElement>} The loaded template element.
+   */
+  async loadTemplate(screenId, data = {}) {
+    const basePath = this.getBasePath();
+    const templateUrl = `${basePath}/src/templates/${screenId}_template.html`;
+    try {
+      const response = await fetch(templateUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to load template: ${templateUrl}`);
+      }
+      const templateText = await response.text();
+      const renderedHTML = TemplateEngine.render(templateText, data);
+      const container = document.getElementById("global-content");
+      if (container) {
+        // Append the rendered HTML to the container.
+        container.innerHTML += renderedHTML;
+        // Return the last appended element (assumed to be the new screen)
+        const newScreen = container.lastElementChild;
+        console.log(`[ViewManager] Loaded template for screen: ${screenId}`);
+        return newScreen;
+      } else {
+        throw new Error("Global content container (id='global-content') not found.");
+      }
+    } catch (error) {
+      ErrorManager.logError(error, "loadTemplate");
+      return null;
+    }
+  }
+
+  /**
+   * switchScreen
+   * Switches the UI to the target screen. If the screen element does not exist,
+   * it dynamically loads the template from the templates folder.
+   *
+   * @param {string} screenId - The id of the target screen.
+   * @param {string} buttonsGroupId - The id of the control button group to display.
+   */
+  async switchScreen(screenId, buttonsGroupId) {
+    // Hide all sections
+    document.querySelectorAll('section').forEach(section => {
+      section.style.display = 'none';
+    });
+    // Attempt to get the target screen element
+    let targetScreen = document.getElementById(screenId);
+    // If not found, load it dynamically
+    if (!targetScreen) {
+      targetScreen = await this.loadTemplate(screenId);
+      if (!targetScreen) {
+        console.error(`[ViewManager] Failed to load screen: ${screenId}`);
+        return;
+      }
+      // Optionally, update localized text in the newly loaded container:
+      // Example (if languageManager is available):
+      // if (this.languageManager && typeof this.languageManager.updateContainerLanguage === 'function') {
+      //   this.languageManager.updateContainerLanguage(targetScreen);
+      // }
+    }
+    // Display the target screen
+    targetScreen.style.display = 'block';
+    console.log(`[ViewManager] Switched to screen: ${screenId}`);
+
+    // Hide all controls panel button groups
+    document.querySelectorAll('#controls-panel > .buttons').forEach(group => {
+      group.style.display = 'none';
+      group.style.pointerEvents = 'none';
+    });
+    if (buttonsGroupId) {
+      const targetGroup = document.getElementById(buttonsGroupId);
+      if (targetGroup) {
+        targetGroup.style.display = 'flex';
+        targetGroup.style.pointerEvents = 'auto';
+        if (screenId === "main-screen") {
+          const td = targetGroup.querySelector("#toggle-diary");
+          if (td) td.style.display = "none";
+          const shootBtn = targetGroup.querySelector("#btn_shoot");
+          if (shootBtn) shootBtn.style.display = "none";
+        }
+        console.log(`[ViewManager] Controls panel updated for group: ${buttonsGroupId}`);
+      }
+    }
+    const chatContainer = document.getElementById("chat-button-container");
+    if (chatContainer) {
+      chatContainer.style.display = 'flex';
+      chatContainer.style.pointerEvents = 'auto';
+      console.log("[ViewManager] Chat button container set to visible.");
+    }
+  }
+
   // ------------------ Diary Rendering Operations ------------------
 
   /**
@@ -277,15 +377,24 @@ export class ViewManager {
     };
   }
 
-  switchScreen(screenId, buttonsGroupId) {
+  // Note: switchScreen is now asynchronous to support dynamic template loading.
+  async switchScreen(screenId, buttonsGroupId) {
+    // Hide all sections
     document.querySelectorAll('section').forEach(section => {
       section.style.display = 'none';
     });
-    const targetScreen = document.getElementById(screenId);
-    if (targetScreen) {
-      targetScreen.style.display = 'block';
-      console.log(`[ViewManager] Switched to screen: ${screenId}`);
+    let targetScreen = document.getElementById(screenId);
+    if (!targetScreen) {
+      // If not found, load the template dynamically.
+      targetScreen = await this.loadTemplate(screenId);
+      if (!targetScreen) {
+        console.error(`[ViewManager] Failed to load screen: ${screenId}`);
+        return;
+      }
     }
+    targetScreen.style.display = 'block';
+    console.log(`[ViewManager] Switched to screen: ${screenId}`);
+    
     document.querySelectorAll('#controls-panel > .buttons').forEach(group => {
       group.style.display = 'none';
       group.style.pointerEvents = 'none';
@@ -907,9 +1016,9 @@ export class ViewManager {
   }
 
   // ---------- New Method: showLocationTypeModal ----------
-
   /**
-   * showLocationTypeModal – Displays a modal window for selecting the location type.
+   * showLocationTypeModal
+   * Displays a modal window for selecting the location type.
    * @param {Function} onConfirm - Callback invoked with the selected type.
    * @param {Function} onCancel - Callback invoked if selection is cancelled.
    */

@@ -115,9 +115,7 @@ export class ViewManager {
       console.error("Chat button (id='chat-btn') not found in the DOM.");
     }
 
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    // *** FIX: Add the missing event listener for the Post button. ***
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    // >>> Add missing event listener for the Post button.
     if (this.postBtn) {
       this.postBtn.addEventListener("click", () => {
         console.log("Post button clicked. Delegating to ghostManager.handlePostButtonClick()...");
@@ -126,7 +124,6 @@ export class ViewManager {
     } else {
       console.error("Post button (id='post-btn') not found in the DOM.");
     }
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   }
 
   // ------------------ Dynamic Template Loading Methods ------------------
@@ -993,6 +990,8 @@ export class ViewManager {
   /**
    * renderDiary
    * Renders the diary entries from the database into the diary container.
+   * Now checks if an entry represents an image (base64 data URI) and renders
+   * an <img> element instead of plain text.
    */
   renderDiary(entries, currentLanguage, visualEffectsManager) {
     if (!this.diaryContainer) {
@@ -1009,18 +1008,34 @@ export class ViewManager {
       console.log("[ViewManager] No diary entries found.");
       return;
     }
-    const diaryEntryTemplate = `
-      <div class="diary-entry {{postClass}}">
-        <p>{{entry}}</p>
-        <span class="diary-timestamp">{{timestamp}}</span>
-      </div>
-    `;
     entries.forEach(entry => {
-      const rendered = TemplateEngine.render(diaryEntryTemplate, {
-        postClass: entry.postClass,
-        entry: entry.entry,
-        timestamp: entry.timestamp
-      });
+      let rendered;
+      // If entry starts with "data:image", assume it's an image.
+      if (entry.entry.startsWith("data:image")) {
+        const imageDiaryEntryTemplate = `
+          <div class="diary-entry {{postClass}}">
+            <img src="{{entry}}" alt="Diary Image" />
+            <span class="diary-timestamp">{{timestamp}}</span>
+          </div>
+        `;
+        rendered = TemplateEngine.render(imageDiaryEntryTemplate, {
+          postClass: entry.postClass,
+          entry: entry.entry,
+          timestamp: entry.timestamp
+        });
+      } else {
+        const diaryEntryTemplate = `
+          <div class="diary-entry {{postClass}}">
+            <p>{{entry}}</p>
+            <span class="diary-timestamp">{{timestamp}}</span>
+          </div>
+        `;
+        rendered = TemplateEngine.render(diaryEntryTemplate, {
+          postClass: entry.postClass,
+          entry: entry.entry,
+          timestamp: entry.timestamp
+        });
+      }
       this.diaryContainer.innerHTML += rendered;
     });
     console.log(`[ViewManager] Diary updated with ${entries.length} entries.`);

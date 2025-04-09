@@ -24,8 +24,10 @@ export class ViewManager {
     this.controlsPanel = document.getElementById("controls-panel");
     
     // --- Registration Form Elements ---
+    // В регистрации поле языка удалено – используются только name и gender
     this.nameInput = document.getElementById('player-name');
     this.genderSelect = document.getElementById('player-gender');
+    // Глобальный селектор языка (находится в index.html) используется для выбора языка
     this.languageSelector = document.getElementById('language-selector');
     this.nextStepBtn = document.getElementById('next-step-btn');
     
@@ -105,12 +107,12 @@ export class ViewManager {
    * @param {App} app - The main application instance.
    */
   bindEvents(app) {
+    // Проверка валидности регистрации теперь основывается только на имени и поле выбора пола
     const checkRegistrationValidity = () => {
       const nameValid = this.nameInput && this.nameInput.value.trim().length > 0;
       const genderValid = this.genderSelect && this.genderSelect.value !== "";
-      const languageValid = this.languageSelector && this.languageSelector.value !== "";
       if (this.nextStepBtn) {
-        this.nextStepBtn.disabled = !(nameValid && genderValid && languageValid);
+        this.nextStepBtn.disabled = !(nameValid && genderValid);
       }
     };
 
@@ -126,10 +128,11 @@ export class ViewManager {
         checkRegistrationValidity();
       });
     }
+    // Обработчик изменения глобального селектора языка можно оставить для обновления локализации,
+    // но он не влияет на валидность регистрации
     if (this.languageSelector) {
       this.languageSelector.addEventListener('change', () => {
         console.log("Language select changed:", this.languageSelector.value);
-        checkRegistrationValidity();
       });
     }
     if (this.nextStepBtn) {
@@ -847,6 +850,7 @@ export class ViewManager {
     const profile = {
       name: regData.name,
       gender: regData.gender,
+      // Берем язык из глобального селектора, т.к. в регистрации его нет
       language: regData.language,
       selfie: selfieSrc
     };

@@ -3,7 +3,7 @@ import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
 import { ImageUtils } from '../utils/ImageUtils.js';
 import { ApartmentPlanManager } from './ApartmentPlanManager.js'; // Import from the managers folder
-import { TemplateEngine } from '../utils/TemplateEngine.js'; // NEW: Import TemplateEngine for rendering templates
+import { TemplateEngine } from '../utils/TemplateEngine.js'; // Import TemplateEngine for rendering templates
 
 /**
  * ViewManager
@@ -19,48 +19,28 @@ import { TemplateEngine } from '../utils/TemplateEngine.js'; // NEW: Import Temp
  */
 export class ViewManager {
   constructor() {
-    // --- Cache Main UI Elements ---
-    this.diaryContainer = document.getElementById("diary");
+    // --- Cache Global UI Elements (always present in index.html) ---
     this.controlsPanel = document.getElementById("controls-panel");
+    this.languageSelector = document.getElementById("language-selector"); // Global language selector from index.html
+    // Dummy placeholder exists in index.html; use its diary container initially.
+    this.diaryContainer = document.getElementById("diary");
     
-    // --- Registration Form Elements ---
-    // В регистрации поле языка удалено – используются только name и gender
-    this.nameInput = document.getElementById('player-name');
-    this.genderSelect = document.getElementById('player-gender');
-    // Глобальный селектор языка (находится в index.html) используется для выбора языка
-    this.languageSelector = document.getElementById('language-selector');
-    this.nextStepBtn = document.getElementById('next-step-btn');
-    
-    // --- Selfie Screen Elements ---
-    this.selfiePreview = document.getElementById('selfie-thumbnail');
-    this.captureBtn = document.getElementById('capture-btn');
-    this.completeBtn = document.getElementById('complete-registration');
-    
-    // --- Profile Display Elements ---
-    this.profileNameElem = document.getElementById('profile-name');
-    this.profilePhotoElem = document.getElementById('profile-photo');
-    
-    // --- Import File Input ---
-    this.importFileInput = document.getElementById('import-file');
-    
-    // --- Toggle Buttons and Global Camera ---
+    // --- Other elements that are static (e.g. camera, chat button) ---
     this.toggleCameraBtn = document.getElementById("toggle-camera");
     this.toggleDiaryBtn = document.getElementById("toggle-diary");
     this.globalCamera = document.getElementById("global-camera");
     this.postBtn = document.getElementById("post-btn");
-
-    // --- Additional Control Buttons ---
     this.resetDataBtn = document.getElementById("reset-data");
     this.exportProfileBtn = document.getElementById("export-profile-btn");
     this.updateBtn = document.getElementById("update-btn");
-
-    // --- Chat Button Container ---
-    // Chat container is assumed to be always visible.
     
+    // --- Chat Button Container is assumed to be always present ---
+    // (Other elements for selfie and profile display will be re-bound when their screens load)
+
     // --- Camera Manager Reference (set externally) ---
     this.cameraManager = null;
 
-    // Property for LanguageManager (if needed for updating container language dynamically)
+    // Property for LanguageManager (set externally)
     this.languageManager = null;
 
     // Disable "Post" button by default.
@@ -93,7 +73,8 @@ export class ViewManager {
   }
 
   /**
-   * Optionally set LanguageManager for updating dynamically loaded content.
+   * setLanguageManager
+   * Sets the LanguageManager instance.
    * @param {LanguageManager} languageManager - The LanguageManager instance.
    */
   setLanguageManager(languageManager) {
@@ -102,79 +83,16 @@ export class ViewManager {
 
   /**
    * bindEvents
-   * Binds event listeners for UI elements.
+   * Binds event listeners for UI elements that exist on index.html.
+   * Dynamic elements (e.g. registration fields) are bound when their screen is loaded.
    *
    * @param {App} app - The main application instance.
    */
   bindEvents(app) {
-    // Проверка валидности регистрации теперь основывается только на имени и поле выбора пола
-    const checkRegistrationValidity = () => {
-      const nameValid = this.nameInput && this.nameInput.value.trim().length > 0;
-      const genderValid = this.genderSelect && this.genderSelect.value !== "";
-      if (this.nextStepBtn) {
-        this.nextStepBtn.disabled = !(nameValid && genderValid);
-      }
-    };
-
-    if (this.nameInput) {
-      this.nameInput.addEventListener('input', () => {
-        console.log("Name input changed:", this.nameInput.value);
-        checkRegistrationValidity();
-      });
-    }
-    if (this.genderSelect) {
-      this.genderSelect.addEventListener('change', () => {
-        console.log("Gender select changed:", this.genderSelect.value);
-        checkRegistrationValidity();
-      });
-    }
-    // Обработчик изменения глобального селектора языка можно оставить для обновления локализации,
-    // но он не влияет на валидность регистрации
+    // Для глобальных элементов:
     if (this.languageSelector) {
       this.languageSelector.addEventListener('change', () => {
-        console.log("Language select changed:", this.languageSelector.value);
-      });
-    }
-    if (this.nextStepBtn) {
-      this.nextStepBtn.addEventListener('click', () => {
-        this.goToApartmentPlanScreen(app);
-        console.log("[ViewManager] Next step button clicked.");
-      });
-    }
-    if (this.captureBtn) {
-      this.captureBtn.addEventListener("click", () => {
-        console.log("Capture button clicked. Triggering captureSelfie().");
-        this.captureSelfie(app);
-      });
-    }
-    if (this.completeBtn) {
-      this.completeBtn.addEventListener("click", () => {
-        console.log("Complete Registration button clicked. Triggering completeRegistration().");
-        this.completeRegistration(app);
-      });
-    }
-    if (this.postBtn) {
-      this.postBtn.addEventListener("click", () => {
-        console.log("Post button clicked. Triggering app.ghostManager.handlePostButtonClick().");
-        app.ghostManager.handlePostButtonClick();
-      });
-    }
-    if (this.resetDataBtn) {
-      this.resetDataBtn.addEventListener("click", () => {
-        console.log("Reset Data button clicked.");
-        app.profileManager.resetProfile();
-      });
-    }
-    if (this.exportProfileBtn) {
-      this.exportProfileBtn.addEventListener("click", () => {
-        console.log("Export Profile button clicked.");
-        this.exportProfile(app);
-      });
-    }
-    if (this.updateBtn) {
-      this.updateBtn.addEventListener("click", () => {
-        console.log("Update button clicked.");
-        this.clearCache();
+        console.log("Global language selector changed:", this.languageSelector.value);
       });
     }
     if (this.toggleCameraBtn) {
@@ -195,6 +113,24 @@ export class ViewManager {
       });
     } else {
       console.error("Chat button (id='chat-btn') not found in the DOM.");
+    }
+    if (this.resetDataBtn) {
+      this.resetDataBtn.addEventListener("click", () => {
+        console.log("Reset Data button clicked.");
+        app.profileManager.resetProfile();
+      });
+    }
+    if (this.exportProfileBtn) {
+      this.exportProfileBtn.addEventListener("click", () => {
+        console.log("Export Profile button clicked.");
+        this.exportProfile(app);
+      });
+    }
+    if (this.updateBtn) {
+      this.updateBtn.addEventListener("click", () => {
+        console.log("Update button clicked.");
+        this.clearCache();
+      });
     }
   }
 
@@ -223,12 +159,9 @@ export class ViewManager {
       const renderedHTML = TemplateEngine.render(templateText, data);
       const container = document.getElementById("global-content");
       if (container) {
-        // Append the rendered HTML to the container.
         container.innerHTML += renderedHTML;
-        // Get the newly added element (assumed to be the last child)
         const newScreen = container.lastElementChild;
         console.log(`[ViewManager] Loaded template for screen: ${screenId}`);
-        // Optionally update language for the new screen if languageManager is set:
         if (this.languageManager && typeof this.languageManager.updateContainerLanguage === 'function') {
           this.languageManager.updateContainerLanguage(newScreen);
         }
@@ -246,8 +179,10 @@ export class ViewManager {
    * switchScreen
    * Switches the UI to the target screen. If the screen element does not exist,
    * it dynamically loads the template from the templates folder.
-   * In addition, for the "main-screen" it updates the diary container,
-   * and for the "landing-screen" binds the click event for start-registration-btn.
+   * Additionally:
+   * - For "main-screen", it updates the diary container.
+   * - For "landing-screen", it binds the click event for the start-registration-btn.
+   * - For "registration-screen", it rebinds the registration form events.
    *
    * @param {string} screenId - The id of the target screen.
    * @param {string} buttonsGroupId - The id of the control button group to display.
@@ -259,7 +194,6 @@ export class ViewManager {
     });
     let targetScreen = document.getElementById(screenId);
     if (!targetScreen) {
-      // If not found, load the template dynamically.
       targetScreen = await this.loadTemplate(screenId);
       if (!targetScreen) {
         console.error(`[ViewManager] Failed to load screen: ${screenId}`);
@@ -269,7 +203,7 @@ export class ViewManager {
     targetScreen.style.display = 'block';
     console.log(`[ViewManager] Switched to screen: ${screenId}`);
     
-    // Для экрана main-screen обновляем контейнер дневника
+    // For main-screen, update diary container
     if (screenId === "main-screen") {
       const diaryElem = targetScreen.querySelector('#diary');
       if (diaryElem) {
@@ -278,7 +212,7 @@ export class ViewManager {
       }
     }
     
-    // Для лендингового экрана привязываем обработчик для кнопки регистрации
+    // For landing-screen, bind click event on start-registration-btn
     if (screenId === "landing-screen") {
       const startRegistrationBtn = targetScreen.querySelector('#start-registration-btn');
       if (startRegistrationBtn) {
@@ -289,7 +223,40 @@ export class ViewManager {
       }
     }
     
-    // Скрываем все группы кнопок в панели управления.
+    // For registration-screen, re-bind registration form events (since its elements are loaded dynamically)
+    if (screenId === "registration-screen") {
+      this.nameInput = targetScreen.querySelector('#player-name');
+      this.genderSelect = targetScreen.querySelector('#player-gender');
+      this.nextStepBtn = targetScreen.querySelector('#next-step-btn');
+      // Bind registration validation events (only name and gender are required)
+      const checkRegistrationValidity = () => {
+        const nameValid = this.nameInput && this.nameInput.value.trim().length > 0;
+        const genderValid = this.genderSelect && this.genderSelect.value !== "";
+        if (this.nextStepBtn) {
+          this.nextStepBtn.disabled = !(nameValid && genderValid);
+        }
+      };
+      if (this.nameInput) {
+        this.nameInput.addEventListener('input', () => {
+          console.log("Name input changed:", this.nameInput.value);
+          checkRegistrationValidity();
+        });
+      }
+      if (this.genderSelect) {
+        this.genderSelect.addEventListener('change', () => {
+          console.log("Gender select changed:", this.genderSelect.value);
+          checkRegistrationValidity();
+        });
+      }
+      if (this.nextStepBtn) {
+        this.nextStepBtn.addEventListener('click', () => {
+          this.goToApartmentPlanScreen(app);
+          console.log("[ViewManager] Next step button clicked on registration screen.");
+        });
+      }
+    }
+    
+    // Update controls panel: hide all groups then show target group
     document.querySelectorAll('#controls-panel > .buttons').forEach(group => {
       group.style.display = 'none';
       group.style.pointerEvents = 'none';
@@ -324,7 +291,6 @@ export class ViewManager {
   }
 
   // ---------- Profile Display Methods ----------
-
   updateProfileDisplay(profile) {
     if (this.profileNameElem) {
       this.profileNameElem.textContent = profile.name;
@@ -337,7 +303,6 @@ export class ViewManager {
   }
 
   // ---------- Selfie Preview and Complete Button Methods ----------
-
   updateSelfiePreview(imageData) {
     if (this.selfiePreview) {
       this.selfiePreview.src = imageData;
@@ -374,7 +339,6 @@ export class ViewManager {
   }
 
   // ---------- Global Camera and Diary View Methods ----------
-
   showGlobalCamera() {
     if (this.globalCamera) {
       this.globalCamera.style.display = 'block';
@@ -440,7 +404,6 @@ export class ViewManager {
   }
 
   // ---------- Button State Methods ----------
-
   setPostButtonEnabled(isEnabled) {
     const postBtn = document.getElementById("post-btn");
     if (postBtn) {
@@ -501,7 +464,6 @@ export class ViewManager {
   }
 
   // ---------- Apartment Plan UI ----------
-
   setApartmentPlanNextButtonEnabled(isEnabled) {
     const nextBtn = document.getElementById("apartment-plan-next-btn");
     if (nextBtn) {
@@ -513,7 +475,6 @@ export class ViewManager {
   }
 
   // ---------- Mirror Quest UI ----------
-
   startMirrorQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
     if (statusElem) {
@@ -563,7 +524,6 @@ export class ViewManager {
   }
 
   // ---------- Repeating Quest UI ----------
-
   startRepeatingQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
     if (statusElem) {
@@ -625,7 +585,6 @@ export class ViewManager {
   }
 
   // ---------- Top Controls for Extended Camera Modes ----------
-
   createTopCameraControls() {
     const existing = document.getElementById("top-camera-controls");
     if (existing) existing.remove();
@@ -703,7 +662,6 @@ export class ViewManager {
   }
 
   // ---------- Visual Effects and Notifications ----------
-
   applyBackgroundTransition(color, duration) {
     document.body.style.transition = `background ${duration}ms`;
     document.body.style.background = color;
@@ -779,7 +737,6 @@ export class ViewManager {
   }
 
   // ---------- New UI Methods (moved from App) ----------
-
   goToApartmentPlanScreen(app) {
     const regData = this.getRegistrationData();
     if (!regData) {
@@ -850,7 +807,7 @@ export class ViewManager {
     const profile = {
       name: regData.name,
       gender: regData.gender,
-      // Берем язык из глобального селектора, т.к. в регистрации его нет
+      // Используем глобальный язык, выбранный на лендинге
       language: regData.language,
       selfie: selfieSrc
     };

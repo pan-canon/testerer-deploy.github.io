@@ -19,25 +19,24 @@ import { TemplateEngine } from '../utils/TemplateEngine.js'; // NEW: Import Temp
  */
 export class ViewManager {
   constructor() {
-    // --- Cache Main UI Elements that are static (from index.html) ---
+    // --- Cache static UI elements from index.html ---
     this.controlsPanel = document.getElementById("controls-panel");
     this.languageSelector = document.getElementById('language-selector'); // Global language selector in index.html
-    // Global camera element is static
     this.globalCamera = document.getElementById("global-camera");
-    // Chat container/button remain static
     this.postBtn = document.getElementById("post-btn");
     this.toggleCameraBtn = document.getElementById("toggle-camera");
     this.toggleDiaryBtn = document.getElementById("toggle-diary");
     this.resetDataBtn = document.getElementById("reset-data");
     this.exportProfileBtn = document.getElementById("export-profile-btn");
     this.updateBtn = document.getElementById("update-btn");
-    
-    // Note: Dynamic elements (e.g. registration inputs, diary container) will be queried
-    // when switching screens.
+    // Добавляем первоначальное назначение diaryContainer из скрытого placeholder,
+    // чтобы EventManager мог обновлять дневник даже до перехода на main-screen.
+    this.diaryContainer = document.getElementById("diary");
     
     // --- Additional Properties ---
     this.cameraManager = null;
     this.languageManager = null;
+    
     // Initially disable "Post" button.
     if (this.postBtn) {
       this.postBtn.disabled = true;
@@ -73,6 +72,24 @@ export class ViewManager {
    */
   setLanguageManager(languageManager) {
     this.languageManager = languageManager;
+  }
+
+  /**
+   * getRegistrationData
+   * Retrieves registration data from the registration screen elements.
+   *
+   * @returns {Object|null} An object with name, gender and language or null if fields are missing.
+   */
+  getRegistrationData() {
+    if (!this.nameInput || !this.genderSelect) {
+      return null;
+    }
+    return {
+      name: this.nameInput.value.trim(),
+      gender: this.genderSelect.value.trim(),
+      // Берём язык из глобального селектора, т.к. в форме регистрации он отсутствует
+      language: this.languageSelector ? this.languageSelector.value : 'en'
+    };
   }
 
   /**
@@ -201,7 +218,7 @@ export class ViewManager {
     targetScreen.style.display = 'block';
     console.log(`[ViewManager] Switched to screen: ${screenId}`);
     
-    // For the main-screen update the diary container from the loaded template.
+    // Для экрана main-screen обновляем контейнер дневника из нового шаблона.
     if (screenId === "main-screen") {
       const diaryElem = targetScreen.querySelector('#diary');
       if (diaryElem) {
@@ -210,7 +227,7 @@ export class ViewManager {
       }
     }
     
-    // For the landing-screen, bind the registration button and show global language selector.
+    // Для лендингового экрана привязываем обработчик для кнопки регистрации и показываем глобальный селектор языка.
     if (screenId === "landing-screen") {
       const startRegistrationBtn = targetScreen.querySelector('#start-registration-btn');
       if (startRegistrationBtn) {
@@ -221,8 +238,7 @@ export class ViewManager {
       }
     }
     
-    // When switching to the registration-screen, re-query the dynamic registration elements
-    // and bind their event listeners.
+    // Для экрана регистрации повторно назначаем динамические элементы и их обработчики.
     if (screenId === "registration-screen") {
       this.nameInput = targetScreen.querySelector('#player-name');
       this.genderSelect = targetScreen.querySelector('#player-gender');
@@ -255,7 +271,7 @@ export class ViewManager {
       }
     }
     
-    // Hide all groups of buttons in the control panel.
+    // Скрываем все группы кнопок в панели управления.
     document.querySelectorAll('#controls-panel > .buttons').forEach(group => {
       group.style.display = 'none';
       group.style.pointerEvents = 'none';
@@ -275,7 +291,7 @@ export class ViewManager {
       }
     }
     
-    // Set chat button container visible.
+    // Делаем видимой кнопку чата.
     const chatContainer = document.getElementById("chat-button-container");
     if (chatContainer) {
       chatContainer.style.display = 'flex';
@@ -285,7 +301,7 @@ export class ViewManager {
     
     // ------------------------
     // NEW: Toggle the global language container visibility.
-    // The global language selector (in index.html) is shown only on the landing screen.
+    // Глобальный селектор языка (в index.html) показывается только на лендинговом экране.
     const languageContainer = document.getElementById("language-container");
     if (languageContainer) {
       if (screenId === "landing-screen") {
@@ -837,7 +853,7 @@ export class ViewManager {
     const profile = {
       name: regData.name,
       gender: regData.gender,
-      // Take language from the global selector since registration no longer includes it.
+      // Берём язык из глобального селектора, т.к. в регистрации он отсутствует
       language: this.languageSelector ? this.languageSelector.value : 'en',
       selfie: selfieSrc
     };

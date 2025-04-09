@@ -2,8 +2,8 @@
 import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
 import { ImageUtils } from '../utils/ImageUtils.js';
-import { ApartmentPlanManager } from './ApartmentPlanManager.js'; // Import from the managers folder
-import { TemplateEngine } from '../utils/TemplateEngine.js'; // NEW: Import TemplateEngine for rendering templates
+import { ApartmentPlanManager } from './ApartmentPlanManager.js';
+import { TemplateEngine } from '../utils/TemplateEngine.js';
 
 /**
  * ViewManager
@@ -21,7 +21,7 @@ export class ViewManager {
   constructor() {
     // --- Cache static UI elements from index.html ---
     this.controlsPanel = document.getElementById("controls-panel");
-    this.languageSelector = document.getElementById('language-selector'); // Global language selector in index.html
+    this.languageSelector = document.getElementById('language-selector'); 
     this.globalCamera = document.getElementById("global-camera");
     this.postBtn = document.getElementById("post-btn");
     this.toggleCameraBtn = document.getElementById("toggle-camera");
@@ -29,15 +29,15 @@ export class ViewManager {
     this.resetDataBtn = document.getElementById("reset-data");
     this.exportProfileBtn = document.getElementById("export-profile-btn");
     this.updateBtn = document.getElementById("update-btn");
-    // Добавляем первоначальное назначение diaryContainer из скрытого placeholder,
-    // чтобы EventManager мог обновлять дневник даже до перехода на main-screen.
-    this.diaryContainer = document.getElementById("diary");
     
-    // --- Additional Properties ---
+    // Initially, we assign the diaryContainer from the hidden placeholder
+    // so that EventManager can update the diary even before main-screen loads.
+    this.diaryContainer = document.getElementById("diary");
+
     this.cameraManager = null;
     this.languageManager = null;
-    
-    // Initially disable "Post" button.
+
+    // Disable "Post" button initially.
     if (this.postBtn) {
       this.postBtn.disabled = true;
       StateManager.set("postButtonDisabled", "true");
@@ -45,41 +45,21 @@ export class ViewManager {
     }
   }
 
-  /**
-   * getBasePath
-   * Returns the base URL (origin + path without the file name).
-   *
-   * @returns {string} The base URL.
-   */
   getBasePath() {
     const loc = window.location;
     const path = loc.pathname.substring(0, loc.pathname.lastIndexOf('/'));
     return loc.origin + path;
   }
 
-  /**
-   * setCameraManager
-   * Sets the camera manager instance.
-   */
   setCameraManager(cameraManager) {
     this.cameraManager = cameraManager;
     console.log("[ViewManager] Camera manager set.");
   }
 
-  /**
-   * Optionally set LanguageManager for updating dynamically loaded content.
-   * @param {LanguageManager} languageManager - The LanguageManager instance.
-   */
   setLanguageManager(languageManager) {
     this.languageManager = languageManager;
   }
 
-  /**
-   * getRegistrationData
-   * Retrieves registration data from the registration screen elements.
-   *
-   * @returns {Object|null} An object with name, gender and language or null if fields are missing.
-   */
   getRegistrationData() {
     if (!this.nameInput || !this.genderSelect) {
       return null;
@@ -87,19 +67,11 @@ export class ViewManager {
     return {
       name: this.nameInput.value.trim(),
       gender: this.genderSelect.value.trim(),
-      // Берём язык из глобального селектора, т.к. в форме регистрации он отсутствует
       language: this.languageSelector ? this.languageSelector.value : 'en'
     };
   }
 
-  /**
-   * bindEvents
-   * Binds event listeners for the static UI elements.
-   *
-   * @param {App} app - The main application instance.
-   */
   bindEvents(app) {
-    // Global language selector change event (static element)
     if (this.languageSelector) {
       this.languageSelector.addEventListener('change', () => {
         console.log("Language select changed:", this.languageSelector.value);
@@ -146,17 +118,6 @@ export class ViewManager {
 
   // ------------------ Dynamic Template Loading Methods ------------------
 
-  /**
-   * loadTemplate
-   * Dynamically loads an HTML template from the templates folder.
-   * The file name format is "src/templates/[screenId]_template.html".
-   * It uses fetch to load the template text, renders it using TemplateEngine,
-   * and inserts the resulting HTML into the global content container.
-   *
-   * @param {string} screenId - The id of the screen/template to load.
-   * @param {Object} [data={}] - Optional data for template rendering.
-   * @returns {Promise<HTMLElement>} The loaded template element.
-   */
   async loadTemplate(screenId, data = {}) {
     const basePath = this.getBasePath();
     const templateUrl = `${basePath}/src/templates/${screenId}_template.html`;
@@ -169,12 +130,9 @@ export class ViewManager {
       const renderedHTML = TemplateEngine.render(templateText, data);
       const container = document.getElementById("global-content");
       if (container) {
-        // Append the rendered HTML to the container.
         container.innerHTML += renderedHTML;
-        // Get the newly added element (assumed to be the last child)
         const newScreen = container.lastElementChild;
         console.log(`[ViewManager] Loaded template for screen: ${screenId}`);
-        // Optionally update language for the new screen if languageManager is set:
         if (this.languageManager && typeof this.languageManager.updateContainerLanguage === 'function') {
           this.languageManager.updateContainerLanguage(newScreen);
         }
@@ -192,10 +150,8 @@ export class ViewManager {
    * switchScreen
    * Switches the UI to the target screen. If the screen element does not exist,
    * it dynamically loads the template from the templates folder.
-   * In addition, for the "main-screen" it updates the diary container,
-   * and for the "landing-screen" binds the click event for start-registration-btn.
-   * Also, this method re-binds dynamic event handlers for screens that are loaded later,
-   * and toggles the global language selector display.
+   * Also re-binds dynamic event handlers for newly loaded screens
+   * and toggles the global language selector (on landing only).
    *
    * @param {string} screenId - The id of the target screen.
    * @param {string} buttonsGroupId - The id of the control button group to display.
@@ -217,8 +173,8 @@ export class ViewManager {
     }
     targetScreen.style.display = 'block';
     console.log(`[ViewManager] Switched to screen: ${screenId}`);
-    
-    // Для экрана main-screen обновляем контейнер дневника из нового шаблона.
+
+    // If main-screen, update diaryContainer to the newly loaded #diary
     if (screenId === "main-screen") {
       const diaryElem = targetScreen.querySelector('#diary');
       if (diaryElem) {
@@ -226,8 +182,8 @@ export class ViewManager {
         console.log("[ViewManager] Updated diary container for main-screen.");
       }
     }
-    
-    // Для лендингового экрана привязываем обработчик для кнопки регистрации и показываем глобальный селектор языка.
+
+    // If landing-screen, bind the start-registration button
     if (screenId === "landing-screen") {
       const startRegistrationBtn = targetScreen.querySelector('#start-registration-btn');
       if (startRegistrationBtn) {
@@ -237,13 +193,13 @@ export class ViewManager {
         });
       }
     }
-    
-    // Для экрана регистрации повторно назначаем динамические элементы и их обработчики.
+
+    // If registration-screen, re-assign dynamic fields and event handlers
     if (screenId === "registration-screen") {
       this.nameInput = targetScreen.querySelector('#player-name');
       this.genderSelect = targetScreen.querySelector('#player-gender');
       this.nextStepBtn = targetScreen.querySelector('#next-step-btn');
-      
+
       const checkRegistrationValidity = () => {
         const nameValid = this.nameInput && this.nameInput.value.trim().length > 0;
         const genderValid = this.genderSelect && this.genderSelect.value !== "";
@@ -270,8 +226,28 @@ export class ViewManager {
         });
       }
     }
-    
-    // Скрываем все группы кнопок в панели управления.
+
+    // If apartment-plan-screen, add event listeners to the floor buttons
+    if (screenId === "apartment-plan-screen" && app) {
+      const prevFloorBtn = document.getElementById("prev-floor-btn");
+      if (prevFloorBtn) {
+        prevFloorBtn.addEventListener("click", () => {
+          if (app.apartmentPlanManager) {
+            app.apartmentPlanManager.prevFloor();
+          }
+        });
+      }
+      const nextFloorBtn = document.getElementById("next-floor-btn");
+      if (nextFloorBtn) {
+        nextFloorBtn.addEventListener("click", () => {
+          if (app.apartmentPlanManager) {
+            app.apartmentPlanManager.nextFloor();
+          }
+        });
+      }
+    }
+
+    // Hide all groups of buttons in controls panel, then show the target group
     document.querySelectorAll('#controls-panel > .buttons').forEach(group => {
       group.style.display = 'none';
       group.style.pointerEvents = 'none';
@@ -281,6 +257,7 @@ export class ViewManager {
       if (targetGroup) {
         targetGroup.style.display = 'flex';
         targetGroup.style.pointerEvents = 'auto';
+        // For main-screen, hide toggle-diary and shoot to avoid confusion.
         if (screenId === "main-screen") {
           const td = targetGroup.querySelector("#toggle-diary");
           if (td) td.style.display = "none";
@@ -290,18 +267,16 @@ export class ViewManager {
         console.log(`[ViewManager] Controls panel updated for group: ${buttonsGroupId}`);
       }
     }
-    
-    // Делаем видимой кнопку чата.
+
+    // Make the chat button visible
     const chatContainer = document.getElementById("chat-button-container");
     if (chatContainer) {
       chatContainer.style.display = 'flex';
       chatContainer.style.pointerEvents = 'auto';
       console.log("[ViewManager] Chat button container set to visible.");
     }
-    
-    // ------------------------
-    // NEW: Toggle the global language container visibility.
-    // Глобальный селектор языка (в index.html) показывается только на лендинговом экране.
+
+    // Show/hide global language container depending on screen
     const languageContainer = document.getElementById("language-container");
     if (languageContainer) {
       if (screenId === "landing-screen") {
@@ -319,8 +294,6 @@ export class ViewManager {
     }
   }
 
-  // ---------- Profile Display Methods ----------
-
   updateProfileDisplay(profile) {
     const profileNameElem = document.getElementById('profile-name');
     const profilePhotoElem = document.getElementById('profile-photo');
@@ -333,8 +306,6 @@ export class ViewManager {
     }
     console.log("[ViewManager] Profile display updated.");
   }
-
-  // ---------- Selfie Preview and Complete Button Methods ----------
 
   updateSelfiePreview(imageData) {
     const selfiePreview = document.getElementById('selfie-thumbnail');
@@ -375,8 +346,6 @@ export class ViewManager {
     }
     return null;
   }
-
-  // ---------- Global Camera and Diary View Methods ----------
 
   showGlobalCamera() {
     if (this.globalCamera) {
@@ -442,8 +411,6 @@ export class ViewManager {
     }
   }
 
-  // ---------- Button State Methods ----------
-
   setPostButtonEnabled(isEnabled) {
     const postBtn = document.getElementById("post-btn");
     if (postBtn) {
@@ -503,8 +470,6 @@ export class ViewManager {
     console.log("[ViewManager] Shoot button state restored:", isActive);
   }
 
-  // ---------- Apartment Plan UI ----------
-
   setApartmentPlanNextButtonEnabled(isEnabled) {
     const nextBtn = document.getElementById("apartment-plan-next-btn");
     if (nextBtn) {
@@ -514,8 +479,6 @@ export class ViewManager {
       ErrorManager.logError("Apartment plan Next button not found.", "setApartmentPlanNextButtonEnabled");
     }
   }
-
-  // ---------- Mirror Quest UI ----------
 
   startMirrorQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
@@ -564,8 +527,6 @@ export class ViewManager {
     this.setShootButtonActive(false);
     console.log("[ViewManager] Mirror quest UI stopped.");
   }
-
-  // ---------- Repeating Quest UI ----------
 
   startRepeatingQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
@@ -626,8 +587,6 @@ export class ViewManager {
     }
     console.log("[ViewManager] UI updated after quest stage:", { postEnabled, cameraActive, shootActive });
   }
-
-  // ---------- Top Controls for Extended Camera Modes ----------
 
   createTopCameraControls() {
     const existing = document.getElementById("top-camera-controls");
@@ -705,8 +664,6 @@ export class ViewManager {
     console.log("[ViewManager] Top camera controls created.");
   }
 
-  // ---------- Visual Effects and Notifications ----------
-
   applyBackgroundTransition(color, duration) {
     document.body.style.transition = `background ${duration}ms`;
     document.body.style.background = color;
@@ -781,8 +738,6 @@ export class ViewManager {
     }
   }
 
-  // ---------- New UI Methods (moved from App) ----------
-
   goToApartmentPlanScreen(app) {
     const regData = this.getRegistrationData();
     if (!regData) {
@@ -791,7 +746,6 @@ export class ViewManager {
     }
     StateManager.set('regData', JSON.stringify(regData));
     this.switchScreen('apartment-plan-screen', 'apartment-plan-buttons', app);
-    // Instantiate ApartmentPlanManager if not already created.
     if (!app.apartmentPlanManager) {
       app.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', app.databaseManager, app);
     }
@@ -853,7 +807,6 @@ export class ViewManager {
     const profile = {
       name: regData.name,
       gender: regData.gender,
-      // Берём язык из глобального селектора, т.к. в регистрации он отсутствует
       language: this.languageSelector ? this.languageSelector.value : 'en',
       selfie: selfieSrc
     };
@@ -914,13 +867,6 @@ export class ViewManager {
     }
   }
 
-  // ---------- New Method: showLocationTypeModal ----------
-  /**
-   * showLocationTypeModal
-   * Displays a modal window for selecting the location type.
-   * @param {Function} onConfirm - Callback invoked with the selected type.
-   * @param {Function} onCancel - Callback invoked if selection is cancelled.
-   */
   showLocationTypeModal(onConfirm, onCancel) {
     const modalOverlay = document.createElement("div");
     modalOverlay.id = "location-type-modal-overlay";
@@ -999,22 +945,16 @@ export class ViewManager {
     document.body.appendChild(modalOverlay);
   }
 
-  // ---------- NEW: renderDiary Method ----------
   /**
    * renderDiary
    * Renders the diary entries from the database into the diary container.
-   * Uses TemplateEngine to dynamically insert each entry.
-   *
-   * @param {Array} entries - Array of diary entries (each with keys: entry, postClass, timestamp)
-   * @param {string} currentLanguage - The current language code (for localized messages)
-   * @param {VisualEffectsManager} visualEffectsManager - Manager for any UI effects (optional usage)
    */
   renderDiary(entries, currentLanguage, visualEffectsManager) {
     if (!this.diaryContainer) {
       console.error("Diary container not set. Cannot render diary entries.");
       return;
     }
-    this.diaryContainer.innerHTML = ""; // Clear existing content
+    this.diaryContainer.innerHTML = "";
     if (!entries || entries.length === 0) {
       const emptyMessage = (this.languageManager && this.languageManager.translate("no_diary_entries", "Diary is empty.")) || "Diary is empty.";
       const emptyDiv = document.createElement("div");
@@ -1024,14 +964,12 @@ export class ViewManager {
       console.log("[ViewManager] No diary entries found.");
       return;
     }
-    // Define a simple diary entry template.
     const diaryEntryTemplate = `
       <div class="diary-entry {{postClass}}">
         <p>{{entry}}</p>
         <span class="diary-timestamp">{{timestamp}}</span>
       </div>
     `;
-    // Loop through entries and render them.
     entries.forEach(entry => {
       const rendered = TemplateEngine.render(diaryEntryTemplate, {
         postClass: entry.postClass,

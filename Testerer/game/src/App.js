@@ -66,7 +66,6 @@ export class App {
     this.showProfileModal = deps.showProfileModal || new ShowProfileModal(this);
 
     // Initialize ChatManager for the "support" chat section using the wrapper.
-    // All chat logic (state, dialogue, localization) is handled within ChatManager.
     this.chatManager = deps.chatManager || ChatManager.createChatManagerWrapper({
       databaseManager: this.databaseManager,
       languageManager: this.languageManager,
@@ -113,6 +112,8 @@ export class App {
     this.questManager.restoreAllActiveQuests();
 
     this.viewManager.showToggleCameraButton();
+    // We call updateDiaryDisplay early in case user is on main screen,
+    // but specifically for older profiles, we must wait for the template to load (see below).
     this.eventManager.updateDiaryDisplay();
     this.viewManager.createTopCameraControls();
 
@@ -122,11 +123,15 @@ export class App {
     // Schedule support chat conversation to start after 5 seconds.
     this.chatManager.scheduleConversationStartIfInactive(5000);
 
+    // If a profile exists, switch to main screen (and only then re-call updateDiaryDisplay).
     if (await this.profileManager.isProfileSaved()) {
       const profile = await this.profileManager.getProfile();
       console.log("Profile found:", profile);
-      this.viewManager.switchScreen('main-screen', 'main-buttons');
+
+      // IMPORTANT: use await to ensure main-screen is fully loaded before re-rendering diary
+      await this.viewManager.switchScreen('main-screen', 'main-buttons');
       this.viewManager.showToggleCameraButton();
+
       if (StateManager.get("mirrorQuestReady") === "true") {
         this.viewManager.setPostButtonEnabled(true);
       } else {
@@ -134,11 +139,14 @@ export class App {
       }
       this.viewManager.updateProfileDisplay(profile);
       this.selfieData = profile.selfie;
+
+      // Re-render the diary after main-screen is loaded
+      this.eventManager.updateDiaryDisplay();
     } else {
       console.log("Profile not found, showing landing screen.");
-      // Если профиль не найден, сначала показываем лендинговую секцию.
-      // Используем группу кнопок "landing-buttons", соответствующую обновлённой разметке landing_template.html
-      this.viewManager.switchScreen('landing-screen', 'landing-buttons');
+
+      // Also await so the landing template is loaded before any other step
+      await this.viewManager.switchScreen('landing-screen', 'landing-buttons');
     }
   }
 }

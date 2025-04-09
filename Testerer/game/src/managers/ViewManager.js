@@ -19,51 +19,26 @@ import { TemplateEngine } from '../utils/TemplateEngine.js'; // NEW: Import Temp
  */
 export class ViewManager {
   constructor() {
-    // --- Cache Main UI Elements ---
-    this.diaryContainer = document.getElementById("diary");
+    // --- Cache Main UI Elements that are static (from index.html) ---
     this.controlsPanel = document.getElementById("controls-panel");
-    
-    // --- Registration Form Elements ---
-    // В регистрации поле языка удалено – используются только name и gender
-    this.nameInput = document.getElementById('player-name');
-    this.genderSelect = document.getElementById('player-gender');
-    // Глобальный селектор языка (находится в index.html) используется для выбора языка
-    this.languageSelector = document.getElementById('language-selector');
-    this.nextStepBtn = document.getElementById('next-step-btn');
-    
-    // --- Selfie Screen Elements ---
-    this.selfiePreview = document.getElementById('selfie-thumbnail');
-    this.captureBtn = document.getElementById('capture-btn');
-    this.completeBtn = document.getElementById('complete-registration');
-    
-    // --- Profile Display Elements ---
-    this.profileNameElem = document.getElementById('profile-name');
-    this.profilePhotoElem = document.getElementById('profile-photo');
-    
-    // --- Import File Input ---
-    this.importFileInput = document.getElementById('import-file');
-    
-    // --- Toggle Buttons and Global Camera ---
+    this.languageSelector = document.getElementById('language-selector'); // Global language selector in index.html
+    // Global camera element is static
+    this.globalCamera = document.getElementById("global-camera");
+    // Chat container/button remain static
+    this.postBtn = document.getElementById("post-btn");
     this.toggleCameraBtn = document.getElementById("toggle-camera");
     this.toggleDiaryBtn = document.getElementById("toggle-diary");
-    this.globalCamera = document.getElementById("global-camera");
-    this.postBtn = document.getElementById("post-btn");
-
-    // --- Additional Control Buttons ---
     this.resetDataBtn = document.getElementById("reset-data");
     this.exportProfileBtn = document.getElementById("export-profile-btn");
     this.updateBtn = document.getElementById("update-btn");
-
-    // --- Chat Button Container ---
-    // Chat container is assumed to be always visible.
     
-    // --- Camera Manager Reference (set externally) ---
+    // Note: Dynamic elements (e.g. registration inputs, diary container) will be queried
+    // when switching screens.
+    
+    // --- Additional Properties ---
     this.cameraManager = null;
-
-    // Property for LanguageManager (if needed for updating container language dynamically)
     this.languageManager = null;
-
-    // Disable "Post" button by default.
+    // Initially disable "Post" button.
     if (this.postBtn) {
       this.postBtn.disabled = true;
       StateManager.set("postButtonDisabled", "true");
@@ -102,61 +77,25 @@ export class ViewManager {
 
   /**
    * bindEvents
-   * Binds event listeners for UI elements.
+   * Binds event listeners for the static UI elements.
    *
    * @param {App} app - The main application instance.
    */
   bindEvents(app) {
-    // Проверка валидности регистрации теперь основывается только на имени и поле выбора пола
-    const checkRegistrationValidity = () => {
-      const nameValid = this.nameInput && this.nameInput.value.trim().length > 0;
-      const genderValid = this.genderSelect && this.genderSelect.value !== "";
-      if (this.nextStepBtn) {
-        this.nextStepBtn.disabled = !(nameValid && genderValid);
-      }
-    };
-
-    if (this.nameInput) {
-      this.nameInput.addEventListener('input', () => {
-        console.log("Name input changed:", this.nameInput.value);
-        checkRegistrationValidity();
-      });
-    }
-    if (this.genderSelect) {
-      this.genderSelect.addEventListener('change', () => {
-        console.log("Gender select changed:", this.genderSelect.value);
-        checkRegistrationValidity();
-      });
-    }
-    // Обработчик изменения глобального селектора языка можно оставить для обновления локализации,
-    // но он не влияет на валидность регистрации
+    // Global language selector change event (static element)
     if (this.languageSelector) {
       this.languageSelector.addEventListener('change', () => {
         console.log("Language select changed:", this.languageSelector.value);
       });
     }
-    if (this.nextStepBtn) {
-      this.nextStepBtn.addEventListener('click', () => {
-        this.goToApartmentPlanScreen(app);
-        console.log("[ViewManager] Next step button clicked.");
+    if (this.toggleCameraBtn) {
+      this.toggleCameraBtn.addEventListener("click", () => {
+        this.toggleCameraView(app);
       });
     }
-    if (this.captureBtn) {
-      this.captureBtn.addEventListener("click", () => {
-        console.log("Capture button clicked. Triggering captureSelfie().");
-        this.captureSelfie(app);
-      });
-    }
-    if (this.completeBtn) {
-      this.completeBtn.addEventListener("click", () => {
-        console.log("Complete Registration button clicked. Triggering completeRegistration().");
-        this.completeRegistration(app);
-      });
-    }
-    if (this.postBtn) {
-      this.postBtn.addEventListener("click", () => {
-        console.log("Post button clicked. Triggering app.ghostManager.handlePostButtonClick().");
-        app.ghostManager.handlePostButtonClick();
+    if (this.toggleDiaryBtn) {
+      this.toggleDiaryBtn.addEventListener("click", () => {
+        this.toggleCameraView(app);
       });
     }
     if (this.resetDataBtn) {
@@ -175,16 +114,6 @@ export class ViewManager {
       this.updateBtn.addEventListener("click", () => {
         console.log("Update button clicked.");
         this.clearCache();
-      });
-    }
-    if (this.toggleCameraBtn) {
-      this.toggleCameraBtn.addEventListener("click", () => {
-        this.toggleCameraView(app);
-      });
-    }
-    if (this.toggleDiaryBtn) {
-      this.toggleDiaryBtn.addEventListener("click", () => {
-        this.toggleCameraView(app);
       });
     }
     const chatBtn = document.getElementById("chat-btn");
@@ -248,11 +177,14 @@ export class ViewManager {
    * it dynamically loads the template from the templates folder.
    * In addition, for the "main-screen" it updates the diary container,
    * and for the "landing-screen" binds the click event for start-registration-btn.
+   * Also, this method re-binds dynamic event handlers for screens that are loaded later,
+   * and toggles the global language selector display.
    *
    * @param {string} screenId - The id of the target screen.
    * @param {string} buttonsGroupId - The id of the control button group to display.
+   * @param {App} [app] - The main application instance (if needed for event callbacks).
    */
-  async switchScreen(screenId, buttonsGroupId) {
+  async switchScreen(screenId, buttonsGroupId, app) {
     // Hide all sections
     document.querySelectorAll('section').forEach(section => {
       section.style.display = 'none';
@@ -269,7 +201,7 @@ export class ViewManager {
     targetScreen.style.display = 'block';
     console.log(`[ViewManager] Switched to screen: ${screenId}`);
     
-    // Для экрана main-screen обновляем контейнер дневника
+    // For the main-screen update the diary container from the loaded template.
     if (screenId === "main-screen") {
       const diaryElem = targetScreen.querySelector('#diary');
       if (diaryElem) {
@@ -278,18 +210,52 @@ export class ViewManager {
       }
     }
     
-    // Для лендингового экрана привязываем обработчик для кнопки регистрации
+    // For the landing-screen, bind the registration button and show global language selector.
     if (screenId === "landing-screen") {
       const startRegistrationBtn = targetScreen.querySelector('#start-registration-btn');
       if (startRegistrationBtn) {
         startRegistrationBtn.addEventListener('click', () => {
-          this.switchScreen('registration-screen', 'registration-buttons');
+          this.switchScreen('registration-screen', 'registration-buttons', app);
           console.log("[ViewManager] Start registration button clicked, switching to registration screen.");
         });
       }
     }
     
-    // Скрываем все группы кнопок в панели управления.
+    // When switching to the registration-screen, re-query the dynamic registration elements
+    // and bind their event listeners.
+    if (screenId === "registration-screen") {
+      this.nameInput = targetScreen.querySelector('#player-name');
+      this.genderSelect = targetScreen.querySelector('#player-gender');
+      this.nextStepBtn = targetScreen.querySelector('#next-step-btn');
+      
+      const checkRegistrationValidity = () => {
+        const nameValid = this.nameInput && this.nameInput.value.trim().length > 0;
+        const genderValid = this.genderSelect && this.genderSelect.value !== "";
+        if (this.nextStepBtn) {
+          this.nextStepBtn.disabled = !(nameValid && genderValid);
+        }
+      };
+      if (this.nameInput) {
+        this.nameInput.addEventListener('input', () => {
+          console.log("Name input changed:", this.nameInput.value);
+          checkRegistrationValidity();
+        });
+      }
+      if (this.genderSelect) {
+        this.genderSelect.addEventListener('change', () => {
+          console.log("Gender select changed:", this.genderSelect.value);
+          checkRegistrationValidity();
+        });
+      }
+      if (this.nextStepBtn) {
+        this.nextStepBtn.addEventListener('click', () => {
+          this.goToApartmentPlanScreen(app);
+          console.log("[ViewManager] Registration next button clicked. Moving to apartment plan screen.");
+        });
+      }
+    }
+    
+    // Hide all groups of buttons in the control panel.
     document.querySelectorAll('#controls-panel > .buttons').forEach(group => {
       group.style.display = 'none';
       group.style.pointerEvents = 'none';
@@ -308,11 +274,25 @@ export class ViewManager {
         console.log(`[ViewManager] Controls panel updated for group: ${buttonsGroupId}`);
       }
     }
+    
+    // Set chat button container visible.
     const chatContainer = document.getElementById("chat-button-container");
     if (chatContainer) {
       chatContainer.style.display = 'flex';
       chatContainer.style.pointerEvents = 'auto';
       console.log("[ViewManager] Chat button container set to visible.");
+    }
+    
+    // ------------------------
+    // NEW: Toggle the global language container visibility.
+    // The global language selector (in index.html) is shown only on the landing screen.
+    const languageContainer = document.getElementById("language-container");
+    if (languageContainer) {
+      if (screenId === "landing-screen") {
+        languageContainer.style.display = "block";
+      } else {
+        languageContainer.style.display = "none";
+      }
     }
   }
 
@@ -326,12 +306,14 @@ export class ViewManager {
   // ---------- Profile Display Methods ----------
 
   updateProfileDisplay(profile) {
-    if (this.profileNameElem) {
-      this.profileNameElem.textContent = profile.name;
+    const profileNameElem = document.getElementById('profile-name');
+    const profilePhotoElem = document.getElementById('profile-photo');
+    if (profileNameElem) {
+      profileNameElem.textContent = profile.name;
     }
-    if (this.profilePhotoElem) {
-      this.profilePhotoElem.src = profile.selfie;
-      this.profilePhotoElem.style.display = 'block';
+    if (profilePhotoElem) {
+      profilePhotoElem.src = profile.selfie;
+      profilePhotoElem.style.display = 'block';
     }
     console.log("[ViewManager] Profile display updated.");
   }
@@ -339,9 +321,10 @@ export class ViewManager {
   // ---------- Selfie Preview and Complete Button Methods ----------
 
   updateSelfiePreview(imageData) {
-    if (this.selfiePreview) {
-      this.selfiePreview.src = imageData;
-      this.selfiePreview.style.display = 'block';
+    const selfiePreview = document.getElementById('selfie-thumbnail');
+    if (selfiePreview) {
+      selfiePreview.src = imageData;
+      selfiePreview.style.display = 'block';
       console.log("[ViewManager] Selfie preview updated.");
     } else {
       ErrorManager.logError("Selfie preview element not found.", "updateSelfiePreview");
@@ -349,26 +332,30 @@ export class ViewManager {
   }
 
   enableCompleteButton() {
-    if (this.completeBtn) {
-      this.completeBtn.disabled = false;
+    const completeBtn = document.getElementById('complete-registration');
+    if (completeBtn) {
+      completeBtn.disabled = false;
       console.log("[ViewManager] Complete button enabled.");
     }
   }
 
   disableCompleteButton() {
-    if (this.completeBtn) {
-      this.completeBtn.disabled = true;
+    const completeBtn = document.getElementById('complete-registration');
+    if (completeBtn) {
+      completeBtn.disabled = true;
       console.log("[ViewManager] Complete button disabled.");
     }
   }
 
   getSelfieSource() {
-    return this.selfiePreview ? this.selfiePreview.src : "";
+    const selfiePreview = document.getElementById('selfie-thumbnail');
+    return selfiePreview ? selfiePreview.src : "";
   }
 
   getImportFile() {
-    if (this.importFileInput && this.importFileInput.files.length > 0) {
-      return this.importFileInput.files[0];
+    const importFileInput = document.getElementById('import-file');
+    if (importFileInput && importFileInput.files.length > 0) {
+      return importFileInput.files[0];
     }
     return null;
   }
@@ -787,7 +774,7 @@ export class ViewManager {
       return;
     }
     StateManager.set('regData', JSON.stringify(regData));
-    this.switchScreen('apartment-plan-screen', 'apartment-plan-buttons');
+    this.switchScreen('apartment-plan-screen', 'apartment-plan-buttons', app);
     // Instantiate ApartmentPlanManager if not already created.
     if (!app.apartmentPlanManager) {
       app.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', app.databaseManager, app);
@@ -795,7 +782,7 @@ export class ViewManager {
   }
 
   goToSelfieScreen(app) {
-    this.switchScreen('selfie-screen', 'selfie-buttons');
+    this.switchScreen('selfie-screen', 'selfie-buttons', app);
     this.showGlobalCamera();
     if (app.cameraSectionManager) {
       app.cameraSectionManager.startCamera();
@@ -850,15 +837,15 @@ export class ViewManager {
     const profile = {
       name: regData.name,
       gender: regData.gender,
-      // Берем язык из глобального селектора, т.к. в регистрации его нет
-      language: regData.language,
+      // Take language from the global selector since registration no longer includes it.
+      language: this.languageSelector ? this.languageSelector.value : 'en',
       selfie: selfieSrc
     };
     app.profileManager.saveProfile(profile).then(() => {
       StateManager.set("registrationCompleted", "true");
       app.cameraSectionManager.stopCamera();
       this.hideGlobalCamera();
-      this.switchScreen('main-screen', 'main-buttons');
+      this.switchScreen('main-screen', 'main-buttons', app);
       this.showToggleCameraButton();
       if (StateManager.get("mirrorQuestReady") === "true") {
         this.setPostButtonEnabled(true);
@@ -994,5 +981,49 @@ export class ViewManager {
     modal.appendChild(btnContainer);
     modalOverlay.appendChild(modal);
     document.body.appendChild(modalOverlay);
+  }
+
+  // ---------- NEW: renderDiary Method ----------
+  /**
+   * renderDiary
+   * Renders the diary entries from the database into the diary container.
+   * Uses TemplateEngine to dynamically insert each entry.
+   *
+   * @param {Array} entries - Array of diary entries (each with keys: entry, postClass, timestamp)
+   * @param {string} currentLanguage - The current language code (for localized messages)
+   * @param {VisualEffectsManager} visualEffectsManager - Manager for any UI effects (optional usage)
+   */
+  renderDiary(entries, currentLanguage, visualEffectsManager) {
+    if (!this.diaryContainer) {
+      console.error("Diary container not set. Cannot render diary entries.");
+      return;
+    }
+    this.diaryContainer.innerHTML = ""; // Clear existing content
+    if (!entries || entries.length === 0) {
+      const emptyMessage = (this.languageManager && this.languageManager.translate("no_diary_entries", "Diary is empty.")) || "Diary is empty.";
+      const emptyDiv = document.createElement("div");
+      emptyDiv.className = "diary-empty";
+      emptyDiv.textContent = emptyMessage;
+      this.diaryContainer.appendChild(emptyDiv);
+      console.log("[ViewManager] No diary entries found.");
+      return;
+    }
+    // Define a simple diary entry template.
+    const diaryEntryTemplate = `
+      <div class="diary-entry {{postClass}}">
+        <p>{{entry}}</p>
+        <span class="diary-timestamp">{{timestamp}}</span>
+      </div>
+    `;
+    // Loop through entries and render them.
+    entries.forEach(entry => {
+      const rendered = TemplateEngine.render(diaryEntryTemplate, {
+        postClass: entry.postClass,
+        entry: entry.entry,
+        timestamp: entry.timestamp
+      });
+      this.diaryContainer.innerHTML += rendered;
+    });
+    console.log(`[ViewManager] Diary updated with ${entries.length} entries.`);
   }
 }

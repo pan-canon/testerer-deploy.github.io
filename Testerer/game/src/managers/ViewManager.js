@@ -21,7 +21,7 @@ export class ViewManager {
   constructor() {
     // --- Cache static UI elements from index.html ---
     this.controlsPanel = document.getElementById("controls-panel");
-    this.languageSelector = document.getElementById('language-selector'); 
+    this.languageSelector = document.getElementById('language-selector');
     this.globalCamera = document.getElementById("global-camera");
     this.postBtn = document.getElementById("post-btn");
     this.toggleCameraBtn = document.getElementById("toggle-camera");
@@ -219,8 +219,8 @@ export class ViewManager {
         });
       }
       if (this.nextStepBtn) {
-        this.nextStepBtn.addEventListener('click', () => {
-          this.goToApartmentPlanScreen(app);
+        this.nextStepBtn.addEventListener('click', async () => {
+          await this.goToApartmentPlanScreen(app);
           console.log("[ViewManager] Registration next button clicked. Moving to apartment plan screen.");
         });
       }
@@ -737,18 +737,21 @@ export class ViewManager {
     }
   }
 
-  goToApartmentPlanScreen(app) {
+  // ------------------ Modified goToApartmentPlanScreen ------------------
+  async goToApartmentPlanScreen(app) {
     const regData = this.getRegistrationData();
     if (!regData) {
       ErrorManager.showError("Registration data missing.");
       return;
     }
     StateManager.set('regData', JSON.stringify(regData));
-    this.switchScreen('apartment-plan-screen', 'apartment-plan-buttons', app);
+    // Await the template loading so that the container is in the DOM.
+    await this.switchScreen('apartment-plan-screen', 'apartment-plan-buttons', app);
     if (!app.apartmentPlanManager) {
       app.apartmentPlanManager = new ApartmentPlanManager('apartment-plan-container', app.databaseManager, app);
     }
   }
+  // --------------------------------------------------------------------
 
   goToSelfieScreen(app) {
     this.switchScreen('selfie-screen', 'selfie-buttons', app);

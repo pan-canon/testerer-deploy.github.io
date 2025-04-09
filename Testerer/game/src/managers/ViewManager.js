@@ -58,6 +58,9 @@ export class ViewManager {
     // --- Camera Manager Reference (set externally) ---
     this.cameraManager = null;
 
+    // Property for LanguageManager (if needed for updating container language dynamically)
+    this.languageManager = null;
+
     // Disable "Post" button by default.
     if (this.postBtn) {
       this.postBtn.disabled = true;
@@ -67,12 +70,32 @@ export class ViewManager {
   }
 
   /**
+   * getBasePath
+   * Returns the base URL (origin + path without the file name).
+   *
+   * @returns {string} The base URL.
+   */
+  getBasePath() {
+    const loc = window.location;
+    const path = loc.pathname.substring(0, loc.pathname.lastIndexOf('/'));
+    return loc.origin + path;
+  }
+
+  /**
    * setCameraManager
    * Sets the camera manager instance.
    */
   setCameraManager(cameraManager) {
     this.cameraManager = cameraManager;
     console.log("[ViewManager] Camera manager set.");
+  }
+
+  /**
+   * Optionally set LanguageManager for updating dynamically loaded content.
+   * @param {LanguageManager} languageManager - The LanguageManager instance.
+   */
+  setLanguageManager(languageManager) {
+    this.languageManager = languageManager;
   }
 
   /**
@@ -199,9 +222,13 @@ export class ViewManager {
       if (container) {
         // Append the rendered HTML to the container.
         container.innerHTML += renderedHTML;
-        // Return the last appended element (assumed to be the new screen)
+        // Get the newly added element (assumed to be the last child)
         const newScreen = container.lastElementChild;
         console.log(`[ViewManager] Loaded template for screen: ${screenId}`);
+        // Optionally update language for the new screen if languageManager is set:
+        if (this.languageManager && typeof this.languageManager.updateContainerLanguage === 'function') {
+          this.languageManager.updateContainerLanguage(newScreen);
+        }
         return newScreen;
       } else {
         throw new Error("Global content container (id='global-content') not found.");
@@ -225,26 +252,19 @@ export class ViewManager {
     document.querySelectorAll('section').forEach(section => {
       section.style.display = 'none';
     });
-    // Attempt to get the target screen element
     let targetScreen = document.getElementById(screenId);
-    // If not found, load it dynamically
     if (!targetScreen) {
+      // If not found, load the template dynamically.
       targetScreen = await this.loadTemplate(screenId);
       if (!targetScreen) {
         console.error(`[ViewManager] Failed to load screen: ${screenId}`);
         return;
       }
-      // Optionally, update localized text in the newly loaded container:
-      // Example (if languageManager is available):
-      // if (this.languageManager && typeof this.languageManager.updateContainerLanguage === 'function') {
-      //   this.languageManager.updateContainerLanguage(targetScreen);
-      // }
     }
-    // Display the target screen
     targetScreen.style.display = 'block';
     console.log(`[ViewManager] Switched to screen: ${screenId}`);
-
-    // Hide all controls panel button groups
+    
+    // Hide all controls panel button groups.
     document.querySelectorAll('#controls-panel > .buttons').forEach(group => {
       group.style.display = 'none';
       group.style.pointerEvents = 'none';

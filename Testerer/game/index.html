@@ -21,7 +21,6 @@
       justify-content: center;
       align-items: center;
     }
-
     /* Simple spinner example */
     .spinner {
       border: 8px solid #f3f3f3; /* light background */
@@ -31,20 +30,17 @@
       height: 60px;
       animation: spin 1s linear infinite;
     }
-
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-
     /* Global content container with a maximum width */
     #global-content {
       max-width: 800px;
       margin: 0 auto;
       padding: 1rem;
     }
-
-    /* Fullscreen container for camera (initially hidden) */
+    /* Global camera container */
     #global-camera {
       display: none;
       position: fixed;
@@ -55,8 +51,7 @@
       background: black;
       z-index: 1000;
     }
-
-    /* Control panel fixed at the bottom center, above all content */
+    /* Control panel fixed at the bottom center */
     #controls-panel {
       position: fixed;
       bottom: 1rem;
@@ -67,11 +62,10 @@
       background: rgba(255, 255, 255, 0.9);
       border-radius: 5px;
     }
-
     /* Selfie screen styling if needed later */
     #selfie-screen {
       position: relative;
-      z-index: 1100; /* higher than global-camera */
+      z-index: 1100;
     }
     .active { box-shadow: 10px 5px 5px red; }
   </style>
@@ -81,20 +75,37 @@
   <div id="preloader">
     <div class="spinner"></div>
   </div>
-  
+
+  <!-- Static Language Selector -->
+  <div id="language-container" style="padding: 1rem; text-align: center;">
+    <select id="language-selector">
+      <option value="en">English</option>
+      <option value="ru">Русский</option>
+      <option value="uk">Українська</option>
+    </select>
+  </div>
+
   <!-- Global container for dynamic main content -->
-  <!-- This container will be populated with templates (landing, registration, main interface, etc.) -->
   <div id="global-content" class="container box">
+    <!-- Dummy placeholder to ensure diary container exists for EventManager -->
+    <section id="dummy-placeholder" style="display: none;">
+      <div id="diary"></div>
+    </section>
     <!-- Dynamic templates will be inserted here via ViewManager.loadTemplate() -->
   </div>
+
+  <!-- Static Chat Section (always available) -->
+  <section id="chat-section" style="display: none;">
+    <!-- Chat content will be loaded dynamically by ChatManager -->
+  </section>
 
   <!-- Global container for camera -->
   <div id="global-camera">
     <div id="mirror-quest-status" 
          style="display: none; position: absolute; top: 1rem; left: 50%; transform: translateX(-50%); 
-                background: rgba(0,0,0,0.5); color: #fff; padding: 0.5rem; z-index: 999;"></div>
+                background: rgba(0,0,0,0.5); color: #fff; padding: 0.5rem; z-index: 999;">
+    </div>
     <div class="camera-inner">
-      <!-- Video element and overlays will be created dynamically -->
       <div id="camera-controls-overlay">
         <!-- Camera control elements (if needed) -->
       </div>
@@ -104,21 +115,23 @@
   <!-- Control Panel (all buttons placed here) -->
   <div id="controls-panel" class="box">
     <img id="selfie-thumbnail" src="" alt="Selfie Thumbnail" style="display: none; width: 50px; height: 50px; border-radius: 50%;">
-    
-    <!-- These control button groups can be shown/hidden by ViewManager.switchScreen() -->
+    <!-- Registration Buttons -->
     <div id="registration-buttons" class="buttons">
       <button class="button is-link" type="button" id="next-step-btn" data-i18n="next" disabled>Next</button>
       <button class="button is-info" type="button" id="import-profile-btn" data-i18n="import">Import Profile</button>
     </div>
+    <!-- Apartment Plan Buttons -->
     <div id="apartment-plan-buttons" class="buttons" style="display: none;">
       <button class="button" type="button" id="prev-floor-btn">Previous Floor</button>
       <button class="button" type="button" id="next-floor-btn">Next Floor</button>
       <button class="button is-link" type="button" id="apartment-plan-next-btn">Next</button>
     </div>
+    <!-- Selfie Screen Buttons -->
     <div id="selfie-buttons" class="buttons" style="display: none;">
       <button class="button is-primary" type="button" id="capture-btn" data-i18n="capture">Capture</button>
       <button class="button is-success" type="button" id="complete-registration" data-i18n="complete" disabled>Complete</button>
     </div>
+    <!-- Main Screen Buttons -->
     <div id="main-buttons" class="buttons" style="display: none;">
       <button class="button" id="post-btn" disabled>Post</button>
       <button class="button" type="button" id="btn_shoot" style="display: none;">Shoot</button>
@@ -129,7 +142,6 @@
       <button class="button is-info" type="button" id="export-profile-btn" data-i18n="export">Export Profile</button>
       <button class="button is-warning" type="button" id="update-btn">Update</button>
     </div>
-    
     <!-- Chat Button Container -->
     <div id="chat-button-container" class="buttons" style="margin-top: 0.5rem;">
       <button class="button is-info" type="button" id="chat-btn">Chat</button>

@@ -93,6 +93,45 @@ export class LanguageManager {
   }
 
   /**
+   * Optional method: startObservingContainer
+   * Sets up a MutationObserver on a given container to automatically update any newly
+   * added elements with the data-i18n attribute.
+   *
+   * @param {HTMLElement} container - The container element to observe.
+   * @returns {MutationObserver} The observer instance (can be disconnected when no longer needed).
+   */
+  startObservingContainer(container) {
+    if (!container) return;
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            // If the new node itself has data-i18n attribute, update it.
+            if (node.hasAttribute && node.hasAttribute('data-i18n')) {
+              const key = node.getAttribute('data-i18n');
+              if (this.locales[this.currentLanguage] && this.locales[this.currentLanguage][key]) {
+                node.textContent = this.locales[this.currentLanguage][key];
+              }
+            }
+            // Also update any descendant elements.
+            if (node.querySelectorAll) {
+              node.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (this.locales[this.currentLanguage] && this.locales[this.currentLanguage][key]) {
+                  el.textContent = this.locales[this.currentLanguage][key];
+                }
+              });
+            }
+          }
+        });
+      });
+    });
+    observer.observe(container, { childList: true, subtree: true });
+    console.log("[LanguageManager] Started observing container for localization updates.");
+    return observer;
+  }
+
+  /**
    * getLanguage – Returns the currently selected language.
    * @returns {string} The current language (e.g., 'en', 'ru', 'uk').
    */

@@ -137,6 +137,7 @@ export class App {
     } else {
       console.log("Profile not found, showing landing screen.");
       // Если профиль не найден, сначала показываем лендинговую секцию.
+      // Используем группу кнопок "landing-buttons", соответствующую обновлённой разметке landing_template.html
       this.viewManager.switchScreen('landing-screen', 'landing-buttons');
     }
   }

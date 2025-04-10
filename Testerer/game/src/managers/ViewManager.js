@@ -990,8 +990,8 @@ export class ViewManager {
   /**
    * renderDiary
    * Renders the diary entries from the database into the diary container.
-   * For entries representing images, it ensures the data URI has the correct prefix.
-   * For text entries, it uses a typewriter effect (via visualEffectsManager) to animate text display.
+   * Now checks if an entry represents an image (base64 data URI) and renders
+   * an <img> element instead of plain text.
    */
   renderDiary(entries, currentLanguage, visualEffectsManager) {
     if (!this.diaryContainer) {
@@ -1009,13 +1009,8 @@ export class ViewManager {
       return;
     }
     entries.forEach(entry => {
-      // If the entry seems to be an image (contains 'base64') but is missing the proper prefix,
-      // add the prefix (defaulting to PNG format).
-      if (entry.entry.includes("base64") && !entry.entry.startsWith("data:image")) {
-        entry.entry = "data:image/png;base64," + entry.entry;
-      }
-      let entryElement;
-      // If entry starts with "data:image", render as an image.
+      let rendered;
+      // If entry starts with "data:image", assume it's an image.
       if (entry.entry.startsWith("data:image")) {
         const imageDiaryEntryTemplate = `
           <div class="diary-entry {{postClass}}">
@@ -1023,46 +1018,25 @@ export class ViewManager {
             <span class="diary-timestamp">{{timestamp}}</span>
           </div>
         `;
-        const renderedHTML = TemplateEngine.render(imageDiaryEntryTemplate, {
+        rendered = TemplateEngine.render(imageDiaryEntryTemplate, {
           postClass: entry.postClass,
           entry: entry.entry,
           timestamp: entry.timestamp
         });
-        // Create a temporary container and then append its content.
-        const tempDiv = document.createElement("div");
-        tempDiv.innerHTML = renderedHTML;
-        entryElement = tempDiv.firstElementChild;
-        this.diaryContainer.appendChild(entryElement);
       } else {
-        // For text entries, render with an empty <p> container and then animate text display.
         const diaryEntryTemplate = `
           <div class="diary-entry {{postClass}}">
-            <p></p>
+            <p>{{entry}}</p>
             <span class="diary-timestamp">{{timestamp}}</span>
           </div>
         `;
-        const renderedHTML = TemplateEngine.render(diaryEntryTemplate, {
+        rendered = TemplateEngine.render(diaryEntryTemplate, {
           postClass: entry.postClass,
+          entry: entry.entry,
           timestamp: entry.timestamp
         });
-        const tempDiv = document.createElement("div");
-        tempDiv.innerHTML = renderedHTML;
-        entryElement = tempDiv.firstElementChild;
-        this.diaryContainer.appendChild(entryElement);
-        // Find the <p> element and animate the text if visualEffectsManager is provided.
-        const pElem = entryElement.querySelector("p");
-        if (pElem) {
-          const fullText = entry.entry;
-          pElem.textContent = ""; // Clear any existing text.
-          if (visualEffectsManager && typeof visualEffectsManager.animateHTMLText === "function") {
-            // Animate text typing with a defined speed (e.g., 50ms per character).
-            visualEffectsManager.animateHTMLText(pElem, fullText, 50);
-          } else {
-            // Fallback: directly set the text.
-            pElem.textContent = fullText;
-          }
-        }
       }
+      this.diaryContainer.innerHTML += rendered;
     });
     console.log(`[ViewManager] Diary updated with ${entries.length} entries.`);
   }

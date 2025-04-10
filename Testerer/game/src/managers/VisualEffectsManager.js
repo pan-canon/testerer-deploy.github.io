@@ -1,5 +1,3 @@
-// File: src/managers/VisualEffectsManager.js
-
 import { ErrorManager } from './ErrorManager.js';
 
 /**
@@ -43,10 +41,31 @@ export class VisualEffectsManager {
   }
 
   /**
+   * setControlsBlocked
+   * Blocks or unblocks user interaction with the controls.
+   * Delegates to the ViewManager if available.
+   *
+   * @param {boolean} shouldBlock - True to block controls, false to unblock.
+   */
+  setControlsBlocked(shouldBlock) {
+    // Do not block controls if the camera is open.
+    if (this.app.isCameraOpen) {
+      shouldBlock = false;
+    }
+    if (this.app.viewManager && typeof this.app.viewManager.setControlsBlocked === 'function') {
+      this.app.viewManager.setControlsBlocked(shouldBlock);
+    } else if (this.controlsPanel) {
+      try {
+        this.controlsPanel.style.pointerEvents = shouldBlock ? "none" : "auto";
+      } catch (error) {
+        ErrorManager.logError(error, "setControlsBlocked");
+      }
+    }
+  }
+
+  /**
    * animateHTMLText
    * Animates HTML text by "typing" it into the target element.
-   *
-   * This version uses recursive setTimeout for better control especially with dynamic templates.
    *
    * @param {HTMLElement} targetElem - The target element for text animation.
    * @param {string} text - The text (including HTML tags) to animate.
@@ -62,34 +81,37 @@ export class VisualEffectsManager {
     let isTag = false;
     let tagBuffer = "";
 
-    const typeNext = () => {
-      if (pos >= text.length) {
+    const intervalId = setInterval(() => {
+      const char = text[pos];
+      if (!char) {
+        clearInterval(intervalId);
         if (audioObj) audioObj.pause();
         if (callback) callback();
         return;
       }
-      const char = text[pos++];
+
+      // Parse HTML tags.
       if (char === "<") {
         isTag = true;
       }
       if (isTag) {
         tagBuffer += char;
         if (char === ">") {
-          isTag = false;
           currentHTML += tagBuffer;
           tagBuffer = "";
+          isTag = false;
         }
       } else {
         currentHTML += char;
       }
+
       targetElem.innerHTML = currentHTML;
+      pos++;
+
       if (typeof onChar === "function") {
         onChar(targetElem, currentHTML);
       }
-      setTimeout(typeNext, speed);
-    };
-
-    typeNext();
+    }, speed);
   }
 
   /**
@@ -289,19 +311,6 @@ export class VisualEffectsManager {
   showControlsPanelForUnregistered() {
     if (StateManager.get("registrationCompleted") !== "true") {
       this.slideUpPanel(this.controlsPanel, 1000, 'assets/audio/panel_slide.mp3');
-    }
-  }
-
-  // Helper method to block/unblock controls for animation effects.
-  setControlsBlocked(shouldBlock) {
-    if (this.app && this.app.viewManager && typeof this.app.viewManager.setControlsBlocked === 'function') {
-      this.app.viewManager.setControlsBlocked(shouldBlock);
-    } else if (this.controlsPanel) {
-      try {
-        this.controlsPanel.style.pointerEvents = shouldBlock ? "none" : "auto";
-      } catch (error) {
-        ErrorManager.logError(error, "setControlsBlocked");
-      }
     }
   }
 }

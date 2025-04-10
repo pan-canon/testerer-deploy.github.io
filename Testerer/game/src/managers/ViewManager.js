@@ -990,8 +990,9 @@ export class ViewManager {
   /**
    * renderDiary
    * Renders the diary entries from the database into the diary container.
-   * Now checks if an entry represents an image (base64 data URI) and renders
-   * an <img> element instead of plain text.
+   * [MODIFIED] We now:
+   *   1) Fix image rendering if the entry is base64 but missing the prefix.
+   *   2) Only animate text if entry.isNew === true.
    */
   renderDiary(entries, currentLanguage, visualEffectsManager) {
     if (!this.diaryContainer) {
@@ -1008,8 +1009,14 @@ export class ViewManager {
       console.log("[ViewManager] No diary entries found.");
       return;
     }
-    entries.forEach(entry => {
-      let rendered;
+    
+    entries.forEach((entry) => {
+      // [MODIFIED] If we see "base64" but no "data:image", add the prefix (assuming PNG).
+      if (entry.entry.includes("base64") && !entry.entry.startsWith("data:image")) {
+        entry.entry = "data:image/png;base64," + entry.entry.replace(/^.*base64\,?/, '');
+      }
+
+      let renderedHTML;
       // If entry starts with "data:image", assume it's an image.
       if (entry.entry.startsWith("data:image")) {
         const imageDiaryEntryTemplate = `
@@ -1018,25 +1025,41 @@ export class ViewManager {
             <span class="diary-timestamp">{{timestamp}}</span>
           </div>
         `;
-        rendered = TemplateEngine.render(imageDiaryEntryTemplate, {
+        renderedHTML = TemplateEngine.render(imageDiaryEntryTemplate, {
           postClass: entry.postClass,
           entry: entry.entry,
           timestamp: entry.timestamp
         });
+        this.diaryContainer.innerHTML += renderedHTML;
       } else {
-        const diaryEntryTemplate = `
+        // [MODIFIED] For text entries, check if we should animate or just display directly.
+        const textDiaryEntryTemplate = `
           <div class="diary-entry {{postClass}}">
-            <p>{{entry}}</p>
+            <p></p>
             <span class="diary-timestamp">{{timestamp}}</span>
           </div>
         `;
-        rendered = TemplateEngine.render(diaryEntryTemplate, {
+        renderedHTML = TemplateEngine.render(textDiaryEntryTemplate, {
           postClass: entry.postClass,
-          entry: entry.entry,
           timestamp: entry.timestamp
         });
+        // Insert the template into the diary container as a DOM element, then animate if needed.
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = renderedHTML;
+        const entryElem = tempDiv.firstElementChild;
+        this.diaryContainer.appendChild(entryElem);
+        
+        const pElem = entryElem.querySelector("p");
+        if (!pElem) return;
+        
+        // If isNew = true, animate text. Else set text directly.
+        if (entry.isNew === true && visualEffectsManager && typeof visualEffectsManager.animateHTMLText === 'function') {
+          console.log(`[ViewManager] Animating new text diary entry: "${entry.entry}"`);
+          visualEffectsManager.animateHTMLText(pElem, entry.entry, 50);
+        } else {
+          pElem.textContent = entry.entry;
+        }
       }
-      this.diaryContainer.innerHTML += rendered;
     });
     console.log(`[ViewManager] Diary updated with ${entries.length} entries.`);
   }

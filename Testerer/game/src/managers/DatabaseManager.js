@@ -1,5 +1,3 @@
-// File: src/managers/DatabaseManager.js
-
 import { SQLiteDataManager } from './SQLiteDataManager.js';
 import { ErrorManager } from './ErrorManager.js';
 
@@ -360,30 +358,5 @@ export class DatabaseManager {
       }));
     }
     return [];
-  }
-
-  /**
-   * getDiaryPostStatus
-   * Checks the status of a diary entry and returns an object with flags:
-   *   - isPublished: Whether the post is considered published (e.g. not a draft).
-   *   - isFromGhost: True if the post is marked as from a ghost (postClass === 'ghost-post').
-   *   - isFromUser: True if the post is not from a ghost.
-   *
-   * This method encapsulates business logic and is used in UI modules to decide
-   * whether to apply animations (only for new, unpublished posts) or adjust display.
-   *
-   * @param {Object} entry - Diary entry object (e.g. { id, entry, postClass, timestamp, ... }).
-   * @returns {Object} { isPublished, isFromGhost, isFromUser }
-   */
-  getDiaryPostStatus(entry) {
-    // Determine if the entry is from a ghost based on postClass.
-    const isFromGhost = (entry.postClass === 'ghost-post');
-    // If not from ghost, assume it comes from the user.
-    const isFromUser = !isFromGhost;
-    // Determine if the post is published.
-    // Здесь можно настроить логику, например:
-    // Если postClass равен 'draft', то запись еще не опубликована.
-    const isPublished = (entry.postClass !== 'draft');
-    return { isPublished, isFromGhost, isFromUser };
   }
 }

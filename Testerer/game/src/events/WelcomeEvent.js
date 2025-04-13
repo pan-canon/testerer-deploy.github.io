@@ -61,8 +61,6 @@ export class WelcomeEvent extends BaseEvent {
     await this.eventManager.addDiaryEntry(this.key, true);
 
     // Instead of setting "mirrorQuestReady", update the universal active quest key.
-    this.app.ghostManager.activeQuestKey = "mirror_quest";
-    StateManager.set("activeQuestKey", "mirror_quest");
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
       this.app.viewManager.setPostButtonEnabled(true);
     }

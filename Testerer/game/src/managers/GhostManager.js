@@ -234,9 +234,10 @@ export class GhostManager {
       console.warn(`Quest "${questKey}" is already active with status "${record.status}".`);
       return false;
     }
-    // 2) Check if an active quest is already recorded using the universal key.
+    // 2) Check if an active quest is already recorded.
     const activeQuestKey = StateManager.get("activeQuestKey");
-    if (activeQuestKey) {
+    // Изменённое условие: блокировать, если активный квест существует и не совпадает с тем, что мы пытаемся запустить.
+    if (activeQuestKey && activeQuestKey !== questKey) {
       console.warn(`Another quest "${activeQuestKey}" is already active, cannot start quest "${questKey}".`);
       return false;
     }

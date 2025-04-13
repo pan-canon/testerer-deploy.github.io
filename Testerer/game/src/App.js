@@ -104,7 +104,7 @@ export class App {
    * Among other tasks, this method launches the support chat section.
    */
   async init() {
-    await this.databaseManager.initDatabasePromise;
+    await this.databaseManager.initDatabasePromise();
     console.log("Database initialization complete.");
 
     this.loadAppState();
@@ -112,8 +112,8 @@ export class App {
     this.questManager.restoreAllActiveQuests();
 
     this.viewManager.showToggleCameraButton();
-    // We call updateDiaryDisplay early in case user is on main screen,
-    // but specifically for older profiles, we must wait for the template to load (see below).
+    // Call updateDiaryDisplay early in case user is on main screen,
+    // but for older profiles, we may need to wait for the template to load.
     this.eventManager.updateDiaryDisplay();
     this.viewManager.createTopCameraControls();
 
@@ -122,8 +122,8 @@ export class App {
     // Schedule support chat conversation to start after 5 seconds.
     this.chatManager.scheduleConversationStartIfInactive(5000);
 
-    // If a profile exists, switch to main screen (and only then re-call updateDiaryDisplay).
-    // IMPORTANT: Pass `this` as the third param so `ViewManager` can reference your main app instance.
+    // If a profile exists, switch to main screen (and then update the diary).
+    // IMPORTANT: Pass `this` as the third parameter so the ViewManager can reference the main app instance.
     if (await this.profileManager.isProfileSaved()) {
       const profile = await this.profileManager.getProfile();
       console.log("Profile found:", profile);
@@ -131,20 +131,22 @@ export class App {
       await this.viewManager.switchScreen('main-screen', 'main-buttons', this);
       this.viewManager.showToggleCameraButton();
 
-      if (StateManager.get("mirrorQuestReady") === "true") {
+      // Universal check: enable the Post button if an active quest is recorded
+      // (activeQuestKey is set by GhostManager/QuestManager when a quest is in progress).
+      if (StateManager.get("activeQuestKey")) {
         this.viewManager.setPostButtonEnabled(true);
       } else {
         this.viewManager.setPostButtonEnabled(false);
       }
+
       this.viewManager.updateProfileDisplay(profile);
       this.selfieData = profile.selfie;
 
-      // Re-render the diary after main-screen is loaded
+      // Re-render the diary after main screen is loaded.
       this.eventManager.updateDiaryDisplay();
     } else {
       console.log("Profile not found, showing landing screen.");
-
-      // ALSO pass `this` here. Without it, `app` will be undefined in `ViewManager`.
+      // Pass `this` here. Without it, 'app' will be undefined in ViewManager.
       await this.viewManager.switchScreen('landing-screen', 'landing-buttons', this);
     }
   }

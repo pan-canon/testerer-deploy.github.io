@@ -115,7 +115,7 @@ export class ViewManager {
       console.error("Chat button (id='chat-btn') not found in the DOM.");
     }
 
-    // >>> Add missing event listener for the Post button.
+    // Add event listener for the Post button.
     if (this.postBtn) {
       this.postBtn.addEventListener("click", () => {
         console.log("Post button clicked. Delegating to ghostManager.handlePostButtonClick()...");
@@ -450,6 +450,11 @@ export class ViewManager {
     }
   }
 
+  /**
+   * setPostButtonEnabled
+   * Sets the enabled/disabled state of the Post button.
+   * This method should be called with a state determined externally (e.g. by QuestManager).
+   */
   setPostButtonEnabled(isEnabled) {
     const postBtn = document.getElementById("post-btn");
     if (postBtn) {
@@ -466,6 +471,11 @@ export class ViewManager {
     }
   }
 
+  /**
+   * setCameraButtonActive
+   * Updates the visual active state of the Toggle Camera button.
+   * The state (true/false) should be provided by an external universal source.
+   */
   setCameraButtonActive(isActive) {
     const cameraBtn = document.getElementById("toggle-camera");
     if (cameraBtn) {
@@ -474,6 +484,7 @@ export class ViewManager {
       } else {
         cameraBtn.classList.remove("active");
       }
+      // Save the universal camera button state (could be updated from a higher-level manager)
       StateManager.set("cameraButtonActive", JSON.stringify(isActive));
       console.log(`[ViewManager] Camera button active state set to ${isActive}.`);
     }
@@ -486,6 +497,11 @@ export class ViewManager {
     console.log("[ViewManager] Camera button state restored:", isActive);
   }
 
+  /**
+   * setShootButtonActive
+   * Updates the visual active state of the Shoot button.
+   * The isActive parameter should be determined by external logic (e.g., quest state).
+   */
   setShootButtonActive(isActive) {
     const shootBtn = document.getElementById("btn_shoot");
     if (shootBtn) {
@@ -495,6 +511,7 @@ export class ViewManager {
       } else {
         shootBtn.classList.remove("active");
       }
+      // Save the universal shoot button state.
       StateManager.set("shootButtonActive", JSON.stringify(isActive));
       console.log(`[ViewManager] Shoot button active state set to ${isActive}.`);
     } else {
@@ -858,10 +875,9 @@ export class ViewManager {
       this.hideGlobalCamera();
       this.switchScreen('main-screen', 'main-buttons', app);
       this.showToggleCameraButton();
-      if (StateManager.get("mirrorQuestReady") === "true") {
-        this.setPostButtonEnabled(true);
-      } else {
-        this.setPostButtonEnabled(false);
+      // Instead of directly checking mirrorQuestReady, we now delegate the decision to the QuestManager.
+      if (this.app.questManager && typeof this.app.questManager.updatePostButtonState === "function") {
+        this.app.questManager.updatePostButtonState();
       }
       app.profileManager.getProfile().then((profile) => {
         this.updateProfileDisplay(profile);

@@ -121,11 +121,29 @@ export class QuestManager {
   }
 
   /**
-   * Synchronizes the quest state for predefined quests (mirror and repeating).
+   * Universal method to update the state of the Post button.
+   * If any active quest is recorded in StateManager (via activeQuestKey),
+   * the Post button is disabled; otherwise, it is enabled.
+   */
+  updatePostButtonState() {
+    const activeQuest = StateManager.get("activeQuestKey");
+    if (activeQuest) {
+      this.app.viewManager.setPostButtonEnabled(false);
+      console.log(`[QuestManager] Post button disabled because active quest exists: ${activeQuest}`);
+    } else {
+      this.app.viewManager.setPostButtonEnabled(true);
+      console.log("[QuestManager] Post button enabled; no active quest found.");
+    }
+  }
+
+  /**
+   * Synchronizes the quest state for predefined quests (mirror and repeating),
+   * then updates the Post button state universally.
    */
   async syncQuestState() {
     await this.syncQuestStateForQuest("mirror_quest");
     await this.syncQuestStateForQuest("repeating_quest");
+    this.updatePostButtonState();
   }
 
   /**

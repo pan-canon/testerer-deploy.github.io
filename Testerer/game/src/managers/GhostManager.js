@@ -62,7 +62,10 @@ export class GhostManager {
         console.log(`Sequence configuration loaded. Current index: ${this.sequenceManager.currentIndex}`);
 
         // Auto-launch the first event if registration is complete and the welcome event has not been executed.
-        if (StateManager.get("registrationCompleted") === "true" && StateManager.get("welcomeDone") !== "true") {
+        if (
+          StateManager.get("registrationCompleted") === "true" &&
+          StateManager.get("welcomeDone") !== "true"
+        ) {
           const firstEntry = this.sequenceManager.getCurrentEntry();
           if (firstEntry) {
             console.log(`Auto-launching initial event: ${firstEntry.eventKey}`);
@@ -222,7 +225,8 @@ export class GhostManager {
 
   /**
    * Determines if a quest can be started.
-   * Checks that there is no active unfinished record in the database, no active quest in the StateManager,
+   * Checks that there is no active unfinished record in the database,
+   * no active quest registered in StateManager,
    * and that the quest key is the next expected in the sequence.
    * @param {string} questKey - The quest key to start.
    * @returns {boolean} True if the quest can be launched; false otherwise.
@@ -237,7 +241,7 @@ export class GhostManager {
     // 2) Check if an active quest is already recorded.
     const activeQuestKey = StateManager.get("activeQuestKey");
     if (activeQuestKey) {
-      console.warn(`Another quest "${activeQuestKey}" is already active, cannot start quest "${questKey}".`);
+      console.warn(`Another quest "${activeQuestKey}" is already active; cannot start quest "${questKey}".`);
       return false;
     }
     // 3) Check if this quest is the next expected in the sequence.

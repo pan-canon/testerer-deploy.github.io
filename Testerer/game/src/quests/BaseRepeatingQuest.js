@@ -1,8 +1,5 @@
-// File: src/quests/BaseRepeatingQuest.js
 import { BaseEvent } from '../events/BaseEvent.js';
-import { ImageUtils } from '../utils/ImageUtils.js';
 import { StateManager } from '../managers/StateManager.js';
-import { ErrorManager } from '../managers/ErrorManager.js';
 
 /**
  * BaseRepeatingQuest – Base class for the repeating quest.
@@ -208,8 +205,7 @@ export class BaseRepeatingQuest extends BaseEvent {
         current_stage: this.currentStage,
         total_stages: this.totalStages
       });
-      // Removed direct reference to mirrorQuestReady.
-      // Instead, rely on universal update via QuestManager (activeQuestKey).
+      StateManager.set("mirrorQuestReady", "true");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(true);
         console.log("[BaseRepeatingQuest] Post button enabled for next stage.");

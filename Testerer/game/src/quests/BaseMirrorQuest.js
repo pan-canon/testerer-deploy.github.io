@@ -1,4 +1,4 @@
-// File: src/quests/BaseMirrorQuest.js
+// --- Quest Classes ---
 import { BaseEvent } from '../events/BaseEvent.js';
 import { ImageUtils } from '../utils/ImageUtils.js';
 import { StateManager } from '../managers/StateManager.js';
@@ -22,7 +22,6 @@ export class BaseMirrorQuest extends BaseEvent {
 
     this.checkInterval = null; // For startCheckLoop
     this.finished = false;
-    this.active = false; // New universal flag indicating if this quest is active
 
     // Canvas for frame comparison
     this.tempCanvas = document.createElement("canvas");
@@ -33,11 +32,11 @@ export class BaseMirrorQuest extends BaseEvent {
 
   /**
    * registerEvents
-   * If the quest is active (this.active is true), starts the check loop when the camera becomes ready.
+   * If the "mirrorQuestActive" flag is set, starts the check loop when the camera becomes ready.
    */
   registerEvents() {
     document.addEventListener('cameraReady', () => {
-      if (this.active) {
+      if (StateManager.get("mirrorQuestActive") === "true") {
         this.startCheckLoop();
       }
     });
@@ -45,7 +44,8 @@ export class BaseMirrorQuest extends BaseEvent {
 
   /**
    * activate
-   * Activates the mirror quest if it is not yet logged and creates an "active" quest record in the database.
+   * Activates the mirror quest if it is not yet logged, sets the mirrorQuestActive flag,
+   * and creates an "active" quest record in the database.
    */
   async activate() {
     if (!this.eventManager.isEventLogged(this.key)) {
@@ -53,8 +53,7 @@ export class BaseMirrorQuest extends BaseEvent {
       await this.eventManager.addDiaryEntry(this.key);
     }
     console.log("[BaseMirrorQuest] Mirror quest activated.");
-    // Instead of setting a persistent flag, we use the local property.
-    this.active = true;
+    StateManager.set("mirrorQuestActive", "true");
 
     // Save quest record as active.
     await this.app.databaseManager.saveQuestRecord({
@@ -68,7 +67,7 @@ export class BaseMirrorQuest extends BaseEvent {
   /**
    * startCheckLoop
    * Displays the mirror quest UI (via ViewManager) and starts a loop that checks 
-   * compareFrameInternally every 2 seconds.
+   * "compareFrameInternally" every 2 seconds.
    */
   startCheckLoop() {
     if (this.checkInterval) return; // Already running.
@@ -177,7 +176,7 @@ export class BaseMirrorQuest extends BaseEvent {
    * - Performs a final status check.
    * - Logs a diary entry indicating success or failure.
    * - Updates the UI (e.g., disables camera highlights, resets buttons).
-   * - Clears the active flag.
+   * - Clears the mirrorQuestActive flag.
    * - Marks the quest as finished in the database.
    * - Does NOT automatically trigger the next quest or event.
    * - Dispatches a "questCompleted" event to signal completion to GhostManager.
@@ -188,7 +187,7 @@ export class BaseMirrorQuest extends BaseEvent {
 
     this.stopCheckLoop();  // Stop the quest UI check loop.
 
-    const success = await this.checkStatus();
+    const success = await this.checkStatus(); 
     const ghost = this.app.ghostManager.getCurrentGhost();
     const randomLetter = ghost ? this.getRandomLetter(ghost.name) : "";
 
@@ -209,8 +208,8 @@ export class BaseMirrorQuest extends BaseEvent {
       this.app.viewManager.setCameraButtonActive(false);
     }
 
-    // Clear the active flag.
-    this.active = false;
+    // Remove the "mirrorQuestActive" flag.
+    StateManager.remove("mirrorQuestActive");
 
     // Mark the quest as finished in the database.
     await this.app.databaseManager.saveQuestRecord({
@@ -232,13 +231,12 @@ export class BaseMirrorQuest extends BaseEvent {
 
   /**
    * getCurrentQuestStatus
-   * Retrieves the quest state from the database along with local flags.
-   * Here, we use the local active flag as a substitute for mirrorQuestActive.
+   * Retrieves the quest state from the database along with local flags ("finished" and "mirrorQuestActive").
    * @returns {Promise<Object>} An object containing quest status information.
    */
   async getCurrentQuestStatus() {
     const record = this.app.databaseManager.getQuestRecord(this.key);
-    const activeFlag = this.active;
+    const activeFlag = StateManager.get("mirrorQuestActive") === "true";
     return {
       key: this.key,
       active: activeFlag,

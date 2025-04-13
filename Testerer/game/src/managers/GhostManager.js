@@ -67,7 +67,7 @@ export class GhostManager {
           if (firstEntry) {
             console.log(`Auto-launching initial event: ${firstEntry.eventKey}`);
             this.eventManager.activateEvent(firstEntry.eventKey);
-            // Save the active quest key.
+            // Save the active quest key using the universal mechanism.
             this.activeQuestKey = firstEntry.questKey;
             StateManager.set("activeQuestKey", this.activeQuestKey);
           }
@@ -234,7 +234,7 @@ export class GhostManager {
       console.warn(`Quest "${questKey}" is already active with status "${record.status}".`);
       return false;
     }
-    // 2) Check if an active quest is already recorded.
+    // 2) Check if an active quest is already recorded using the universal key.
     const activeQuestKey = StateManager.get("activeQuestKey");
     if (activeQuestKey) {
       console.warn(`Another quest "${activeQuestKey}" is already active, cannot start quest "${questKey}".`);
@@ -259,6 +259,7 @@ export class GhostManager {
     }
     console.log(`GhostManager: Starting quest with key: ${questKey}`);
     await this.app.questManager.activateQuest(questKey);
+    // Update the active quest key universally.
     this.activeQuestKey = questKey;
     StateManager.set("activeQuestKey", questKey);
     await this.app.questManager.syncQuestState();

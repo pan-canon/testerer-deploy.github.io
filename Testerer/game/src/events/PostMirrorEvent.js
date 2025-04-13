@@ -1,3 +1,5 @@
+// File: src/events/PostMirrorEvent.js
+
 import { BaseEvent } from './BaseEvent.js';
 import { StateManager } from '../managers/StateManager.js';
 import { ErrorManager } from '../managers/ErrorManager.js';
@@ -5,8 +7,8 @@ import { ErrorManager } from '../managers/ErrorManager.js';
 /**
  * PostMirrorEvent
  * 
- * This event publishes a ghost post and sets flags to start the mirror quest.
- * It updates the UI via ViewManager and uses StateManager to set the necessary flags.
+ * This event publishes a ghost post and signals that the mirror quest cycle has ended.
+ * It updates the UI via ViewManager without directly setting quest-specific flags.
  *
  * NOTE: This event is part of the sequential chain managed by GhostManager.
  * It only performs its task and then dispatches a "gameEventCompleted" event.
@@ -31,23 +33,20 @@ export class PostMirrorEvent extends BaseEvent {
     console.log(`[PostMirrorEvent] Activating event '${this.key}'.`);
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Set required flags to indicate the mirror quest is ready and a repeating cycle is active.
-    StateManager.set("mirrorQuestReady", "true");
-    StateManager.set("isRepeatingCycle", "true");
-
-    // Enable the Post button.
+    // Instead of directly setting mirrorQuestReady or isRepeatingCycle,
+    // signal that the mirror quest cycle has completed by enabling the Post button 
+    // and triggering the mirror effect. The universal active quest state is managed elsewhere.
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
       this.app.viewManager.setPostButtonEnabled(true);
     }
 
-    // Trigger the mirror effect if available.
     if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === "function") {
       this.app.visualEffectsManager.triggerMirrorEffect();
     }
 
     console.log("[PostMirrorEvent] Mirror quest cycle ended; waiting for user action to trigger the next quest.");
     
-    // Dispatch an event to signal completion of this event.
+    // Dispatch an event to signal that this event has completed.
     document.dispatchEvent(new CustomEvent("gameEventCompleted", { detail: this.key }));
   }
 }

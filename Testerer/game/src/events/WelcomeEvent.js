@@ -1,3 +1,5 @@
+// File: src/events/WelcomeEvent.js
+
 import { BaseEvent } from './BaseEvent.js';
 import { StateManager } from '../managers/StateManager.js';
 import { ErrorManager } from '../managers/ErrorManager.js';
@@ -37,18 +39,18 @@ export class WelcomeEvent extends BaseEvent {
       return;
     }
     
-    // If the event is already logged, check the mirrorQuestReady flag for enabling the Post button.
+    // If the event is already logged, check the universal active quest key for enabling the Post button.
     if (this.eventManager.isEventLogged(this.key)) {
       console.log(`Event '${this.key}' is already logged.`);
-      if (StateManager.get("mirrorQuestReady") === "true") {
+      if (StateManager.get("activeQuestKey") === "mirror_quest") {
         if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
           this.app.viewManager.setPostButtonEnabled(true);
-          console.log("Post button enabled based on mirrorQuestReady flag.");
+          console.log("Post button enabled based on activeQuestKey 'mirror_quest'.");
         }
       } else {
         if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
           this.app.viewManager.setPostButtonEnabled(false);
-          console.log("Post button remains disabled as mirrorQuestReady flag is false.");
+          console.log("Post button remains disabled as activeQuestKey is not set to 'mirror_quest'.");
         }
       }
       return;
@@ -58,8 +60,9 @@ export class WelcomeEvent extends BaseEvent {
     console.log(`Activating event '${this.key}': Logging invitation to approach the mirror`);
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Set the mirrorQuestReady flag and enable the Post button.
-    StateManager.set("mirrorQuestReady", "true");
+    // Instead of setting "mirrorQuestReady", update the universal active quest key.
+    this.app.ghostManager.activeQuestKey = "mirror_quest";
+    StateManager.set("activeQuestKey", "mirror_quest");
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
       this.app.viewManager.setPostButtonEnabled(true);
     }

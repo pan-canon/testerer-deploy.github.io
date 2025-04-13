@@ -1,3 +1,5 @@
+// File: src/quests/FinalQuest.js
+
 import { BaseEvent } from '../events/BaseEvent.js';
 import { StateManager } from '../managers/StateManager.js';
 
@@ -44,10 +46,11 @@ export class FinalQuest extends BaseEvent {
    *  1) Checks final conditions via checkStatus.
    *  2) Logs the completion in the diary.
    *  3) Sets the "gameFinalized" flag via StateManager.
-   *  4) Calls finishCurrentGhost from GhostManager.
-   *  5) Notifies the user via ViewManager.
-   *  6) Synchronizes UI state.
-   *  7) Dispatches a "questCompleted" event to signal completion.
+   *  4) Removes the universal active quest key.
+   *  5) Calls finishCurrentGhost from GhostManager.
+   *  6) Notifies the user via ViewManager.
+   *  7) Synchronizes UI state.
+   *  8) Dispatches a "questCompleted" event to signal completion.
    */
   async finish() {
     if (this.finished) return;
@@ -64,7 +67,11 @@ export class FinalQuest extends BaseEvent {
     console.log(`[FinalQuest] Finishing quest: ${this.key}`);
 
     await this.eventManager.addDiaryEntry(`${this.key}_completed`, true);
+    
+    // Set the game as finalized.
     StateManager.set("gameFinalized", "true");
+    // Remove the universal active quest key to clear any lingering quest state.
+    StateManager.remove("activeQuestKey");
 
     if (this.app.ghostManager) {
       await this.app.ghostManager.finishCurrentGhost();

@@ -131,11 +131,10 @@ export class App {
       await this.viewManager.switchScreen('main-screen', 'main-buttons', this);
       this.viewManager.showToggleCameraButton();
 
-      if (StateManager.get("mirrorQuestReady") === "true") {
-        this.viewManager.setPostButtonEnabled(true);
-      } else {
-        this.viewManager.setPostButtonEnabled(false);
-      }
+      // Replace direct mirrorQuestReady check with universal activeQuestKey check.
+      const activeQuestKey = StateManager.get("activeQuestKey");
+      this.viewManager.setPostButtonEnabled(!!activeQuestKey);
+
       this.viewManager.updateProfileDisplay(profile);
       this.selfieData = profile.selfie;
 

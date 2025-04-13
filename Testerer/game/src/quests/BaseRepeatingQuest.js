@@ -1,5 +1,8 @@
+// --- Quest Classes ---
 import { BaseEvent } from '../events/BaseEvent.js';
+import { ImageUtils } from '../utils/ImageUtils.js';
 import { StateManager } from '../managers/StateManager.js';
+import { ErrorManager } from '../managers/ErrorManager.js';
 
 /**
  * BaseRepeatingQuest – Base class for the repeating quest.
@@ -205,7 +208,7 @@ export class BaseRepeatingQuest extends BaseEvent {
         current_stage: this.currentStage,
         total_stages: this.totalStages
       });
-      StateManager.set("mirrorQuestReady", "true");
+      // Removed direct call to set "mirrorQuestReady"; universal active quest state is managed externally.
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(true);
         console.log("[BaseRepeatingQuest] Post button enabled for next stage.");
@@ -271,11 +274,13 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * getCurrentQuestStatus – Retrieves the current status of the repeating quest.
+   * Now, instead of using a local boolean, the active flag is determined by comparing
+   * the universal active quest key with this quest's key.
    * @returns {Promise<Object>} An object containing quest status information.
    */
   async getCurrentQuestStatus() {
     const record = this.app.databaseManager.getQuestRecord(this.key);
-    const active = (!this.finished && this.currentStage <= this.totalStages);
+    const active = (StateManager.get("activeQuestKey") === this.key);
     return {
       key: this.key,
       active: active,

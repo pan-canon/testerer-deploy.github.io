@@ -32,11 +32,13 @@ export class BaseMirrorQuest extends BaseEvent {
 
   /**
    * registerEvents
-   * If the "mirrorQuestActive" flag is set, starts the check loop when the camera becomes ready.
+   * If the universal active quest key matches this quest's key,
+   * starts the check loop when the camera becomes ready.
    */
   registerEvents() {
     document.addEventListener('cameraReady', () => {
-      if (StateManager.get("mirrorQuestActive") === "true") {
+      // Instead of checking a specific flag, check the universal "activeQuestKey"
+      if (StateManager.get("activeQuestKey") === this.key) {
         this.startCheckLoop();
       }
     });
@@ -44,8 +46,8 @@ export class BaseMirrorQuest extends BaseEvent {
 
   /**
    * activate
-   * Activates the mirror quest if it is not yet logged, sets the mirrorQuestActive flag,
-   * and creates an "active" quest record in the database.
+   * Activates the mirror quest if it is not yet logged and creates an "active" quest record in the database.
+   * Note: The universal active quest key is set by the GhostManager/QuestManager.
    */
   async activate() {
     if (!this.eventManager.isEventLogged(this.key)) {
@@ -53,7 +55,7 @@ export class BaseMirrorQuest extends BaseEvent {
       await this.eventManager.addDiaryEntry(this.key);
     }
     console.log("[BaseMirrorQuest] Mirror quest activated.");
-    StateManager.set("mirrorQuestActive", "true");
+    // Removed direct setting of "mirrorQuestActive"; the universal active quest key will be handled externally.
 
     // Save quest record as active.
     await this.app.databaseManager.saveQuestRecord({
@@ -176,7 +178,7 @@ export class BaseMirrorQuest extends BaseEvent {
    * - Performs a final status check.
    * - Logs a diary entry indicating success or failure.
    * - Updates the UI (e.g., disables camera highlights, resets buttons).
-   * - Clears the mirrorQuestActive flag.
+   * - Clears the quest-specific state.
    * - Marks the quest as finished in the database.
    * - Does NOT automatically trigger the next quest or event.
    * - Dispatches a "questCompleted" event to signal completion to GhostManager.
@@ -208,8 +210,9 @@ export class BaseMirrorQuest extends BaseEvent {
       this.app.viewManager.setCameraButtonActive(false);
     }
 
-    // Remove the "mirrorQuestActive" flag.
-    StateManager.remove("mirrorQuestActive");
+    // Remove any quest-specific flag.
+    // Instead of removing "mirrorQuestActive", the universal active quest key should be managed externally.
+    // StateManager.remove("mirrorQuestActive");
 
     // Mark the quest as finished in the database.
     await this.app.databaseManager.saveQuestRecord({
@@ -231,12 +234,14 @@ export class BaseMirrorQuest extends BaseEvent {
 
   /**
    * getCurrentQuestStatus
-   * Retrieves the quest state from the database along with local flags ("finished" and "mirrorQuestActive").
+   * Retrieves the quest state from the database along with local flags.
+   * Now, instead of checking "mirrorQuestActive", it checks if the universal active quest key
+   * matches this quest's key.
    * @returns {Promise<Object>} An object containing quest status information.
    */
   async getCurrentQuestStatus() {
     const record = this.app.databaseManager.getQuestRecord(this.key);
-    const activeFlag = StateManager.get("mirrorQuestActive") === "true";
+    const activeFlag = (StateManager.get("activeQuestKey") === this.key);
     return {
       key: this.key,
       active: activeFlag,

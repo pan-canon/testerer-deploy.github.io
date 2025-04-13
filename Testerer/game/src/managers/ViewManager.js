@@ -40,6 +40,7 @@ export class ViewManager {
     // Disable "Post" button initially.
     if (this.postBtn) {
       this.postBtn.disabled = true;
+      // Use universal flag storage; initial state is disabled.
       StateManager.set("postButtonDisabled", "true");
       console.log("[ViewManager] Post button disabled on initialization.");
     }
@@ -450,6 +451,12 @@ export class ViewManager {
     }
   }
 
+  /**
+   * setPostButtonEnabled
+   * Sets the Post button state.
+   * The passed parameter (isEnabled) is assumed to be pre-computed based on the universal quest state,
+   * such as the presence of an active quest key ("activeQuestKey").
+   */
   setPostButtonEnabled(isEnabled) {
     const postBtn = document.getElementById("post-btn");
     if (postBtn) {
@@ -466,6 +473,10 @@ export class ViewManager {
     }
   }
 
+  /**
+   * setCameraButtonActive
+   * Sets the active state of the camera button.
+   */
   setCameraButtonActive(isActive) {
     const cameraBtn = document.getElementById("toggle-camera");
     if (cameraBtn) {
@@ -474,18 +485,28 @@ export class ViewManager {
       } else {
         cameraBtn.classList.remove("active");
       }
+      // Optionally, you might remove the old fixed key and rely on universal state instead.
       StateManager.set("cameraButtonActive", JSON.stringify(isActive));
       console.log(`[ViewManager] Camera button active state set to ${isActive}.`);
     }
   }
 
+  /**
+   * restoreCameraButtonState
+   * Restores the camera button state based on the universal quest state ("activeQuestKey").
+   */
   restoreCameraButtonState() {
-    const stored = StateManager.get("cameraButtonActive");
-    const isActive = stored ? JSON.parse(stored) : false;
+    const activeQuestKey = StateManager.get("activeQuestKey");
+    // If an active quest is present, assume camera button should be active.
+    const isActive = activeQuestKey ? true : false;
     this.setCameraButtonActive(isActive);
-    console.log("[ViewManager] Camera button state restored:", isActive);
+    console.log("[ViewManager] Camera button state restored using activeQuestKey:", isActive);
   }
 
+  /**
+   * setShootButtonActive
+   * Sets the active state of the Shoot button.
+   */
   setShootButtonActive(isActive) {
     const shootBtn = document.getElementById("btn_shoot");
     if (shootBtn) {
@@ -495,6 +516,7 @@ export class ViewManager {
       } else {
         shootBtn.classList.remove("active");
       }
+      // Optionally, store the state using the universal key mechanism.
       StateManager.set("shootButtonActive", JSON.stringify(isActive));
       console.log(`[ViewManager] Shoot button active state set to ${isActive}.`);
     } else {
@@ -502,11 +524,15 @@ export class ViewManager {
     }
   }
 
+  /**
+   * restoreShootButtonState
+   * Restores the Shoot button state based on the universal quest state ("activeQuestKey").
+   */
   restoreShootButtonState() {
-    const stored = StateManager.get("shootButtonActive");
-    const isActive = stored ? JSON.parse(stored) : false;
+    const activeQuestKey = StateManager.get("activeQuestKey");
+    const isActive = activeQuestKey ? true : false;
     this.setShootButtonActive(isActive);
-    console.log("[ViewManager] Shoot button state restored:", isActive);
+    console.log("[ViewManager] Shoot button state restored using activeQuestKey:", isActive);
   }
 
   setApartmentPlanNextButtonEnabled(isEnabled) {
@@ -858,11 +884,9 @@ export class ViewManager {
       this.hideGlobalCamera();
       this.switchScreen('main-screen', 'main-buttons', app);
       this.showToggleCameraButton();
-      if (StateManager.get("mirrorQuestReady") === "true") {
-        this.setPostButtonEnabled(true);
-      } else {
-        this.setPostButtonEnabled(false);
-      }
+      // Use universal activeQuestKey to determine Post button state.
+      const activeQuestKey = StateManager.get("activeQuestKey");
+      this.setPostButtonEnabled(!!activeQuestKey);
       app.profileManager.getProfile().then((profile) => {
         this.updateProfileDisplay(profile);
         app.selfieData = profile.selfie;

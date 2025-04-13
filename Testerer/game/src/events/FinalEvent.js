@@ -1,3 +1,5 @@
+// File: src/events/FinalEvent.js
+
 import { BaseEvent } from './BaseEvent.js';
 import { StateManager } from '../managers/StateManager.js';
 import { ErrorManager } from '../managers/ErrorManager.js';
@@ -55,6 +57,9 @@ export class FinalEvent extends BaseEvent {
     if (this.app.questManager && typeof this.app.questManager.syncQuestState === "function") {
       await this.app.questManager.syncQuestState();
     }
+
+    // Remove the universal active quest key to clear any remaining quest state.
+    StateManager.remove("activeQuestKey");
 
     // Notify the user that the scenario is finished.
     if (this.app.viewManager && typeof this.app.viewManager.showNotification === "function") {

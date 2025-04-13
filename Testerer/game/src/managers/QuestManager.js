@@ -91,32 +91,32 @@ export class QuestManager {
 
   /**
    * Universal method to synchronize the state for a given quest.
-   * Enables or disables the Post button accordingly.
+   * Uses the universal active quest key stored in StateManager.
+   * If the active quest key matches the provided questKey, the Post button is disabled;
+   * otherwise, the Post button is enabled.
    * @param {string} questKey - The key of the quest to synchronize.
    */
   async syncQuestStateForQuest(questKey) {
-    if (StateManager.get("gameFinalized") === "true" || StateManager.get("questActive") === "true") {
-      StateManager.set("postButtonDisabled", "true");
+    // If the game is finalized, disable Post button.
+    if (StateManager.get("gameFinalized") === "true") {
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(false);
       }
-      console.log(`[QuestManager.syncQuestStateForQuest] Global condition met; Post button disabled for quest "${questKey}".`);
+      console.log(`[QuestManager.syncQuestStateForQuest] Game finalized; Post button disabled for quest "${questKey}".`);
       return;
     }
-    const questRecord = this.app.databaseManager.getQuestRecord(questKey);
-    console.log(`[QuestManager.syncQuestStateForQuest] Quest record for "${questKey}":`, questRecord);
-    if (questRecord && questRecord.status !== "finished") {
-      StateManager.set("postButtonDisabled", "true");
+    // Retrieve the universal active quest key.
+    const activeQuestKey = StateManager.get("activeQuestKey");
+    if (activeQuestKey && activeQuestKey === questKey) {
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(false);
       }
-      console.log(`[QuestManager.syncQuestStateForQuest] Active quest "${questKey}" detected; Post button disabled.`);
+      console.log(`[QuestManager.syncQuestStateForQuest] Active quest "${questKey}" is in progress; Post button disabled.`);
     } else {
-      StateManager.set("postButtonDisabled", "false");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(true);
       }
-      console.log(`[QuestManager.syncQuestStateForQuest] No active quest "${questKey}" or quest finished; Post button enabled.`);
+      console.log(`[QuestManager.syncQuestStateForQuest] No active quest "${questKey}"; Post button enabled.`);
     }
   }
 
@@ -130,6 +130,7 @@ export class QuestManager {
 
   /**
    * Finds a quest by its key and activates it.
+   * After activation, updates the universal active quest key.
    * @param {string} key - The quest key.
    */
   async activateQuest(key) {
@@ -140,6 +141,9 @@ export class QuestManager {
     }
     console.log(`[QuestManager] Activating quest: ${key}`);
     await quest.activate();
+    // Update the universal active quest key.
+    this.app.ghostManager.activeQuestKey = key;
+    StateManager.set("activeQuestKey", key);
     await this.syncQuestState();
   }
 
@@ -189,6 +193,8 @@ export class QuestManager {
 
   /**
    * Re-initializes UI for all active quests.
+   * For each quest, if a corresponding database record exists with active status,
+   * the quest's restoreUI method is called to reinitialize its UI.
    */
   restoreAllActiveQuests() {
     console.log("[QuestManager] Attempting to restore UI for all active quests...");

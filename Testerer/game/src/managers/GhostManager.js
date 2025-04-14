@@ -361,7 +361,7 @@ export class GhostManager {
         ? await repeatingQuest.getCurrentQuestStatus() 
         : { currentStage: 1, totalStages: 1 };
       console.log("Repeating quest status:", questStatus);
-      if (questStatus.currentStage < questStatus.totalStages) {
+      if (questStatus.currentStage <= questStatus.totalStages) {
         // Intermediate stage: dynamically generate the event key.
         const dynamicEventKey = `post_repeating_event_stage_${questStatus.currentStage}`;
         console.log(`Repeating quest stage completed. Triggering generated event: ${dynamicEventKey}`);

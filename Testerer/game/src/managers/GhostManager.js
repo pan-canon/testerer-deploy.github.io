@@ -21,6 +21,8 @@ import { SequenceManager } from '../utils/SequenceManager.js';
  *    2. There is no active quest registered in the StateManager.
  *    3. The quest key matches the expected next quest in the sequence.
  * - Auto-launch of the first event (e.g., "welcome") is performed if registration is complete.
+ * - Dynamic update of the Post button state added via updatePostButtonState():
+ *    the button is enabled only if no quest is active.
  */
 export class GhostManager {
   /**
@@ -72,6 +74,8 @@ export class GhostManager {
             StateManager.set("activeQuestKey", this.activeQuestKey);
           }
         }
+        // After loading configuration, update the Post button state.
+        this.updatePostButtonState();
       })
       .catch(error => {
         console.error("Error loading unified configuration:", error);
@@ -236,7 +240,7 @@ export class GhostManager {
     }
     // 2) Check if an active quest is already recorded.
     const activeQuestKey = StateManager.get("activeQuestKey");
-    // Изменённое условие: блокировать, если активный квест существует и не совпадает с тем, что мы пытаемся запустить.
+    // Changed condition: block if an active quest exists and it does not match the quest we're trying to start.
     if (activeQuestKey && activeQuestKey !== questKey) {
       console.warn(`Another quest "${activeQuestKey}" is already active, cannot start quest "${questKey}".`);
       return false;
@@ -281,21 +285,38 @@ export class GhostManager {
   }
 
   /**
+   * Updates the Post button state based on whether an active quest is present.
+   * If an active quest exists, the button is disabled; otherwise, it is enabled.
+   */
+  updatePostButtonState() {
+    const activeQuestKey = StateManager.get("activeQuestKey");
+    // If active quest exists, disable the button; else, enable it.
+    const isEnabled = !activeQuestKey;
+    this.app.viewManager.setPostButtonEnabled(isEnabled);
+    console.log(`[GhostManager] Post button state updated: enabled=${isEnabled}`);
+  }
+
+  /**
    * Handles the Post button click.
    * Immediately disables the button, retrieves the next sequence entry, and checks if the quest can be started.
    */
   async handlePostButtonClick() {
+    // Disable the Post button immediately to prevent double-clicks.
     this.app.viewManager.setPostButtonEnabled(false);
     const nextEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
     if (!nextEntry) {
       console.warn("No next sequence entry found.");
+      this.updatePostButtonState();
       return;
     }
     console.log(`GhostManager: Handling Post button click. Next expected quest: ${nextEntry.questKey}`);
     if (!this.canStartQuest(nextEntry.questKey)) {
+      this.updatePostButtonState();
       return;
     }
     await this.startQuest(nextEntry.questKey);
+    // After starting the quest, update the Post button state.
+    this.updatePostButtonState();
   }
 
   /**
@@ -322,6 +343,9 @@ export class GhostManager {
     // Clear the active quest key.
     this.activeQuestKey = null;
     StateManager.remove("activeQuestKey");
+
+    // Update the Post button state after quest completion.
+    this.updatePostButtonState();
 
     if (questKey === "repeating_quest") {
       const repeatingQuest = this.app.questManager.quests.find(q => q.key === "repeating_quest");

@@ -23,6 +23,8 @@ import { SequenceManager } from '../utils/SequenceManager.js';
  * - Auto-launch of the first event (e.g., "welcome") is performed if registration is complete.
  * - Dynamic update of the Post button state added via updatePostButtonState():
  *    the button is enabled only if no quest is active.
+ * - **New:** On starting a quest the camera button is set to active,
+ *   and upon quest completion the active state (class) is removed.
  */
 export class GhostManager {
   /**
@@ -240,7 +242,7 @@ export class GhostManager {
     }
     // 2) Check if an active quest is already recorded.
     const activeQuestKey = StateManager.get("activeQuestKey");
-    // Changed condition: block if an active quest exists and it does not match the quest we're trying to start.
+    // Block if an active quest exists and it does not match the quest we're trying to start.
     if (activeQuestKey && activeQuestKey !== questKey) {
       console.warn(`Another quest "${activeQuestKey}" is already active, cannot start quest "${questKey}".`);
       return false;
@@ -268,6 +270,8 @@ export class GhostManager {
     this.activeQuestKey = questKey;
     StateManager.set("activeQuestKey", questKey);
     await this.app.questManager.syncQuestState();
+    // When a quest starts, mark the camera button as active.
+    this.app.viewManager.setCameraButtonActive(true);
   }
 
   /**
@@ -346,6 +350,8 @@ export class GhostManager {
 
     // Update the Post button state after quest completion.
     this.updatePostButtonState();
+    // Deactivate the camera button since the quest is finished.
+    this.app.viewManager.setCameraButtonActive(false);
 
     if (questKey === "repeating_quest") {
       const repeatingQuest = this.app.questManager.quests.find(q => q.key === "repeating_quest");

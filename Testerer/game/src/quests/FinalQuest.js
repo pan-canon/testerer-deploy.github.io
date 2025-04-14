@@ -87,7 +87,6 @@ export class FinalQuest extends BaseEvent {
       await this.app.questManager.syncQuestState();
     }
 
-    // Dispatch an event to signal that the quest has been completed.
     document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
   }
 }

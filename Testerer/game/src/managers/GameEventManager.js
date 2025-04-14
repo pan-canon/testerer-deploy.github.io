@@ -86,49 +86,21 @@ export class GameEventManager {
   }
 
   /**
-   * Checks whether the provided event key matches the expected next event
-   * in the sequence managed by GhostManager.
-   * @param {string} eventKey - The event key to check.
-   * @returns {boolean} True if it is the next expected event; otherwise, false.
+   * Helper method for starting a ghost quest.
    */
-  isNextEvent(eventKey) {
-    const sequence = this.app.ghostManager.sequenceManager;
-    if (!sequence) return false;
-    const currentEntry = sequence.getCurrentEntry();
-    return currentEntry && currentEntry.nextEventKey === eventKey;
-  }
-
-  /**
-   * Starts an event after verifying if it is the next expected one unless it's a follow-up.
-   * @param {string} eventKey - The event key to start.
-   * @param {boolean} [isFollowup=false] - If true, bypasses the sequence check.
-   */
-  async startEvent(eventKey, isFollowup = false) {
-    if (!isFollowup && !this.isNextEvent(eventKey)) {
-      console.error(`Event "${eventKey}" is not next in sequence.`);
-      return;
-    }
-    console.log(`GameEventManager: Starting event with key: ${eventKey}`);
-    await this.activateEvent(eventKey);
-  }
-
-  /**
-   * Called when an event completes.
-   * If the completed event matches the expected next event, increments the sequence index.
-   * @param {string} eventKey - The completed event key.
-   */
-  onEventCompleted(eventKey) {
-    console.log(`GameEventManager: Event completed with key: ${eventKey}`);
-    const sequence = this.app.ghostManager.sequenceManager;
-    if (sequence && sequence.getCurrentEntry() && sequence.getCurrentEntry().nextEventKey === eventKey) {
-      sequence.increment();
-      StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(sequence.currentIndex));
-      console.log(`GameEventManager: Sequence index incremented to ${sequence.currentIndex}`);
+  async startQuest() {
+    const ghost = this.app.ghostManager.getCurrentGhost();
+    const questKey = `ghost_${ghost.id}_quest`;
+    const event = this.events.find(e => e.key === questKey);
+    if (event) {
+      await this.activateEvent(questKey);
+    } else {
+      await this.app.questManager.activateQuest(questKey);
     }
   }
 
   /**
-   * Helper method for explicitly starting the mirror quest event.
+   * Helper method for explicitly starting the mirror quest.
    */
   async startMirrorQuest() {
     await this.activateEvent('mirror_quest');

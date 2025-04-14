@@ -8,10 +8,10 @@ import { ErrorManager } from '../managers/ErrorManager.js';
  * PostMirrorEvent
  * 
  * This event publishes a ghost post and signals that the mirror quest cycle has ended.
- * It now delegates UI updates to specialized managers.
+ * It updates the UI via ViewManager without directly setting quest-specific flags.
  *
  * NOTE: This event is part of the sequential chain managed by GhostManager.
- * It performs its core task and dispatches a "gameEventCompleted" event.
+ * It only performs its task and then dispatches a "gameEventCompleted" event.
  */
 export class PostMirrorEvent extends BaseEvent {
   /**
@@ -33,8 +33,13 @@ export class PostMirrorEvent extends BaseEvent {
     console.log(`[PostMirrorEvent] Activating event '${this.key}'.`);
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Delegate UI updates (e.g. enabling the Post button) to specialized managers.
-    // Trigger mirror effect via visualEffectsManager.
+    // Instead of directly setting mirrorQuestReady or isRepeatingCycle,
+    // signal that the mirror quest cycle has completed by enabling the Post button 
+    // and triggering the mirror effect. The universal active quest state is managed elsewhere.
+    if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
+      this.app.viewManager.setPostButtonEnabled(true);
+    }
+
     if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === "function") {
       this.app.visualEffectsManager.triggerMirrorEffect();
     }

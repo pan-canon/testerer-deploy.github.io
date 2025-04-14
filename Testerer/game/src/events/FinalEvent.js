@@ -9,11 +9,11 @@ import { ErrorManager } from '../managers/ErrorManager.js';
  *
  * This event finalizes the scenario. It logs the final event,
  * sets the game as finalized, triggers a ghost fade-out effect,
- * marks the current ghost as finished, disables active UI elements,
- * and notifies the user via the ViewManager.
+ * marks the current ghost as finished, and clears active quest state.
  *
  * NOTE: FinalEvent is part of the sequential chain managed by GhostManager.
- * It performs its task and signals completion via the "gameEventCompleted" event.
+ * It performs its core task and dispatches a "gameEventCompleted" event.
+ * All UI updates (e.g. disabling buttons, notifications) are delegated to specialized managers.
  */
 export class FinalEvent extends BaseEvent {
   /**
@@ -48,25 +48,8 @@ export class FinalEvent extends BaseEvent {
     // Mark the current ghost as finished.
     await this.app.ghostManager.finishCurrentGhost();
 
-    // Disable active UI elements (e.g. Post button).
-    if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
-      this.app.viewManager.setPostButtonEnabled(false);
-    }
-
-    // Re-sync UI state.
-    if (this.app.questManager && typeof this.app.questManager.syncQuestState === "function") {
-      await this.app.questManager.syncQuestState();
-    }
-
-    // Remove the universal active quest key to clear any remaining quest state.
+    // Clear any active quest state.
     StateManager.remove("activeQuestKey");
-
-    // Notify the user that the scenario is finished.
-    if (this.app.viewManager && typeof this.app.viewManager.showNotification === "function") {
-      this.app.viewManager.showNotification("🎉 Congratulations, the scenario is finished!");
-    } else {
-      console.log("🎉 Congratulations, the scenario is finished!");
-    }
 
     // Dispatch an event to signal completion of the final event.
     document.dispatchEvent(new CustomEvent("gameEventCompleted", { detail: this.key }));

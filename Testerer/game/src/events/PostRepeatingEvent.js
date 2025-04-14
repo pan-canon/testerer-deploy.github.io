@@ -8,11 +8,11 @@ import { ErrorManager } from '../managers/ErrorManager.js';
  * PostRepeatingEvent
  * 
  * This event finalizes the mirror quest cycle and prepares the system for the repeating quest cycle.
- * It logs a ghost post and, if the current ghost is not finished, enables the Post button and triggers the mirror effect.
- * It does not directly set quest-specific flags; these are managed via the universal state.
+ * It logs a ghost post and, if the current ghost is not finished, triggers the mirror effect.
+ * UI updates are delegated to specialized managers.
  *
  * NOTE: This event does not automatically trigger quest activation;
- * it simply performs its task and dispatches a "gameEventCompleted" event.
+ * it performs its task and dispatches a "gameEventCompleted" event.
  */
 export class PostRepeatingEvent extends BaseEvent {
   /**
@@ -48,12 +48,7 @@ export class PostRepeatingEvent extends BaseEvent {
       console.log("[PostRepeatingEvent] Ghost is finished; ready to dispatch event completion.");
       // No additional processing is needed if the ghost is finished.
     } else {
-      // Instead of setting a mirrorQuestReady flag,
-      // simply enable the Post button and trigger the mirror effect.
-      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
-        this.app.viewManager.setPostButtonEnabled(true);
-      }
-      
+      // Delegate UI updates and trigger mirror effect via visualEffectsManager.
       if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === "function") {
         this.app.visualEffectsManager.triggerMirrorEffect();
       }

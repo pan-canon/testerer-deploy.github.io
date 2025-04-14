@@ -214,4 +214,73 @@ export class QuestManager {
       }
     });
   }
+
+  // ----------------- New Methods for Quest-Specific Logic -----------------
+
+  /**
+   * Checks if the provided quest key is eligible to start.
+   * Conditions:
+   * 1. There is no existing unfinished quest record in the database.
+   * 2. No other active quest is registered in the StateManager.
+   * @param {string} questKey - The quest key to check.
+   * @returns {boolean} True if the quest can be started; otherwise, false.
+   */
+  canStartQuest(questKey) {
+    const record = this.app.databaseManager.getQuestRecord(questKey);
+    if (record && record.status !== "finished") {
+      console.warn(`Quest "${questKey}" is already active with status "${record.status}".`);
+      return false;
+    }
+    const activeQuestKey = StateManager.get("activeQuestKey");
+    if (activeQuestKey && activeQuestKey !== questKey) {
+      console.warn(`Another quest "${activeQuestKey}" is already active, cannot start quest "${questKey}".`);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Handles quest completion.
+   * Clears the active quest key, updates UI, and for repeating quests triggers dynamic events.
+   * For non-repeating quests, if the current sequence entry matches the quest, and a nextEventKey is defined,
+   * delegates event activation to GameEventManager.
+   * @param {string} questKey - The completed quest key.
+   */
+  async onQuestCompleted(questKey) {
+    console.log(`QuestManager: Quest completed with key: ${questKey}`);
+    // Clear the active quest key.
+    StateManager.remove("activeQuestKey");
+    this.app.ghostManager.activeQuestKey = null;
+    // Update UI: disable camera button.
+    this.app.viewManager.setCameraButtonActive(false);
+    await this.syncQuestState();
+
+    if (questKey === "repeating_quest") {
+      const repeatingQuest = this.quests.find(q => q.key === "repeating_quest");
+      const questStatus = repeatingQuest ? await repeatingQuest.getCurrentQuestStatus() : { finished: false, currentStage: 1 };
+      console.log("Repeating quest status:", questStatus);
+      if (!questStatus.finished) {
+        const dynamicEventKey = `post_repeating_event_stage_${questStatus.currentStage}`;
+        console.log(`Repeating quest stage completed. Triggering event: ${dynamicEventKey} without sequence increment.`);
+        await this.app.gameEventManager.activateEvent(dynamicEventKey, true);
+        return;
+      } else {
+        console.log("Repeating quest fully completed. Triggering final event.");
+        await this.app.gameEventManager.activateEvent("final_event", true);
+        // Optionally, increment sequence index if needed:
+        if (this.app.ghostManager.sequenceManager) {
+          this.app.ghostManager.sequenceManager.increment();
+          StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.app.ghostManager.sequenceManager.currentIndex));
+        }
+        return;
+      }
+    }
+    
+    // For non-repeating quests, if the current sequence entry's quest matches and a next event is defined, start it.
+    const currentEntry = this.app.ghostManager.sequenceManager ? this.app.ghostManager.sequenceManager.getCurrentEntry() : null;
+    if (currentEntry && currentEntry.questKey === questKey && currentEntry.nextEventKey) {
+      console.log(`QuestManager: Quest completed. Delegating event start for: ${currentEntry.nextEventKey}`);
+      await this.app.gameEventManager.activateEvent(currentEntry.nextEventKey, true);
+    }
+  }
 }

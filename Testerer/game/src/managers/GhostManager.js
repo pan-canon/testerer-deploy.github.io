@@ -339,7 +339,9 @@ export class GhostManager {
 
   /**
    * Called when a quest completes.
-   * For repeating quests, triggers a dynamic event; for non-repeating quests, starts the next event.
+   * For repeating quests, triggers a dynamic event for intermediate stages;
+   * if the quest is fully completed, uses the final event key from the configuration.
+   * For non-repeating quests, starts the next event as defined in the sequence.
    * @param {string} questKey - The completed quest key.
    */
   async onQuestCompleted(questKey) {
@@ -355,16 +357,25 @@ export class GhostManager {
 
     if (questKey === "repeating_quest") {
       const repeatingQuest = this.app.questManager.quests.find(q => q.key === "repeating_quest");
-      const questStatus = repeatingQuest ? await repeatingQuest.getCurrentQuestStatus() : { finished: false, currentStage: 1 };
+      const questStatus = repeatingQuest 
+        ? await repeatingQuest.getCurrentQuestStatus() 
+        : { currentStage: 1, totalStages: 1 };
       console.log("Repeating quest status:", questStatus);
-      if (!questStatus.finished) {
+      if (questStatus.currentStage < questStatus.totalStages) {
+        // Intermediate stage: dynamically generate the event key.
         const dynamicEventKey = `post_repeating_event_stage_${questStatus.currentStage}`;
-        console.log(`Repeating quest stage completed. Triggering ghost event: ${dynamicEventKey} without sequence increment.`);
+        console.log(`Repeating quest stage completed. Triggering generated event: ${dynamicEventKey}`);
         await this.startEvent(dynamicEventKey, true);
         return;
       } else {
-        console.log("Repeating quest fully completed. Now starting ghost event: final_event");
-        await this.startEvent("final_event", true);
+        // Quest has reached its final stage: use the final event key from config.
+        const currentEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
+        if (currentEntry && currentEntry.nextEventKey) {
+          console.log(`Repeating quest fully completed. Now starting ghost event from config: ${currentEntry.nextEventKey}`);
+          await this.startEvent(currentEntry.nextEventKey, true);
+        } else {
+          console.warn("No final event configured for repeating quest completion. Unable to start final event.");
+        }
         this.sequenceManager.increment();
         StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
         return;

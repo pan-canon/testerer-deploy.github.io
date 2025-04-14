@@ -1,4 +1,5 @@
-// --- Quest Classes ---
+// File: src/quests/BaseRepeatingQuest.js
+
 import { BaseEvent } from '../events/BaseEvent.js';
 import { ImageUtils } from '../utils/ImageUtils.js';
 import { StateManager } from '../managers/StateManager.js';
@@ -26,9 +27,6 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.totalStages = config.totalStages || 3;
     this.currentStage = 1;
     this.finished = false;
-
-    // (Optional flag – not used further, can be removed if unnecessary)
-    this.finalRepeatingQuestCompleted = false;
 
     // Restore saved quest state from StateManager.
     this.loadState();
@@ -100,7 +98,9 @@ export class BaseRepeatingQuest extends BaseEvent {
     }
     this.startCheckLoop();
     StateManager.set("shootButtonActive", "true");
-    this.app.viewManager.restoreShootButtonState();
+    if (this.app.viewManager && typeof this.app.viewManager.restoreShootButtonState === 'function') {
+      this.app.viewManager.restoreShootButtonState();
+    }
   }
 
   /**
@@ -125,8 +125,8 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * restoreUI – Restores the UI for the repeating quest if a cycle is active.
-   * This method now checks the DB record and, if the quest is active there,
-   * sets the local 'activated' flag to true before restoring the UI.
+   * This method checks the DB record and, if the quest is active,
+   * sets a local flag and restores the UI via ViewManager.
    */
   restoreUI() {
     console.log("[BaseRepeatingQuest] Attempting to restore repeating quest UI...");
@@ -146,7 +146,7 @@ export class BaseRepeatingQuest extends BaseEvent {
       return;
     }
     
-    // If the quest was not activated locally (e.g. after a page reload), set it to active based on DB record.
+    // If the quest was not activated locally (e.g. after a page reload), mark it as activated.
     if (!this.activated) {
       console.log("[BaseRepeatingQuest] Quest not activated locally; setting activated=true based on DB record.");
       this.activated = true;
@@ -163,7 +163,7 @@ export class BaseRepeatingQuest extends BaseEvent {
       }
     };
 
-    // If the camera is not open yet, wait for the "cameraReady" event.
+    // Если камера не открыта, ждём события "cameraReady".
     if (!this.app.isCameraOpen) {
       document.addEventListener("cameraReady", restoreButtonState, { once: true });
     } else {
@@ -173,11 +173,9 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * finishStage – Completes one stage of the repeating quest.
-   * Disables the "Shoot" button, captures a snapshot, logs the stage completion,
+   * Disables the "Shoot" button, captures a snapshot, logs stage completion,
    * updates quest state, and enables the "Post" button for the next stage (if any).
-   * 
-   * IMPORTANT: After finishing a stage (if quest is not finished),
-   * a "questCompleted" event is dispatched to notify GhostManager.
+   * After finishing a stage (если квест не завершён полностью), dispatches a "questCompleted" event.
    */
   async finishStage() {
     if (this.finished) return;
@@ -200,46 +198,42 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.saveState();
 
     if (this.currentStage <= this.totalStages) {
-      // For intermediate stages, force the quest record to be "finished"
-      // so that a new instance of the quest can be started.
+      // Для промежуточных этапов помечаем квестовую запись как "finished"
+      // чтобы создать новый экземпляр квеста на следующем этапе.
       await this.app.databaseManager.saveQuestRecord({
         quest_key: this.key,
         status: "finished",
         current_stage: this.currentStage,
         total_stages: this.totalStages
       });
-      // Removed direct call to set "mirrorQuestReady"; universal active quest state is managed externally.
+      // Включаем Post кнопку для следующего этапа через ViewManager.
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(true);
         console.log("[BaseRepeatingQuest] Post button enabled for next stage.");
       }
-      // Dispatch event to notify that a stage of the repeating quest is completed.
+      // Уведомляем о завершении этапа repeating quest.
       document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
       console.log("[BaseRepeatingQuest] questCompleted event dispatched for repeating quest stage.");
     } else {
-      // If the current stage exceeds the total stages, finish the quest completely.
+      // Если текущий этап превышает общее число, завершаем квест полностью.
       await this.finishCompletely();
     }
   }
 
   /**
    * finishCompletely – Finalizes the repeating quest.
-   * Sets the quest as finished in the database, removes the quest state from StateManager,
-   * and dispatches the questCompleted event to signal full completion.
+   * Сохраняет конечное состояние в базе данных, удаляет локальное состояние квеста из StateManager,
+   * и диспатчит событие "questCompleted" для сигнализации полной завершённости.
    */
   async finishCompletely() {
-    // Mark the quest as finished.
     this.finished = true;
-    // Save the final state in the database with status "finished".
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
       status: "finished",
       current_stage: this.currentStage,
       total_stages: this.totalStages
     });
-    // Remove the quest state from StateManager so that it doesn't get restored on page refresh.
     StateManager.remove(`quest_state_${this.key}`);
-    // Dispatch the questCompleted event to signal full completion.
     document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
     console.log(`[BaseRepeatingQuest] Quest completely finished. questCompleted event dispatched.`);
   }
@@ -274,8 +268,7 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * getCurrentQuestStatus – Retrieves the current status of the repeating quest.
-   * Now, instead of using a local boolean, the active flag is determined by comparing
-   * the universal active quest key with this quest's key.
+   * Checks if the universal active quest key matches this quest's key.
    * @returns {Promise<Object>} An object containing quest status information.
    */
   async getCurrentQuestStatus() {

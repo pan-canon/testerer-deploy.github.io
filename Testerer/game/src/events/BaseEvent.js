@@ -1,12 +1,10 @@
-// File: src/events/BaseEvent.js
-
 import { ErrorManager } from '../managers/ErrorManager.js';
 
 /**
  * BaseEvent - Base class for events, providing common functionality
- * for activation and diary logging.
- * This class implements the observer pattern to notify subscribed components (e.g. diary UI)
- * about event activations without directly updating the UI.
+ * for activation and logging in the diary.
+ * This class is used in an Observer Pattern where each event notifies
+ * subscribed components (e.g., diary UI) about changes.
  */
 export class BaseEvent {
   /**
@@ -24,8 +22,11 @@ export class BaseEvent {
 
   /**
    * activate - Activates the event.
-   * If the event with the given key has not been logged yet, it is logged via the eventManager.
-   * No direct UI manipulations are performed here.
+   * If an event with the given key has not been logged yet, the event is logged via the eventManager.
+   * This method handles logging and notification without triggering subsequent actions.
+   *
+   * NOTE: No direct UI manipulations should be placed here — any UI updates
+   *       (e.g. enabling/disabling buttons) happen in specialized managers.
    *
    * @returns {Promise<void>} Asynchronous execution.
    */
@@ -34,10 +35,11 @@ export class BaseEvent {
       // Check if the event with this key has not been logged yet.
       if (!this.eventManager.isEventLogged(this.key)) {
         console.log(`Activating event: ${this.key}`);
-        // Log the event in the diary.
+        // Log the event in the diary (as a user post, without ghost flag).
         await this.eventManager.addDiaryEntry(this.key);
       }
     } catch (error) {
+      // Delegate error logging and user notification.
       ErrorManager.logError(error, "BaseEvent.activate");
       ErrorManager.showError("An error occurred during event activation.");
     }

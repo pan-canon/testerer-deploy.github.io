@@ -4,12 +4,10 @@ import { BaseEvent } from '../events/BaseEvent.js';
 import { StateManager } from '../managers/StateManager.js';
 
 /**
- * FinalQuest – The final quest signifies the complete end of the scenario.
- * It logs the completion, updates the game state via StateManager, triggers
- * the ghost finishing process, and notifies the user via ViewManager.
- *
- * NOTE: This quest performs its task (logging, state updates, finish procedures)
- * and then dispatches a "questCompleted" event for external managers to handle further UI updates.
+ * FinalQuest – The final quest signifies the complete end of the scenario
+ * (e.g., no more letters/phenomena). It logs the completion, updates the game
+ * state via StateManager, triggers the ghost finishing process, and notifies the user
+ * via ViewManager.
  */
 export class FinalQuest extends BaseEvent {
   /**
@@ -36,10 +34,8 @@ export class FinalQuest extends BaseEvent {
   }
 
   /**
-   * checkStatus – Performs necessary checks for final quest completion.
+   * checkStatus – Performs any necessary checks (e.g., additional snapshot if needed).
    * Currently always returns true.
-   *
-   * @returns {Promise<boolean>}
    */
   async checkStatus() {
     return true;
@@ -51,9 +47,9 @@ export class FinalQuest extends BaseEvent {
    *  2) Logs the completion in the diary.
    *  3) Sets the "gameFinalized" flag via StateManager.
    *  4) Removes the universal active quest key.
-   *  5) Triggers the ghost finishing process via GhostManager.
+   *  5) Calls finishCurrentGhost from GhostManager.
    *  6) Notifies the user via ViewManager.
-   *  7) Synchronizes the UI state via QuestManager.
+   *  7) Synchronizes UI state.
    *  8) Dispatches a "questCompleted" event to signal completion.
    */
   async finish() {
@@ -71,29 +67,26 @@ export class FinalQuest extends BaseEvent {
     console.log(`[FinalQuest] Finishing quest: ${this.key}`);
 
     await this.eventManager.addDiaryEntry(`${this.key}_completed`, true);
-
-    // Set the game as finalized and clear the universal active quest key.
+    
+    // Set the game as finalized.
     StateManager.set("gameFinalized", "true");
+    // Remove the universal active quest key to clear any lingering quest state.
     StateManager.remove("activeQuestKey");
 
-    // Trigger the ghost finishing process.
     if (this.app.ghostManager) {
       await this.app.ghostManager.finishCurrentGhost();
     }
 
-    // Notify the user about final completion.
     if (this.app.viewManager && typeof this.app.viewManager.showNotification === "function") {
       this.app.viewManager.showNotification("🎉 Final quest completed! Scenario ended!");
     } else {
       console.log("🎉 Final quest completed! Scenario ended!");
     }
 
-    // Synchronize the UI state via QuestManager.
     if (this.app.questManager && typeof this.app.questManager.syncQuestState === "function") {
       await this.app.questManager.syncQuestState();
     }
 
-    // Dispatch an event to signal that the final quest has been completed.
     document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
   }
 }

@@ -474,18 +474,6 @@ export class ViewManager {
   }
 
   /**
-   * restorePostButtonState
-   * Restores the Post button state based on the universal active quest key.
-   * If no active quest is present, the Post button is enabled.
-   */
-  restorePostButtonState() {
-    const activeQuestKey = StateManager.get("activeQuestKey");
-    // Enable Post button if there is no active quest.
-    this.setPostButtonEnabled(!activeQuestKey);
-    console.log("[ViewManager] Post button state restored using activeQuestKey:", !activeQuestKey);
-  }
-
-  /**
    * setCameraButtonActive
    * Sets the active state of the camera button.
    */
@@ -896,8 +884,9 @@ export class ViewManager {
       this.hideGlobalCamera();
       this.switchScreen('main-screen', 'main-buttons', app);
       this.showToggleCameraButton();
-      // Instead of directly setting the Post button state with a boolean, restore it based on the universal state.
-      this.restorePostButtonState();
+      // Use universal activeQuestKey to determine Post button state.
+      const activeQuestKey = StateManager.get("activeQuestKey");
+      this.setPostButtonEnabled(!!activeQuestKey);
       app.profileManager.getProfile().then((profile) => {
         this.updateProfileDisplay(profile);
         app.selfieData = profile.selfie;

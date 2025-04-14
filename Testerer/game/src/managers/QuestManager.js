@@ -121,11 +121,12 @@ export class QuestManager {
   }
 
   /**
-   * Synchronizes the quest state for predefined quests (mirror and repeating).
+   * Synchronizes the quest state for predefined quests.
    */
   async syncQuestState() {
-    await this.syncQuestStateForQuest("mirror_quest");
-    await this.syncQuestStateForQuest("repeating_quest");
+    for (const quest of this.quests) {
+      await this.syncQuestStateForQuest(quest.key);
+    }
   }
 
   /**

@@ -8,8 +8,8 @@ import { ErrorManager } from '../managers/ErrorManager.js';
  * PostRepeatingEvent
  * 
  * This event finalizes the mirror quest cycle and prepares the system for the repeating quest cycle.
- * It logs a ghost post and, if the current ghost is not finished, enables the Post button and triggers the mirror effect.
- * It does not directly set quest-specific flags; these are managed via the universal state.
+ * It logs a ghost post and, if the current ghost is not finished, triggers the mirror effect.
+ * It does not directly update UI elements; any UI changes are handled via global event listeners.
  *
  * NOTE: This event does not automatically trigger quest activation;
  * it simply performs its task and dispatches a "gameEventCompleted" event.
@@ -39,28 +39,23 @@ export class PostRepeatingEvent extends BaseEvent {
       return;
     }
     console.log(`[PostRepeatingEvent] Activating event '${eventKey}'.`);
-
     await this.eventManager.addDiaryEntry(eventKey, true);
 
     // Check if the current ghost is finished.
     const ghost = this.app.ghostManager.getCurrentGhost();
     if (ghost && ghost.isFinished) {
       console.log("[PostRepeatingEvent] Ghost is finished; ready to dispatch event completion.");
-      // No additional processing is needed if the ghost is finished.
+      // No additional UI updates are performed if the ghost is finished.
     } else {
-      // Instead of setting a mirrorQuestReady flag,
-      // simply enable the Post button and trigger the mirror effect.
-      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
-        this.app.viewManager.setPostButtonEnabled(true);
-      }
-      
+      // Instead of directly updating the UI via ViewManager,
+      // trigger the mirror effect and let higher-level managers handle UI state.
       if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === "function") {
         this.app.visualEffectsManager.triggerMirrorEffect();
       }
       console.log("[PostRepeatingEvent] Repeating quest cycle ended; waiting for user action.");
     }
 
-    // Dispatch an event to signal completion of this event.
+    // Dispatch a global event to signal completion of this event.
     document.dispatchEvent(new CustomEvent("gameEventCompleted", { detail: eventKey }));
   }
 }

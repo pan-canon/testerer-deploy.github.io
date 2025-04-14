@@ -419,20 +419,23 @@ export class ViewManager {
     }
   }
 
-showCameraView() {
-  const diary = document.getElementById("diary");
-  if (diary && this.globalCamera) {
-    diary.style.display = "none";
-    this.globalCamera.style.display = "flex";
-    if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = 'none';
-    if (this.toggleDiaryBtn) this.toggleDiaryBtn.style.display = 'inline-block';
-    this.hidePostButton();
-    // Вместо принудительного отключения кнопки Shoot,
-    // восстановим её состояние из StateManager:
-    this.restoreShootButtonState();
-    console.log("[ViewManager] Switched to camera view.");
+  showCameraView() {
+    const diary = document.getElementById("diary");
+    if (diary && this.globalCamera) {
+      diary.style.display = "none";
+      this.globalCamera.style.display = "flex";
+      if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = 'none';
+      if (this.toggleDiaryBtn) this.toggleDiaryBtn.style.display = 'inline-block';
+      this.hidePostButton();
+      const shootBtn = document.getElementById("btn_shoot");
+      if (shootBtn) {
+        shootBtn.style.display = "inline-block";
+        shootBtn.disabled = true;
+        shootBtn.style.pointerEvents = "none";
+      }
+      console.log("[ViewManager] Switched to camera view.");
+    }
   }
-}
 
   showPostButton() {
     if (this.postBtn) {

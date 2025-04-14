@@ -7,11 +7,10 @@ import { loadGameEntitiesConfig } from '../utils/GameEntityLoader.js';
 /**
  * GameEventManager class
  * 
- * Manages one-time game events. It loads event definitions dynamically from
- * a unified JSON configuration. The configuration (including event class names,
- * dependencies and keys) is defined entirely in the config file.
- *
- * NOTE: Sequential linking of events and quests is now handled by GhostManager.
+ * Manages one-time game events by loading event definitions dynamically
+ * from a unified JSON configuration. All event-related operations (activation,
+ * auto-launch, etc.) are handled here. Sequential linking of events and quests
+ * is now coordinated by GhostManager and QuestManager.
  */
 export class GameEventManager {
   /**
@@ -69,6 +68,8 @@ export class GameEventManager {
 
   /**
    * Activates an event by its key.
+   * In case of dynamic keys (e.g. "post_repeating_event_stage_X"), falls back to
+   * a generic event key ("post_repeating_event").
    * @param {string} key - The event key.
    */
   async activateEvent(key) {
@@ -85,28 +86,6 @@ export class GameEventManager {
     }
   }
 
-  /**
-   * Helper method for starting a ghost quest.
-   */
-  async startQuest() {
-    const ghost = this.app.ghostManager.getCurrentGhost();
-    const questKey = `ghost_${ghost.id}_quest`;
-    const event = this.events.find(e => e.key === questKey);
-    if (event) {
-      await this.activateEvent(questKey);
-    } else {
-      await this.app.questManager.activateQuest(questKey);
-    }
-  }
-
-  /**
-   * Helper method for explicitly starting the mirror quest.
-   */
-  async startMirrorQuest() {
-    await this.activateEvent('mirror_quest');
-    console.log("Mirror quest started (event).");
-  }
-  
   /**
    * Automatically launches the welcome event (after 5 seconds) post-registration,
    * if the "welcomeDone" flag is not set.

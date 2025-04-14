@@ -8,10 +8,11 @@ import { ErrorManager } from '../managers/ErrorManager.js';
  * PostMirrorEvent
  * 
  * This event publishes a ghost post and signals that the mirror quest cycle has ended.
- * It updates the UI via ViewManager without directly setting quest-specific flags.
+ * It no longer directly updates UI elements (e.g. enabling the Post button) but relies on
+ * the global event "gameEventCompleted" for subsequent UI updates.
  *
  * NOTE: This event is part of the sequential chain managed by GhostManager.
- * It only performs its task and then dispatches a "gameEventCompleted" event.
+ * It performs its task and then dispatches a "gameEventCompleted" event.
  */
 export class PostMirrorEvent extends BaseEvent {
   /**
@@ -33,20 +34,14 @@ export class PostMirrorEvent extends BaseEvent {
     console.log(`[PostMirrorEvent] Activating event '${this.key}'.`);
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Instead of directly setting mirrorQuestReady or isRepeatingCycle,
-    // signal that the mirror quest cycle has completed by enabling the Post button 
-    // and triggering the mirror effect. The universal active quest state is managed elsewhere.
-    if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
-      this.app.viewManager.setPostButtonEnabled(true);
-    }
-
+    // Instead of directly updating the Post button state,
+    // trigger the mirror effect and allow higher-level managers to update the UI.
     if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === "function") {
       this.app.visualEffectsManager.triggerMirrorEffect();
     }
-
     console.log("[PostMirrorEvent] Mirror quest cycle ended; waiting for user action to trigger the next quest.");
-    
-    // Dispatch an event to signal that this event has completed.
+
+    // Dispatch a global event to signal that this event has completed.
     document.dispatchEvent(new CustomEvent("gameEventCompleted", { detail: this.key }));
   }
 }

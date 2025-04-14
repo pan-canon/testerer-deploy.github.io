@@ -1,4 +1,5 @@
-// --- Quest Classes ---
+// File: src/quests/BaseRepeatingQuest.js
+
 import { BaseEvent } from '../events/BaseEvent.js';
 import { ImageUtils } from '../utils/ImageUtils.js';
 import { StateManager } from '../managers/StateManager.js';
@@ -6,29 +7,29 @@ import { ErrorManager } from '../managers/ErrorManager.js';
 
 /**
  * BaseRepeatingQuest – Base class for the repeating quest.
- * Manages quest progress by updating state across multiple stages,
- * saving progress via StateManager, and delegating UI updates to ViewManager.
+ * Manages quest progress across multiple stages by updating state via StateManager,
+ * saving progress in the database, and delegating UI updates to ViewManager.
  *
  * NOTE: This quest is part of the sequential chain managed by GhostManager.
+ * It uses the universal active quest key (via StateManager) and does not directly set quest-specific flags.
  */
 export class BaseRepeatingQuest extends BaseEvent {
   constructor(eventManager, appInstance, config = {}) {
     super(eventManager);
     this.app = appInstance;
+    // Use universal active quest key; allow overriding via config.
     this.key = config.key || "repeating_quest";
     this.doneKey = config.doneKey || (this.key + "_done");
 
-    // UI configuration (delegated to ViewManager)
+    // UI configuration for ViewManager.
     this.statusElementId = config.statusElementId || "repeating-quest-status";
     this.shootButtonId = config.shootButtonId || "btn_shoot";
 
-    // Quest state
+    // Quest state.
     this.totalStages = config.totalStages || 3;
     this.currentStage = 1;
     this.finished = false;
-
-    // (Optional flag – not used further, can be removed if unnecessary)
-    this.finalRepeatingQuestCompleted = false;
+    this.activated = false; // Local flag to indicate if the quest was activated.
 
     // Restore saved quest state from StateManager.
     this.loadState();
@@ -69,9 +70,9 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * activate – Activates the repeating quest.
-   * Waits for the camera to be open (using a "cameraReady" event) if needed,
-   * then starts the UI check loop and sets the "Open Camera" button active via ViewManager.
-   * Also saves the quest record in the database with status "active".
+   * Logs the quest activation in the diary, saves an active quest record in the database,
+   * and initializes the UI by activating the camera button and starting the check loop.
+   * It waits for the camera to be open if necessary.
    */
   async activate() {
     console.log(`Activating repeating quest: ${this.key}`);
@@ -99,12 +100,15 @@ export class BaseRepeatingQuest extends BaseEvent {
       });
     }
     this.startCheckLoop();
-    StateManager.set("shootButtonActive", "true");
-    this.app.viewManager.restoreShootButtonState();
+    // Instead of setting shoot button active via StateManager for global UI updates,
+    // delegate such changes to higher-level managers.
+    if (this.app.viewManager && typeof this.app.viewManager.restoreShootButtonState === 'function') {
+      this.app.viewManager.restoreShootButtonState();
+    }
   }
 
   /**
-   * startCheckLoop – Delegates UI initialization for the quest stage to ViewManager,
+   * startCheckLoop – Delegates initialization of the repeating quest UI to ViewManager,
    * then awaits user action (via the shoot button).
    */
   startCheckLoop() {
@@ -124,37 +128,27 @@ export class BaseRepeatingQuest extends BaseEvent {
   }
 
   /**
-   * restoreUI – Restores the UI for the repeating quest if a cycle is active.
-   * This method now checks the DB record and, if the quest is active there,
-   * sets the local 'activated' flag to true before restoring the UI.
+   * restoreUI – Restores the UI for the repeating quest if it is active.
+   * Checks the database record and, if the quest is active and not finished,
+   * reinitializes the UI (via startCheckLoop) and ensures the shoot button is active.
    */
   restoreUI() {
     console.log("[BaseRepeatingQuest] Attempting to restore repeating quest UI...");
-
-    // Retrieve the DB record for this quest.
     const record = this.app.databaseManager.getQuestRecord(this.key);
-    
-    // If there is no record or the status is not "active", skip restoration.
     if (!record || record.status !== "active") {
       console.log("[BaseRepeatingQuest] DB record is not active; UI restoration skipped.");
       return;
     }
-    
-    // If the quest is finished locally, skip restoration.
     if (this.finished) {
       console.log("[BaseRepeatingQuest] Quest is finished; UI restoration skipped.");
       return;
     }
-    
-    // If the quest was not activated locally (e.g. after a page reload), set it to active based on DB record.
     if (!this.activated) {
       console.log("[BaseRepeatingQuest] Quest not activated locally; setting activated=true based on DB record.");
       this.activated = true;
     }
-    
-    // Function to restore UI state.
     const restoreButtonState = () => {
-      this.startCheckLoop(); // This will reinitialize the repeating quest UI via ViewManager.
+      this.startCheckLoop();
       if (this.currentStage <= this.totalStages && this.app.isCameraOpen) {
         if (this.app.viewManager && typeof this.app.viewManager.setShootButtonActive === 'function') {
           this.app.viewManager.setShootButtonActive(true);
@@ -162,8 +156,6 @@ export class BaseRepeatingQuest extends BaseEvent {
         }
       }
     };
-
-    // If the camera is not open yet, wait for the "cameraReady" event.
     if (!this.app.isCameraOpen) {
       document.addEventListener("cameraReady", restoreButtonState, { once: true });
     } else {
@@ -173,11 +165,9 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * finishStage – Completes one stage of the repeating quest.
-   * Disables the "Shoot" button, captures a snapshot, logs the stage completion,
-   * updates quest state, and enables the "Post" button for the next stage (if any).
-   * 
-   * IMPORTANT: After finishing a stage (if quest is not finished),
-   * a "questCompleted" event is dispatched to notify GhostManager.
+   * Disables the shoot button, captures a snapshot, logs the stage completion,
+   * updates quest state, and dispatches a "questCompleted" event so that external
+   * managers can update global UI (e.g. enabling the Post button).
    */
   async finishStage() {
     if (this.finished) return;
@@ -200,46 +190,36 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.saveState();
 
     if (this.currentStage <= this.totalStages) {
-      // For intermediate stages, force the quest record to be "finished"
-      // so that a new instance of the quest can be started.
+      // For intermediate stages, mark the quest record as finished for the current cycle.
       await this.app.databaseManager.saveQuestRecord({
         quest_key: this.key,
         status: "finished",
         current_stage: this.currentStage,
         total_stages: this.totalStages
       });
-      // Removed direct call to set "mirrorQuestReady"; universal active quest state is managed externally.
-      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
-        this.app.viewManager.setPostButtonEnabled(true);
-        console.log("[BaseRepeatingQuest] Post button enabled for next stage.");
-      }
-      // Dispatch event to notify that a stage of the repeating quest is completed.
+      // Instead of directly enabling the Post button, dispatch an event.
       document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
       console.log("[BaseRepeatingQuest] questCompleted event dispatched for repeating quest stage.");
     } else {
-      // If the current stage exceeds the total stages, finish the quest completely.
+      // If all stages are completed, finalize the quest.
       await this.finishCompletely();
     }
   }
 
   /**
    * finishCompletely – Finalizes the repeating quest.
-   * Sets the quest as finished in the database, removes the quest state from StateManager,
-   * and dispatches the questCompleted event to signal full completion.
+   * Sets the quest as finished in the database, removes the saved quest state,
+   * and dispatches a "questCompleted" event to signal full completion.
    */
   async finishCompletely() {
-    // Mark the quest as finished.
     this.finished = true;
-    // Save the final state in the database with status "finished".
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
       status: "finished",
       current_stage: this.currentStage,
       total_stages: this.totalStages
     });
-    // Remove the quest state from StateManager so that it doesn't get restored on page refresh.
     StateManager.remove(`quest_state_${this.key}`);
-    // Dispatch the questCompleted event to signal full completion.
     document.dispatchEvent(new CustomEvent("questCompleted", { detail: this.key }));
     console.log(`[BaseRepeatingQuest] Quest completely finished. questCompleted event dispatched.`);
   }
@@ -263,7 +243,7 @@ export class BaseRepeatingQuest extends BaseEvent {
   }
 
   /**
-   * resetCycle – Resets the state of the repeating quest for a new cycle.
+   * resetCycle – Resets the repeating quest state for a new cycle.
    */
   resetCycle() {
     this.finished = false;
@@ -274,8 +254,7 @@ export class BaseRepeatingQuest extends BaseEvent {
 
   /**
    * getCurrentQuestStatus – Retrieves the current status of the repeating quest.
-   * Now, instead of using a local boolean, the active flag is determined by comparing
-   * the universal active quest key with this quest's key.
+   * Determines the active flag by comparing the universal active quest key with this quest's key.
    * @returns {Promise<Object>} An object containing quest status information.
    */
   async getCurrentQuestStatus() {

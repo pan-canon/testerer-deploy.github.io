@@ -7,14 +7,13 @@ import { ErrorManager } from '../managers/ErrorManager.js';
 /**
  * WelcomeEvent
  * 
- * This event is triggered immediately after registration. It logs a welcome message
- * (invitation to approach the mirror) in the diary and enables the "Post" button.
- * It uses StateManager to check and update the "welcomeDone" flag so that the event
- * is launched only once per registration cycle.
+ * This event is triggered immediately after registration.
+ * It logs a welcome message (inviting the user to approach the mirror)
+ * in the diary and sets the "welcomeDone" flag so that the event is launched only once per registration cycle.
  *
  * NOTE: This event is part of the sequential chain managed by GhostManager.
- * It only performs its task (publishing a ghost post and setting flags) and then
- * dispatches a "gameEventCompleted" event.
+ * It performs its task (logging, triggering effects, setting flags) and then
+ * dispatches a "gameEventCompleted" event for the managers to handle further actions (such as UI updates).
  */
 export class WelcomeEvent extends BaseEvent {
   /**
@@ -33,39 +32,20 @@ export class WelcomeEvent extends BaseEvent {
     // If the welcome event has already been completed, skip activation.
     if (StateManager.get("welcomeDone") === "true") {
       console.log("Welcome event already completed; skipping activation.");
-      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
-        this.app.viewManager.setPostButtonEnabled(true);
-      }
       return;
     }
     
-    // If the event is already logged, check the universal active quest key for enabling the Post button.
+    // If the event is already logged, no further action is needed.
     if (this.eventManager.isEventLogged(this.key)) {
       console.log(`Event '${this.key}' is already logged.`);
-      if (StateManager.get("activeQuestKey") === "mirror_quest") {
-        if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
-          this.app.viewManager.setPostButtonEnabled(true);
-          console.log("Post button enabled based on activeQuestKey 'mirror_quest'.");
-        }
-      } else {
-        if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
-          this.app.viewManager.setPostButtonEnabled(false);
-          console.log("Post button remains disabled as activeQuestKey is not set to 'mirror_quest'.");
-        }
-      }
       return;
     }
 
-    // Log the event as a ghost post.
+    // Log the welcome event as a ghost diary entry.
     console.log(`Activating event '${this.key}': Logging invitation to approach the mirror`);
     await this.eventManager.addDiaryEntry(this.key, true);
 
-    // Instead of setting "mirrorQuestReady", update the universal active quest key.
-    if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
-      this.app.viewManager.setPostButtonEnabled(true);
-    }
-    
-    // Trigger the mirror effect if available.
+    // Trigger mirror effect if available.
     if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === "function") {
       this.app.visualEffectsManager.triggerMirrorEffect();
     }

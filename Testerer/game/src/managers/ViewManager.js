@@ -886,7 +886,7 @@ export class ViewManager {
       this.showToggleCameraButton();
       // Use universal activeQuestKey to determine Post button state.
       const activeQuestKey = StateManager.get("activeQuestKey");
-      this.setPostButtonEnabled(!!activeQuestKey);
+      this.setPostButtonEnabled(!activeQuestKey);
       app.profileManager.getProfile().then((profile) => {
         this.updateProfileDisplay(profile);
         app.selfieData = profile.selfie;

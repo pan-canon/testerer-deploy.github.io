@@ -1,5 +1,3 @@
-// File: src/managers/GameEventManager.js
-
 import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
 import { loadGameEntitiesConfig } from '../utils/GameEntityLoader.js';
@@ -11,7 +9,7 @@ import { loadGameEntitiesConfig } from '../utils/GameEntityLoader.js';
  * a unified JSON configuration. The configuration (including event class names,
  * dependencies and keys) is defined entirely in the config file.
  *
- * NOTE: Sequential linking of events and quests is now handled by GhostManager.
+ * NOTE: Sequential linking of events and quests is now handled by GhostManager and QuestManager.
  */
 export class GameEventManager {
   /**
@@ -85,28 +83,6 @@ export class GameEventManager {
     }
   }
 
-  /**
-   * Helper method for starting a ghost quest.
-   */
-  async startQuest() {
-    const ghost = this.app.ghostManager.getCurrentGhost();
-    const questKey = `ghost_${ghost.id}_quest`;
-    const event = this.events.find(e => e.key === questKey);
-    if (event) {
-      await this.activateEvent(questKey);
-    } else {
-      await this.app.questManager.activateQuest(questKey);
-    }
-  }
-
-  /**
-   * Helper method for explicitly starting the mirror quest.
-   */
-  async startMirrorQuest() {
-    await this.activateEvent('mirror_quest');
-    console.log("Mirror quest started (event).");
-  }
-  
   /**
    * Automatically launches the welcome event (after 5 seconds) post-registration,
    * if the "welcomeDone" flag is not set.

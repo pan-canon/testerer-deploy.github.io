@@ -98,7 +98,7 @@ export class EventManager {
    * An example method to initiate a ghost quest. It retrieves the current ghost,
    * constructs a unique quest key for that ghost, and logs the corresponding event as a ghost post.
    */
-  async startGhostQuest() {
+/*  async startGhostQuest() {
     const ghost = this.ghostManager.getCurrentGhost();
     if (ghost) {
       // Construct a unique event key for the ghost quest.
@@ -109,7 +109,7 @@ export class EventManager {
       ErrorManager.logError("No active ghost found.", "startGhostQuest");
       ErrorManager.showError("⚠️ No active ghost found.");
     }
-  }
+  }*/
   
   // Additional helper methods for handling events can be added here as needed.
 }

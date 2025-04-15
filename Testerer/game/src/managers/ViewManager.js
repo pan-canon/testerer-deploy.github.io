@@ -1014,8 +1014,8 @@ export class ViewManager {
   /**
    * renderDiary
    * Renders the diary entries from the database into the diary container.
-   * Now checks if an entry represents an image (base64 data URI) and renders
-   * an <img> element instead of plain text.
+   * Now checks if entry text *contains* base64 data (`data:image`) anywhere;
+   * if found, we separate text + image and render them properly.
    */
   renderDiary(entries, currentLanguage, visualEffectsManager) {
     if (!this.diaryContainer) {
@@ -1032,22 +1032,52 @@ export class ViewManager {
       console.log("[ViewManager] No diary entries found.");
       return;
     }
+
     entries.forEach(entry => {
+      // CHANGED PART: Now we check for 'data:image' anywhere in the string.
       let rendered;
-      // If entry starts with "data:image", assume it's an image.
-      if (entry.entry.startsWith("data:image")) {
-        const imageDiaryEntryTemplate = `
-          <div class="diary-entry {{postClass}}">
-            <img src="{{entry}}" alt="Diary Image" />
-            <span class="diary-timestamp">{{timestamp}}</span>
-          </div>
-        `;
-        rendered = TemplateEngine.render(imageDiaryEntryTemplate, {
-          postClass: entry.postClass,
-          entry: entry.entry,
-          timestamp: entry.timestamp
-        });
+      if (entry.entry.includes("data:image")) {
+        // Предположим, что у нас максимум одно изображение.
+        // Разделим по переносу строки, чтобы выделить base64 отдельно.
+        const lines = entry.entry.split("\n");
+        // Ищем первую строку, содержащую data:image
+        let base64Line = lines.find(line => line.trim().startsWith("data:image"));
+        
+        // Остальные строки склеим как текст (или возьмём первую строку до data:image).
+        let textLines = lines.filter(line => !line.trim().startsWith("data:image")).join("\n");
+
+        // Если не нашли строку, содержащую data:image, fallback в обычный текст
+        if (!base64Line) {
+          // Обычный текст
+          const diaryEntryTemplate = `
+            <div class="diary-entry {{postClass}}">
+              <p>{{entry}}</p>
+              <span class="diary-timestamp">{{timestamp}}</span>
+            </div>
+          `;
+          rendered = TemplateEngine.render(diaryEntryTemplate, {
+            postClass: entry.postClass,
+            entry: entry.entry,
+            timestamp: entry.timestamp
+          });
+        } else {
+          // Считаем, что base64Line — это строка с картинкой
+          const entryWithImageTemplate = `
+            <div class="diary-entry {{postClass}}">
+              <p>{{text}}</p>
+              <img src="{{img}}" alt="Diary Image" />
+              <span class="diary-timestamp">{{timestamp}}</span>
+            </div>
+          `;
+          rendered = TemplateEngine.render(entryWithImageTemplate, {
+            postClass: entry.postClass,
+            text: textLines,
+            img: base64Line.trim(),
+            timestamp: entry.timestamp
+          });
+        }
       } else {
+        // Если в тексте нет data:image, обычная логика
         const diaryEntryTemplate = `
           <div class="diary-entry {{postClass}}">
             <p>{{entry}}</p>
@@ -1060,6 +1090,7 @@ export class ViewManager {
           timestamp: entry.timestamp
         });
       }
+
       this.diaryContainer.innerHTML += rendered;
     });
     console.log(`[ViewManager] Diary updated with ${entries.length} entries.`);

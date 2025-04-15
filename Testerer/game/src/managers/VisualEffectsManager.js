@@ -94,25 +94,27 @@ export class VisualEffectsManager {
         if (callback) callback();
         return;
       }
-
-      // Parse HTML tags.
-      if (char === "<") {
-        isTag = true;
-      }
-      if (isTag) {
-        tagBuffer += char;
-        if (char === ">") {
-          currentHTML += tagBuffer;
-          tagBuffer = "";
-          isTag = false;
-        }
+      // If the character is a newline, insert a <br>
+      if (char === "\n") {
+        currentHTML += "<br>";
       } else {
-        currentHTML += char;
+        // Check for HTML tags.
+        if (char === "<") {
+          isTag = true;
+        }
+        if (isTag) {
+          tagBuffer += char;
+          if (char === ">") {
+            currentHTML += tagBuffer;
+            tagBuffer = "";
+            isTag = false;
+          }
+        } else {
+          currentHTML += char;
+        }
       }
-
       targetElem.innerHTML = currentHTML;
       pos++;
-
       if (typeof onChar === "function") {
         onChar(targetElem, currentHTML);
       }

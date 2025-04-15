@@ -1046,20 +1046,20 @@ export class ViewManager {
       // CHANGED PART: Now we check for 'data:image' anywhere in the string.
       let rendered;
       if (entry.entry.includes("data:image")) {
-        // Предположим, что у нас максимум одно изображение.
-        // Разделим по переносу строки, чтобы выделить base64 отдельно.
+        // Assume maximum one image per entry.
+        // Split entry into lines to extract base64 string.
         const lines = entry.entry.split("\n");
-        // Ищем первую строку, содержащую data:image
+        // Find the first line that starts with data:image.
         let base64Line = lines.find(line => line.trim().startsWith("data:image"));
-        
-        // Остальные строки склеим как текст (или возьмём первую строку до data:image).
+
+        // Join the remaining lines as text (or take the first line before the data:image line).
         let textLines = lines.filter(line => !line.trim().startsWith("data:image")).join("\n");
 
-        // Если не нашли строку, содержащую data:image, fallback в обычный текст
+        // If no base64 line was found, fallback to regular text.
         if (!base64Line) {
-          // Обычный текст
+          // Regular text template with animate attribute
           const diaryEntryTemplate = `
-            <div class="diary-entry {{postClass}}">
+            <div class="diary-entry {{postClass}}" data-animate-on-board="true">
               <p>{{entry}}</p>
               <span class="diary-timestamp">{{timestamp}}</span>
             </div>
@@ -1070,9 +1070,9 @@ export class ViewManager {
             timestamp: entry.timestamp
           });
         } else {
-          // Считаем, что base64Line — это строка с картинкой
+          // Template for diary entry with an image
           const entryWithImageTemplate = `
-            <div class="diary-entry {{postClass}}">
+            <div class="diary-entry {{postClass}}" data-animate-on-board="true">
               <p>{{text}}</p>
               <img src="{{img}}" alt="Diary Image" />
               <span class="diary-timestamp">{{timestamp}}</span>
@@ -1086,9 +1086,9 @@ export class ViewManager {
           });
         }
       } else {
-        // Если в тексте нет data:image, обычная логика
+        // Regular diary entry template with animate attribute
         const diaryEntryTemplate = `
-          <div class="diary-entry {{postClass}}">
+          <div class="diary-entry {{postClass}}" data-animate-on-board="true">
             <p>{{entry}}</p>
             <span class="diary-timestamp">{{timestamp}}</span>
           </div>

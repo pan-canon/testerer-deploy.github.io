@@ -1,5 +1,3 @@
-// File: src/events/PostRepeatingEvent.js
-
 import { BaseEvent } from './BaseEvent.js';
 import { StateManager } from '../managers/StateManager.js';
 import { ErrorManager } from '../managers/ErrorManager.js';
@@ -40,7 +38,7 @@ export class PostRepeatingEvent extends BaseEvent {
     }
     console.log(`[PostRepeatingEvent] Activating event '${eventKey}'.`);
 
-    await this.eventManager.addDiaryEntry(eventKey, true);
+    await this.addDiaryEntry(eventKey, true);
 
     // Check if the current ghost is finished.
     const ghost = this.app.ghostManager.getCurrentGhost();

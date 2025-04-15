@@ -14,6 +14,11 @@ export class VisualEffectsManager {
   constructor(appInstance, controlsPanel) {
     this.app = appInstance;
     this.controlsPanel = controlsPanel;
+    // Default effect configuration (can be updated from external config)
+    this.effectConfig = {
+      userText: { speed: 100 },
+      ghostText: { speed: 100 }
+    };
   }
 
   /**
@@ -198,8 +203,12 @@ export class VisualEffectsManager {
    * @param {HTMLElement} targetElem - The target element for text animation.
    * @param {string} text - The ghost text to animate.
    * @param {Function} callback - Callback invoked after animation completes.
+   * @param {Object} [effectConfig] - Optional configuration for the effect (e.g. speed).
    */
-  triggerGhostTextEffect(targetElem, text, callback) {
+  triggerGhostTextEffect(targetElem, text, callback, effectConfig) {
+    // Use provided configuration or default ghostText config.
+    const config = effectConfig || this.effectConfig.ghostText;
+
     // Block controls.
     this.setControlsBlocked(true);
 
@@ -210,7 +219,7 @@ export class VisualEffectsManager {
     this.animateHTMLText(
       targetElem,
       text,
-      100,
+      config.speed,
       ghostSound,
       () => {
         this.setControlsBlocked(false);
@@ -227,8 +236,12 @@ export class VisualEffectsManager {
    * @param {HTMLElement} targetElem - The target element for text animation.
    * @param {string} text - The text to animate.
    * @param {Function} callback - Callback invoked after animation completes.
+   * @param {Object} [effectConfig] - Optional configuration for the effect (e.g. speed).
    */
-  triggerUserTextEffect(targetElem, text, callback) {
+  triggerUserTextEffect(targetElem, text, callback, effectConfig) {
+    // Use provided configuration or default userText config.
+    const config = effectConfig || this.effectConfig.userText;
+
     // Create a pencil icon.
     const pencilIcon = document.createElement("img");
     pencilIcon.src = "../../../../assets/images/pencil.png";
@@ -269,7 +282,7 @@ export class VisualEffectsManager {
     this.animateHTMLText(
       targetElem,
       text,
-      100,
+      config.speed,
       typeSound,
       () => {
         pencilIcon.remove();
@@ -312,5 +325,98 @@ export class VisualEffectsManager {
     if (StateManager.get("registrationCompleted") !== "true") {
       this.slideUpPanel(this.controlsPanel, 1000, 'assets/audio/panel_slide.mp3');
     }
+  }
+
+  /**
+   * applyEffectsToNewElements
+   * Applies visual effects to newly added DOM elements.
+   * It iterates over the provided elements, checks for a data-attribute "data-animate-on-board",
+   * and, depending on the "data-animate-effect" attribute ("ghost" or "user", default "user"),
+   * triggers the corresponding text effect. After animation, the marker is removed.
+   *
+   * @param {Array<HTMLElement>} newElements - Array or NodeList of newly added DOM elements.
+   */
+  applyEffectsToNewElements(newElements) {
+    // Convert to Array in case newElements is a NodeList.
+    Array.from(newElements).forEach(elem => {
+      if (elem.dataset.animateOnBoard === "true") {
+        // Determine effect type: default to "user" if not specified.
+        const effectType = elem.dataset.animateEffect || "user";
+        const text = elem.textContent;
+        // Clear the content before starting the effect.
+        elem.textContent = "";
+        if (effectType === "ghost") {
+          this.triggerGhostTextEffect(elem, text, () => {
+            delete elem.dataset.animateOnBoard;
+          }, this.effectConfig.ghostText);
+        } else {
+          this.triggerUserTextEffect(elem, text, () => {
+            delete elem.dataset.animateOnBoard;
+          }, this.effectConfig.userText);
+        }
+      }
+    });
+  }
+}
+
+/**
+ * BaseEffect
+ *
+ * A base class for visual effects.
+ * Subclasses should implement the applyEffect method.
+ */
+export class BaseEffect {
+  /**
+   * @param {Object} config - Configuration object for the effect.
+   */
+  constructor(config) {
+    this.config = config;
+  }
+
+  /**
+   * applyEffect
+   * Applies the effect to the target element.
+   * This method should be overridden in subclasses.
+   *
+   * @param {HTMLElement} target - The target element.
+   * @param {string} text - The text to animate.
+   * @param {Function} callback - Callback to call after effect is complete.
+   */
+  applyEffect(target, text, callback) {
+    throw new Error("applyEffect must be implemented by subclass");
+  }
+}
+
+/**
+ * TypewriterEffect
+ *
+ * An example subclass of BaseEffect that implements a typewriter effect.
+ */
+export class TypewriterEffect extends BaseEffect {
+  /**
+   * Applies the typewriter effect to the target element.
+   *
+   * @param {HTMLElement} target - The target element.
+   * @param {string} text - The text to animate.
+   * @param {Function} callback - Callback to call after effect is complete.
+   */
+  applyEffect(target, text, callback) {
+    // Here we simply delegate to VisualEffectsManager's animateHTMLText using the configured speed.
+    // In a real implementation, additional logic could be added.
+    // For demonstration, we assume a global instance is available.
+    // Alternatively, this method could accept an instance of VisualEffectsManager.
+    target.innerHTML = "";
+    let pos = 0;
+    let currentHTML = "";
+    const intervalId = setInterval(() => {
+      if (pos >= text.length) {
+        clearInterval(intervalId);
+        if (callback) callback();
+        return;
+      }
+      currentHTML += text[pos];
+      target.innerHTML = currentHTML;
+      pos++;
+    }, this.config.speed);
   }
 }

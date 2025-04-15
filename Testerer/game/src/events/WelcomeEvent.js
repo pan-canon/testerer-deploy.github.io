@@ -1,5 +1,3 @@
-// File: src/events/WelcomeEvent.js
-
 import { BaseEvent } from './BaseEvent.js';
 import { StateManager } from '../managers/StateManager.js';
 import { ErrorManager } from '../managers/ErrorManager.js';
@@ -56,9 +54,9 @@ export class WelcomeEvent extends BaseEvent {
       return;
     }
 
-    // Log the event as a ghost post.
+    // Log the event as a ghost post via the unified method.
     console.log(`Activating event '${this.key}': Logging invitation to approach the mirror`);
-    await this.eventManager.addDiaryEntry(this.key, true);
+    await this.addDiaryEntry(this.key, true);
 
     // Instead of setting "mirrorQuestReady", update the universal active quest key.
     if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {

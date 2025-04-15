@@ -3,29 +3,49 @@
     {
       "key": "welcome",
       "className": "WelcomeEvent",
-      "dependencies": ["eventManager", "app", "languageManager"]
+      "dependencies": ["eventManager", "app", "languageManager"],
+      "effects": {
+        "userText": { "speed": 100 },
+        "ghostText": { "speed": 100 }
+      }
     },
     {
       "key": "post_mirror_event",
       "className": "PostMirrorEvent",
-      "dependencies": ["eventManager", "app"]
+      "dependencies": ["eventManager", "app"],
+      "effects": {
+        "userText": { "speed": 100 },
+        "ghostText": { "speed": 100 }
+      }
     },
     {
       "key": "post_repeating_event",
       "className": "PostRepeatingEvent",
-      "dependencies": ["eventManager", "app"]
+      "dependencies": ["eventManager", "app"],
+      "effects": {
+        "userText": { "speed": 100 },
+        "ghostText": { "speed": 100 }
+      }
     },
     {
       "key": "final_event",
       "className": "FinalEvent",
-      "dependencies": ["eventManager", "app", "languageManager"]
+      "dependencies": ["eventManager", "app", "languageManager"],
+      "effects": {
+        "userText": { "speed": 100 },
+        "ghostText": { "speed": 100 }
+      }
     }
   ],
   "quests": [
     {
       "key": "mirror_quest",
       "className": "BaseMirrorQuest",
-      "dependencies": ["eventManager", "app"]
+      "dependencies": ["eventManager", "app"],
+      "effects": {
+        "userText": { "speed": 100 },
+        "ghostText": { "speed": 100 }
+      }
     },
     {
       "key": "repeating_quest",
@@ -35,12 +55,20 @@
         "totalStages": 5,
         "statusElementId": "repeating-quest-status",
         "shootButtonId": "btn_shoot"
+      },
+      "effects": {
+        "userText": { "speed": 100 },
+        "ghostText": { "speed": 100 }
       }
     },
     {
       "key": "final_quest",
       "className": "FinalQuest",
-      "dependencies": ["eventManager", "app"]
+      "dependencies": ["eventManager", "app"],
+      "effects": {
+        "userText": { "speed": 100 },
+        "ghostText": { "speed": 100 }
+      }
     }
   ],
   "sequence": [

@@ -1,5 +1,3 @@
-// File: src/events/FinalEvent.js
-
 import { BaseEvent } from './BaseEvent.js';
 import { StateManager } from '../managers/StateManager.js';
 import { ErrorManager } from '../managers/ErrorManager.js';
@@ -35,7 +33,7 @@ export class FinalEvent extends BaseEvent {
     }
 
     console.log(`Activating final event: '${this.key}'`);
-    await this.eventManager.addDiaryEntry(this.key, true);
+    await this.addDiaryEntry(this.key, true);
 
     // Set the game as finalized.
     StateManager.set("gameFinalized", "true");

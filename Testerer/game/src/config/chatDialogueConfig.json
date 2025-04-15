@@ -1,5 +1,9 @@
 {
   "sectionName": "chat_support",
+  "effects": {
+    "userText": { "speed": 100 },
+    "ghostText": { "speed": 100 }
+  },
   "dialogues": [
     {
       "messages": [

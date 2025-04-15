@@ -1,5 +1,3 @@
-// File: src/events/PostMirrorEvent.js
-
 import { BaseEvent } from './BaseEvent.js';
 import { StateManager } from '../managers/StateManager.js';
 import { ErrorManager } from '../managers/ErrorManager.js';
@@ -31,7 +29,7 @@ export class PostMirrorEvent extends BaseEvent {
     }
 
     console.log(`[PostMirrorEvent] Activating event '${this.key}'.`);
-    await this.eventManager.addDiaryEntry(this.key, true);
+    await this.addDiaryEntry(this.key, true);
 
     // Instead of directly setting mirrorQuestReady or isRepeatingCycle,
     // signal that the mirror quest cycle has completed by enabling the Post button 

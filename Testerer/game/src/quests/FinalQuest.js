@@ -1,5 +1,3 @@
-// File: src/quests/FinalQuest.js
-
 import { BaseEvent } from '../events/BaseEvent.js';
 import { StateManager } from '../managers/StateManager.js';
 
@@ -28,7 +26,8 @@ export class FinalQuest extends BaseEvent {
   async activate() {
     if (!this.eventManager.isEventLogged(this.key)) {
       console.log(`[FinalQuest] Activating final quest: ${this.key}`);
-      await this.eventManager.addDiaryEntry(this.key, true);
+      // Use unified method for adding diary entry.
+      await this.addDiaryEntry(this.key, true);
     }
     console.log("[FinalQuest] Final quest initiated.");
   }
@@ -66,7 +65,8 @@ export class FinalQuest extends BaseEvent {
     this.finished = true;
     console.log(`[FinalQuest] Finishing quest: ${this.key}`);
 
-    await this.eventManager.addDiaryEntry(`${this.key}_completed`, true);
+    // Use unified method for adding a diary entry.
+    await this.addDiaryEntry(`${this.key}_completed`, true);
     
     // Set the game as finalized.
     StateManager.set("gameFinalized", "true");

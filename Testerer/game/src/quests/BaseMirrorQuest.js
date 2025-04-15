@@ -1,4 +1,3 @@
-// --- Quest Classes ---
 import { BaseEvent } from '../events/BaseEvent.js';
 import { ImageUtils } from '../utils/ImageUtils.js';
 import { StateManager } from '../managers/StateManager.js';
@@ -52,11 +51,10 @@ export class BaseMirrorQuest extends BaseEvent {
   async activate() {
     if (!this.eventManager.isEventLogged(this.key)) {
       console.log(`Activating event: ${this.key}`);
-      await this.eventManager.addDiaryEntry(this.key);
+      // Use the unified diary entry method from BaseEvent.
+      await this.addDiaryEntry(this.key);
     }
     console.log("[BaseMirrorQuest] Mirror quest activated.");
-    // Removed direct setting of "mirrorQuestActive"; the universal active quest key will be handled externally.
-
     // Save quest record as active.
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
@@ -197,9 +195,10 @@ export class BaseMirrorQuest extends BaseEvent {
       const photoData = this.app.lastMirrorPhoto
         ? ` [photo attached]\n${this.app.lastMirrorPhoto}`
         : "";
-      await this.eventManager.addDiaryEntry(`user_post_success: ${randomLetter}${photoData}`, false);
+      // Use the unified method for adding a diary entry.
+      await this.addDiaryEntry(`user_post_success: ${randomLetter}${photoData}`, false);
     } else {
-      await this.eventManager.addDiaryEntry(`user_post_failed: ${randomLetter}`, false);
+      await this.addDiaryEntry(`user_post_failed: ${randomLetter}`, false);
     }
 
     // Update the UI after finishing the quest.
@@ -210,10 +209,6 @@ export class BaseMirrorQuest extends BaseEvent {
       this.app.viewManager.setCameraButtonActive(false);
     }
 
-    // Remove any quest-specific flag.
-    // Instead of removing "mirrorQuestActive", the universal active quest key should be managed externally.
-    // StateManager.remove("mirrorQuestActive");
-
     // Mark the quest as finished in the database.
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
@@ -221,9 +216,6 @@ export class BaseMirrorQuest extends BaseEvent {
       current_stage: 1,
       total_stages: 1
     });
-
-    // Do not trigger any new event automatically.
-    // Instead, let GhostManager handle the sequencing after receiving the questCompleted event.
 
     // Synchronize the quest state so that the "Post" button updates.
     await this.app.questManager.syncQuestState();

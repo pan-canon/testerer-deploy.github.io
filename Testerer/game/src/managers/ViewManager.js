@@ -1,5 +1,3 @@
-// File: src/managers/ViewManager.js
-
 import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
 import { ImageUtils } from '../utils/ImageUtils.js';
@@ -147,6 +145,11 @@ export class ViewManager {
         if (this.languageManager && typeof this.languageManager.updateContainerLanguage === 'function') {
           this.languageManager.updateContainerLanguage(newScreen);
         }
+        // APPLY VISUAL EFFECTS TO NEW ELEMENTS IN THE LOADED SCREEN
+        if (this.app && this.app.visualEffectsManager && typeof this.app.visualEffectsManager.applyEffectsToNewElements === 'function') {
+          const newElements = newScreen.querySelectorAll("[data-animate-on-board='true']");
+          this.app.visualEffectsManager.applyEffectsToNewElements(newElements);
+        }
         return newScreen;
       } else {
         throw new Error("Global content container (id='global-content') not found.");
@@ -176,7 +179,7 @@ export class ViewManager {
     let targetScreen = document.getElementById(screenId);
     if (!targetScreen) {
       // If not found, load the template dynamically.
-      targetScreen = await this.loadTemplate(screenId);
+      targetScreen = await this.loadTemplate(screenId, {});
       if (!targetScreen) {
         console.error(`[ViewManager] Failed to load screen: ${screenId}`);
         return;
@@ -184,6 +187,12 @@ export class ViewManager {
     }
     targetScreen.style.display = 'block';
     console.log(`[ViewManager] Switched to screen: ${screenId}`);
+
+    // APPLY VISUAL EFFECTS TO NEW ELEMENTS IN THE SWITCHED SCREEN
+    if (this.app && this.app.visualEffectsManager && typeof this.app.visualEffectsManager.applyEffectsToNewElements === 'function') {
+      const newElements = targetScreen.querySelectorAll("[data-animate-on-board='true']");
+      this.app.visualEffectsManager.applyEffectsToNewElements(newElements);
+    }
 
     // If main-screen, update diaryContainer to the newly loaded #diary
     if (screenId === "main-screen") {

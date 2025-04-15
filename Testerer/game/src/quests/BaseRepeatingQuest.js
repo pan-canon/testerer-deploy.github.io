@@ -1,4 +1,3 @@
-// --- Quest Classes ---
 import { BaseEvent } from '../events/BaseEvent.js';
 import { ImageUtils } from '../utils/ImageUtils.js';
 import { StateManager } from '../managers/StateManager.js';
@@ -75,7 +74,8 @@ export class BaseRepeatingQuest extends BaseEvent {
    */
   async activate() {
     console.log(`Activating repeating quest: ${this.key}`);
-    await this.eventManager.addDiaryEntry(this.key, true);
+    // Use unified method to log diary entry.
+    await this.addDiaryEntry(this.key, true);
     console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
@@ -190,10 +190,8 @@ export class BaseRepeatingQuest extends BaseEvent {
     const photoData = this.captureSimplePhoto();
     console.log(`[BaseRepeatingQuest] Captured snapshot for stage ${this.currentStage}.`);
 
-    await this.eventManager.addDiaryEntry(
-      `repeating_stage_${this.currentStage} [photo attached]\n${photoData}`,
-      false
-    );
+    // Use unified method to log diary entry.
+    await this.addDiaryEntry(`repeating_stage_${this.currentStage} [photo attached]\n${photoData}`, false);
     console.log(`[BaseRepeatingQuest] Completed stage: ${this.currentStage}`);
 
     this.currentStage++;

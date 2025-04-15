@@ -47,6 +47,7 @@ export class EventManager {
    * (e.g., from a ghost), it is additionally saved to the events table.
    *
    * After saving, it delegates the UI update (diary rendering) to the ViewManager.
+   * Then, it calls the centralized visual effects method to animate the newly added entry.
    *
    * @param {string} entry - The text of the diary entry.
    * @param {boolean} [isPostFromGhost=false] - Flag to mark the entry as a ghost post.
@@ -73,6 +74,14 @@ export class EventManager {
 
     // Delegate UI update of the diary to the ViewManager.
     this.updateDiaryDisplay();
+
+    // After updating the diary display, apply visual effects to newly added diary entries.
+    // It is expected that the rendered diary entries have the attribute data-animate-on-board="true"
+    // if they need to be animated.
+    if (this.viewManager && this.visualEffectsManager && this.viewManager.diaryContainer) {
+      const newEntries = this.viewManager.diaryContainer.querySelectorAll('[data-animate-on-board="true"]');
+      this.visualEffectsManager.applyEffectsToNewElements(newEntries);
+    }
   }
 
   /**
@@ -92,24 +101,4 @@ export class EventManager {
       ErrorManager.showError("Unable to update diary display.");
     }
   }
-
-  /**
-   * startGhostQuest
-   * An example method to initiate a ghost quest. It retrieves the current ghost,
-   * constructs a unique quest key for that ghost, and logs the corresponding event as a ghost post.
-   */
-/*  async startGhostQuest() {
-    const ghost = this.ghostManager.getCurrentGhost();
-    if (ghost) {
-      // Construct a unique event key for the ghost quest.
-      const questKey = `ghost_${ghost.id}_quest`;
-      await this.addDiaryEntry(questKey, true);
-      console.log(`👻 Starting quest for ${ghost.name}...`);
-    } else {
-      ErrorManager.logError("No active ghost found.", "startGhostQuest");
-      ErrorManager.showError("⚠️ No active ghost found.");
-    }
-  }*/
-  
-  // Additional helper methods for handling events can be added here as needed.
 }

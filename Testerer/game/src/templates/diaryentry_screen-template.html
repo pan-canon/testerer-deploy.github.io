@@ -1,0 +1,10 @@
+<div class="diary-entry {{postClass}}">
+  <!-- Text content that will be animated -->
+  <p data-animate-on-board="true">{{text}}</p>
+  <!-- If an image is provided (base64 string starting with data:image), display it separately -->
+  {{#if img}}
+    <img src="{{img}}" alt="Diary Image" />
+  {{/if}}
+  <!-- Display the timestamp -->
+  <span class="diary-timestamp">{{timestamp}}</span>
+</div>

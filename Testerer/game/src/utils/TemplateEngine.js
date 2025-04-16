@@ -1,17 +1,3 @@
-/**
- * TemplateEngine.js
- *
- * A simple template engine for dynamic HTML rendering.
- * It replaces placeholders in the template string with values from a data object.
- *
- * Placeholders are defined using double curly braces, e.g., {{ variableName }}.
- *
- * Example usage:
- *   const template = "<h1>{{ title }}</h1><p>{{ content }}</p>";
- *   const data = { title: "Hello", content: "World" };
- *   const renderedHTML = TemplateEngine.render(template, data);
- *   // renderedHTML: "<h1>Hello</h1><p>World</p>"
- */
 export class TemplateEngine {
   /**
    * Renders an HTML template using the provided data.
@@ -25,5 +11,21 @@ export class TemplateEngine {
       const trimmedKey = key.trim();
       return data.hasOwnProperty(trimmedKey) ? data[trimmedKey] : match;
     });
+  }
+  
+  /**
+   * Asynchronously loads a template file from the given URL, then renders it using the data.
+   *
+   * @param {string} templateUrl - The URL of the template file.
+   * @param {Object} data - The data to replace placeholders.
+   * @returns {Promise<string>} - A Promise that resolves to the rendered HTML.
+   */
+  static async renderFile(templateUrl, data) {
+    const response = await fetch(templateUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to load template from ${templateUrl}`);
+    }
+    const templateText = await response.text();
+    return TemplateEngine.render(templateText, data);
   }
 }

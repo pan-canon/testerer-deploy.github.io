@@ -28,7 +28,7 @@ export class ViewManager {
     this.resetDataBtn = document.getElementById("reset-data");
     this.exportProfileBtn = document.getElementById("export-profile-btn");
     this.updateBtn = document.getElementById("update-btn");
-    
+
     // Initially, we assign the diaryContainer from the hidden placeholder
     this.diaryContainer = document.getElementById("diary");
 
@@ -200,6 +200,8 @@ export class ViewManager {
       if (diaryElem) {
         this.diaryContainer = diaryElem;
         console.log("[ViewManager] Updated diary container for main-screen.");
+        // Load only the latest diary posts (e.g. last 3) upon switching screen.
+        this.loadLatestDiaryPosts();
       }
     }
 
@@ -1023,8 +1025,8 @@ export class ViewManager {
   /**
    * renderDiary
    * Renders the diary entries from the database into the diary container.
-   * Now checks if entry text *contains* base64 data (`data:image`) anywhere;
-   * if found, we separate text + image and render them properly.
+   * Upon screen switch, only the last three (latest) entries are rendered.
+   * Use full re-render on screen change.
    */
   renderDiary(entries, currentLanguage, visualEffectsManager) {
     if (!this.diaryContainer) {
@@ -1041,67 +1043,120 @@ export class ViewManager {
       console.log("[ViewManager] No diary entries found.");
       return;
     }
+    // Only take the latest three entries (assuming entries are sorted descending by timestamp)
+    const latestEntries = entries.slice(0, 3);
 
-    entries.forEach(entry => {
-      // CHANGED PART: Now we check for 'data:image' anywhere in the string.
+    latestEntries.forEach(entry => {
+      // Determine if entry contains an image based on presence of "data:image"
       let rendered;
       if (entry.entry.includes("data:image")) {
-        // Assume maximum one image per entry.
-        // Split entry into lines to extract base64 string.
+        // Split entry to separate text and image data.
         const lines = entry.entry.split("\n");
-        // Find the first line that starts with data:image.
         let base64Line = lines.find(line => line.trim().startsWith("data:image"));
-
-        // Join the remaining lines as text (or take the first line before the data:image line).
         let textLines = lines.filter(line => !line.trim().startsWith("data:image")).join("\n");
-
-        // If no base64 line was found, fallback to regular text.
-        if (!base64Line) {
-          // Regular text template with animate attribute
-          const diaryEntryTemplate = `
-            <div class="diary-entry {{postClass}}" data-animate-on-board="true">
-              <p>{{entry}}</p>
-              <span class="diary-timestamp">{{timestamp}}</span>
-            </div>
-          `;
-          rendered = TemplateEngine.render(diaryEntryTemplate, {
-            postClass: entry.postClass,
-            entry: entry.entry,
-            timestamp: entry.timestamp
-          });
-        } else {
-          // Template for diary entry with an image
-          const entryWithImageTemplate = `
-            <div class="diary-entry {{postClass}}" data-animate-on-board="true">
-              <p>{{text}}</p>
-              <img src="{{img}}" alt="Diary Image" />
-              <span class="diary-timestamp">{{timestamp}}</span>
-            </div>
-          `;
-          rendered = TemplateEngine.render(entryWithImageTemplate, {
-            postClass: entry.postClass,
-            text: textLines,
-            img: base64Line.trim(),
-            timestamp: entry.timestamp
-          });
-        }
-      } else {
-        // Regular diary entry template with animate attribute
-        const diaryEntryTemplate = `
-          <div class="diary-entry {{postClass}}" data-animate-on-board="true">
-            <p>{{entry}}</p>
-            <span class="diary-timestamp">{{timestamp}}</span>
-          </div>
-        `;
-        rendered = TemplateEngine.render(diaryEntryTemplate, {
+        rendered = TemplateEngine.renderFile("diary_entry_template.html", {
           postClass: entry.postClass,
-          entry: entry.entry,
+          text: textLines,
+          img: base64Line ? base64Line.trim() : null,
+          timestamp: entry.timestamp
+        });
+      } else {
+        rendered = TemplateEngine.renderFile("diary_entry_template.html", {
+          postClass: entry.postClass,
+          text: entry.entry,
+          img: null,
           timestamp: entry.timestamp
         });
       }
-
-      this.diaryContainer.innerHTML += rendered;
+      this.diaryContainer.insertAdjacentHTML("beforeend", rendered);
     });
-    console.log(`[ViewManager] Diary updated with ${entries.length} entries.`);
+    console.log(`[ViewManager] Diary updated with ${latestEntries.length} entries (latest posts).`);
+  }
+
+  /**
+   * addSingleDiaryPost
+   * Adds a single diary post to the diary container without re-rendering all entries.
+   * Uses the external template "diary_entry_template.html".
+   *
+   * @param {Object} entryData - Object containing postClass, entry (text), timestamp.
+   */
+  addSingleDiaryPost(entryData) {
+    let rendered;
+    if (entryData.entry.includes("data:image")) {
+      // Split entry into text and image data.
+      const lines = entryData.entry.split("\n");
+      let base64Line = lines.find(line => line.trim().startsWith("data:image"));
+      let textLines = lines.filter(line => !line.trim().startsWith("data:image")).join("\n");
+      rendered = TemplateEngine.renderFile("diary_entry_template.html", {
+        postClass: entryData.postClass,
+        text: textLines,
+        img: base64Line ? base64Line.trim() : null,
+        timestamp: entryData.timestamp
+      });
+    } else {
+      rendered = TemplateEngine.renderFile("diary_entry_template.html", {
+        postClass: entryData.postClass,
+        text: entryData.entry,
+        img: null,
+        timestamp: entryData.timestamp
+      });
+    }
+    // Append the new post to the diary container
+    this.diaryContainer.insertAdjacentHTML("beforeend", rendered);
+    // Apply visual effects only to the newly added post.
+    const newPostElem = this.diaryContainer.lastElementChild;
+    if (newPostElem && this.app && this.app.visualEffectsManager) {
+      this.app.visualEffectsManager.applyEffectsToNewElements([newPostElem]);
+    }
+    console.log("[ViewManager] Single diary post added.");
+  }
+
+  /**
+   * loadLatestDiaryPosts
+   * Loads and renders only the latest diary posts (e.g., last three posts).
+   * This method can be called when switching screens.
+   */
+  loadLatestDiaryPosts() {
+    // Assume that getDiaryEntries() returns all entries.
+    // For lazy loading, only the last three entries are rendered initially.
+    const entries = this.app.databaseManager.getDiaryEntries();
+    this.renderDiary(entries, this.languageManager && this.languageManager.getLanguage(), this.app.visualEffectsManager);
+  }
+
+  /**
+   * loadMoreDiaryPosts
+   * Loads and appends older diary posts upon request (e.g., on scroll or button click).
+   * This method should fetch the next set (e.g., 3) of older posts and append them.
+   */
+  loadMoreDiaryPosts() {
+    // Placeholder implementation. Actual implementation would depend on paging logic.
+    const entries = this.app.databaseManager.getDiaryEntries();
+    // Assume that entries already rendered are the first 3.
+    const renderedCount = this.diaryContainer.children.length;
+    // Get next 3 posts from the array (entries assumed sorted descending).
+    const moreEntries = entries.slice(renderedCount, renderedCount + 3);
+    moreEntries.forEach(entry => {
+      let rendered;
+      if (entry.entry.includes("data:image")) {
+        const lines = entry.entry.split("\n");
+        let base64Line = lines.find(line => line.trim().startsWith("data:image"));
+        let textLines = lines.filter(line => !line.trim().startsWith("data:image")).join("\n");
+        rendered = TemplateEngine.renderFile("diary_entry_template.html", {
+          postClass: entry.postClass,
+          text: textLines,
+          img: base64Line ? base64Line.trim() : null,
+          timestamp: entry.timestamp
+        });
+      } else {
+        rendered = TemplateEngine.renderFile("diary_entry_template.html", {
+          postClass: entry.postClass,
+          text: entry.entry,
+          img: null,
+          timestamp: entry.timestamp
+        });
+      }
+      this.diaryContainer.insertAdjacentHTML("beforeend", rendered);
+    });
+    console.log(`[ViewManager] Loaded ${moreEntries.length} more diary posts.`);
   }
 }

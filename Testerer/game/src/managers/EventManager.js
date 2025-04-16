@@ -46,8 +46,8 @@ export class EventManager {
    * serializes it as JSON, and saves it to the database. If the entry represents a system event
    * (e.g., from a ghost), it is additionally saved to the events table.
    *
-   * After saving, it delegates the UI update (diary rendering) to the ViewManager.
-   * Then, it calls the centralized visual effects method to animate the newly added entry.
+   * After saving the entry in the database, the diary UI is updated incrementally by
+   * adding only the new post via ViewManager.addSingleDiaryPost().
    *
    * @param {string} entry - The text of the diary entry.
    * @param {boolean} [isPostFromGhost=false] - Flag to mark the entry as a ghost post.
@@ -72,15 +72,12 @@ export class EventManager {
       this.databaseManager.saveEvent(eventData);
     }
 
-    // Delegate UI update of the diary to the ViewManager.
-    this.updateDiaryDisplay();
-
-    // After updating the diary display, apply visual effects to newly added diary entries.
-    // It is expected that the rendered diary entries have the attribute data-animate-on-board="true"
-    // if they need to be animated.
-    if (this.viewManager && this.visualEffectsManager && this.viewManager.diaryContainer) {
-      const newEntries = this.viewManager.diaryContainer.querySelectorAll('[data-animate-on-board="true"]');
-      this.visualEffectsManager.applyEffectsToNewElements(newEntries);
+    // Incremental UI update: add only the new diary post.
+    if (this.viewManager && typeof this.viewManager.addSingleDiaryPost === 'function') {
+      this.viewManager.addSingleDiaryPost(entryData);
+    } else {
+      // Fallback to full re-render if incremental method is not available.
+      this.updateDiaryDisplay();
     }
   }
 

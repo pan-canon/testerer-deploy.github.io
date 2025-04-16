@@ -332,14 +332,14 @@ export class VisualEffectsManager {
   /**
    * applyEffectsToNewElements
    * Applies visual effects to newly added DOM elements.
-   * Instead of clearing the entire element content, it searches for a child <p> with the
-   * "data-animate-on-board" attribute and applies animation only to that element.
+   * Instead of clearing the entire element content, it searches for a child <p>
+   * with the "data-animate-on-board" attribute and applies animation only to that element.
    *
    * @param {Array<HTMLElement>} newElements - Array or NodeList of newly added DOM elements.
    */
   applyEffectsToNewElements(newElements) {
     Array.from(newElements).forEach(elem => {
-      // If the element itself is not a <p> with animate attribute, try to find one inside.
+      // If the element itself is not a <p> with the animate attribute, look for one inside.
       let targetElem = elem;
       if (elem.tagName.toLowerCase() !== "p" || !elem.dataset.animateOnBoard) {
         const pChild = elem.querySelector("p[data-animate-on-board='true']");
@@ -351,7 +351,7 @@ export class VisualEffectsManager {
         // Determine effect type: default to "user" if not specified.
         const effectType = targetElem.dataset.animateEffect || "user";
         const text = targetElem.textContent;
-        // Clear only the content of the target element (e.g. the <p>), leaving other parts intact.
+        // Clear only the content of the target element to leave other parts intact.
         targetElem.textContent = "";
         if (effectType === "ghost") {
           this.triggerGhostTextEffect(targetElem, text, () => {

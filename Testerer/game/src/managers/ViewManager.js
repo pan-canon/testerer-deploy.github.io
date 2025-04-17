@@ -448,8 +448,8 @@ export class ViewManager {
       const shootBtn = document.getElementById("btn_shoot");
       if (shootBtn) {
         shootBtn.style.display = "inline-block";
-        shootBtn.disabled = true;
-        shootBtn.style.pointerEvents = "none";
+        // Восстанавливаем состояние кнопки Shoot по активному квесту
+        this.restoreShootButtonState();
       }
       console.log("[ViewManager] Switched to camera view.");
     }

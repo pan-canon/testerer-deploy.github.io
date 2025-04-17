@@ -293,11 +293,11 @@ export class GhostManager {
    * If an active quest exists, the button is disabled; otherwise, it is enabled.
    */
   updatePostButtonState() {
-    const activeQuestKey = StateManager.get("activeQuestKey");
-    // If active quest exists, disable the button; else, enable it.
-    const isEnabled = !activeQuestKey;
-    this.app.viewManager.setPostButtonEnabled(isEnabled);
-    console.log(`[GhostManager] Post button state updated: enabled=${isEnabled}`);
+    // Проверяем, есть ли следующий квест в последовательности и можно ли его запустить
+    const nextEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
+    const canStart = nextEntry ? this.canStartQuest(nextEntry.questKey) : false;
+    this.app.viewManager.setPostButtonEnabled(canStart);
+    console.log(`[GhostManager] Post button state updated: enabled=${canStart}`);
   }
 
   /**

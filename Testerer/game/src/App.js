@@ -128,7 +128,7 @@ export class App {
       await this.viewManager.switchScreen('main-screen', 'main-buttons', this);
       this.viewManager.showToggleCameraButton();
 
-      // Replace direct mirrorQuestReady check with universal activeQuestKey check.
+      // Читаем состояние из предыдущего сохранения
       const postButtonDisabled = StateManager.get("postButtonDisabled") === "true";
       this.viewManager.setPostButtonEnabled(!postButtonDisabled);
 

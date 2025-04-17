@@ -140,4 +140,14 @@ export class EventManager {
       ) ?? [];
     this.visualEffectsManager.applyEffectsToNewElements(animatedNodes);
   }
+
+  /**
+   * updateDiaryDisplay
+   * --------------------------------------------------------------
+   * Back‑compat wrapper retained for legacy callers. Internally
+   * delegates to the new private full‑refresh routine.
+   */
+  updateDiaryDisplay() {
+    this._fullDiaryRefresh();
+  }
 }

@@ -1033,8 +1033,6 @@ export class ViewManager {
       console.error("Diary container not set. Cannot render diary entries.");
       return;
     }
-    // Always show newest entries first
-    const ordered = [...entries].reverse();
     this.diaryContainer.innerHTML = "";
     if (!entries || entries.length === 0) {
       const emptyMessage = (this.languageManager && this.languageManager.translate("no_diary_entries", "Diary is empty.")) || "Diary is empty.";
@@ -1046,7 +1044,7 @@ export class ViewManager {
       return;
     }
 
-    ordered.forEach(entry => {
+    entries.forEach(entry => {
       // CHANGED PART: Now we check for 'data:image' anywhere in the string.
       let rendered;
       if (entry.entry.includes("data:image")) {
@@ -1115,8 +1113,9 @@ export class ViewManager {
    */
   async loadLatestDiaryPosts(limit = 3) {
     const all = await this.app.databaseManager.getDiaryEntries();
-    const latest = all.slice(-limit); // return last `limit` items
-    this.renderDiary(latest.reverse(), this.app.languageManager.getLanguage(), this.app.visualEffectsManager);
+    const latest = all.slice(-limit);          // grab last N (already latest)
+    // pass as‑is; renderDiary will keep order
+    this.renderDiary(latest, this.app.languageManager.getLanguage(), this.app.visualEffectsManager);
   }
 
   /**
@@ -1126,17 +1125,17 @@ export class ViewManager {
   async addSingleDiaryPost(entryData) {
     if (!this.diaryContainer) return;
 
-    // 1. Render via the dedicated template
+    // Build optional <img> tag once
+    const imgTag = entryData.img ? `<img src="${entryData.img}" alt="Diary image" />` : "";
     const html = await TemplateEngine.renderFile(
       "./src/templates/diaryentry_screen-template.html",
-      entryData
+      { ...entryData, imgTag }
     );
 
-    // 2. Insert **at the top** – newest first
+    // prepend so newest on top
     this.diaryContainer.insertAdjacentHTML("afterbegin", html);
 
-    // 3. Trigger animation only for the freshly inserted <p>
-    const p = this.diaryContainer.querySelector(".diary-entry:first-child p[data-animate-on-board='true']");
+    const p = this.diaryContainer.querySelector('.diary-entry:first-child p[data-animate-on-board="true"]');
     if (p && this.app.visualEffectsManager) {
       this.app.visualEffectsManager.applyEffectsToNewElements([p]);
     }

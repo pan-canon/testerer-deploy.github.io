@@ -1,9 +1,5 @@
 <div class="diary-entry {{postClass}}">
-  <!-- Text that will be animated by VisualEffectsManager -->
   <p data-animate-on-board="true">{{text}}</p>
-  <!-- Optional image (base64) is rendered only when present -->
-  {{#if img}}
-    <img src="{{img}}" alt="Diary image" />
-  {{/if}}
+  {{imgTag}}
   <span class="diary-timestamp">{{timestamp}}</span>
 </div>

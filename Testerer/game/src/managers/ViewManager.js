@@ -1149,22 +1149,37 @@ export class ViewManager {
     }
   }
 
-  async loadEarlierDiaryPosts(step = 3) {
-    const displayed = this.diaryContainer.querySelectorAll('.diary-entry').length;
-    const all = await this.app.databaseManager.getDiaryEntries();
-    // Сортируем по дате новых к старым
-    all.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    // Берём следующий шаг записей
-    const nextPosts = all.slice(displayed, displayed + step);
+async loadEarlierDiaryPosts(step = 3) {
+  const displayed = this.diaryContainer.querySelectorAll('.diary-entry').length;
+  const allEntries = await this.app.databaseManager.getDiaryEntries();
+  // Сортируем от новых к старым
+  allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  // Берём следующий кусок
+  const nextChunk = allEntries.slice(displayed, displayed + step);
+  const templateUrl = `${this.getBasePath()}/src/templates/diaryentry_screen-template.html`;
 
-    // Абсолютный путь к шаблону
-    const templateUrl = `${this.getBasePath()}/src/templates/diaryentry_screen-template.html`;
-    for (const item of nextPosts) {
-      const html = await TemplateEngine.renderFile(templateUrl, item);
-      // вставляем в конец
-      this.diaryContainer.insertAdjacentHTML("beforeend", html);
+  for (const entry of nextChunk) {
+    // разбираем текст и картинку
+    let text = entry.entry;
+    let imgTag = "";
+    if (text.includes("data:image")) {
+      const idx = text.indexOf("data:image");
+      const imgSrc = text.slice(idx).trim();
+      text = text.slice(0, idx).trim();
+      imgTag = `<img src="${imgSrc}" alt="Diary image" />`;
     }
+
+    const html = await TemplateEngine.renderFile(templateUrl, {
+      postClass: entry.postClass,
+      text,
+      imgTag,
+      timestamp: entry.timestamp
+    });
+
+    this.diaryContainer.insertAdjacentHTML("beforeend", html);
   }
+}
+
 
 /**
  * При скролле вниз подгружает ещё по 3 поста.

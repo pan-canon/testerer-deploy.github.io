@@ -72,6 +72,9 @@ export class QuestManager {
     }
     if (this.app.viewManager && typeof this.app.viewManager.restoreCameraButtonState === 'function') {
       this.app.viewManager.restoreCameraButtonState();
+    }
+    // *** Добавляем восcтановление для кнопки Shoot ***
+    if (this.app.viewManager && typeof this.app.viewManager.restoreShootButtonState === 'function') {
       this.app.viewManager.restoreShootButtonState();
     }
   }

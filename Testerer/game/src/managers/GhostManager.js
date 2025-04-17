@@ -293,8 +293,9 @@ export class GhostManager {
    * If an active quest exists, the button is disabled; otherwise, it is enabled.
    */
   updatePostButtonState() {
-    // Проверяем, есть ли следующий квест в последовательности и можно ли его запустить
+    // Определяем следующий элемент последовательности
     const nextEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
+    // Можно ли запустить следующий квест?
     const canStart = nextEntry ? this.canStartQuest(nextEntry.questKey) : false;
     this.app.viewManager.setPostButtonEnabled(canStart);
     console.log(`[GhostManager] Post button state updated: enabled=${canStart}`);

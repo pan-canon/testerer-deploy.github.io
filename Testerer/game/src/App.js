@@ -134,6 +134,9 @@ export class App {
 
       this.viewManager.updateProfileDisplay(profile);
       this.selfieData = profile.selfie;
+
+      // Render only the latest posts (lazy mode)
+      await this.viewManager.loadLatestDiaryPosts();
     } else {
       console.log("Profile not found, showing landing screen.");
 

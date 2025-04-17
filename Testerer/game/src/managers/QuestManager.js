@@ -72,6 +72,7 @@ export class QuestManager {
     }
     if (this.app.viewManager && typeof this.app.viewManager.restoreCameraButtonState === 'function') {
       this.app.viewManager.restoreCameraButtonState();
+      this.app.viewManager.restoreShootButtonState();
     }
   }
 

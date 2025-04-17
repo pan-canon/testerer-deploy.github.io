@@ -129,8 +129,8 @@ export class App {
       this.viewManager.showToggleCameraButton();
 
       // Replace direct mirrorQuestReady check with universal activeQuestKey check.
-      const activeQuestKey = StateManager.get("activeQuestKey");
-      this.viewManager.setPostButtonEnabled(!!activeQuestKey);
+      const postButtonDisabled = StateManager.get("postButtonDisabled") === "true";
+      this.viewManager.setPostButtonEnabled(!postButtonDisabled);
 
       this.viewManager.updateProfileDisplay(profile);
       this.selfieData = profile.selfie;

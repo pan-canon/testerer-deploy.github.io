@@ -1108,12 +1108,16 @@ export class ViewManager {
   }
 
   /**
-   * Loads and renders the latest `limit` diary posts.
-   * Falls back to empty list if DB is empty.
+   * Loads and renders the latest `limit` diary posts, newest first.
    */
   async loadLatestDiaryPosts(limit = 3) {
-    const all = await this.app.databaseManager.getDiaryEntries();
-    const latest = all.slice(-limit).reverse(); // newest first
+    // Получаем все записи
+    const entries = await this.app.databaseManager.getDiaryEntries();
+    // Сортируем по timestamp: от новых к старым
+    entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    // Берём первые `limit` самых свежих
+    const latest = entries.slice(0, limit);
+    // Рендерим
     this.renderDiary(latest, this.app.languageManager.getLanguage(), this.app.visualEffectsManager);
   }
 
@@ -1124,12 +1128,12 @@ export class ViewManager {
   async addSingleDiaryPost(entryData) {
     if (!this.diaryContainer) return;
 
-    // Build optional <img> tag once
-    const imgTag = entryData.img ? `<img src="${entryData.img}" alt="Diary image" />` : "";
-    const html = await TemplateEngine.renderFile(
-      "./src/templates/diaryentry_screen-template.html",
-      { ...entryData, imgTag }
-    );
+  // Построить абсолютный URL к шаблону
+  const templateUrl = `${this.getBasePath()}/src/templates/diaryentry_screen-template.html`;
+  const html = await TemplateEngine.renderFile(
+    templateUrl,
+    { ...entryData, imgTag }
+  );
 
     // prepend so newest on top
     this.diaryContainer.insertAdjacentHTML("afterbegin", html);
@@ -1143,14 +1147,17 @@ export class ViewManager {
   async loadEarlierDiaryPosts(step = 3) {
     const displayed = this.diaryContainer.querySelectorAll('.diary-entry').length;
     const all = await this.app.databaseManager.getDiaryEntries();
-    const nextChunk = all.slice(Math.max(0, all.length - displayed - step), all.length - displayed);
-    // Append **after** existing entries
-    nextChunk.reverse().forEach(async (item) => {
-      const html = await TemplateEngine.renderFile(
-        "./src/templates/diaryentry_screen-template.html",
-        item
-      );
+    // Сортируем по дате новых к старым
+    all.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    // Берём следующий шаг записей
+    const nextPosts = all.slice(displayed, displayed + step);
+
+    // Абсолютный путь к шаблону
+    const templateUrl = `${this.getBasePath()}/src/templates/diaryentry_screen-template.html`;
+    for (const item of nextPosts) {
+      const html = await TemplateEngine.renderFile(templateUrl, item);
+      // вставляем в конец
       this.diaryContainer.insertAdjacentHTML("beforeend", html);
-    });
+    }
   }
 }

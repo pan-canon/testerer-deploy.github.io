@@ -1033,6 +1033,8 @@ export class ViewManager {
       console.error("Diary container not set. Cannot render diary entries.");
       return;
     }
+    // Always show newest entries first
+    const ordered = [...entries].reverse();
     this.diaryContainer.innerHTML = "";
     if (!entries || entries.length === 0) {
       const emptyMessage = (this.languageManager && this.languageManager.translate("no_diary_entries", "Diary is empty.")) || "Diary is empty.";
@@ -1044,7 +1046,7 @@ export class ViewManager {
       return;
     }
 
-    entries.forEach(entry => {
+    ordered.forEach(entry => {
       // CHANGED PART: Now we check for 'data:image' anywhere in the string.
       let rendered;
       if (entry.entry.includes("data:image")) {

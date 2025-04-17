@@ -1127,25 +1127,23 @@ export class ViewManager {
    */
   async addSingleDiaryPost(entryData) {
     if (!this.diaryContainer) return;
+
     const imgTag = entryData.img
       ? `<img src="${entryData.img}" alt="Diary image" data-animate-on-board="true" />`
       : "";
+
     const templateUrl = `${this.getBasePath()}/src/templates/diaryentry_screen-template.html`;
     const html = await TemplateEngine.renderFile(templateUrl, {
       ...entryData,
       imgTag
     });
-    // Построить абсолютный URL к шаблону
-    const templateUrl = `${this.getBasePath()}/src/templates/diaryentry_screen-template.html`;
-    const html = await TemplateEngine.renderFile(
-      templateUrl,
-      { ...entryData, imgTag }
-    );
 
     // prepend so newest on top
     this.diaryContainer.insertAdjacentHTML("afterbegin", html);
 
-    const p = this.diaryContainer.querySelector('.diary-entry:first-child p[data-animate-on-board="true"]');
+    const p = this.diaryContainer.querySelector(
+      '.diary-entry:first-child p[data-animate-on-board="true"]'
+    );
     if (p && this.app.visualEffectsManager) {
       this.app.visualEffectsManager.applyEffectsToNewElements([p]);
     }

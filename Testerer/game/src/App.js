@@ -112,9 +112,6 @@ export class App {
     this.questManager.restoreAllActiveQuests();
 
     this.viewManager.showToggleCameraButton();
-    // We call updateDiaryDisplay early in case user is on main screen,
-    // but specifically for older profiles, we must wait for the template to load (see below).
-    this.eventManager.updateDiaryDisplay();
     this.viewManager.createTopCameraControls();
 
     // Initialize the chat section for "support"
@@ -137,9 +134,6 @@ export class App {
 
       this.viewManager.updateProfileDisplay(profile);
       this.selfieData = profile.selfie;
-
-      // Re-render the diary after main-screen is loaded
-      this.eventManager.updateDiaryDisplay();
     } else {
       console.log("Profile not found, showing landing screen.");
 

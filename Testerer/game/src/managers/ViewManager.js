@@ -20,6 +20,7 @@ export class ViewManager {
   constructor(appInstance) {
     this.app = appInstance;
     // --- Cache static UI elements from index.html ---
+    this.loadingOlderPosts = false;
     this.controlsPanel = document.getElementById("controls-panel");
     this.languageSelector = document.getElementById('language-selector');
     this.globalCamera = document.getElementById("global-camera");
@@ -202,6 +203,12 @@ export class ViewManager {
         this.diaryContainer = diaryElem;
         console.log("[ViewManager] Updated diary container for main-screen.");
         await this.loadLatestDiaryPosts();
+        // подгружаем старые посты при приближении к низу страницы
+        window.addEventListener(
+          "scroll",
+          this.onScrollLoadOlder.bind(this),
+          { passive: true }
+        );
       }
     }
 
@@ -1158,4 +1165,18 @@ export class ViewManager {
       this.diaryContainer.insertAdjacentHTML("beforeend", html);
     }
   }
+
+/**
+ * При скролле вниз подгружает ещё по 3 поста.
+ */
+async onScrollLoadOlder() {
+  if (this.loadingOlderPosts) return;
+  const threshold = 150; // px до низа, чтобы сработало чуть раньше
+  if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - threshold) {
+    this.loadingOlderPosts = true;
+    await this.loadEarlierDiaryPosts();
+    this.loadingOlderPosts = false;
+  }
+}
+
 }

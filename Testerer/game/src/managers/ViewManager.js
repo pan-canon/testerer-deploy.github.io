@@ -1081,7 +1081,7 @@ export class ViewManager {
 
       this.diaryContainer.innerHTML += rendered;
     });
-    /*console.log(\`[ViewManager] Diary updated with \${entries.length} entries.\`);*/
+    console.log("[ViewManager] Diary updated with " + entries.length + " entries.");
   }
 
   /**

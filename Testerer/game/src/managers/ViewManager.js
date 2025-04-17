@@ -17,7 +17,7 @@ import { TemplateEngine } from '../utils/TemplateEngine.js';
  * All UI updates and DOM manipulations are centralized here.
  */
 export class ViewManager {
-  constructor(appInstance = null) {
+  constructor(appInstance) {
     this.app = appInstance;
     // --- Cache static UI elements from index.html ---
     this.controlsPanel = document.getElementById("controls-panel");

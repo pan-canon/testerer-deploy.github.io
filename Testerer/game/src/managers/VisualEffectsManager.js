@@ -339,6 +339,9 @@ export class VisualEffectsManager {
    * @param {Array<HTMLElement>} newElements - Array or NodeList of newly added DOM elements.
    */
   applyEffectsToNewElements(newElements) {
+    // Ensure we always iterate over a concrete array
+    Array.from(newElements).forEach((elem) => {
+      // Gather only <p data-animate-on-board="true"> inside the element
       const textTargets = elem.matches('p[data-animate-on-board="true"]')
         ? [elem]
         : elem.querySelectorAll('p[data-animate-on-board="true"]');
@@ -353,6 +356,7 @@ export class VisualEffectsManager {
           this.triggerUserTextEffect(p, rawText, () => delete p.dataset.animateOnBoard);
         }
       });
+    });
   }
 }
 

@@ -73,16 +73,16 @@ export class EventManager {
     }
 
     // Delegate UI update of the diary to the ViewManager.
-if (this.viewManager?.addSingleDiaryPost) {
-  this.viewManager.addSingleDiaryPost({
-    text: entry,               // original message
-    img: entry.startsWith("data:image") ? entry : "", // best‑effort
-    timestamp: new Date().toLocaleString(),
-    postClass
-  });
-} else {
-  this.updateDiaryDisplay();
-}
+    if (this.viewManager?.addSingleDiaryPost) {
+      this.viewManager.addSingleDiaryPost({
+        text: entry,               // original message
+        img: entry.startsWith("data:image") ? entry : "", // best‑effort
+        timestamp: new Date().toLocaleString(),
+        postClass
+      });
+    } else {
+      this.updateDiaryDisplay();
+    }
 
     // After updating the diary display, apply visual effects to newly added diary entries.
     // It is expected that the rendered diary entries have the attribute data-animate-on-board="true"

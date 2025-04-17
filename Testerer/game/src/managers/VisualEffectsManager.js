@@ -338,28 +338,21 @@ export class VisualEffectsManager {
    *
    * @param {Array<HTMLElement>} newElements - Array or NodeList of newly added DOM elements.
    */
-/**
- * Applies visual effects only to <p data-animate-on-board="true"> elements.
- * Does not clear or touch <img> or other nodes.
- */
   applyEffectsToNewElements(newElements) {
-    Array.from(newElements).forEach(elem => {
-      // only <p> with the flag
-      if (elem.tagName === 'P' && elem.dataset.animateOnBoard === 'true') {
-        const text = elem.textContent;
-        elem.textContent = ''; // clear text only
-        const effectType = elem.dataset.animateEffect || 'user';
+      const textTargets = elem.matches('p[data-animate-on-board="true"]')
+        ? [elem]
+        : elem.querySelectorAll('p[data-animate-on-board="true"]');
+
+      textTargets.forEach((p) => {
+        const effectType = p.dataset.animateEffect || 'user';
+        const rawText    = p.textContent;
+        p.textContent    = '';
         if (effectType === 'ghost') {
-          this.triggerGhostTextEffect(elem, text, () => {
-            delete elem.dataset.animateOnBoard;
-          }, this.effectConfig.ghostText);
+          this.triggerGhostTextEffect(p, rawText, () => delete p.dataset.animateOnBoard);
         } else {
-          this.triggerUserTextEffect(elem, text, () => {
-            delete elem.dataset.animateOnBoard;
-          }, this.effectConfig.userText);
+          this.triggerUserTextEffect(p, rawText, () => delete p.dataset.animateOnBoard);
         }
-      }
-    });
+      });
   }
 }
 

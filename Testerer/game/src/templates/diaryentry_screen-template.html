@@ -1,8 +1,9 @@
-<!-- diaryentry_screen-template.html -->
 <div class="diary-entry {{postClass}}">
-  <!-- text block for animation -->
+  <!-- Text that will be animated by VisualEffectsManager -->
   <p data-animate-on-board="true">{{text}}</p>
-  <!-- image (empty src will be hidden via CSS) -->
-  <img src="{{img}}" alt="Diary Image" />
+  <!-- Optional image (base64) is rendered only when present -->
+  {{#if img}}
+    <img src="{{img}}" alt="Diary image" />
+  {{/if}}
   <span class="diary-timestamp">{{timestamp}}</span>
 </div>

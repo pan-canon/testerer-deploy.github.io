@@ -34,7 +34,7 @@ import { ChatManager } from './managers/ChatManager.js';
 export class App {
   constructor(deps = {}) {
     // Initialize or inject ViewManager and bind UI events.
-    this.viewManager = deps.viewManager || new ViewManager(this);
+    this.viewManager = deps.viewManager || new ViewManager();
     this.viewManager.bindEvents(this);
 
     // Create or inject persistence managers.

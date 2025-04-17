@@ -17,9 +17,6 @@ import { TemplateEngine } from '../utils/TemplateEngine.js';
  * All UI updates and DOM manipulations are centralized here.
  */
 export class ViewManager {
-  /**
-   * @param {App} appInstance  — reference to main application
-   */
   constructor(appInstance) {
     this.app = appInstance;
     // --- Cache static UI elements from index.html ---
@@ -204,7 +201,6 @@ export class ViewManager {
       if (diaryElem) {
         this.diaryContainer = diaryElem;
         console.log("[ViewManager] Updated diary container for main-screen.");
-        // Lazy‑load only the latest 3 posts
         await this.loadLatestDiaryPosts();
       }
     }
@@ -1111,62 +1107,50 @@ export class ViewManager {
     console.log(`[ViewManager] Diary updated with ${entries.length} entries.`);
   }
 
-/**
- * Loads, sorts by timestamp, and displays the latest 3 diary entries.
- */
-async loadLatestDiaryPosts() {
-  // 1) get raw entries from DB
-  const allEntries = await this.app.databaseManager.getDiaryEntries();
-  if (!Array.isArray(allEntries) || allEntries.length === 0) {
-    this.diaryContainer.innerHTML = '';
-    return;
+  /**
+   * Loads and renders the latest `limit` diary posts.
+   * Falls back to empty list if DB is empty.
+   */
+  async loadLatestDiaryPosts(limit = 3) {
+    const all = await this.app.databaseManager.getDiaryEntries();
+    const latest = all.slice(-limit); // return last `limit` items
+    this.renderDiary(latest.reverse(), this.app.languageManager.getLanguage(), this.app.visualEffectsManager);
   }
 
-  // 2) sort ascending by timestamp
-  const sorted = allEntries.slice().sort((a, b) => {
-    return new Date(a.timestamp) - new Date(b.timestamp);
+  /**
+   * Inserts a single diary post without re‑rendering the whole list.
+   * @param {Object} entryData {text, img, timestamp, postClass}
+   */
+  async addSingleDiaryPost(entryData) {
+    if (!this.diaryContainer) return;
+
+    // 1. Render via the dedicated template
+    const html = await TemplateEngine.renderFile(
+      "./src/templates/diaryentry_screen-template.html",
+      entryData
+    );
+
+    // 2. Insert **at the top** – newest first
+    this.diaryContainer.insertAdjacentHTML("afterbegin", html);
+
+    // 3. Trigger animation only for the freshly inserted <p>
+    const p = this.diaryContainer.querySelector(".diary-entry:first-child p[data-animate-on-board='true']");
+    if (p && this.app.visualEffectsManager) {
+      this.app.visualEffectsManager.applyEffectsToNewElements([p]);
+    }
+  }
+
+async loadEarlierDiaryPosts(step = 3) {
+  const displayed = this.diaryContainer.querySelectorAll('.diary-entry').length;
+  const all = await this.app.databaseManager.getDiaryEntries();
+  const nextChunk = all.slice(Math.max(0, all.length - displayed - step), all.length - displayed);
+  // Append **after** existing entries
+  nextChunk.reverse().forEach(async (item) => {
+    const html = await TemplateEngine.renderFile(
+      "./src/templates/diaryentry_screen-template.html",
+      item
+    );
+    this.diaryContainer.insertAdjacentHTML("beforeend", html);
   });
-
-  // 3) take only последние 3
-  const latestThree = sorted.slice(-3);
-
-  // 4) clear container before rendering
-  this.diaryContainer.innerHTML = '';
-
-  // 5) добавить каждый в порядке возрастания времени
-  for (const entryData of latestThree) {
-    await this.addSingleDiaryPost(entryData);
-  }
 }
-
-
-/**
- * Incrementally adds one diary entry without re‑rendering old ones.
- */
-async addSingleDiaryPost(entryData) {
-  // 1) duplicate guard
-  if (this.diaryContainer.querySelector(`[data-timestamp="${entryData.timestamp}"]`)) {
-    return;
-  }
-
-  // 2) prepare template data
-  const data = { postClass: entryData.postClass, timestamp: entryData.timestamp };
-  if (entryData.entry.includes('data:image')) {
-    const lines = entryData.entry.split('\n');
-    data.img = lines.find(l => l.trim().startsWith('data:image')).trim();
-    data.text = lines.filter(l => !l.trim().startsWith('data:image')).join('\n');
-  } else {
-    data.img = '';
-    data.text = entryData.entry;
-  }
-
-  // 3) render via TemplateEngine.renderFile
-  const tplUrl = `${this.getBasePath()}/src/templates/diaryentry_screen-template.html`;
-  const rendered = await TemplateEngine.renderFile(tplUrl, data);
-
-  // 4) wrap with timestamp marker and insert
-  const wrapped = `<div data-timestamp="${entryData.timestamp}">${rendered}</div>`;
-  this.diaryContainer.insertAdjacentHTML('beforeend', wrapped);
-}
-
 }

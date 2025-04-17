@@ -55,12 +55,7 @@ export class EventManager {
   async addDiaryEntry(entry, isPostFromGhost = false) {
     // Determine post class based on the source.
     const postClass = isPostFromGhost ? "ghost-post" : "user-post";
-    // include a timestamp so we can sort later
-    const entryData = {
-      entry,
-      postClass,
-      timestamp: new Date().toISOString()
-    };
+    const entryData = { entry, postClass };
     const serializedEntry = JSON.stringify(entryData);
 
     // Save the diary entry to the database.
@@ -77,12 +72,24 @@ export class EventManager {
       this.databaseManager.saveEvent(eventData);
     }
 
-    // UI: try incremental add
-    if (this.viewManager && typeof this.viewManager.addSingleDiaryPost === 'function') {
-      await this.viewManager.addSingleDiaryPost(entryData);
-    } else {
-      // fallback: full rerender
-      this.updateDiaryDisplay();
+    // Delegate UI update of the diary to the ViewManager.
+if (this.viewManager?.addSingleDiaryPost) {
+  this.viewManager.addSingleDiaryPost({
+    text: entry,               // original message
+    img: entry.startsWith("data:image") ? entry : "", // best‑effort
+    timestamp: new Date().toLocaleString(),
+    postClass
+  });
+} else {
+  this.updateDiaryDisplay();
+}
+
+    // After updating the diary display, apply visual effects to newly added diary entries.
+    // It is expected that the rendered diary entries have the attribute data-animate-on-board="true"
+    // if they need to be animated.
+    if (this.viewManager && this.visualEffectsManager && this.viewManager.diaryContainer) {
+      const newEntries = this.viewManager.diaryContainer.querySelectorAll('[data-animate-on-board="true"]');
+      this.visualEffectsManager.applyEffectsToNewElements(newEntries);
     }
   }
 

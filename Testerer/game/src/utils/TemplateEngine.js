@@ -28,17 +28,16 @@ export class TemplateEngine {
   }
 
   /**
-   * Loads an HTML template from a URL and renders it with data.
-   * @param {string} templateUrl
-   * @param {Object} data
-   * @returns {Promise<string>}
+   * Loads an HTML template from `templatePath` with `fetch`, then renders it with the data.
+   * @param {string} templatePath – relative / absolute URL to the HTML file.
+   * @param {Object} [data={}] – placeholder values.
    */
-  static async renderFile(templateUrl, data) {
-    const response = await fetch(templateUrl);
+  static async renderFile(templatePath, data = {}) {
+    const response = await fetch(templatePath);
     if (!response.ok) {
-      throw new Error(`Failed to load template: ${templateUrl}`);
+      throw new Error(`[TemplateEngine] Failed to load template: ${templatePath}`);
     }
     const templateText = await response.text();
-    return this.render(templateText, data);
+    return TemplateEngine.render(templateText, data);
   }
 }

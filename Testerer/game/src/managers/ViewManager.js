@@ -1113,8 +1113,7 @@ export class ViewManager {
    */
   async loadLatestDiaryPosts(limit = 3) {
     const all = await this.app.databaseManager.getDiaryEntries();
-    const latest = all.slice(-limit);          // grab last N (already latest)
-    // pass as‑is; renderDiary will keep order
+    const latest = all.slice(-limit).reverse(); // newest first
     this.renderDiary(latest, this.app.languageManager.getLanguage(), this.app.visualEffectsManager);
   }
 

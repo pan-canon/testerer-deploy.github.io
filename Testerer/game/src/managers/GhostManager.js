@@ -294,8 +294,8 @@ export class GhostManager {
    */
   updatePostButtonState() {
     // Определяем следующий элемент последовательности
-    const nextEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
-    // Можно ли запустить следующий квест?
+    anager ? this.sequenceManager.getCurrentEntry() : null;
+    // Проверяем, можно ли его запустить
     const canStart = nextEntry ? this.canStartQuest(nextEntry.questKey) : false;
     this.app.viewManager.setPostButtonEnabled(canStart);
     console.log(`[GhostManager] Post button state updated: enabled=${canStart}`);

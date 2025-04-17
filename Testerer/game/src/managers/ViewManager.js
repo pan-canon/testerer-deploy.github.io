@@ -528,13 +528,14 @@ export class ViewManager {
   setShootButtonActive(isActive) {
     const shootBtn = document.getElementById("btn_shoot");
     if (shootBtn) {
+      // disabled и pointerEvents в одном месте
       shootBtn.disabled = !isActive;
+      shootBtn.style.pointerEvents = isActive ? "auto" : "none";
       if (isActive) {
         shootBtn.classList.add("active");
       } else {
         shootBtn.classList.remove("active");
       }
-      // Optionally, store the state using the universal key mechanism.
       StateManager.set("shootButtonActive", JSON.stringify(isActive));
       console.log(`[ViewManager] Shoot button active state set to ${isActive}.`);
     } else {

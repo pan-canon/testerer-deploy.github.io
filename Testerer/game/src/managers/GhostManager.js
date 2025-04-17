@@ -88,6 +88,12 @@ export class GhostManager {
     document.addEventListener("questCompleted", (e) => {
       this.onQuestCompleted(e.detail);
     });
+  // единственная точка обновления Post‑кнопки
+  document.addEventListener("activeQuestKeyChanged", () =>
+    this.updatePostButtonState()
+  );
+  // апдейт сразу после создания GhostManager
+  this.updatePostButtonState();
   }
 
   /**
@@ -325,8 +331,6 @@ export class GhostManager {
       return;
     }
     await this.startQuest(nextEntry.questKey);
-    // After starting the quest, update the Post button state.
-    this.updatePostButtonState();
   }
 
   /**
@@ -356,8 +360,6 @@ export class GhostManager {
     this.activeQuestKey = null;
     StateManager.remove("activeQuestKey");
 
-    // Update the Post button state after quest completion.
-    this.updatePostButtonState();
     // Deactivate the camera button since the quest is finished.
     this.app.viewManager.setCameraButtonActive(false);
 

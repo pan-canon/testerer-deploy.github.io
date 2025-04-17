@@ -1040,55 +1040,32 @@ export class ViewManager {
       emptyDiv.className = "diary-empty";
       emptyDiv.textContent = emptyMessage;
       this.diaryContainer.appendChild(emptyDiv);
-      console.log("[ViewManager] No diary entries found.");
       return;
     }
 
     entries.forEach(entry => {
-      // CHANGED PART: Now we check for 'data:image' anywhere in the string.
       let rendered;
       if (entry.entry.includes("data:image")) {
-        // Assume maximum one image per entry.
-        // Split entry into lines to extract base64 string.
-        const lines = entry.entry.split("\n");
-        // Find the first line that starts with data:image.
-        let base64Line = lines.find(line => line.trim().startsWith("data:image"));
+        // Находим начало base64
+        const full = entry.entry;
+        const idx = full.indexOf("data:image");
+        const textLines = full.slice(0, idx).trim();
+        const base64Line = full.slice(idx).trim();
 
-        // Join the remaining lines as text (or take the first line before the data:image line).
-        let textLines = lines.filter(line => !line.trim().startsWith("data:image")).join("\n");
-
-        // If no base64 line was found, fallback to regular text.
-        if (!base64Line) {
-          // Regular text template with animate attribute
-          const diaryEntryTemplate = `
-            <div class="diary-entry {{postClass}}" data-animate-on-board="true">
-              <p>{{entry}}</p>
-              <span class="diary-timestamp">{{timestamp}}</span>
-            </div>
-          `;
-          rendered = TemplateEngine.render(diaryEntryTemplate, {
-            postClass: entry.postClass,
-            entry: entry.entry,
-            timestamp: entry.timestamp
-          });
-        } else {
-          // Template for diary entry with an image
-          const entryWithImageTemplate = `
-            <div class="diary-entry {{postClass}}" data-animate-on-board="true">
-              <p>{{text}}</p>
-              <img src="{{img}}" alt="Diary Image" />
-              <span class="diary-timestamp">{{timestamp}}</span>
-            </div>
-          `;
-          rendered = TemplateEngine.render(entryWithImageTemplate, {
-            postClass: entry.postClass,
-            text: textLines,
-            img: base64Line.trim(),
-            timestamp: entry.timestamp
-          });
-        }
+        const entryWithImageTemplate = `
+          <div class="diary-entry {{postClass}}" data-animate-on-board="true">
+            <p>{{text}}</p>
+            <img src="{{img}}" alt="Diary Image" data-animate-on-board="true" />
+            <span class="diary-timestamp">{{timestamp}}</span>
+          </div>
+        `;
+        rendered = TemplateEngine.render(entryWithImageTemplate, {
+          postClass: entry.postClass,
+          text: textLines,
+          img: base64Line,
+          timestamp: entry.timestamp
+        });
       } else {
-        // Regular diary entry template with animate attribute
         const diaryEntryTemplate = `
           <div class="diary-entry {{postClass}}" data-animate-on-board="true">
             <p>{{entry}}</p>
@@ -1104,8 +1081,7 @@ export class ViewManager {
 
       this.diaryContainer.innerHTML += rendered;
     });
-    console.log(`[ViewManager] Diary updated with ${entries.length} entries.`);
-  }
+    }
 
   /**
    * Loads and renders the latest `limit` diary posts, newest first.

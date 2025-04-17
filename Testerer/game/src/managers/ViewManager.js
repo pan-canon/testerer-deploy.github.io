@@ -1140,26 +1140,33 @@ async loadLatestDiaryPosts() {
 }
 
 
-  /**
-   * Incrementally adds one diary entry without re-rendering old ones.
-   * @param {Object} entryData — { entry, postClass, timestamp }
-   */
-  async addSingleDiaryPost(entryData) {
-    // determine data for template
-    const data = { postClass: entryData.postClass, timestamp: entryData.timestamp };
-    if (entryData.entry.includes('data:image')) {
-      const lines = entryData.entry.split('\n');
-      data.img = lines.find(l => l.trim().startsWith('data:image')).trim();
-      data.text = lines.filter(l => !l.trim().startsWith('data:image')).join('\n');
-    } else {
-      data.img = '';
-      data.text = entryData.entry;
-    }
-    // build template URL
-    const tplUrl = `${this.getBasePath()}/src/templates/diaryentry_screen-template.html`;
-    // render HTML
-    const rendered = await TemplateEngine.renderFile(tplUrl, data);
-    // insert at end
-    this.diaryContainer.insertAdjacentHTML('beforeend', rendered);
+/**
+ * Incrementally adds one diary entry without re‑rendering old ones.
+ */
+async addSingleDiaryPost(entryData) {
+  // 1) duplicate guard
+  if (this.diaryContainer.querySelector(`[data-timestamp="${entryData.timestamp}"]`)) {
+    return;
   }
+
+  // 2) prepare template data
+  const data = { postClass: entryData.postClass, timestamp: entryData.timestamp };
+  if (entryData.entry.includes('data:image')) {
+    const lines = entryData.entry.split('\n');
+    data.img = lines.find(l => l.trim().startsWith('data:image')).trim();
+    data.text = lines.filter(l => !l.trim().startsWith('data:image')).join('\n');
+  } else {
+    data.img = '';
+    data.text = entryData.entry;
+  }
+
+  // 3) render via TemplateEngine.renderFile
+  const tplUrl = `${this.getBasePath()}/src/templates/diaryentry_screen-template.html`;
+  const rendered = await TemplateEngine.renderFile(tplUrl, data);
+
+  // 4) wrap with timestamp marker and insert
+  const wrapped = `<div data-timestamp="${entryData.timestamp}">${rendered}</div>`;
+  this.diaryContainer.insertAdjacentHTML('beforeend', wrapped);
+}
+
 }

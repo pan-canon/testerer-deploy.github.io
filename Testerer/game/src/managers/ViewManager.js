@@ -1149,49 +1149,47 @@ export class ViewManager {
     }
   }
 
-async loadEarlierDiaryPosts(step = 3) {
-  const displayed = this.diaryContainer.querySelectorAll('.diary-entry').length;
-  const allEntries = await this.app.databaseManager.getDiaryEntries();
-  // Сортируем от новых к старым
-  allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  // Берём следующий кусок
-  const nextChunk = allEntries.slice(displayed, displayed + step);
-  const templateUrl = `${this.getBasePath()}/src/templates/diaryentry_screen-template.html`;
+  async loadEarlierDiaryPosts(step = 3) {
+    const displayed = this.diaryContainer.querySelectorAll('.diary-entry').length;
+    const allEntries = await this.app.databaseManager.getDiaryEntries();
+    // Сортируем от новых к старым
+    allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    // Берём следующий кусок
+    const nextChunk = allEntries.slice(displayed, displayed + step);
+    const templateUrl = `${this.getBasePath()}/src/templates/diaryentry_screen-template.html`;
 
-  for (const entry of nextChunk) {
-    // разбираем текст и картинку
-    let text = entry.entry;
-    let imgTag = "";
-    if (text.includes("data:image")) {
-      const idx = text.indexOf("data:image");
-      const imgSrc = text.slice(idx).trim();
-      text = text.slice(0, idx).trim();
-      imgTag = `<img src="${imgSrc}" alt="Diary image" />`;
+    for (const entry of nextChunk) {
+      // разбираем текст и картинку
+      let text = entry.entry;
+      let imgTag = "";
+      if (text.includes("data:image")) {
+        const idx = text.indexOf("data:image");
+        const imgSrc = text.slice(idx).trim();
+        text = text.slice(0, idx).trim();
+        imgTag = `<img src="${imgSrc}" alt="Diary image" />`;
+      }
+
+      const html = await TemplateEngine.renderFile(templateUrl, {
+        postClass: entry.postClass,
+        text,
+        imgTag,
+        timestamp: entry.timestamp
+      });
+
+      this.diaryContainer.insertAdjacentHTML("beforeend", html);
     }
-
-    const html = await TemplateEngine.renderFile(templateUrl, {
-      postClass: entry.postClass,
-      text,
-      imgTag,
-      timestamp: entry.timestamp
-    });
-
-    this.diaryContainer.insertAdjacentHTML("beforeend", html);
   }
-}
 
-
-/**
- * При скролле вниз подгружает ещё по 3 поста.
- */
-async onScrollLoadOlder() {
-  if (this.loadingOlderPosts) return;
-  const threshold = 150; // px до низа, чтобы сработало чуть раньше
-  if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - threshold) {
-    this.loadingOlderPosts = true;
-    await this.loadEarlierDiaryPosts();
-    this.loadingOlderPosts = false;
+  /**
+   * При скролле вниз подгружает ещё по 3 поста.
+   */
+  async onScrollLoadOlder() {
+    if (this.loadingOlderPosts) return;
+    const threshold = 150; // px до низа, чтобы сработало чуть раньше
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - threshold) {
+      this.loadingOlderPosts = true;
+      await this.loadEarlierDiaryPosts();
+      this.loadingOlderPosts = false;
+    }
   }
-}
-
 }

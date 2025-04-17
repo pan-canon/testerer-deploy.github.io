@@ -55,7 +55,12 @@ export class EventManager {
   async addDiaryEntry(entry, isPostFromGhost = false) {
     // Determine post class based on the source.
     const postClass = isPostFromGhost ? "ghost-post" : "user-post";
-    const entryData = { entry, postClass };
+    // include a timestamp so we can sort later
+    const entryData = {
+      entry,
+      postClass,
+      timestamp: new Date().toISOString()
+    };
     const serializedEntry = JSON.stringify(entryData);
 
     // Save the diary entry to the database.

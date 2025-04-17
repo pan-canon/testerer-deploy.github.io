@@ -1111,21 +1111,34 @@ export class ViewManager {
     console.log(`[ViewManager] Diary updated with ${entries.length} entries.`);
   }
 
-  /**
-   * Loads and displays the latest 3 diary entries.
-   */
-  async loadLatestDiaryPosts() {
-    // get all entries from DB
-    const allEntries = await this.app.databaseManager.getDiaryEntries();
-    // take last 3
-    const latestEntries = allEntries.slice(-3);
-    // clear container
+/**
+ * Loads, sorts by timestamp, and displays the latest 3 diary entries.
+ */
+async loadLatestDiaryPosts() {
+  // 1) get raw entries from DB
+  const allEntries = await this.app.databaseManager.getDiaryEntries();
+  if (!Array.isArray(allEntries) || allEntries.length === 0) {
     this.diaryContainer.innerHTML = '';
-    // add each
-    for (const entryData of latestEntries) {
-      await this.addSingleDiaryPost(entryData);
-    }
+    return;
   }
+
+  // 2) sort ascending by timestamp
+  const sorted = allEntries.slice().sort((a, b) => {
+    return new Date(a.timestamp) - new Date(b.timestamp);
+  });
+
+  // 3) take only последние 3
+  const latestThree = sorted.slice(-3);
+
+  // 4) clear container before rendering
+  this.diaryContainer.innerHTML = '';
+
+  // 5) добавить каждый в порядке возрастания времени
+  for (const entryData of latestThree) {
+    await this.addSingleDiaryPost(entryData);
+  }
+}
+
 
   /**
    * Incrementally adds one diary entry without re-rendering old ones.

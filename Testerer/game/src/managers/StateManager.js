@@ -40,37 +40,30 @@ export class StateManager {
     }
   }
 
+  /**
+   * Stores the given value in localStorage under the specified key.
+   *
+   * @param {string} key - The key under which to store the value.
+   * @param {string} value - The value to store (should be a string; use JSON.stringify() if needed).
+   */
   static set(key, value) {
     try {
       localStorage.setItem(key, value);
-      // 🚀 если меняется activeQuestKey — бросаем событие
-      if (key === 'activeQuestKey') {
-        document.dispatchEvent(
-          new CustomEvent('activeQuestKeyChanged', { detail: value })
-        );
-      }
     } catch (error) {
-      ErrorManager.logError(
-        `StateManager.set error for key "${key}": ${error}`,
-        "StateManager.set"
-      );
+      ErrorManager.logError(`StateManager.set error for key "${key}": ${error}`, "StateManager.set");
     }
   }
 
+  /**
+   * Removes the item with the specified key from localStorage.
+   *
+   * @param {string} key - The key of the item to remove.
+   */
   static remove(key) {
     try {
       localStorage.removeItem(key);
-      // 🚀 если удаляем activeQuestKey — бросаем событие с detail:null
-      if (key === 'activeQuestKey') {
-        document.dispatchEvent(
-          new CustomEvent('activeQuestKeyChanged', { detail: null })
-        );
-      }
     } catch (error) {
-      ErrorManager.logError(
-        `StateManager.remove error for key "${key}": ${error}`,
-        "StateManager.remove"
-      );
+      ErrorManager.logError(`StateManager.remove error for key "${key}": ${error}`, "StateManager.remove");
     }
   }
 }

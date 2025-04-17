@@ -88,12 +88,6 @@ export class GhostManager {
     document.addEventListener("questCompleted", (e) => {
       this.onQuestCompleted(e.detail);
     });
-  // единственная точка обновления Post‑кнопки
-  document.addEventListener("activeQuestKeyChanged", () =>
-    this.updatePostButtonState()
-  );
-  // апдейт сразу после создания GhostManager
-  this.updatePostButtonState();
   }
 
   /**
@@ -331,6 +325,8 @@ export class GhostManager {
       return;
     }
     await this.startQuest(nextEntry.questKey);
+    // After starting the quest, update the Post button state.
+    this.updatePostButtonState();
   }
 
   /**
@@ -356,30 +352,35 @@ export class GhostManager {
    */
   async onQuestCompleted(questKey) {
     console.log(`GhostManager: Quest completed with key: ${questKey}`);
+    // Clear the active quest key.
+    this.activeQuestKey = null;
+    StateManager.remove("activeQuestKey");
+
+    // Update the Post button state after quest completion.
+    this.updatePostButtonState();
+    // Deactivate the camera button since the quest is finished.
+    this.app.viewManager.setCameraButtonActive(false);
 
     if (questKey === "repeating_quest") {
-      // Для повторяющегося квеста оставляем activeQuestKey в покое:
-      // логика промежуточных и финальных этапов будет в BaseRepeatingQuest.
       const repeatingQuest = this.app.questManager.quests.find(q => q.key === "repeating_quest");
-      const questStatus = repeatingQuest
-        ? await repeatingQuest.getCurrentQuestStatus()
+      const questStatus = repeatingQuest 
+        ? await repeatingQuest.getCurrentQuestStatus() 
         : { currentStage: 1, totalStages: 1 };
       console.log("Repeating quest status:", questStatus);
-
       if (questStatus.currentStage <= questStatus.totalStages) {
-        // этап не последний — триггерим динамический ивент
+        // Intermediate stage: dynamically generate the event key.
         const dynamicEventKey = `post_repeating_event_stage_${questStatus.currentStage}`;
         console.log(`Repeating quest stage completed. Triggering generated event: ${dynamicEventKey}`);
         await this.startEvent(dynamicEventKey, true);
         return;
       } else {
-        // последний этап — триггерим финальный ивент из конфигурации
-        const currentEntry = this.sequenceManager?.getCurrentEntry();
-        if (currentEntry?.nextEventKey) {
+        // Quest has reached its final stage: use the final event key from config.
+        const currentEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
+        if (currentEntry && currentEntry.nextEventKey) {
           console.log(`Repeating quest fully completed. Now starting ghost event from config: ${currentEntry.nextEventKey}`);
           await this.startEvent(currentEntry.nextEventKey, true);
         } else {
-          console.warn("No final event configured for repeating quest completion.");
+          console.warn("No final event configured for repeating quest completion. Unable to start final event.");
         }
         this.sequenceManager.increment();
         StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
@@ -387,15 +388,8 @@ export class GhostManager {
       }
     }
 
-    // для всех остальных квестов сразу очищаем глобальный флаг и деактивируем камеру
-    this.activeQuestKey = null;
-    StateManager.remove("activeQuestKey");
-    this.app.viewManager.setCameraButtonActive(false);
-    
-    // теперь GhostManager.updatePostButtonState() вызовется по событию activeQuestKeyChanged
-    // запускаем следующий ивент, если он есть
-    const currentEntry = this.sequenceManager?.getCurrentEntry();
-    if (currentEntry?.questKey === questKey && currentEntry.nextEventKey) {
+    const currentEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
+    if (currentEntry && currentEntry.questKey === questKey && currentEntry.nextEventKey) {
       console.log(`GhostManager: Quest completed. Now starting ghost event: ${currentEntry.nextEventKey}`);
       await this.startEvent(currentEntry.nextEventKey, true);
     }

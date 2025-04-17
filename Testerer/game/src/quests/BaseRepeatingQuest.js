@@ -208,8 +208,6 @@ export class BaseRepeatingQuest extends BaseEvent {
       });
       // Removed direct call to set "mirrorQuestReady"; universal active quest state is managed externally.
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
-    // чтобы canStartQuest больше не видел этот квест активным
-    StateManager.remove("activeQuestKey");
         this.app.viewManager.setPostButtonEnabled(true);
         console.log("[BaseRepeatingQuest] Post button enabled for next stage.");
       }

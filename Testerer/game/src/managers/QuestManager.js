@@ -218,5 +218,9 @@ export class QuestManager {
         }
       }
     });
+    // Обновляем кнопку Post после восстановления UI
+    if (this.app.ghostManager && typeof this.app.ghostManager.updatePostButtonState === 'function') {
+      this.app.ghostManager.updatePostButtonState();
+    }
   }
 }

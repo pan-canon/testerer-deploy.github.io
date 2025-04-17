@@ -110,6 +110,8 @@ export class App {
     this.loadAppState();
     await this.questManager.syncQuestState();
     this.questManager.restoreAllActiveQuests();
+    // Теперь, когда БД и квесты восстановлены, обновляем состояние Post-кнопки
+    this.ghostManager.updatePostButtonState();
 
     this.viewManager.showToggleCameraButton();
     this.viewManager.createTopCameraControls();

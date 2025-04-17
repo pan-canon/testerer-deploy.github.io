@@ -17,7 +17,7 @@ import { TemplateEngine } from '../utils/TemplateEngine.js';
  * All UI updates and DOM manipulations are centralized here.
  */
 export class ViewManager {
-  constructor(appInstance) {
+  constructor(appInstance = null) {
     this.app = appInstance;
     // --- Cache static UI elements from index.html ---
     this.controlsPanel = document.getElementById("controls-panel");
@@ -1140,17 +1140,17 @@ export class ViewManager {
     }
   }
 
-async loadEarlierDiaryPosts(step = 3) {
-  const displayed = this.diaryContainer.querySelectorAll('.diary-entry').length;
-  const all = await this.app.databaseManager.getDiaryEntries();
-  const nextChunk = all.slice(Math.max(0, all.length - displayed - step), all.length - displayed);
-  // Append **after** existing entries
-  nextChunk.reverse().forEach(async (item) => {
-    const html = await TemplateEngine.renderFile(
-      "./src/templates/diaryentry_screen-template.html",
-      item
-    );
-    this.diaryContainer.insertAdjacentHTML("beforeend", html);
-  });
-}
+  async loadEarlierDiaryPosts(step = 3) {
+    const displayed = this.diaryContainer.querySelectorAll('.diary-entry').length;
+    const all = await this.app.databaseManager.getDiaryEntries();
+    const nextChunk = all.slice(Math.max(0, all.length - displayed - step), all.length - displayed);
+    // Append **after** existing entries
+    nextChunk.reverse().forEach(async (item) => {
+      const html = await TemplateEngine.renderFile(
+        "./src/templates/diaryentry_screen-template.html",
+        item
+      );
+      this.diaryContainer.insertAdjacentHTML("beforeend", html);
+    });
+  }
 }

@@ -1127,13 +1127,16 @@ export class ViewManager {
    */
   async addSingleDiaryPost(entryData) {
     if (!this.diaryContainer) return;
-
-  // Построить абсолютный URL к шаблону
-  const templateUrl = `${this.getBasePath()}/src/templates/diaryentry_screen-template.html`;
-  const html = await TemplateEngine.renderFile(
-    templateUrl,
-    { ...entryData, imgTag }
-  );
+    // выстраиваем тег <img> или пустую строку
+    const imgTag = entryData.img
+    ? `<img src="${entryData.img}" alt="Diary image" data-animate-on-board="true" />`
+    : "";
+    // Построить абсолютный URL к шаблону
+    const templateUrl = `${this.getBasePath()}/src/templates/diaryentry_screen-template.html`;
+    const html = await TemplateEngine.renderFile(
+      templateUrl,
+      { ...entryData, imgTag }
+    );
 
     // prepend so newest on top
     this.diaryContainer.insertAdjacentHTML("afterbegin", html);

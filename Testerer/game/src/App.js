@@ -114,7 +114,7 @@ export class App {
     this.viewManager.showToggleCameraButton();
     // We call updateDiaryDisplay early in case user is on main screen,
     // but specifically for older profiles, we must wait for the template to load (see below).
-    this.eventManager.updateDiaryDisplay();
+    this.viewManager.loadLatestDiaryPosts();
     this.viewManager.createTopCameraControls();
 
     // Initialize the chat section for "support"

@@ -1081,7 +1081,8 @@ export class ViewManager {
 
       this.diaryContainer.innerHTML += rendered;
     });
-    }
+    /*console.log(\`[ViewManager] Diary updated with \${entries.length} entries.\`);*/
+  }
 
   /**
    * Loads and renders the latest `limit` diary posts, newest first.
@@ -1099,24 +1100,40 @@ export class ViewManager {
 
   /**
    * Inserts a single diary post without re‑rendering the whole list.
-   * @param {Object} entryData {text, img, timestamp, postClass}
+   * @param {Object} entryData { text, img, timestamp, postClass }
    */
   async addSingleDiaryPost(entryData) {
     if (!this.diaryContainer) return;
 
-    const imgTag = entryData.img
-      ? `<img src="${entryData.img}" alt="Diary image" data-animate-on-board="true" />`
+    // разбираем текст на до изображения и само изображение (если есть)
+    let textPart = entryData.text;
+    let imgSrc = "";
+    if (entryData.text.includes("data:image")) {
+      const idx = entryData.text.indexOf("data:image");
+      textPart = entryData.text.slice(0, idx).trim();
+      imgSrc = entryData.text.slice(idx).trim();
+    }
+
+    // строим тег <img> только если нашли base64
+    const imgTag = imgSrc
+      ? `<img src="${imgSrc}" alt="Diary image" />`
       : "";
 
+    // абсолютный URL к шаблону
     const templateUrl = `${this.getBasePath()}/src/templates/diaryentry_screen-template.html`;
+
+    // рендерим, подставляя разделённый текст и картинку
     const html = await TemplateEngine.renderFile(templateUrl, {
-      ...entryData,
-      imgTag
+      postClass: entryData.postClass,
+      text: textPart,
+      imgTag,
+      timestamp: entryData.timestamp
     });
 
-    // prepend so newest on top
+    // вставляем сверху
     this.diaryContainer.insertAdjacentHTML("afterbegin", html);
 
+    // запускаем анимацию печатания только для <p>
     const p = this.diaryContainer.querySelector(
       '.diary-entry:first-child p[data-animate-on-board="true"]'
     );

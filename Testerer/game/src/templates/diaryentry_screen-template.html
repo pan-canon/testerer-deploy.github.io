@@ -1,7 +1,8 @@
-<!-- Template: One diary entry -->
-<!-- If no image data is provided, pass an empty string for {{img}} and the helper {{imgDisplay}} will hide the tag -->
+<!-- diaryentry_screen-template.html -->
 <div class="diary-entry {{postClass}}">
+  <!-- text block for animation -->
   <p data-animate-on-board="true">{{text}}</p>
-  <img src="{{img}}" alt="Diary image" style="{{imgDisplay}}" />
+  <!-- image (empty src will be hidden via CSS) -->
+  <img src="{{img}}" alt="Diary Image" />
   <span class="diary-timestamp">{{timestamp}}</span>
 </div>

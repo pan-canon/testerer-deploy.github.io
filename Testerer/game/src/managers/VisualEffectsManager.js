@@ -331,45 +331,34 @@ export class VisualEffectsManager {
 
   /**
    * applyEffectsToNewElements
-   * ------------------------------------------------------------------
-   * Animates ONLY <p> tags that have  data-animate-on-board="true"
-   * inside the supplied root element list.
-   * Images or other elements are left untouched.
+   * Applies visual effects to newly added DOM elements.
+   * It iterates over the provided elements, checks for a data-attribute "data-animate-on-board",
+   * and, depending on the "data-animate-effect" attribute ("ghost" or "user", default "user"),
+   * triggers the corresponding text effect. After animation, the marker is removed.
    *
-   * @param {Iterable<HTMLElement>} newElements – root nodes just added to the DOM
+   * @param {Array<HTMLElement>} newElements - Array or NodeList of newly added DOM elements.
    */
+/**
+ * Applies visual effects only to <p data-animate-on-board="true"> elements.
+ * Does not clear or touch <img> or other nodes.
+ */
   applyEffectsToNewElements(newElements) {
-    /* Ensure we work with a real Array */
-    Array.from(newElements).forEach(root => {
-      /* Search strictly for <p> children marked for animation */
-      const paragraphs = root.querySelectorAll(
-        "p[data-animate-on-board='true']"
-      );
-
-      paragraphs.forEach(p => {
-        const effectType = p.dataset.animateEffect || "user";
-        const original   = p.textContent;   // store before clearing
-
-        /* Clear content so the typing effect starts from zero */
-        p.textContent = "";
-
-        /* Choose effect and run */
-        if (effectType === "ghost") {
-          this.triggerGhostTextEffect(
-            p,
-            original,
-            () => delete p.dataset.animateOnBoard,         // cleanup
-            this.effectConfig.ghostText
-          );
+    Array.from(newElements).forEach(elem => {
+      // only <p> with the flag
+      if (elem.tagName === 'P' && elem.dataset.animateOnBoard === 'true') {
+        const text = elem.textContent;
+        elem.textContent = ''; // clear text only
+        const effectType = elem.dataset.animateEffect || 'user';
+        if (effectType === 'ghost') {
+          this.triggerGhostTextEffect(elem, text, () => {
+            delete elem.dataset.animateOnBoard;
+          }, this.effectConfig.ghostText);
         } else {
-          this.triggerUserTextEffect(
-            p,
-            original,
-            () => delete p.dataset.animateOnBoard,         // cleanup
-            this.effectConfig.userText
-          );
+          this.triggerUserTextEffect(elem, text, () => {
+            delete elem.dataset.animateOnBoard;
+          }, this.effectConfig.userText);
         }
-      });
+      }
     });
   }
 }

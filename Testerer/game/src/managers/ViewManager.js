@@ -17,8 +17,10 @@ import { TemplateEngine } from '../utils/TemplateEngine.js';
  * All UI updates and DOM manipulations are centralized here.
  */
 export class ViewManager {
+  /**
+   * @param {App} appInstance  — reference to main application
+   */
   constructor(appInstance) {
-    /** Reference to root App instance */
     this.app = appInstance;
     // --- Cache static UI elements from index.html ---
     this.controlsPanel = document.getElementById("controls-panel");
@@ -30,10 +32,7 @@ export class ViewManager {
     this.resetDataBtn = document.getElementById("reset-data");
     this.exportProfileBtn = document.getElementById("export-profile-btn");
     this.updateBtn = document.getElementById("update-btn");
-    /** Diary lazy‑load state */
-    this._diaryPageSize  = 3;   // number of posts per chunk
-    this._diaryLoadedCount = 0; // how many posts are already on screen
-
+    
     // Initially, we assign the diaryContainer from the hidden placeholder
     this.diaryContainer = document.getElementById("diary");
 
@@ -205,9 +204,8 @@ export class ViewManager {
       if (diaryElem) {
         this.diaryContainer = diaryElem;
         console.log("[ViewManager] Updated diary container for main-screen.");
-
-        /* ↓ NEW: show only the latest posts, rest will be loaded on demand */
-        this.loadLatestDiaryPosts();
+        // Lazy‑load only the latest 3 posts
+        await this.loadLatestDiaryPosts();
       }
     }
 
@@ -1114,78 +1112,41 @@ export class ViewManager {
   }
 
   /**
-   * Render the last _diaryPageSize posts (resets pagination).
+   * Loads and displays the latest 3 diary entries.
    */
-  loadLatestDiaryPosts() {
-    if (!this.app || !this.app.databaseManager) {
-      console.error("[ViewManager] Cannot load diary – databaseManager missing.");
-      return;
+  async loadLatestDiaryPosts() {
+    // get all entries from DB
+    const allEntries = await this.app.databaseManager.getDiaryEntries();
+    // take last 3
+    const latestEntries = allEntries.slice(-3);
+    // clear container
+    this.diaryContainer.innerHTML = '';
+    // add each
+    for (const entryData of latestEntries) {
+      await this.addSingleDiaryPost(entryData);
     }
-    const all = this.app.databaseManager.getDiaryEntries();
-    if (!Array.isArray(all) || all.length === 0) {
-      this.renderDiary([], this.languageManager?.getLanguage() ?? "en", this.app.visualEffectsManager);
-      return;
-    }
-    this._diaryLoadedCount = Math.min(this._diaryPageSize, all.length);
-    const slice = all.slice(-this._diaryLoadedCount);          // newest N
-    this.renderDiary(slice, this.languageManager?.getLanguage() ?? "en", this.app.visualEffectsManager);
   }
 
   /**
-   * Append older posts by chunks of _diaryPageSize.
-   * Call when user requests earlier entries.
+   * Incrementally adds one diary entry without re-rendering old ones.
+   * @param {Object} entryData — { entry, postClass, timestamp }
    */
-  async loadPreviousDiaryPosts() {
-    if (!this.app || !this.app.databaseManager) return;
-
-    const all = this.app.databaseManager.getDiaryEntries();
-    if (this._diaryLoadedCount >= all.length) return;          // everything shown
-
-    const toAdd      = Math.min(this._diaryPageSize, all.length - this._diaryLoadedCount);
-    const startIndex = all.length - this._diaryLoadedCount - toAdd;
-    const slice      = all.slice(startIndex, startIndex + toAdd);
-
-    /* prepend to keep chronological order */
-    for (let i = slice.length - 1; i >= 0; i--) {
-      await this.addSingleDiaryPost(slice[i], true);
+  async addSingleDiaryPost(entryData) {
+    // determine data for template
+    const data = { postClass: entryData.postClass, timestamp: entryData.timestamp };
+    if (entryData.entry.includes('data:image')) {
+      const lines = entryData.entry.split('\n');
+      data.img = lines.find(l => l.trim().startsWith('data:image')).trim();
+      data.text = lines.filter(l => !l.trim().startsWith('data:image')).join('\n');
+    } else {
+      data.img = '';
+      data.text = entryData.entry;
     }
-    this._diaryLoadedCount += toAdd;
-  }
-
-  /**
-   * Insert a single diary post without full re‑render.
-   * @param {Object}  entryData – data of the entry (entry, postClass, timestamp, …)
-   * @param {Boolean} prepend   – if true, inserts at the top (for older items)
-   */
-  async addSingleDiaryPost(entryData, prepend = false) {
-    try {
-      const html = await TemplateEngine.renderFile(
-        "src/templates/diaryentry_screen-template.html",
-        entryData
-      );
-
-      if (!this.diaryContainer) {
-        console.error("[ViewManager] diaryContainer not set.");
-        return;
-      }
-
-      /* insert HTML */
-      this.diaryContainer.insertAdjacentHTML(
-        prepend ? "afterbegin" : "beforeend",
-        html
-      );
-
-      /* animate only the new <p> element */
-      const newRoot = prepend
-        ? this.diaryContainer.firstElementChild
-        : this.diaryContainer.lastElementChild;
-
-      const p = newRoot?.querySelector("p[data-animate-on-board='true']");
-      if (p && this.app?.visualEffectsManager) {
-        this.app.visualEffectsManager.applyEffectsToNewElements([p]);
-      }
-    } catch (err) {
-      ErrorManager.logError(err, "addSingleDiaryPost");
-    }
+    // build template URL
+    const tplUrl = `${this.getBasePath()}/src/templates/diaryentry_screen-template.html`;
+    // render HTML
+    const rendered = await TemplateEngine.renderFile(tplUrl, data);
+    // insert at end
+    this.diaryContainer.insertAdjacentHTML('beforeend', rendered);
   }
 }

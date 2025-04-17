@@ -1,10 +1,7 @@
+<!-- Template: One diary entry -->
+<!-- If no image data is provided, pass an empty string for {{img}} and the helper {{imgDisplay}} will hide the tag -->
 <div class="diary-entry {{postClass}}">
-  <!-- Text content that will be animated -->
   <p data-animate-on-board="true">{{text}}</p>
-  <!-- If an image is provided (base64 string starting with data:image), display it separately -->
-  {{#if img}}
-    <img src="{{img}}" alt="Diary Image" />
-  {{/if}}
-  <!-- Display the timestamp -->
+  <img src="{{img}}" alt="Diary image" style="{{imgDisplay}}" />
   <span class="diary-timestamp">{{timestamp}}</span>
 </div>

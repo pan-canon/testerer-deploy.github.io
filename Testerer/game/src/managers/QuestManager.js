@@ -1,3 +1,5 @@
+// File: src/managers/QuestManager.js
+
 import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
 import { loadGameEntitiesConfig } from '../utils/GameEntityLoader.js';
@@ -7,7 +9,6 @@ import { loadGameEntitiesConfig } from '../utils/GameEntityLoader.js';
  * 
  * Responsible for managing quest activation, state updates, and UI restoration.
  * It loads quest definitions dynamically from a unified JSON configuration.
- * Reactively synchronizes Post button on activeQuestKey and gameFinalized changes.
  */
 export class QuestManager {
   /**
@@ -23,12 +24,17 @@ export class QuestManager {
     loadGameEntitiesConfig()
       .then(async config => {
         for (const questCfg of config.quests) {
+          // Build dependency mapping.
           const dependencyMapping = {
-            eventManager: this.eventManager,
-            app: this.app
+            "eventManager": this.eventManager,
+            "app": this.app
           };
           const params = questCfg.dependencies.map(dep => dependencyMapping[dep]);
-          if (questCfg.config) params.push(questCfg.config);
+          // If quest-specific configuration exists, append it.
+          if (questCfg.config) {
+            params.push(questCfg.config);
+          }
+          // Dynamically import the quest class from ../quests/<ClassName>.js
           const modulePath = `../quests/${questCfg.className}.js`;
           try {
             const module = await import(modulePath);
@@ -36,46 +42,41 @@ export class QuestManager {
             if (!QuestClass) {
               ErrorManager.logError(
                 `Quest class "${questCfg.className}" is not exported from ${modulePath}.`,
-                'QuestManager'
+                "QuestManager"
               );
               continue;
             }
             const instance = new QuestClass(...params);
+            // Set the key as specified in the configuration.
             instance.key = questCfg.key;
             this.quests.push(instance);
           } catch (error) {
             ErrorManager.logError(
               `Failed to import quest class "${questCfg.className}" from ${modulePath}: ${error.message}`,
-              'QuestManager'
+              "QuestManager"
             );
           }
         }
-        console.log('Quests loaded from configuration:', this.quests.map(q => q.key));
+        console.log("Quests loaded from configuration:", this.quests.map(q => q.key));
       })
       .catch(error => {
-        ErrorManager.logError(
-          `Failed to load quests configuration: ${error.message}`,
-          'QuestManager'
-        );
+        ErrorManager.logError("Failed to load quests configuration: " + error.message, "QuestManager");
       });
 
     this.initCameraListeners();
 
-    // Restore UI state for repeating quest if present
-    if (StateManager.get('quest_state_repeating_quest')) {
-      console.log('[QuestManager] Detected saved state for repeating quest.');
+    // Restore UI state for the repeating quest if a saved state exists.
+    if (StateManager.get("quest_state_repeating_quest")) {
+      console.log("[QuestManager] Detected saved state for repeating quest.");
       this.restoreRepeatingQuestUI();
     }
-    // Restore camera and shoot button states
-    this.app.viewManager?.restoreCameraButtonState();
-    this.app.viewManager?.restoreShootButtonState();
-
-    // Subscribe reactively to changes in activeQuestKey and gameFinalized
-    StateManager.subscribe('activeQuestKey', () => this.syncQuestState());
-    StateManager.subscribe('gameFinalized', () => this.syncQuestState());
-
-    // Initial synchronization of Post button
-    this.syncQuestState();
+    if (this.app.viewManager && typeof this.app.viewManager.restoreCameraButtonState === 'function') {
+      this.app.viewManager.restoreCameraButtonState();
+    }
+    // *** Добавляем восcтановление для кнопки Shoot ***
+    if (this.app.viewManager && typeof this.app.viewManager.restoreShootButtonState === 'function') {
+      this.app.viewManager.restoreShootButtonState();
+    }
   }
 
   /**
@@ -84,24 +85,57 @@ export class QuestManager {
   initCameraListeners() {
     const cameraManager = this.app.cameraSectionManager;
     if (!cameraManager) return;
-    cameraManager.onVideoReady = () => console.log('[QuestManager] onVideoReady signal received.');
-    cameraManager.onCameraClosed = () => console.log('[QuestManager] onCameraClosed signal received.');
+    cameraManager.onVideoReady = () => {
+      console.log("[QuestManager] onVideoReady signal received.");
+    };
+    cameraManager.onCameraClosed = () => {
+      console.log("[QuestManager] onCameraClosed signal received.");
+    };
   }
 
   /**
-   * Synchronizes the Post button based on active quest and finalized state.
+   * Universal method to synchronize the state for a given quest.
+   * Uses the universal active quest key stored in StateManager.
+   * If the active quest key matches the provided questKey, the Post button is disabled;
+   * otherwise, the Post button is enabled.
+   * @param {string} questKey - The key of the quest to synchronize.
    */
-  syncQuestState() {
-    const gameFinalized = StateManager.get('gameFinalized') === 'true';
-    const activeKey = StateManager.get('activeQuestKey');
-    // Enable Post only if no active quest and not finalized
-    const enablePost = !gameFinalized && !activeKey;
-    this.app.viewManager?.setPostButtonEnabled(enablePost);
-    console.log(`[QuestManager] Post button ${enablePost ? 'enabled' : 'disabled'}`);
+  async syncQuestStateForQuest(questKey) {
+    // If the game is finalized, disable Post button.
+    if (StateManager.get("gameFinalized") === "true") {
+      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
+        this.app.viewManager.setPostButtonEnabled(false);
+      }
+      console.log(`[QuestManager.syncQuestStateForQuest] Game finalized; Post button disabled for quest "${questKey}".`);
+      return;
+    }
+    // Retrieve the universal active quest key.
+    const activeQuestKey = StateManager.get("activeQuestKey");
+    if (activeQuestKey && activeQuestKey === questKey) {
+      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
+        this.app.viewManager.setPostButtonEnabled(false);
+      }
+      console.log(`[QuestManager.syncQuestStateForQuest] Active quest "${questKey}" is in progress; Post button disabled.`);
+    } else {
+      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
+        this.app.viewManager.setPostButtonEnabled(true);
+      }
+      console.log(`[QuestManager.syncQuestStateForQuest] No active quest "${questKey}"; Post button enabled.`);
+    }
   }
 
   /**
-   * Finds and activates a quest by key, setting the universal activeQuestKey.
+   * Synchronizes the quest state for predefined quests.
+   */
+  async syncQuestState() {
+    for (const quest of this.quests) {
+      await this.syncQuestStateForQuest(quest.key);
+    }
+  }
+
+  /**
+   * Finds a quest by its key and activates it.
+   * After activation, updates the universal active quest key.
    * @param {string} key - The quest key.
    */
   async activateQuest(key) {
@@ -112,11 +146,14 @@ export class QuestManager {
     }
     console.log(`[QuestManager] Activating quest: ${key}`);
     await quest.activate();
-    StateManager.set('activeQuestKey', key);
+    // Update the universal active quest key.
+    this.app.ghostManager.activeQuestKey = key;
+    StateManager.set("activeQuestKey", key);
+    await this.syncQuestState();
   }
 
   /**
-   * Finishes a quest by key and clears the activeQuestKey.
+   * Finalizes a quest by calling its finish() method and updates the UI.
    * @param {string} key - The quest key.
    */
   async checkQuest(key) {
@@ -127,44 +164,63 @@ export class QuestManager {
     }
     console.log(`[QuestManager] Finishing quest: ${key}`);
     await quest.finish();
-    StateManager.remove('activeQuestKey');
+    await this.syncQuestState();
   }
 
   /**
-   * Saves quest progress to the database.
+   * Saves the quest progress to the database.
+   * @param {string} questKey - The quest key.
+   * @param {number} currentStage - The current stage.
+   * @param {number} totalStages - The total number of stages.
+   * @param {string} status - The quest status.
    */
   async updateQuestProgress(questKey, currentStage, totalStages, status) {
-    await this.app.databaseManager.saveQuestRecord({
+    const questData = {
       quest_key: questKey,
       current_stage: currentStage,
       total_stages: totalStages,
       status
-    });
-    console.log('[QuestManager] Quest progress updated:', questKey);
+    };
+    await this.app.databaseManager.saveQuestRecord(questData);
+    console.log("[QuestManager] Quest progress updated:", questData);
   }
 
   /**
    * Restores the UI for the repeating quest.
    */
   restoreRepeatingQuestUI() {
-    const repeatingQuest = this.quests.find(q => q.key === 'repeating_quest');
-    if (repeatingQuest?.restoreUI) {
-      console.log('[QuestManager] Restoring repeating quest UI...');
+    const repeatingQuest = this.quests.find(q => q.key === "repeating_quest");
+    if (repeatingQuest && typeof repeatingQuest.restoreUI === "function") {
+      console.log("[QuestManager] Restoring repeating quest UI...");
       repeatingQuest.restoreUI();
     }
   }
 
   /**
-   * Restores UI for all active quests on reload.
+   * Re-initializes UI for all active quests.
+   * For each quest, if a corresponding database record exists with active status,
+   * the quest's restoreUI method is called to reinitialize its UI.
    */
   restoreAllActiveQuests() {
-    console.log('[QuestManager] Restoring UI for all active quests...');
+    console.log("[QuestManager] Attempting to restore UI for all active quests...");
     this.quests.forEach(quest => {
       const record = this.app.databaseManager.getQuestRecord(quest.key);
-      if (record && (record.status === 'active' || (record.status === 'finished' && quest.currentStage <= quest.totalStages))) {
-        console.log(`[QuestManager] Restoring UI for quest "${quest.key}"...`);
-        quest.restoreUI?.();
+      if (
+        record &&
+        (record.status === "active" || (record.status === "finished" && quest.currentStage <= quest.totalStages)) &&
+        !quest.finished
+      ) {
+        console.log(`[QuestManager] Found active quest "${quest.key}". Restoring UI...`);
+        if (typeof quest.restoreUI === "function") {
+          quest.restoreUI();
+        } else {
+          console.log(`[QuestManager] Quest "${quest.key}" does not implement restoreUI().`);
+        }
       }
     });
+    // Обновляем кнопку Post после восстановления UI
+    if (this.app.ghostManager && typeof this.app.ghostManager.updatePostButtonState === 'function') {
+      this.app.ghostManager.updatePostButtonState();
+    }
   }
 }

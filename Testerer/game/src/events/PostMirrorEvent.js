@@ -1,4 +1,5 @@
 import { BaseEvent } from './BaseEvent.js';
+import { StateManager } from '../managers/StateManager.js';
 import { ErrorManager } from '../managers/ErrorManager.js';
 
 /**

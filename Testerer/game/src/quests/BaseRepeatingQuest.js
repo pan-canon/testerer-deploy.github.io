@@ -27,6 +27,9 @@ export class BaseRepeatingQuest extends BaseEvent {
     this.activated = false;
     this.finished = false;
 
+    // (Optional flag – not used further, can be removed if unnecessary)
+    this.finalRepeatingQuestCompleted = false;
+
     // Restore saved quest state from StateManager.
     this.loadState();
   }

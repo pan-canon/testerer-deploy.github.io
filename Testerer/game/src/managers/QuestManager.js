@@ -67,7 +67,7 @@ export class QuestManager {
     this.initCameraListeners();
 
     // Restore UI state for the repeating quest if a saved state exists.
-    if (StateManager.get("quest_state_repeating_quest")) {
+    if (StateManager.get(StateManager.KEYS.REPEATING_QUEST_STATE)) {
       console.log("[QuestManager] Detected saved state for repeating quest.");
       this.restoreRepeatingQuestUI();
     }

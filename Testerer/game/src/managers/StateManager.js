@@ -20,6 +20,7 @@ export class StateManager {
     CAMERA_OPEN: 'cameraOpen',
     ACTIVE_QUEST_KEY: 'activeQuestKey',
     WELCOME_DONE: 'welcomeDone',
+    REPEATING_QUEST_STATE: 'quest_state_repeating_quest',
     GAME_FINALIZED: 'gameFinalized'
   };
 

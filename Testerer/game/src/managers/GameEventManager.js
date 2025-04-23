@@ -10,6 +10,7 @@ import { loadGameEntitiesConfig } from '../utils/GameEntityLoader.js';
  * dependencies and keys) is defined entirely in the config file.
  *
  * NOTE: Sequential linking of events and quests is now handled by GhostManager and QuestManager.
+ * Reactive auto-launch of the welcome event upon registration completion is implemented.
  */
 export class GameEventManager {
   /**
@@ -29,13 +30,13 @@ export class GameEventManager {
         for (const eventCfg of config.events) {
           // Build dependency mapping.
           const dependencyMapping = {
-            "eventManager": this.eventManager,
-            "app": this.app,
-            "languageManager": this.languageManager
+            eventManager: this.eventManager,
+            app: this.app,
+            languageManager: this.languageManager
           };
           const params = eventCfg.dependencies.map(dep => dependencyMapping[dep]);
 
-          // Dynamically import the event class from ../events/<ClassName>.js
+          // Dynamically import the event class
           const modulePath = `../events/${eventCfg.className}.js`;
           try {
             const module = await import(modulePath);
@@ -43,26 +44,40 @@ export class GameEventManager {
             if (!EventClass) {
               ErrorManager.logError(
                 `Event class "${eventCfg.className}" is not exported from ${modulePath}.`,
-                "GameEventManager"
+                'GameEventManager'
               );
               continue;
             }
             const instance = new EventClass(...params);
-            // Set the key as specified in the config.
+            // Set the key as specified in the config
             instance.key = eventCfg.key;
             this.events.push(instance);
           } catch (error) {
             ErrorManager.logError(
               `Failed to import event class "${eventCfg.className}" from ${modulePath}: ${error.message}`,
-              "GameEventManager"
+              'GameEventManager'
             );
           }
         }
-        console.log("Game events loaded from configuration:", this.events.map(e => e.key));
+        console.log('Game events loaded from configuration:', this.events.map(e => e.key));
       })
       .catch(error => {
-        ErrorManager.logError("Failed to load events configuration: " + error.message, "GameEventManager");
+        ErrorManager.logError(
+          `Failed to load events configuration: ${error.message}`,
+          'GameEventManager'
+        );
       });
+
+    // Reactive auto-launch of welcome event after registration completes
+    StateManager.subscribe('registrationCompleted', (newVal, oldVal) => {
+      if (newVal === 'true' && oldVal !== 'true') {
+        this.autoLaunchWelcomeEvent();
+      }
+    });
+    // If already registered on init, schedule welcome event
+    if (StateManager.get('registrationCompleted') === 'true') {
+      this.autoLaunchWelcomeEvent();
+    }
   }
 
   /**
@@ -72,14 +87,17 @@ export class GameEventManager {
   async activateEvent(key) {
     let event = this.events.find(e => e.key === key);
     // Fallback for dynamic keys (e.g. "post_repeating_event_stage_X")
-    if (!event && key.startsWith("post_repeating_event")) {
-      event = this.events.find(e => e.key === "post_repeating_event");
+    if (!event && key.startsWith('post_repeating_event')) {
+      event = this.events.find(e => e.key === 'post_repeating_event');
     }
     if (event) {
       await event.activate(key);
       console.log(`Event '${key}' activated.`);
     } else {
-      ErrorManager.logError(`Event "${key}" not found in the list.`, "activateEvent");
+      ErrorManager.logError(
+        `Event "${key}" not found in the list.`,
+        'GameEventManager'
+      );
     }
   }
 
@@ -88,13 +106,13 @@ export class GameEventManager {
    * if the "welcomeDone" flag is not set.
    */
   async autoLaunchWelcomeEvent() {
-    if (StateManager.get("welcomeDone") === "true") {
-      console.log("Welcome event already completed; auto-launch skipped.");
+    if (StateManager.get('welcomeDone') === 'true') {
+      console.log('Welcome event already completed; auto-launch skipped.');
       return;
     }
-    console.log("Auto-launching welcome event in 5 seconds...");
+    console.log('Auto-launching welcome event in 5 seconds...');
     setTimeout(async () => {
-      await this.activateEvent("welcome");
+      await this.activateEvent('welcome');
     }, 5000);
   }
 }

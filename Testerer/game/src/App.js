@@ -72,6 +72,15 @@ export class App {
       sectionKey: 'support'
     });
 
+    // Reactive updates: Post and camera buttons
+    StateManager.subscribe('activeQuestKey', (newVal) => {
+      this.ghostManager.updatePostButtonState();
+      this.viewManager.setCameraButtonActive(!!newVal);
+    });
+    StateManager.subscribe('gameFinalized', () => {
+      this.ghostManager.updatePostButtonState();
+    });
+
     // Begin application initialization.
     this.init();
   }
@@ -93,7 +102,7 @@ export class App {
   loadAppState() {
     const savedGhostId = StateManager.get('currentGhostId');
     if (savedGhostId) {
-      this.ghostManager.setCurrentGhost(parseInt(savedGhostId));
+      this.ghostManager.setCurrentGhost(parseInt(savedGhostId, 10));
     } else {
       this.ghostManager.setCurrentGhost(1);
     }
@@ -110,8 +119,6 @@ export class App {
     this.loadAppState();
     await this.questManager.syncQuestState();
     this.questManager.restoreAllActiveQuests();
-    // Теперь, когда БД и квесты восстановлены, обновляем состояние Post-кнопки
-    this.ghostManager.updatePostButtonState();
 
     this.viewManager.showToggleCameraButton();
     this.viewManager.createTopCameraControls();
@@ -121,8 +128,7 @@ export class App {
     // Schedule support chat conversation to start after 5 seconds.
     this.chatManager.scheduleConversationStartIfInactive(5000);
 
-    // If a profile exists, switch to main screen (and only then re-call updateDiaryDisplay).
-    // IMPORTANT: Pass `this` as the third param so `ViewManager` can reference your main app instance.
+    // If a profile exists, switch to main screen
     if (await this.profileManager.isProfileSaved()) {
       const profile = await this.profileManager.getProfile();
       console.log("Profile found:", profile);
@@ -130,19 +136,15 @@ export class App {
       await this.viewManager.switchScreen('main-screen', 'main-buttons', this);
       this.viewManager.showToggleCameraButton();
 
-      // Читаем состояние из предыдущего сохранения
-      const postButtonDisabled = StateManager.get("postButtonDisabled") === "true";
+      const postButtonDisabled = StateManager.get('postButtonDisabled') === 'true';
       this.viewManager.setPostButtonEnabled(!postButtonDisabled);
 
       this.viewManager.updateProfileDisplay(profile);
       this.selfieData = profile.selfie;
 
-      // Render only the latest posts (lazy mode)
       await this.viewManager.loadLatestDiaryPosts();
     } else {
       console.log("Profile not found, showing landing screen.");
-
-      // ALSO pass `this` here. Without it, `app` will be undefined in `ViewManager`.
       await this.viewManager.switchScreen('landing-screen', 'landing-buttons', this);
     }
   }

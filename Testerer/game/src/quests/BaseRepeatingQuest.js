@@ -24,10 +24,8 @@ export class BaseRepeatingQuest extends BaseEvent {
     // Quest state
     this.totalStages = config.totalStages || 3;
     this.currentStage = 1;
+    this.activated = false; 
     this.finished = false;
-
-    // (Optional flag – not used further, can be removed if unnecessary)
-    this.finalRepeatingQuestCompleted = false;
 
     // Restore saved quest state from StateManager.
     this.loadState();

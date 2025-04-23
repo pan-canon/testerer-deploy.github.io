@@ -20,6 +20,8 @@ import { SequenceManager } from '../utils/SequenceManager.js';
  *    3. The quest key matches the expected next quest in the sequence.
  * - Auto-launch of the first event (e.g., "welcome") is performed if registration is complete.
  * - Reactive updates on activeQuestKey changes via pub/sub; manual updatePostButtonState calls removed.
+ * - On starting a quest the camera button is set to active,
+ *   and upon quest completion the active state (class) is removed.
  */
 export class GhostManager {
   /**
@@ -28,18 +30,18 @@ export class GhostManager {
    * @param {App} app - The main application instance.
    */
   constructor(currentSequenceIndex, profileManager, app) {
-    // Initialize state
+    // Sequence index and dependencies
     this.currentSequenceIndex = currentSequenceIndex;
     this.profileManager = profileManager;
     this.app = app;
 
-    // Active quest key persisted in StateManager
-    this.activeQuestKey = StateManager.get('activeQuestKey') || null;
+    // Persisted active quest key
+    this.activeQuestKey = StateManager.get(StateManager.KEYS.ACTIVE_QUEST_KEY) || null;
 
-    // Manager references (to be injected by App)
+    // Placeholder for GameEventManager injection
     this.eventManager = null;
 
-    // Ghost list setup
+    // Ghost list initialization
     this.ghosts = [];
     this.setupGhosts();
     this.currentGhostId = 1;
@@ -48,7 +50,7 @@ export class GhostManager {
     const currentGhost = this.getCurrentGhost();
     console.log(`Current active ghost: ${currentGhost ? currentGhost.name : 'not found'}`);
 
-    // Load sequence configuration
+    // Load unified config
     loadGameEntitiesConfig()
       .then(config => {
         this.sequenceManager = new SequenceManager(config.sequence);
@@ -56,13 +58,13 @@ export class GhostManager {
         this.sequenceManager.currentIndex = savedIndex;
         console.log(`Sequence configuration loaded. Current index: ${this.sequenceManager.currentIndex}`);
 
-        // Auto-launch first event if needed
+        // Auto-launch welcome event
         if (StateManager.get('registrationCompleted') === 'true' && StateManager.get('welcomeDone') !== 'true') {
           const firstEntry = this.sequenceManager.getCurrentEntry();
           if (firstEntry) {
             console.log(`Auto-launching initial event: ${firstEntry.eventKey}`);
             this.eventManager.activateEvent(firstEntry.eventKey);
-            StateManager.set('activeQuestKey', firstEntry.questKey);
+            StateManager.set(StateManager.KEYS.ACTIVE_QUEST_KEY, firstEntry.questKey);
           }
         }
       })
@@ -70,27 +72,27 @@ export class GhostManager {
         console.error('Error loading unified configuration:', error);
       });
 
-    // Subscribe to game and quest completion events
+    // Listen to global completions
     document.addEventListener('gameEventCompleted', e => this.onEventCompleted(e.detail));
     document.addEventListener('questCompleted', e => this.onQuestCompleted(e.detail));
 
-    // Reactive Post button updates on activeQuestKey changes
-    StateManager.subscribe('activeQuestKey', () => this.updatePostButtonState());
-    // Initial UI sync
+    // React to changes in activeQuestKey
+    StateManager.subscribe(StateManager.KEYS.ACTIVE_QUEST_KEY, () => this.updatePostButtonState());
+    // Initial Post button sync
     this.updatePostButtonState();
   }
 
-  /** Generates the list of ghosts. */
+  /** Generates the list of ghosts (only default for now). */
   setupGhosts() {
     this.ghosts = [{ id: 1, name: 'ghost 1', phenomenaCount: 3, isFinished: false }];
   }
 
-  /** Returns the active ghost. */
+  /** Returns the currently active ghost object. */
   getCurrentGhost() {
     return this.ghosts.find(g => g.id === this.currentGhostId);
   }
 
-  /** Sets and persists the current ghost. */
+  /** Sets and persists the current ghost by ID. */
   async setCurrentGhost(ghostId) {
     this.currentGhostId = ghostId;
     const ghost = this.getCurrentGhost();
@@ -114,7 +116,16 @@ export class GhostManager {
     }
   }
 
-  /** Triggers the next phenomenon for the ghost. */
+  /** Returns true if the current ghost is finished. */
+  isCurrentGhostFinished() {
+    const ghost = this.getCurrentGhost();
+    return ghost ? ghost.isFinished : false;
+  }
+
+  /**
+   * Triggers the next phenomenon in the chain.
+   * Adds a diary entry and updates progression.
+   */
   async triggerNextPhenomenon() {
     const ghost = this.getCurrentGhost();
     if (!ghost) return ErrorManager.logError('No ghost found.', 'triggerNextPhenomenon');
@@ -139,7 +150,7 @@ export class GhostManager {
     }
   }
 
-  /** Resets the ghost chain to initial state. */
+  /** Resets ghost chain and clears progress. */
   async resetGhostChain() {
     this.currentGhostId = 1;
     this.currentPhenomenonIndex = 0;
@@ -152,7 +163,7 @@ export class GhostManager {
     console.log('Ghost chain reset.');
   }
 
-  // ---------- Sequential Event & Quest API ----------
+  // ---------- Sequential Event & Quest Management ----------
 
   isNextInSequence(questKey) {
     return this.sequenceManager?.isNextQuest(questKey) || false;
@@ -162,32 +173,42 @@ export class GhostManager {
     return this.sequenceManager?.isNextEvent(eventKey) || false;
   }
 
+  /**
+   * Returns true if the quest can start:
+   * - No unfinished record exists.
+   * - No other active quest.
+   * - Matches next in sequence.
+   */
   canStartQuest(questKey) {
     const record = this.app.databaseManager.getQuestRecord(questKey);
     if (record && record.status !== 'finished') return false;
-    const activeKey = StateManager.get('activeQuestKey');
+    const activeKey = StateManager.get(StateManager.KEYS.ACTIVE_QUEST_KEY);
     if (activeKey && activeKey !== questKey) return false;
     if (!this.isNextInSequence(questKey)) return false;
     return true;
   }
 
-  /** Starts a quest and updates state reactively. */
+  /**
+   * Starts a quest reactively: updates StateManager and camera button.
+   */
   async startQuest(questKey) {
     if (!this.canStartQuest(questKey)) return;
     console.log(`Starting quest: ${questKey}`);
     await this.app.questManager.activateQuest(questKey);
-    StateManager.set('activeQuestKey', questKey);
+    StateManager.set(StateManager.KEYS.ACTIVE_QUEST_KEY, questKey);
     this.app.viewManager.setCameraButtonActive(true);
   }
 
-  /** Starts an event, optional follow-up. */
+  /**
+   * Starts an event; if not followup, checks sequence.
+   */
   async startEvent(eventKey, isFollowup = false) {
     if (!isFollowup && !this.isNextEvent(eventKey)) return;
     console.log(`Starting event: ${eventKey}`);
     await this.app.gameEventManager.activateEvent(eventKey);
   }
 
-  /** Updates Post button based on next quest availability. */
+  /** Updates the Post button based on next quest readiness. */
   updatePostButtonState() {
     const next = this.sequenceManager?.getCurrentEntry();
     const enabled = next ? this.canStartQuest(next.questKey) : false;
@@ -195,7 +216,7 @@ export class GhostManager {
     console.log(`[GhostManager] Post button enabled=${enabled}`);
   }
 
-  /** Handles Post button clicks. */
+  /** Handles Post button click without manual toggles. */
   async handlePostButtonClick() {
     this.app.viewManager.setPostButtonEnabled(false);
     const next = this.sequenceManager?.getCurrentEntry();
@@ -204,19 +225,21 @@ export class GhostManager {
     await this.startQuest(next.questKey);
   }
 
-  /** Increments sequence on event completion. */
+  /** Increments sequence if completed event matches next. */
   onEventCompleted(eventKey) {
     if (this.sequenceManager?.getCurrentEntry().nextEventKey === eventKey) {
       this.sequenceManager.increment();
       StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
-      console.log(`Sequence index now ${this.sequenceManager.currentIndex}`);
+      console.log(`Sequence index: ${this.sequenceManager.currentIndex}`);
     }
   }
 
-  /** Reacts to quest completion: clears active key and triggers next event. */
+  /**
+   * Clears active quest on completion and triggers subsequent events.
+   */
   async onQuestCompleted(questKey) {
     console.log(`Quest completed: ${questKey}`);
-    StateManager.remove('activeQuestKey');
+    StateManager.remove(StateManager.KEYS.ACTIVE_QUEST_KEY);
     this.app.viewManager.setCameraButtonActive(false);
 
     if (questKey === 'repeating_quest') {

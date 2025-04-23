@@ -39,7 +39,7 @@ export class GhostManager {
     this.app = app;
 
     // In-memory flag for the active quest key (persisted in StateManager).
-    this.activeQuestKey = StateManager.get("activeQuestKey") || null;
+    this.activeQuestKey = StateManager.getActiveQuestKey();
     this.questActive = !!this.activeQuestKey; // true if an active quest key is stored.
 
     // eventManager will be assigned externally (see App.js).
@@ -78,7 +78,8 @@ export class GhostManager {
         }
       })
       .catch(error => {
-        console.error("Error loading unified configuration:", error);
+        ErrorManager.logError(error, "GhostManager.loadConfig");
+        ErrorManager.showError("Failed to load game configuration");
       });
 
     // Subscribe to global events for completions.
@@ -239,7 +240,7 @@ export class GhostManager {
       return false;
     }
     // 2) Check if an active quest is already recorded.
-    const activeQuestKey = StateManager.get("activeQuestKey");
+    const activeQuestKey = StateManager.getActiveQuestKey();
     // Block if an active quest exists and it does not match the quest we're trying to start.
     if (activeQuestKey && activeQuestKey !== questKey) {
       console.warn(`Another quest "${activeQuestKey}" is already active, cannot start quest "${questKey}".`);
@@ -266,7 +267,7 @@ export class GhostManager {
     await this.app.questManager.activateQuest(questKey);
     // Update the active quest key universally.
     this.activeQuestKey = questKey;
-    StateManager.set("activeQuestKey", questKey);
+    StateManager.setActiveQuestKey(questKey);
     await this.app.questManager.syncQuestState();
     // When a quest starts, mark the camera button as active.
     this.app.viewManager.setCameraButtonActive(true);
@@ -354,7 +355,7 @@ export class GhostManager {
     console.log(`GhostManager: Quest completed with key: ${questKey}`);
     // Clear the active quest key.
     this.activeQuestKey = null;
-    StateManager.remove("activeQuestKey");
+    StateManager.setActiveQuestKey(null);
 
     // Update the Post button state after quest completion.
     this.updatePostButtonState();

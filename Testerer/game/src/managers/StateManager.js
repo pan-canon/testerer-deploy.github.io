@@ -9,12 +9,6 @@ import { ErrorManager } from './ErrorManager.js';
  *
  * Note: Values are stored as strings, so for objects or arrays use JSON.stringify() before setting,
  * and JSON.parse() when retrieving.
- *
- * Default keys:
- * - currentSequenceIndex: Index for the current sequence of events/quests.
- * - postButtonDisabled: Flag to disable/enable the "Post" button.
- * - cameraButtonActive: Flag indicating if the camera button is active.
- * - mirrorQuestReady: Flag indicating if the mirror quest is ready.
  */
 export class StateManager {
   // Define default keys as static constants for ease of use across the application.
@@ -22,7 +16,11 @@ export class StateManager {
     CURRENT_SEQUENCE_INDEX: 'currentSequenceIndex',
     POST_BUTTON_DISABLED: 'postButtonDisabled',
     CAMERA_BUTTON_ACTIVE: 'cameraButtonActive',
-    MIRROR_QUEST_READY: 'mirrorQuestReady'
+    MIRROR_QUEST_READY: 'mirrorQuestReady',
+    CAMERA_OPEN: 'cameraOpen',
+    ACTIVE_QUEST_KEY: 'activeQuestKey',
+    WELCOME_DONE: 'welcomeDone',
+    GAME_FINALIZED: 'gameFinalized'
   };
 
   /**
@@ -65,5 +63,57 @@ export class StateManager {
     } catch (error) {
       ErrorManager.logError(`StateManager.remove error for key "${key}": ${error}`, "StateManager.remove");
     }
+  }
+
+  /**
+   * Mark camera as open or closed.
+   * @param {boolean} isOpen
+   */
+  static setCameraOpen(isOpen) {
+    StateManager.set(StateManager.KEYS.CAMERA_OPEN, isOpen ? 'true' : 'false');
+  }
+
+  /**
+   * Check whether camera is currently open.
+   * @returns {boolean}
+   */
+  static isCameraOpen() {
+    return StateManager.get(StateManager.KEYS.CAMERA_OPEN) === 'true';
+  }
+
+  /**
+   * Store or clear the active quest key.
+   * @param {string|null} key
+   */
+  static setActiveQuestKey(key) {
+    if (key) {
+      StateManager.set(StateManager.KEYS.ACTIVE_QUEST_KEY, key);
+    } else {
+      StateManager.remove(StateManager.KEYS.ACTIVE_QUEST_KEY);
+    }
+  }
+
+  /**
+   * Retrieve the current active quest key, or null if none.
+   * @returns {string|null}
+   */
+  static getActiveQuestKey() {
+    return StateManager.get(StateManager.KEYS.ACTIVE_QUEST_KEY);
+  }
+
+  /**
+   * Return true if both the camera is open and a quest is active.
+   * @returns {boolean}
+   */
+  static canShoot() {
+    return StateManager.isCameraOpen() && !!StateManager.getActiveQuestKey();
+  }
+
+  /**
+   * Return true if no quest is active (i.e. user may press Post).
+   * @returns {boolean}
+   */
+  static canPost() {
+    return !StateManager.getActiveQuestKey();
   }
 }

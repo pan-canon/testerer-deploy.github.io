@@ -60,7 +60,8 @@ export class QuestManager {
         console.log("Quests loaded from configuration:", this.quests.map(q => q.key));
       })
       .catch(error => {
-        ErrorManager.logError("Failed to load quests configuration: " + error.message, "QuestManager");
+        ErrorManager.logError(error, "QuestManager.loadConfig");
+        ErrorManager.showError("Failed to load quests configuration");
       });
 
     this.initCameraListeners();
@@ -102,7 +103,7 @@ export class QuestManager {
    */
   async syncQuestStateForQuest(questKey) {
     // If the game is finalized, disable Post button.
-    if (StateManager.get("gameFinalized") === "true") {
+    if (StateManager.get(StateManager.KEYS.GAME_FINALIZED) === "true") {
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
         this.app.viewManager.setPostButtonEnabled(false);
       }
@@ -110,18 +111,9 @@ export class QuestManager {
       return;
     }
     // Retrieve the universal active quest key.
-    const activeQuestKey = StateManager.get("activeQuestKey");
-    if (activeQuestKey && activeQuestKey === questKey) {
-      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
-        this.app.viewManager.setPostButtonEnabled(false);
-      }
-      console.log(`[QuestManager.syncQuestStateForQuest] Active quest "${questKey}" is in progress; Post button disabled.`);
-    } else {
-      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === 'function') {
-        this.app.viewManager.setPostButtonEnabled(true);
-      }
-      console.log(`[QuestManager.syncQuestStateForQuest] No active quest "${questKey}"; Post button enabled.`);
-    }
+    const canPost = StateManager.canPost();
+    this.app.viewManager.setPostButtonEnabled(canPost);
+    console.log(`[QuestManager] Post button ${canPost ? "enabled" : "disabled"} for quest "${questKey}".`);
   }
 
   /**
@@ -141,14 +133,13 @@ export class QuestManager {
   async activateQuest(key) {
     const quest = this.quests.find(q => q.key === key);
     if (!quest) {
-      console.warn(`[QuestManager] Quest with key "${key}" not found.`);
+      ErrorManager.logError(`Quest "${key}" not found`, "QuestManager.activateQuest");
+      ErrorManager.showError(`Cannot activate quest "${key}"`);
       return;
     }
     console.log(`[QuestManager] Activating quest: ${key}`);
     await quest.activate();
-    // Update the universal active quest key.
-    this.app.ghostManager.activeQuestKey = key;
-    StateManager.set("activeQuestKey", key);
+    StateManager.setActiveQuestKey(key);
     await this.syncQuestState();
   }
 
@@ -159,7 +150,8 @@ export class QuestManager {
   async checkQuest(key) {
     const quest = this.quests.find(q => q.key === key);
     if (!quest) {
-      console.warn(`[QuestManager] Cannot check quest "${key}": not found.`);
+      ErrorManager.logError(`Quest "${key}" not found`, "QuestManager.checkQuest");
+      ErrorManager.showError(`Cannot finish quest "${key}"`);
       return;
     }
     console.log(`[QuestManager] Finishing quest: ${key}`);

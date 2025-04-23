@@ -61,7 +61,8 @@ export class GameEventManager {
         console.log("Game events loaded from configuration:", this.events.map(e => e.key));
       })
       .catch(error => {
-        ErrorManager.logError("Failed to load events configuration: " + error.message, "GameEventManager");
+        ErrorManager.logError(error, "GameEventManager.loadConfig");
+        ErrorManager.showError("Failed to load game events configuration");
       });
   }
 
@@ -79,7 +80,8 @@ export class GameEventManager {
       await event.activate(key);
       console.log(`Event '${key}' activated.`);
     } else {
-      ErrorManager.logError(`Event "${key}" not found in the list.`, "activateEvent");
+      ErrorManager.logError(`Event "${key}" not found`, "GameEventManager.activateEvent");
+      ErrorManager.showError(`Cannot activate event "${key}"`);
     }
   }
 
@@ -88,7 +90,7 @@ export class GameEventManager {
    * if the "welcomeDone" flag is not set.
    */
   async autoLaunchWelcomeEvent() {
-    if (StateManager.get("welcomeDone") === "true") {
+    if (StateManager.get(StateManager.KEYS.WELCOME_DONE) === "true") {
       console.log("Welcome event already completed; auto-launch skipped.");
       return;
     }

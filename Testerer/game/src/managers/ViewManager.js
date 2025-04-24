@@ -41,7 +41,7 @@ export class ViewManager {
     if (this.postBtn) {
       this.postBtn.disabled = true;
       // Use universal flag storage; initial state is disabled.
-      StateManager.set("postButtonDisabled", "true");
+      StateManager.set(StateManager.KEYS.POST_BUTTON_DISABLED, "true");
       console.log("[ViewManager] Post button disabled on initialization.");
     }
   }
@@ -478,14 +478,14 @@ export class ViewManager {
   setPostButtonEnabled(isEnabled) {
     const postBtn = document.getElementById("post-btn");
     if (postBtn) {
-      const gameFinalized = StateManager.get("gameFinalized") === "true";
+      const gameFinalized = StateManager.get(StateManager.KEYS.GAME_FINALIZED) === "true";
       if (gameFinalized) {
         postBtn.disabled = true;
-        StateManager.set("postButtonDisabled", "true");
+        StateManager.set(StateManager.KEYS.POST_BUTTON_DISABLED, "true");
         console.log("[ViewManager] Game finalized. Post button disabled.");
       } else {
         postBtn.disabled = !isEnabled;
-        StateManager.set("postButtonDisabled", isEnabled ? "false" : "true");
+        StateManager.set(StateManager.KEYS.POST_BUTTON_DISABLED, isEnabled ? "false" : "true");
         console.log(`[ViewManager] Post button set to ${isEnabled ? "enabled" : "disabled"}.`);
       }
     }
@@ -504,7 +504,7 @@ export class ViewManager {
         cameraBtn.classList.remove("active");
       }
       // Optionally, you might remove the old fixed key and rely on universal state instead.
-      StateManager.set("cameraButtonActive", JSON.stringify(isActive));
+      StateManager.set(StateManager.KEYS.CAMERA_BUTTON_ACTIVE, JSON.stringify(isActive));
       console.log(`[ViewManager] Camera button active state set to ${isActive}.`);
     }
   }
@@ -514,7 +514,7 @@ export class ViewManager {
    * Restores the camera button state based on the universal quest state ("activeQuestKey").
    */
   restoreCameraButtonState() {
-    const activeQuestKey = StateManager.get("activeQuestKey");
+    const activeQuestKey = StateManager.getActiveQuestKey();
     // If an active quest is present, assume camera button should be active.
     const isActive = activeQuestKey ? true : false;
     this.setCameraButtonActive(isActive);
@@ -536,7 +536,6 @@ export class ViewManager {
       } else {
         shootBtn.classList.remove("active");
       }
-      StateManager.set("shootButtonActive", JSON.stringify(isActive));
       console.log(`[ViewManager] Shoot button active state set to ${isActive}.`);
     } else {
       ErrorManager.logError("Shoot button not found.", "setShootButtonActive");
@@ -548,8 +547,7 @@ export class ViewManager {
    * Restores the Shoot button state based on the universal quest state ("activeQuestKey").
    */
   restoreShootButtonState() {
-    const activeQuestKey = StateManager.get("activeQuestKey");
-    const isActive = activeQuestKey ? true : false;
+    const isActive = StateManager.canShoot();
     this.setShootButtonActive(isActive);
     console.log("[ViewManager] Shoot button state restored using activeQuestKey:", isActive);
   }
@@ -904,8 +902,8 @@ export class ViewManager {
       this.switchScreen('main-screen', 'main-buttons', app);
       this.showToggleCameraButton();
       // Use universal activeQuestKey to determine Post button state.
-      const activeQuestKey = StateManager.get("activeQuestKey");
-      this.setPostButtonEnabled(!!activeQuestKey);
+      const activeQuestKey = StateManager.getActiveQuestKey();
+      this.setPostButtonEnabled(Boolean(activeQuestKey));
       app.profileManager.getProfile().then((profile) => {
         this.updateProfileDisplay(profile);
         app.selfieData = profile.selfie;

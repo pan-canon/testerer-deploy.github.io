@@ -107,7 +107,7 @@ export class StateManager {
    * @returns {boolean}
    */
   static canShoot() {
-    return StateManager.isCameraOpen() && !!StateManager.getActiveQuestKey();
+    return this.get(StateManager.KEYS.CAMERA_BUTTON_ACTIVE) === "true" && !!this.getActiveQuestKey();
   }
 
   /**

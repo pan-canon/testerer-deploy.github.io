@@ -36,7 +36,7 @@ export class FinalEvent extends BaseEvent {
     await this.addDiaryEntry(this.key, true);
 
     // Set the game as finalized.
-    StateManager.set("gameFinalized", "true");
+    StateManager.set(StateManager.KEYS.GAME_FINALIZED, "true");
 
     // Trigger the ghost fade-out effect.
     if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerGhostAppearanceEffect === "function") {
@@ -57,7 +57,7 @@ export class FinalEvent extends BaseEvent {
     }
 
     // Remove the universal active quest key to clear any remaining quest state.
-    StateManager.remove("activeQuestKey");
+    StateManager.setActiveQuestKey(null);
 
     // Notify the user that the scenario is finished.
     if (this.app.viewManager && typeof this.app.viewManager.showNotification === "function") {

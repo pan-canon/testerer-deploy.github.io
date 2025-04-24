@@ -37,7 +37,7 @@ export class BaseMirrorQuest extends BaseEvent {
   registerEvents() {
     document.addEventListener('cameraReady', () => {
       // Instead of checking a specific flag, check the universal "activeQuestKey"
-      if (StateManager.get("activeQuestKey") === this.key) {
+      if (StateManager.getActiveQuestKey() === this.key) {
         this.startCheckLoop();
       }
     });
@@ -233,7 +233,7 @@ export class BaseMirrorQuest extends BaseEvent {
    */
   async getCurrentQuestStatus() {
     const record = this.app.databaseManager.getQuestRecord(this.key);
-    const activeFlag = (StateManager.get("activeQuestKey") === this.key);
+    const activeFlag = (StateManager.getActiveQuestKey() === this.key);
     return {
       key: this.key,
       active: activeFlag,

@@ -29,7 +29,7 @@ export class WelcomeEvent extends BaseEvent {
 
   async activate() {
     // If the welcome event has already been completed, skip activation.
-    if (StateManager.get("welcomeDone") === "true") {
+    if (StateManager.get(StateManager.KEYS.WELCOME_DONE) === "true") {
       console.log("Welcome event already completed; skipping activation.");
       if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
         this.app.viewManager.setPostButtonEnabled(true);
@@ -69,7 +69,7 @@ export class WelcomeEvent extends BaseEvent {
     }
 
     // Mark the welcome event as completed.
-    StateManager.set("welcomeDone", "true");
+    StateManager.set(StateManager.KEYS.WELCOME_DONE, "true");
 
     // Dispatch an event to signal that the welcome event has completed.
     document.dispatchEvent(new CustomEvent("gameEventCompleted", { detail: this.key }));

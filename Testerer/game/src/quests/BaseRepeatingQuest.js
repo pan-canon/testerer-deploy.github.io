@@ -100,8 +100,6 @@ export class BaseRepeatingQuest extends BaseEvent {
       });
     }
     this.startCheckLoop();
-    StateManager.set("shootButtonActive", "true");
-    this.app.viewManager.restoreShootButtonState();
   }
 
   /**
@@ -279,7 +277,7 @@ export class BaseRepeatingQuest extends BaseEvent {
    */
   async getCurrentQuestStatus() {
     const record = this.app.databaseManager.getQuestRecord(this.key);
-    const active = (StateManager.get("activeQuestKey") === this.key);
+    const active = (StateManager.getActiveQuestKey() === this.key);
     return {
       key: this.key,
       active: active,

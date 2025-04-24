@@ -69,9 +69,9 @@ export class FinalQuest extends BaseEvent {
     await this.addDiaryEntry(`${this.key}_completed`, true);
     
     // Set the game as finalized.
-    StateManager.set("gameFinalized", "true");
+    StateManager.set(StateManager.KEYS.GAME_FINALIZED, "true");
     // Remove the universal active quest key to clear any lingering quest state.
-    StateManager.remove("activeQuestKey");
+    StateManager.setActiveQuestKey(null);
 
     if (this.app.ghostManager) {
       await this.app.ghostManager.finishCurrentGhost();

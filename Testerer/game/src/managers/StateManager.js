@@ -1,5 +1,5 @@
 import { ErrorManager } from './ErrorManager.js';
-import StateKeys from '../config/stateKeys.json' assert { type: 'json' };
+import StateKeys from '../config/stateKeys.js';
 
 /**
  * StateManager
@@ -12,7 +12,7 @@ import StateKeys from '../config/stateKeys.json' assert { type: 'json' };
  * and JSON.parse() when retrieving.
  */
 export class StateManager {
-  // Load all state-keys from external JSON config
+  // Load all state-keys from external JS module
   static KEYS = StateKeys;
 
   /**

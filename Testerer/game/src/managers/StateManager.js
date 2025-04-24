@@ -1,4 +1,5 @@
 import { ErrorManager } from './ErrorManager.js';
+import StateKeys from '../config/stateKeys.json' assert { type: 'json' };
 
 /**
  * StateManager
@@ -11,18 +12,8 @@ import { ErrorManager } from './ErrorManager.js';
  * and JSON.parse() when retrieving.
  */
 export class StateManager {
-  // Define default keys as static constants for ease of use across the application.
-  static KEYS = {
-    CURRENT_SEQUENCE_INDEX: 'currentSequenceIndex',
-    POST_BUTTON_DISABLED: 'postButtonDisabled',
-    CAMERA_BUTTON_ACTIVE: 'cameraButtonActive',
-    CAMERA_OPEN: 'cameraOpen',
-    ACTIVE_QUEST_KEY: 'activeQuestKey',
-    MIRROR_QUEST_READY: 'mirrorQuestReady',
-    WELCOME_DONE: 'welcomeDone',
-    REPEATING_QUEST_STATE: 'quest_state_repeating_quest',
-    GAME_FINALIZED: 'gameFinalized'
-  };
+  // Load all state-keys from external JSON config
+  static KEYS = StateKeys;
 
   /**
    * Retrieves the value associated with the specified key from localStorage.

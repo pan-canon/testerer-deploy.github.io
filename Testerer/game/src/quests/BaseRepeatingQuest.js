@@ -93,7 +93,7 @@ export class BaseRepeatingQuest extends BaseEvent {
   async activate() {
     console.log(`Activating repeating quest: ${this.key}`);
 
-    // 1) логим квест в дневник и БД
+    // 1) запишем в дневник и в БД
     await this.addDiaryEntry(this.key, true);
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
@@ -107,32 +107,18 @@ export class BaseRepeatingQuest extends BaseEvent {
       this.app.viewManager.setCameraButtonActive(true);
     }
 
-    // 3) открыть UI камеры + запустить поток
-    if (!this.app.isCameraOpen) {
-      console.log("[BaseRepeatingQuest] Opening camera for repeating quest.");
-      // переключаем в «камера»-вид
-      if (this.app.viewManager?.showCameraView) {
-        this.app.viewManager.showCameraView();
-      }
-      // стартуем физическую камеру
-      await this.app.cameraSectionManager.startCamera();
-      this.app.isCameraOpen = true;
-
-      // ждём реального «cameraReady»
-      await new Promise(resolve => {
-        const onCameraReady = () => {
-          document.removeEventListener("cameraReady", onCameraReady);
-          resolve();
-        };
-        document.addEventListener("cameraReady", onCameraReady);
-      });
-    }
-
-    // 4) теперь квест официально активирован
+    // 3) флажок что квест стартанул
     this.activated = true;
 
-    // 5) запускаем UI + AI-детекцию
-    this.startCheckLoop();
+    // 4) Ждём, пока пользователь сам откроет камеру…
+    if (this.app.isCameraOpen) {
+      this.startCheckLoop();
+    } else {
+      document.addEventListener("cameraReady", () => {
+        console.log("[BaseRepeatingQuest] cameraReady received — starting quest loop");
+        this.startCheckLoop();
+      }, { once: true });
+    }
   }
 
   /**

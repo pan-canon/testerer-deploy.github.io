@@ -46,7 +46,9 @@ export class BaseRepeatingQuest extends BaseEvent {
     // Pick the first item from the list as the current target
     this.currentTarget = this.remainingItems.length > 0 ? this.remainingItems[0] : null;
     console.log(`[BaseRepeatingQuest] Current detection target: ${this.currentTarget}`);
-    // ===============================================================
+
+    // subscribe to AI‐detection events and enable Shoot button when target is found
+    document.addEventListener("objectDetected", this.onObjectDetected.bind(this));
   }
 
   /**
@@ -122,6 +124,15 @@ export class BaseRepeatingQuest extends BaseEvent {
    * then awaits user action (via the shoot button).
    */
   startCheckLoop() {
+    // only start AI detection if camera is open and quest activated
+    if (this.app.isCameraOpen && !this.finished) {
+      console.log(`[BaseRepeatingQuest] Starting AI detection for target '${this.currentTarget}'.`);
+      if (this.app.cameraSectionManager && typeof this.app.cameraSectionManager.startAIDetection === 'function') {
+        this.app.cameraSectionManager.startAIDetection({ target: this.currentTarget });
+      }
+    }
+
+    // initialize UI for this quest stage (status text + disabled Shoot button)
     if (this.app.viewManager && typeof this.app.viewManager.startRepeatingQuestUI === 'function') {
       this.app.viewManager.startRepeatingQuestUI({
         statusElementId: this.statusElementId,
@@ -130,7 +141,7 @@ export class BaseRepeatingQuest extends BaseEvent {
         totalStages: this.totalStages,
         target: this.currentTarget,
         onShoot: () => this.finishStage(),
-        quest: this // Pass the current quest instance for status checking.
+        quest: this
       });
     } else {
       console.error("[BaseRepeatingQuest] ViewManager.startRepeatingQuestUI is not available.");
@@ -196,6 +207,12 @@ export class BaseRepeatingQuest extends BaseEvent {
    */
   async finishStage() {
     if (this.finished) return;
+
+    // stop AI detection as soon as user pressed Shoot
+    if (this.app.cameraSectionManager && typeof this.app.cameraSectionManager.stopAIDetection === 'function') {
+      this.app.cameraSectionManager.stopAIDetection();
+      console.log("[BaseRepeatingQuest] AI detection stopped after shoot.");
+    }
 
     if (this.app.viewManager && typeof this.app.viewManager.setShootButtonActive === 'function') {
       this.app.viewManager.setShootButtonActive(false);
@@ -322,5 +339,19 @@ export class BaseRepeatingQuest extends BaseEvent {
     const letters = name.replace(/[^A-Za-zА-Яа-яЁё]/g, '').split('');
     if (!letters.length) return '';
     return letters[Math.floor(Math.random() * letters.length)];
+  }
+
+  /**
+   * onObjectDetected – called when the AI model detects the current target.
+   * Enables the Shoot button in the UI.
+   */
+  onObjectDetected(event) {
+    const detectedClass = event.detail;
+    if (detectedClass === this.currentTarget && this.app.isCameraOpen) {
+      console.log(`[BaseRepeatingQuest] Detected '${detectedClass}', enabling Shoot button.`);
+      if (this.app.viewManager && typeof this.app.viewManager.setShootButtonActive === 'function') {
+        this.app.viewManager.setShootButtonActive(true);
+      }
+    }
   }
 }

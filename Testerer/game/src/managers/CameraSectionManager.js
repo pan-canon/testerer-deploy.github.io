@@ -277,7 +277,6 @@ export class CameraSectionManager {
   handleAIPredictions(predictions) {
     const target = this.currentDetectionConfig?.target;
     console.log(`[CameraSectionManager] handleAIPredictions(): looking for "${target}"`);
-    const target = this.currentDetectionConfig?.target;
     if (!target) return;
 
     for (const pred of predictions) {

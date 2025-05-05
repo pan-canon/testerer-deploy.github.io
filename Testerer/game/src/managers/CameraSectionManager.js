@@ -230,19 +230,20 @@ export class CameraSectionManager {
 
   /**
    * startAIDetection
-   * Loads the COCO-SSD model (if not already loaded) and starts periodic detection.
-   * Accepts an optional configuration object for dynamic detection modes.
-   * @param {Object} [config] - Detection configuration, e.g. { target: 'eran' }.
+   * Loads the COCO-SSD model if necessary and begins detection loop.
+   * Stores only the `target` property from config for quest logic.
+   * @param {{ target?: string }} config
    */
-  async startAIDetection(config = null) {
-    // Save current detection config for repeating quest logic.
-    this.currentDetectionConfig = config || this.generateDetectionConfig();
+  async startAIDetection(config = {}) {
+    // Save only the target for repeating quest logic.
+    this.currentDetectionConfig = { target: config.target || null };
+
     if (!this.aiModel) {
       try {
         this.aiModel = await cocoSsd.load();
         console.log("AI model loaded successfully.");
       } catch (error) {
-        ErrorManager.logError(error, "startAIDetection");
+        ErrorManager.logError(error, "CameraSectionManager.startAIDetection");
         return;
       }
     }
@@ -266,16 +267,22 @@ export class CameraSectionManager {
 
   /**
    * handleAIPredictions
-   * Processes the predictions from the AI detection.
-   * Here, for each prediction above a threshold, an animated corner frame is displayed.
-   * @param {Array} predictions - Array of prediction objects.
+   * Filters predictions by the current target and confidence,
+   * draws a frame and dispatches `objectDetected` when found.
+   * @param {Array<{class: string, score: number, bbox: number[]}>} predictions
    */
   handleAIPredictions(predictions) {
-    predictions.forEach(pred => {
-      if (pred.score > 0.6) {
+    const target = this.currentDetectionConfig?.target;
+    if (!target) return;
+
+    for (const pred of predictions) {
+      // Only process high-confidence hits for the current target
+      if (pred.score > 0.6 && pred.class === target) {
         this.animateCornerFrame(pred.bbox);
+        // Notify quest logic that the target was found
+        document.dispatchEvent(new CustomEvent("objectDetected", { detail: target }));
       }
-    });
+    }
   }
 
   /**

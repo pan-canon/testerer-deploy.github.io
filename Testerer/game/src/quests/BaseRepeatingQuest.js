@@ -2,6 +2,7 @@ import { BaseEvent } from '../events/BaseEvent.js';
 import { ImageUtils } from '../utils/ImageUtils.js';
 import { StateManager } from '../managers/StateManager.js';
 import { ErrorManager } from '../managers/ErrorManager.js';
+import { detectableItems } from '../config/detectableItems.js';
 
 /**
  * BaseRepeatingQuest – Base class for the repeating quest.
@@ -32,6 +33,20 @@ export class BaseRepeatingQuest extends BaseEvent {
 
     // Restore saved quest state from StateManager.
     this.loadState();
+
+    // ==== new: initialize remaining items and pick the currentTarget ====
+    // Restore the list of remaining items from StateManager or use the default array
+    const savedItems = StateManager.get('remainingItems');
+    this.remainingItems = savedItems
+      ? JSON.parse(savedItems)
+      : [...detectableItems];
+    // Save the remaining items list (if not already saved)
+    StateManager.set('remainingItems', JSON.stringify(this.remainingItems));
+
+    // Pick the first item from the list as the current target
+    this.currentTarget = this.remainingItems.length > 0 ? this.remainingItems[0] : null;
+    console.log(`[BaseRepeatingQuest] Current detection target: ${this.currentTarget}`);
+    // ===============================================================
   }
 
   /**
@@ -113,6 +128,7 @@ export class BaseRepeatingQuest extends BaseEvent {
         shootButtonId: this.shootButtonId,
         stage: this.currentStage,
         totalStages: this.totalStages,
+        target: this.currentTarget,
         onShoot: () => this.finishStage(),
         quest: this // Pass the current quest instance for status checking.
       });
@@ -195,6 +211,14 @@ export class BaseRepeatingQuest extends BaseEvent {
 
     this.currentStage++;
     this.saveState();
+
+    // Remove the processed item from remainingItems and persist for next cycles
+    if (this.currentTarget) {
+      this.remainingItems.shift();
+      StateManager.set('remainingItems', JSON.stringify(this.remainingItems));
+      this.currentTarget = this.remainingItems[0] || null;
+      console.log(`[BaseRepeatingQuest] Next detection target: ${this.currentTarget}`);
+    }
 
     if (this.currentStage <= this.totalStages) {
       // For intermediate stages, force the quest record to be "finished"

@@ -610,21 +610,33 @@ export class ViewManager {
     console.log("[ViewManager] Mirror quest UI stopped.");
   }
 
+  /**
+   * startRepeatingQuestUI
+   * Displays the current target item and stage, and enables the Shoot button.
+   * @param {{ statusElementId: string, shootButtonId: string, stage: number, totalStages: number, target?: string, onShoot: Function, quest?: Object }} options
+   */
   startRepeatingQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
     if (statusElem) {
+      // show target name and stage
       statusElem.style.display = "block";
-      statusElem.textContent = `Repeating quest – Stage ${options.stage} of ${options.totalStages}`;
-      console.log(`[ViewManager] Repeating quest UI started: Stage ${options.stage} of ${options.totalStages}`);
+      statusElem.textContent = options.target
+        ? `Find: ${options.target} — Stage ${options.stage} of ${options.totalStages}`
+        : `Repeating quest — Stage ${options.stage} of ${options.totalStages}`;
+      console.log(
+        `[ViewManager] Repeating quest UI started: target=${options.target}, stage=${options.stage}/${options.totalStages}`
+      );
     }
+
     const shootBtn = document.getElementById(options.shootButtonId);
     if (shootBtn) {
       shootBtn.style.display = "inline-block";
       this.setShootButtonActive(true);
       shootBtn.style.pointerEvents = "auto";
       shootBtn.onclick = () => {
+        // prevent click if quest already finished
         if (options.quest && options.quest.finished) {
-          console.log("[ViewManager] Quest is finished; Shoot button click ignored.");
+          console.log("[ViewManager] Quest is finished; ignoring Shoot click.");
           return;
         }
         this.setShootButtonActive(false);

@@ -92,9 +92,7 @@ export class BaseRepeatingQuest extends BaseEvent {
    */
   async activate() {
     console.log(`Activating repeating quest: ${this.key}`);
-    // Use unified method to log diary entry.
     await this.addDiaryEntry(this.key, true);
-    console.log(`[BaseRepeatingQuest] Repeating quest started with ${this.totalStages} stages`);
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
       status: "active",
@@ -106,8 +104,15 @@ export class BaseRepeatingQuest extends BaseEvent {
       this.app.viewManager.setCameraButtonActive(true);
     }
 
+    // NEW: open camera UI + start camera if not already open
     if (!this.app.isCameraOpen) {
-      console.log("[BaseRepeatingQuest] Camera is not open. Waiting for cameraReady event...");
+      console.log("[BaseRepeatingQuest] Opening camera for repeating quest.");
+      if (this.app.viewManager && typeof this.app.viewManager.showCameraView === "function") {
+        this.app.viewManager.showCameraView();
+      }
+      await this.app.cameraSectionManager.startCamera();
+      this.app.isCameraOpen = true;
+
       await new Promise(resolve => {
         const onCameraReady = () => {
           document.removeEventListener("cameraReady", onCameraReady);
@@ -116,6 +121,8 @@ export class BaseRepeatingQuest extends BaseEvent {
         document.addEventListener("cameraReady", onCameraReady);
       });
     }
+
+    // теперь, когда камера точно открыта, запускаем детекцию и UI
     this.startCheckLoop();
   }
 

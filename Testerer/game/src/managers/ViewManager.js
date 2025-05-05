@@ -546,9 +546,9 @@ export class ViewManager {
    * Restores the Shoot button state based on the universal quest state ("activeQuestKey").
    */
   restoreShootButtonState() {
-    const isActive = StateManager.canShoot();
-    this.setShootButtonActive(isActive);
-    console.log("[ViewManager] Shoot button state restored using activeQuestKey:", isActive);
+    // Always start with Shoot disabled on page load.
+    this.setShootButtonActive(false);
+    console.log("[ViewManager] Shoot button state reset to disabled on restore.");
   }
 
   setApartmentPlanNextButtonEnabled(isEnabled) {
@@ -924,9 +924,9 @@ export class ViewManager {
   toggleCameraView(app) {
     if (!app.isCameraOpen) {
       this.showCameraView();
-      app.cameraSectionManager.startCamera().then(() => {
-        app.isCameraOpen = true;
-      });
+      // Set flag immediately — чтобы при первом dispatch("cameraReady") оно уже было true
+      app.isCameraOpen = true;
+      app.cameraSectionManager.startCamera();
     } else {
       this.showDiaryView();
       app.cameraSectionManager.stopCamera();

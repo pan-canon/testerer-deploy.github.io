@@ -272,17 +272,22 @@ export class CameraSectionManager {
    * @param {Array<{class: string, score: number, bbox: number[]}>} predictions
    */
   handleAIPredictions(predictions) {
-    const target = this.currentDetectionConfig?.target;
-    if (!target) return;
-
-    for (const pred of predictions) {
-      // Only process high-confidence hits for the current target
-      if (pred.score > 0.6 && pred.class === target) {
+    predictions.forEach(pred => {
+      if (pred.score > 0.6) {
         this.animateCornerFrame(pred.bbox);
-        // Notify quest logic that the target was found
-        document.dispatchEvent(new CustomEvent("objectDetected", { detail: target }));
+
+        // ==== new: if this is the quest’s current target, enable Shoot ====
+        const target = this.currentDetectionConfig?.target;
+        if (target && pred.class === target) {
+          console.log(`[AI Detection] Found target: ${pred.class}`);
+          // enable the Shoot button now that we’ve detected it
+          this.app.viewManager.setShootButtonActive(true);
+          // optionally stop further detection
+          clearTimeout(this.aiDetectionTimer);
+        }
+        // ================================================================
       }
-    }
+    });
   }
 
   /**

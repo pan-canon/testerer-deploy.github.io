@@ -631,8 +631,8 @@ export class ViewManager {
     const shootBtn = document.getElementById(options.shootButtonId);
     if (shootBtn) {
       shootBtn.style.display = "inline-block";
-      this.setShootButtonActive(true);
-      shootBtn.style.pointerEvents = "auto";
+      this.setShootButtonActive(false);
+      shootBtn.style.pointerEvents = "none";
       shootBtn.onclick = () => {
         // prevent click if quest already finished
         if (options.quest && options.quest.finished) {

@@ -272,20 +272,22 @@ export class CameraSectionManager {
    * @param {Array<{class: string, score: number, bbox: number[]}>} predictions
    */
   handleAIPredictions(predictions) {
+    const target = this.currentDetectionConfig?.target;
+
     predictions.forEach(pred => {
       if (pred.score > 0.6) {
         this.animateCornerFrame(pred.bbox);
 
-        // ==== new: if this is the quest’s current target, enable Shoot ====
-        const target = this.currentDetectionConfig?.target;
+        // English comment: if detected class matches our target, enable Shoot
         if (target && pred.class === target) {
-          console.log(`[AI Detection] Found target: ${pred.class}`);
-          // enable the Shoot button now that we’ve detected it
+          console.log(`[AI] Detected target "${target}"`);
+
+          // English comment: enable Shoot button
           this.app.viewManager.setShootButtonActive(true);
-          // optionally stop further detection
+
+          // English comment: stop further AI polling to freeze UI state
           clearTimeout(this.aiDetectionTimer);
         }
-        // ================================================================
       }
     });
   }

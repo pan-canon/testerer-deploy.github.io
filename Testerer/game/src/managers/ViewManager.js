@@ -618,32 +618,30 @@ export class ViewManager {
   startRepeatingQuestUI(options) {
     const statusElem = document.getElementById(options.statusElementId);
     if (statusElem) {
-      // show target name and stage
-      statusElem.style.display = "block";
-      statusElem.textContent = options.target
-        ? `Find: ${options.target} — Stage ${options.stage} of ${options.totalStages}`
-        : `Repeating quest — Stage ${options.stage} of ${options.totalStages}`;
-      console.log(
-        `[ViewManager] Repeating quest UI started: target=${options.target}, stage=${options.stage}/${options.totalStages}`
-      );
+      statusElem.style.display = 'block';
+      statusElem.textContent = `Stage ${options.stage} of ${options.totalStages}: find "${options.quest.currentTarget}"`;
     }
 
     const shootBtn = document.getElementById(options.shootButtonId);
     if (shootBtn) {
-      shootBtn.style.display = "inline-block";
+      shootBtn.style.display = 'inline-block';
+      // English comment: disable Shoot by default until AI confirms detection
       this.setShootButtonActive(false);
-      shootBtn.style.pointerEvents = "none";
+      shootBtn.style.pointerEvents = 'none';
+
       shootBtn.onclick = () => {
-        // prevent click if quest already finished
+        // English comment: prevent click if quest already finished
         if (options.quest && options.quest.finished) {
           console.log("[ViewManager] Quest is finished; ignoring Shoot click.");
           return;
         }
+        // English comment: turn off again to avoid double clicks
         this.setShootButtonActive(false);
         if (typeof options.onShoot === "function") {
           options.onShoot();
         }
       };
+
       console.log("[ViewManager] Shoot button for repeating quest initialized.");
     } else {
       ErrorManager.logError("Shoot button not found in the DOM.", "startRepeatingQuestUI");

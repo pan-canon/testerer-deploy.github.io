@@ -237,6 +237,7 @@ export class CameraSectionManager {
   async startAIDetection(config = {}) {
     // Save only the target for repeating quest logic.
     this.currentDetectionConfig = { target: config.target || null };
+    console.log(`[CameraSectionManager] startAIDetection(): target = "${this.currentDetectionConfig.target}"`);
 
     if (!this.aiModel) {
       try {
@@ -255,9 +256,11 @@ export class CameraSectionManager {
    * Performs object detection on the current video frame and processes predictions.
    */
   async runAIDetection() {
+    console.log("[CameraSectionManager] runAIDetection() — beginning new detection cycle");
     if (!this.videoElement || this.videoElement.readyState < 2) return;
     try {
       const predictions = await this.aiModel.detect(this.videoElement);
+      console.log("[CameraSectionManager] predictions:", predictions);
       this.handleAIPredictions(predictions);
     } catch (error) {
       ErrorManager.logError(error, "runAIDetection");
@@ -273,11 +276,14 @@ export class CameraSectionManager {
    */
   handleAIPredictions(predictions) {
     const target = this.currentDetectionConfig?.target;
+    console.log(`[CameraSectionManager] handleAIPredictions(): looking for "${target}"`);
+    const target = this.currentDetectionConfig?.target;
     if (!target) return;
 
     for (const pred of predictions) {
       // Only process high-confidence hits for the current target
       if (pred.score > 0.6 && pred.class === target) {
+        console.log(`[CameraSectionManager] MATCH for "${target}" (score=${pred.score.toFixed(3)})`, pred.bbox);
         this.animateCornerFrame(pred.bbox);
         // Notify quest logic that the target was found
         document.dispatchEvent(new CustomEvent("objectDetected", { detail: target }));

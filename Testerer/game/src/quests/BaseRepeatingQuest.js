@@ -122,20 +122,20 @@ export class BaseRepeatingQuest extends BaseEvent {
    * then awaits user action (via the shoot button).
    */
   startCheckLoop() {
-    this.app.viewManager.startRepeatingQuestUI({
-      statusElementId: this.statusElementId,
-      shootButtonId: this.shootButtonId,
-      stage: this.currentStage,
-      totalStages: this.totalStages,
-      onShoot: () => this.finishStage(),
-      quest: this
-    });
-
-    // English comment: start AI detection for the current target
-    const camera = this.app.cameraSectionManager;
-    if (camera) {
-      camera.startAIDetection({ target: this.currentTarget });
+    if (this.app.viewManager && typeof this.app.viewManager.startRepeatingQuestUI === 'function') {
+      this.app.viewManager.startRepeatingQuestUI({
+        statusElementId: this.statusElementId,
+        shootButtonId: this.shootButtonId,
+        stage: this.currentStage,
+        totalStages: this.totalStages,
+        target: this.currentTarget,
+        onShoot: () => this.finishStage(),
+        quest: this // Pass the current quest instance for status checking.
+      });
+    } else {
+      console.error("[BaseRepeatingQuest] ViewManager.startRepeatingQuestUI is not available.");
     }
+    console.log("[BaseRepeatingQuest] Repeating quest UI updated. Awaiting user action to capture snapshot.");
   }
 
   /**

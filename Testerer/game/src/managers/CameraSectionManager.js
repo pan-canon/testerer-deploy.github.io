@@ -273,23 +273,16 @@ export class CameraSectionManager {
    */
   handleAIPredictions(predictions) {
     const target = this.currentDetectionConfig?.target;
+    if (!target) return;
 
-    predictions.forEach(pred => {
-      if (pred.score > 0.6) {
+    for (const pred of predictions) {
+      // Only process high-confidence hits for the current target
+      if (pred.score > 0.6 && pred.class === target) {
         this.animateCornerFrame(pred.bbox);
-
-        // English comment: if detected class matches our target, enable Shoot
-        if (target && pred.class === target) {
-          console.log(`[AI] Detected target "${target}"`);
-
-          // English comment: enable Shoot button
-          this.app.viewManager.setShootButtonActive(true);
-
-          // English comment: stop further AI polling to freeze UI state
-          clearTimeout(this.aiDetectionTimer);
-        }
+        // Notify quest logic that the target was found
+        document.dispatchEvent(new CustomEvent("objectDetected", { detail: target }));
       }
-    });
+    }
   }
 
   /**

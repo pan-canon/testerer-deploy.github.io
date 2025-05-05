@@ -443,13 +443,12 @@ export class ViewManager {
       diary.style.display = "none";
       this.globalCamera.style.display = "flex";
       if (this.toggleCameraBtn) this.toggleCameraBtn.style.display = 'none';
-      if (this.toggleDiaryBtn) this.toggleDiaryBtn.style.display = 'inline-block';
+      if (this.toggleDiaryBtn)  this.toggleDiaryBtn.style.display = 'inline-block';
       this.hidePostButton();
       const shootBtn = document.getElementById("btn_shoot");
       if (shootBtn) {
         shootBtn.style.display = "inline-block";
-        // Восстанавливаем состояние кнопки Shoot по активному квесту
-        this.restoreShootButtonState();
+        console.log("[ViewManager] Shoot button shown for camera view; quest UI will manage its enabled state.");
       }
       console.log("[ViewManager] Switched to camera view.");
     }

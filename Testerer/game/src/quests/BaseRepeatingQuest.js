@@ -92,6 +92,8 @@ export class BaseRepeatingQuest extends BaseEvent {
    */
   async activate() {
     console.log(`Activating repeating quest: ${this.key}`);
+
+    // 1) логим квест в дневник и БД
     await this.addDiaryEntry(this.key, true);
     await this.app.databaseManager.saveQuestRecord({
       quest_key: this.key,
@@ -100,19 +102,23 @@ export class BaseRepeatingQuest extends BaseEvent {
       total_stages: this.totalStages
     });
 
-    if (this.app.viewManager && typeof this.app.viewManager.setCameraButtonActive === 'function') {
+    // 2) визуально подсветить камеру-кнопку
+    if (this.app.viewManager?.setCameraButtonActive) {
       this.app.viewManager.setCameraButtonActive(true);
     }
 
-    // NEW: open camera UI + start camera if not already open
+    // 3) открыть UI камеры + запустить поток
     if (!this.app.isCameraOpen) {
       console.log("[BaseRepeatingQuest] Opening camera for repeating quest.");
-      if (this.app.viewManager && typeof this.app.viewManager.showCameraView === "function") {
+      // переключаем в «камера»-вид
+      if (this.app.viewManager?.showCameraView) {
         this.app.viewManager.showCameraView();
       }
+      // стартуем физическую камеру
       await this.app.cameraSectionManager.startCamera();
       this.app.isCameraOpen = true;
 
+      // ждём реального «cameraReady»
       await new Promise(resolve => {
         const onCameraReady = () => {
           document.removeEventListener("cameraReady", onCameraReady);
@@ -122,7 +128,10 @@ export class BaseRepeatingQuest extends BaseEvent {
       });
     }
 
-    // теперь, когда камера точно открыта, запускаем детекцию и UI
+    // 4) теперь квест официально активирован
+    this.activated = true;
+
+    // 5) запускаем UI + AI-детекцию
     this.startCheckLoop();
   }
 
@@ -131,24 +140,22 @@ export class BaseRepeatingQuest extends BaseEvent {
    * then awaits user action (via the shoot button).
    */
   startCheckLoop() {
-    // only start AI detection if camera is open and quest activated
-    if (this.app.isCameraOpen && !this.finished) {
+    // теперь запускаем детекцию ТОЛЬКО если камера открыта, квест активирован и он не завершён
+    if (this.app.isCameraOpen && this.activated && !this.finished) {
       console.log(`[BaseRepeatingQuest] Starting AI detection for target '${this.currentTarget}'.`);
-      if (this.app.cameraSectionManager && typeof this.app.cameraSectionManager.startAIDetection === 'function') {
-        this.app.cameraSectionManager.startAIDetection({ target: this.currentTarget });
-      }
+      this.app.cameraSectionManager?.startAIDetection?.({ target: this.currentTarget });
     }
 
-    // initialize UI for this quest stage (status text + disabled Shoot button)
-    if (this.app.viewManager && typeof this.app.viewManager.startRepeatingQuestUI === 'function') {
+    // далее — инициализируем UI (статус + disabled Shoot)
+    if (this.app.viewManager?.startRepeatingQuestUI) {
       this.app.viewManager.startRepeatingQuestUI({
         statusElementId: this.statusElementId,
-        shootButtonId: this.shootButtonId,
-        stage: this.currentStage,
-        totalStages: this.totalStages,
-        target: this.currentTarget,
-        onShoot: () => this.finishStage(),
-        quest: this
+        shootButtonId:    this.shootButtonId,
+        stage:            this.currentStage,
+        totalStages:      this.totalStages,
+        target:           this.currentTarget,
+        onShoot:          () => this.finishStage(),
+        quest:            this
       });
     } else {
       console.error("[BaseRepeatingQuest] ViewManager.startRepeatingQuestUI is not available.");

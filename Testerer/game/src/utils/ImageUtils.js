@@ -68,43 +68,6 @@ export class ImageUtils {
   }
 
   /**
-   * Compares two face images using AI via face-api.js.
-   * Loads models from "/models" if not already loaded.
-   * @param {string} imgBase64_1 Base64 string of the first image.
-   * @param {string} imgBase64_2 Base64 string of the second image.
-   * @returns {Promise<number|null>} Euclidean distance or null if a face is not detected.
-   */
-  static async compareFacesUsingAI(imgBase64_1, imgBase64_2) {
-    const loadImage = (base64) => new Promise((resolve, reject) => {
-      const img = new Image();
-      img.src = base64;
-      img.onload = () => resolve(img);
-      img.onerror = (err) => reject(err);
-    });
-    try {
-      const image1 = await loadImage(imgBase64_1);
-      const image2 = await loadImage(imgBase64_2);
-      if (!faceapi.nets.faceRecognitionNet.params) {
-        await Promise.all([
-          faceapi.nets.ssdMobilenetv1.loadFromUri('/models'),
-          faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
-          faceapi.nets.faceRecognitionNet.loadFromUri('/models')
-        ]);
-      }
-      const detection1 = await faceapi.detectSingleFace(image1).withFaceLandmarks().withFaceDescriptor();
-      const detection2 = await faceapi.detectSingleFace(image2).withFaceLandmarks().withFaceDescriptor();
-      if (!detection1 || !detection2) {
-        console.error("Face not detected in one or both images.");
-        return null;
-      }
-      return faceapi.euclideanDistance(detection1.descriptor, detection2.descriptor);
-    } catch (error) {
-      console.error("Error comparing faces:", error);
-      return null;
-    }
-  }
-
-  /**
    * applyFilterToCanvas
    * Applies a filter effect to a canvas and returns a new data URL.
    * For example, for 'nightVision' the image brightness/contrast can be adjusted.

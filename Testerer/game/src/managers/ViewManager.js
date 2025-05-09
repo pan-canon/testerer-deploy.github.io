@@ -921,16 +921,25 @@ export class ViewManager {
     });
   }
 
+  /**
+   * toggleCameraView
+   * Switches between camera view and diary view, and persists the camera-open state.
+   */
   toggleCameraView(app) {
     if (!app.isCameraOpen) {
       this.showCameraView();
-      // Set flag immediately — чтобы при первом dispatch("cameraReady") оно уже было true
+      // Mark camera as open in memory and in persistent state
       app.isCameraOpen = true;
+      StateManager.setCameraOpen(true);
       app.cameraSectionManager.startCamera();
+      console.log("Camera opened and state saved.");
     } else {
       this.showDiaryView();
       app.cameraSectionManager.stopCamera();
+      // Mark camera as closed in memory and in persistent state
       app.isCameraOpen = false;
+      StateManager.setCameraOpen(false);
+      console.log("Camera closed and state saved.");
     }
   }
 

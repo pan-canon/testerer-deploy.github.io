@@ -177,7 +177,7 @@ export class BaseRepeatingQuest extends BaseEvent {
       console.log("[BaseRepeatingQuest] Quest not activated locally; setting activated=true based on DB record.");
       this.activated = true;
     }
-    
+
     // Function to restore UI state.
     const restoreButtonState = () => {
       // Переинициализируем UI: статусы, статус-бар и запустим детекцию,

@@ -106,13 +106,9 @@ export class App {
   async init() {
     await this.databaseManager.initDatabasePromise;
     console.log("Database initialization complete.");
-
     this.loadAppState();
     await this.questManager.syncQuestState();
     this.questManager.restoreAllActiveQuests();
-    // После восстановления квестов — один раз обновляем Post-кнопку
-    this.ghostManager.updatePostButtonState();
-
     // Если перед перезагрузкой камера помечена как активная — просто подсветим кнопку,
     // но НЕ будем её автоматически открывать и не запускать getUserMedia.
     if (StateManager.isCameraOpen()) {

@@ -110,15 +110,15 @@ export class App {
     this.loadAppState();
     await this.questManager.syncQuestState();
     this.questManager.restoreAllActiveQuests();
-    // Restore camera if it was open before page reload
-    if (StateManager.isCameraOpen()) {
-      this.isCameraOpen = true;
-      this.viewManager.showCameraView();
-      await this.cameraSectionManager.startCamera();
-      console.log("Camera restored after reload based on saved state.");
-    }
-    // Теперь, когда БД и квесты восстановлены, обновляем состояние Post-кнопки
+    // После восстановления квестов — один раз обновляем Post-кнопку
     this.ghostManager.updatePostButtonState();
+
+    // Если перед перезагрузкой камера помечена как активная — просто подсветим кнопку,
+    // но НЕ будем её автоматически открывать и не запускать getUserMedia.
+    if (StateManager.isCameraOpen()) {
+      this.viewManager.setCameraButtonActive(true);
+      console.log("Camera button active state restored based on saved state.");
+    }
 
     this.viewManager.showToggleCameraButton();
     this.viewManager.createTopCameraControls();

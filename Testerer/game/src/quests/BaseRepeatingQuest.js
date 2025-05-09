@@ -180,13 +180,10 @@ export class BaseRepeatingQuest extends BaseEvent {
     
     // Function to restore UI state.
     const restoreButtonState = () => {
-      this.startCheckLoop(); // This will reinitialize the repeating quest UI via ViewManager.
-      if (this.currentStage <= this.totalStages && this.app.isCameraOpen) {
-        if (this.app.viewManager && typeof this.app.viewManager.setShootButtonActive === 'function') {
-          this.app.viewManager.setShootButtonActive(true);
-          console.log("[BaseRepeatingQuest] Shoot button state restored as active.");
-        }
-      }
+      // Переинициализируем UI: статусы, статус-бар и запустим детекцию,
+      // но кнопку “Shoot” оставляем выключенной до фактической objectDetected().
+      this.startCheckLoop();
+      console.log("[BaseRepeatingQuest] UI restored; shoot button will be enabled upon detection.");
     };
 
     // If the camera is not open yet, wait for the "cameraReady" event.

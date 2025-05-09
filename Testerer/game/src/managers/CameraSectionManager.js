@@ -90,16 +90,24 @@ export class CameraSectionManager {
         return;
       }
       this.videoElement.srcObject = this.stream;
-      
-      this.videoElement.addEventListener("loadedmetadata", () => {
-        console.log("loadedmetadata: Video stream is ready");
+
+      // Если метаданные уже загружены (быстрый F5), запускаем сразу
+      if (this.videoElement.readyState >= 2) {
+        console.log("Video metadata already ready; dispatching cameraReady immediately");
         if (typeof this.onVideoReady === "function") {
           this.onVideoReady();
         }
-        // Dispatch the custom "cameraReady" event.
-        const event = new CustomEvent("cameraReady");
-        document.dispatchEvent(event);
-      }, { once: true });
+        document.dispatchEvent(new CustomEvent("cameraReady"));
+      } else {
+        // Иначе ждём обычный loadedmetadata
+        this.videoElement.addEventListener("loadedmetadata", () => {
+          console.log("loadedmetadata: Video stream is ready");
+          if (typeof this.onVideoReady === "function") {
+            this.onVideoReady();
+          }
+          document.dispatchEvent(new CustomEvent("cameraReady"));
+        }, { once: true });
+      }
     } catch (error) {
       ErrorManager.logError(error, "startCamera");
     }

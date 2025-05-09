@@ -192,6 +192,19 @@ export class BaseRepeatingQuest extends BaseEvent {
     } else {
       restoreButtonState();
     }
+
+    // Если камера была открыта и videoElement уже готов,
+    // сразу запускаем восстановление (на случай, если loadedmetadata уже случился).
+    const video = this.app.cameraSectionManager.videoElement;
+    if (
+      StateManager.isCameraOpen() &&
+      video &&
+      video.srcObject &&
+      video.readyState >= 2
+    ) {
+      console.log("[BaseRepeatingQuest] videoElement.readyState >= 2 — сразу восстанавливаем детекцию");
+      restoreButtonState();
+    }
   }
 
   /**

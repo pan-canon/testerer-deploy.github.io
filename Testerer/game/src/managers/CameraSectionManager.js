@@ -336,14 +336,13 @@ export class CameraSectionManager {
 
   /**
    * generateDetectionConfig
-   * Generates a random detection configuration for the repeating quest.
-   * For example, chooses a random target from a set.
-   * @returns {Object} Configuration object.
+   * Chooses a random target from the centralized detectableItems list.
+   * @returns {{ target: string }}
    */
   generateDetectionConfig() {
-    const targets = ['eran', 'objectB', 'objectC'];
-    const randomTarget = targets[Math.floor(Math.random() * targets.length)];
-    console.log(`Detection config generated: target = ${randomTarget}`);
-    return { detectionActive: true, target: randomTarget };
+    const randomIndex = Math.floor(Math.random() * detectableItems.length);
+    const randomTarget = detectableItems[randomIndex];
+    console.log(`[CameraSectionManager] Detection config generated: target = "${randomTarget}"`);
+    return { target: randomTarget };
   }
 }

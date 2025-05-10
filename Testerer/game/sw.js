@@ -4,7 +4,7 @@ const BASE_PATH = self.location.hostname.includes("github.io")
   ? "/testerer-deploy.github.io/Testerer/game"
   : "";
 
-const CACHE_VERSION = 'v8'; // bump this on each release
+const CACHE_VERSION = 'v9'; // bump this on each release
 const CACHE_NAME    = `game-cache-${CACHE_VERSION}`;
 
 const urlsToCache = [

@@ -110,6 +110,12 @@ export class BaseRepeatingQuest extends BaseEvent {
     // 3) флажок что квест стартанул
     this.activated = true;
 
+    // ensure detection loop starts when camera is already open
+    if (this.app.isCameraOpen) {
+      console.log("[BaseRepeatingQuest] Camera is open on restore; starting detection.");
+      this.startCheckLoop();
+    }
+
     // 4) Ждём, пока пользователь сам откроет камеру…
     if (this.app.isCameraOpen) {
       this.startCheckLoop();

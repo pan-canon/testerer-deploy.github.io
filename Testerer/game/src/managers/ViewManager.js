@@ -930,6 +930,13 @@ export class ViewManager {
     } else {
       this.showDiaryView();
       app.cameraSectionManager.stopCamera();
+
+      // stop any ongoing AI-detection when camera is closed
+      if (typeof app.cameraSectionManager.stopAIDetection === 'function') {
+        app.cameraSectionManager.stopAIDetection();
+        console.log("AI detection stopped on camera close.");
+      }
+
       // Mark camera as closed in memory and in persistent state
       app.isCameraOpen = false;
       StateManager.setCameraOpen(false);

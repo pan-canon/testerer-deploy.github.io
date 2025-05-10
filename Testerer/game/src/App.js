@@ -97,23 +97,14 @@ export class App {
     await this.databaseManager.initDatabasePromise;
     console.log("Database initialization complete.");
     this.loadAppState();
-
-    // If after reload camera was open — reopen it and trigger AI-detection loop
-    if (StateManager.isCameraOpen()) {
-      this.viewManager.setCameraButtonActive(true);
-      console.log("Camera button active state restored; reopening camera.");
-
-      // actually start the camera stream
-      await this.cameraSectionManager.startCamera();
-      this.isCameraOpen = true;
-
-      // after video is ready, dispatch cameraReady so that quests can hook into it
-      // the CameraSectionManager already does this on loadedmetadata
-      console.log("Camera reopened; awaiting cameraReady to restart detection.");
-    }
-
     await this.questManager.syncQuestState();
     this.questManager.restoreAllActiveQuests();
+    // Если перед перезагрузкой камера помечена как активная — просто подсветим кнопку,
+    // но НЕ будем её автоматически открывать и не запускать getUserMedia.
+    if (StateManager.isCameraOpen()) {
+      this.viewManager.setCameraButtonActive(true);
+      console.log("Camera button active state restored based on saved state.");
+    }
 
     this.viewManager.showToggleCameraButton();
     this.viewManager.createTopCameraControls();

@@ -14,15 +14,6 @@ import { detectableItems } from '../config/detectableItems.js';
 export class BaseRepeatingQuest extends BaseEvent {
   constructor(eventManager, appInstance, config = {}) {
     super(eventManager);
-
-    // Stop AI-detection whenever camera is closed
-    document.addEventListener("cameraClosed", () => {
-      if (this.app.cameraSectionManager && typeof this.app.cameraSectionManager.stopAIDetection === "function") {
-        this.app.cameraSectionManager.stopAIDetection();
-        console.log("[BaseRepeatingQuest] cameraClosed received — AI detection stopped");
-      }
-    });
-
     this.app = appInstance;
     this.key = config.key || "repeating_quest";
     this.doneKey = config.doneKey || (this.key + "_done");
@@ -118,11 +109,6 @@ export class BaseRepeatingQuest extends BaseEvent {
 
     // 3) флажок что квест стартанул
     this.activated = true;
-    // ensure detection loop starts when camera is already open
-    if (this.app.isCameraOpen) {
-      console.log("[BaseRepeatingQuest] Camera is open on restore; starting detection.");
-      this.startCheckLoop();
-    }
 
     // 4) Ждём, пока пользователь сам откроет камеру…
     if (this.app.isCameraOpen) {
@@ -171,34 +157,52 @@ export class BaseRepeatingQuest extends BaseEvent {
   restoreUI() {
     console.log("[BaseRepeatingQuest] Attempting to restore repeating quest UI...");
 
+    // Retrieve the DB record for this quest.
     const record = this.app.databaseManager.getQuestRecord(this.key);
+    
+    // If there is no record or the status is not "active", skip restoration.
     if (!record || record.status !== "active") {
-      console.log("[BaseRepeatingQuest] DB record not active; skipping UI restore.");
+      console.log("[BaseRepeatingQuest] DB record is not active; UI restoration skipped.");
       return;
     }
+    
+    // If the quest is finished locally, skip restoration.
     if (this.finished) {
-      console.log("[BaseRepeatingQuest] Quest already finished; skipping UI restore.");
+      console.log("[BaseRepeatingQuest] Quest is finished; UI restoration skipped.");
       return;
     }
+    
+    // If the quest was not activated locally (e.g. after a page reload), set it to active based on DB record.
     if (!this.activated) {
-      console.log("[BaseRepeatingQuest] Activating locally based on DB record.");
+      console.log("[BaseRepeatingQuest] Quest not activated locally; setting activated=true based on DB record.");
       this.activated = true;
     }
 
-    // Prepare to re-create UI and start detection when camera is ready
+    // Function to restore UI state.
     const restoreButtonState = () => {
-      console.log("[BaseRepeatingQuest] Restoring UI and starting detection loop");
+      // Переинициализируем UI: статусы, статус-бар и запустим детекцию,
+      // но кнопку “Shoot” оставляем выключенной до фактической objectDetected().
       this.startCheckLoop();
+      console.log("[BaseRepeatingQuest] UI restored; shoot button will be enabled upon detection.");
     };
 
-    // Always listen for cameraReady to trigger detection start
-    document.addEventListener("cameraReady", restoreButtonState, { once: true });
-    console.log("[BaseRepeatingQuest] Listening for cameraReady to restart detection");
+    // If the camera is not open yet, wait for the "cameraReady" event.
+    if (!this.app.isCameraOpen) {
+      document.addEventListener("cameraReady", restoreButtonState, { once: true });
+    } else {
+      restoreButtonState();
+    }
 
-    // In case video is already ready (e.g. rapid reload), trigger immediately
+    // Если камера была открыта и videoElement уже готов,
+    // сразу запускаем восстановление (на случай, если loadedmetadata уже случился).
     const video = this.app.cameraSectionManager.videoElement;
-    if (video && video.readyState >= 2) {
-      console.log("[BaseRepeatingQuest] video.readyState >=2; invoking restore now");
+    if (
+      StateManager.isCameraOpen() &&
+      video &&
+      video.srcObject &&
+      video.readyState >= 2
+    ) {
+      console.log("[BaseRepeatingQuest] videoElement.readyState >= 2 — сразу восстанавливаем детекцию");
       restoreButtonState();
     }
   }

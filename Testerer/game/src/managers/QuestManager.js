@@ -86,11 +86,21 @@ export class QuestManager {
   initCameraListeners() {
     const cameraManager = this.app.cameraSectionManager;
     if (!cameraManager) return;
-    cameraManager.onVideoReady = () => {
+
+    // При готовности видео — стартуем детекцию, только если активен наш квест
+    cameraManager.onVideoReady = async () => {
       console.log("[QuestManager] onVideoReady signal received.");
+      const activeQuestKey = StateManager.getActiveQuestKey();
+      if (activeQuestKey === "repeating_quest") {
+        const config = this.app.cameraSectionManager.generateDetectionConfig();
+        await this.app.cameraSectionManager.startAIDetection(config);
+      }
     };
+
+    // При закрытии камеры — сразу же останавливаем детекцию
     cameraManager.onCameraClosed = () => {
-      console.log("[QuestManager] onCameraClosed signal received.");
+      console.log("[QuestManager] onCameraClosed signal received. Stopping detection.");
+      this.app.cameraSectionManager.stopAIDetection();
     };
   }
 

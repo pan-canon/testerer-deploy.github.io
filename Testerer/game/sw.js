@@ -1,8 +1,13 @@
+// sw.js
 // Determine BASE_PATH in ServiceWorker context
-import { SW_VERSION, BASE_PATH } from './src/config/paths.js';
+const BASE_PATH = self.location.hostname.includes("github.io")
+  ? "/testerer-deploy.github.io/Testerer/game"
+  : "";
 
-const CACHE_NAME    = `game-cache-${SW_VERSION}`;
-const urlsToCache   = [
+const CACHE_VERSION = 'v7'; // bump this on each release
+const CACHE_NAME    = `game-cache-${CACHE_VERSION}`;
+
+const urlsToCache = [
   // Root
   `${BASE_PATH}/`,
   `${BASE_PATH}/index.html`,
@@ -106,10 +111,12 @@ const urlsToCache   = [
 ];
 
 self.addEventListener('install', event => {
-  // Ensure new SW activates immediately
+  // Force this SW to become active immediately
   self.skipWaiting();
+
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(urlsToCache))
   );
 });
 
@@ -131,17 +138,25 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('message', event => {
   const msg = event.data;
-  if (msg?.type === 'SKIP_WAITING') {
-    console.log('SW: skipWaiting received');
+  if (!msg) return;
+
+  if (msg.type === 'SKIP_WAITING') {
+    console.log('SW received SKIP_WAITING, activating immediately');
     self.skipWaiting();
     return;
   }
-  if (msg?.action === 'CLEAR_CACHE') {
-    console.log('SW: clear all caches');
+
+  if (msg.action === 'CLEAR_CACHE') {
+    console.log('SW received CLEAR_CACHE, deleting all caches');
     caches.keys()
       .then(keys => Promise.all(keys.map(key => caches.delete(key))))
-      .then(() => self.clients.matchAll())
-      .then(clients => clients.forEach(c => c.navigate(c.url)));
+      .then(() => {
+        console.log('All caches cleared; reloading clients');
+        return self.clients.matchAll();
+      })
+      .then(clients => {
+        clients.forEach(client => client.navigate(client.url));
+      });
   }
 });
 

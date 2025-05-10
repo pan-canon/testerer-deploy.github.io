@@ -28,6 +28,23 @@ export class CameraSectionManager {
   }
 
   /**
+   * preloadModel – Preloads the COCO-SSD model so that detection can start immediately later.
+   * Stores the loading promise to avoid double-loading.
+   */
+  async preloadModel() {
+    if (!this.modelPromise) {
+      console.log("[CameraSectionManager] Preloading AI model...");
+      this.modelPromise = cocoSsd.load({ modelUrl: COCO_SSD_MODEL });
+    }
+    try {
+      this.aiModel = await this.modelPromise;
+      console.log("[CameraSectionManager] AI model preloaded successfully.");
+    } catch (error) {
+      ErrorManager.logError(error, "CameraSectionManager.preloadModel");
+    }
+  }
+
+  /**
    * attachTo(containerId, options)
    * Attaches the video element to the specified container.
    * Creates the video element if it doesn't exist, applies style options,

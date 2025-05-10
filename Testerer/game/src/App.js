@@ -97,6 +97,8 @@ export class App {
     await this.databaseManager.initDatabasePromise;
     console.log("Database initialization complete.");
     this.loadAppState();
+    // Preload AI model before any camera usage
+    await this.cameraSectionManager.preloadModel();
     await this.questManager.syncQuestState();
     this.questManager.restoreAllActiveQuests();
     // Если перед перезагрузкой камера помечена как активная — просто подсветим кнопку,
@@ -137,6 +139,13 @@ export class App {
 
       // ALSO pass `this` here. Without it, `app` will be undefined in `ViewManager`.
       await this.viewManager.switchScreen('landing-screen', 'landing-buttons', this);
+    }
+
+    // In src/App.js, at the very end of init():
+    const preloader = document.getElementById('preloader');
+    if (preloader) {
+      preloader.style.display = 'none';
+      console.log("[App] Preloader hidden after AI model preload and app init.");
     }
   }
 }

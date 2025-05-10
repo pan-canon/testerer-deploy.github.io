@@ -89,19 +89,3 @@ Promise.all([
     });
   })
   .catch(err => console.error('Loader error:', err));
-
-// 5. Preloader fade-out after full load
-window.addEventListener('load', () => {
-  const preloader = document.getElementById('preloader');
-  if (!preloader) return;
-  preloader.style.opacity = '1';
-  const fade = setInterval(() => {
-    const current = parseFloat(preloader.style.opacity);
-    if (current > 0) {
-      preloader.style.opacity = (current - 0.1).toString();
-    } else {
-      clearInterval(fade);
-      preloader.style.display = 'none';
-    }
-  }, 50);
-});

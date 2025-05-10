@@ -1806,19 +1806,6 @@ export class CameraSectionManager {
   stopAIDetection() {
     clearTimeout(this.aiDetectionTimer);
   }
-
-  /**
-   * generateDetectionConfig
-   * Generates a random detection configuration for the repeating quest.
-   * For example, chooses a random target from a set.
-   * @returns {Object} Configuration object.
-   */
-  generateDetectionConfig() {
-    const targets = ['eran', 'objectB', 'objectC'];
-    const randomTarget = targets[Math.floor(Math.random() * targets.length)];
-    console.log(`Detection config generated: target = ${randomTarget}`);
-    return { detectionActive: true, target: randomTarget };
-  }
 }
 
 // File: src\managers\ChatManager.js
@@ -3920,17 +3907,17 @@ export class QuestManager {
     const cameraManager = this.app.cameraSectionManager;
     if (!cameraManager) return;
 
-    // При готовности видео — стартуем детекцию, только если активен наш квест
     cameraManager.onVideoReady = async () => {
       console.log("[QuestManager] onVideoReady signal received.");
-      const activeQuestKey = StateManager.getActiveQuestKey();
-      if (activeQuestKey === "repeating_quest") {
-        const config = this.app.cameraSectionManager.generateDetectionConfig();
+      if (StateManager.getActiveQuestKey() === "repeating_quest") {
+        // Получаем инстанс повторяющегося квеста
+        const repeatingQuest = this.quests.find(q => q.key === "repeating_quest");
+        // Генерируем конфиг прямо там
+        const config = repeatingQuest.generateDetectionConfig();
         await this.app.cameraSectionManager.startAIDetection(config);
       }
     };
 
-    // При закрытии камеры — сразу же останавливаем детекцию
     cameraManager.onCameraClosed = () => {
       console.log("[QuestManager] onCameraClosed signal received. Stopping detection.");
       this.app.cameraSectionManager.stopAIDetection();
@@ -6787,6 +6774,17 @@ export class BaseRepeatingQuest extends BaseEvent {
   }
 
   /**
+   * generateDetectionConfig
+   * Returns an object with current target for AI detection.
+   * @returns {{ target: string }}
+   */
+  generateDetectionConfig() {
+    // Use the quest’s currentTarget (set in constructor)
+    console.log(`[BaseRepeatingQuest] Providing detection target: ${this.currentTarget}`);
+    return { target: this.currentTarget };
+  }
+
+  /**
    * loadState – Restores the quest state from StateManager.
    */
   loadState() {
@@ -6871,12 +6869,12 @@ export class BaseRepeatingQuest extends BaseEvent {
     if (this.app.viewManager?.startRepeatingQuestUI) {
       this.app.viewManager.startRepeatingQuestUI({
         statusElementId: this.statusElementId,
-        shootButtonId:    this.shootButtonId,
-        stage:            this.currentStage,
-        totalStages:      this.totalStages,
-        target:           this.currentTarget,
-        onShoot:          () => this.finishStage(),
-        quest:            this
+        shootButtonId:   this.shootButtonId,
+        stage:           this.currentStage,
+        totalStages:     this.totalStages,
+        target:          this.currentTarget,
+        onShoot:         () => this.finishStage(),
+        quest:           this
       });
     } else {
       console.error("[BaseRepeatingQuest] ViewManager.startRepeatingQuestUI is not available.");
@@ -7621,7 +7619,7 @@ const BASE_PATH = self.location.hostname.includes("github.io")
   ? "/testerer-deploy.github.io/Testerer/game"
   : "";
 
-const CACHE_VERSION = 'v12'; // bump this on each release
+const CACHE_VERSION = 'v15'; // bump this on each release
 const CACHE_NAME    = `game-cache-${CACHE_VERSION}`;
 
 const urlsToCache = [

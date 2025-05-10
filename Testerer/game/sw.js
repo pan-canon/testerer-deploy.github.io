@@ -1,9 +1,5 @@
 // sw.js
 // Determine BASE_PATH in ServiceWorker context
-const BASE_PATH = self.location.hostname.includes("github.io")
-  ? "/testerer-deploy.github.io/Testerer/game"
-  : "";
-
 import { SW_VERSION, BASE_PATH } from './src/config/paths.js';
 
 const CACHE_NAME    = `game-cache-${SW_VERSION}`;

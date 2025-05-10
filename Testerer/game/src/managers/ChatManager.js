@@ -14,7 +14,6 @@ export class ChatManager {
    *  - sectionKey: (optional) unique identifier for the chat section.
    */
   constructor(options = {}) {
-    import { BASE_PATH } from '../config/paths.js';
     this.templateUrl = options.templateUrl || `${BASE_PATH}/src/templates/chat_template.html`;
     this.mode = options.mode || 'full';
     this.container = null; // DOM element for the chat section

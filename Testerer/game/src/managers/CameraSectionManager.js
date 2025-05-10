@@ -244,11 +244,6 @@ export class CameraSectionManager {
    * @param {{ target?: string }} config
    */
   async startAIDetection(config = {}) {
-    // Prevent overlapping detection loops
-    if (this.aiDetectionTimer) {
-      console.warn("[CameraSectionManager] AI detection already running; skipping start");
-      return;
-    }
     // Save only the target for repeating quest logic.
     this.currentDetectionConfig = { target: config.target || null };
     console.log(`[CameraSectionManager] startAIDetection(): target = "${this.currentDetectionConfig.target}"`);
@@ -337,7 +332,6 @@ export class CameraSectionManager {
    */
   stopAIDetection() {
     clearTimeout(this.aiDetectionTimer);
-    this.aiDetectionTimer = null;
   }
 
   /**

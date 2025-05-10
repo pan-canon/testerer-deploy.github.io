@@ -1,90 +1,108 @@
-/*import { DIContainer } from './src/container/DIContainer.js';
-const container = new DIContainer();
-const app = container.getApp();*/
 import { BASE_PATH, SQL_WASM_URL, TFJS_URL, COCO_SSD_URL } from './src/config/paths.js';
 import { App } from './src/App.js';
 
-// Load SQL.js
-const scriptSql = document.createElement('script');
-scriptSql.src    = SQL_WASM_URL;
-scriptSql.async  = false;  // сохранить порядок
-document.head.appendChild(scriptSql);
-
-// Load TensorFlow.js
-const scriptTf = document.createElement('script');
-scriptTf.src   = TFJS_URL;
-scriptTf.async = false;
-document.head.appendChild(scriptTf);
-
-// Load COCO-SSD
-const scriptCoco = document.createElement('script');
-scriptCoco.src   = COCO_SSD_URL;
-scriptCoco.async = false;
-document.head.appendChild(scriptCoco);
-
-// Wait until the DOM is fully loaded, then initialize the application.
-document.addEventListener("DOMContentLoaded", async () => {
-  // Create a new instance of the application.
-  const app = new App();
-
-  // Handle the beforeinstallprompt event for PWA installation.
-  let deferredPrompt;
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    const installBtn = document.getElementById("install-btn");
-    if (installBtn) {
-      installBtn.style.display = "block";
-    }
+// Function to dynamically load a script and return a Promise
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src     = src;
+    script.async   = false;           // preserve execution order
+    script.onload  = () => resolve(src);
+    script.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.appendChild(script);
   });
+}
 
-  // When the install button is clicked, prompt the user to install the PWA.
-  const installBtn = document.getElementById("install-btn");
-  if (installBtn) {
-    installBtn.addEventListener("click", async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log(`User response to the install prompt: ${outcome}`);
-        installBtn.style.display = "none";
-        deferredPrompt = null;
+// 1. Load SQL.js, TF.js and COCO-SSD in sequence before doing anything else
+Promise.all([
+  loadScript(SQL_WASM_URL),
+  loadScript(TFJS_URL),
+  loadScript(COCO_SSD_URL)
+])
+  .then(() => {
+    console.log('All external libraries loaded');
+
+    // 2. Wait for DOM, then initialize App and PWA logic
+    document.addEventListener('DOMContentLoaded', () => {
+      const app = new App();
+
+      // PWA installation prompt handling
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        deferredPrompt = e;
+        const btn = document.getElementById('install-btn');
+        if (btn) btn.style.display = 'block';
+      });
+
+      const installBtn = document.getElementById('install-btn');
+      if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+          if (!deferredPrompt) return;
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log(`User response to the install prompt: ${outcome}`);
+          installBtn.style.display = 'none';
+          deferredPrompt = null;
+        });
+      }
+
+      // 3. Service Worker registration with auto-update hooks
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register(`${BASE_PATH}/sw.js`, { type: 'module' })
+          .then(reg => {
+            console.log('Service Worker registered with scope:', reg.scope);
+
+            // If there's an update ready, tell it to skip waiting
+            if (reg.waiting) {
+              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+
+            // Listen for new SW installations
+            reg.addEventListener('updatefound', () => {
+              const newSW = reg.installing;
+              newSW.addEventListener('statechange', () => {
+                if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+                  newSW.postMessage({ type: 'SKIP_WAITING' });
+                }
+              });
+            });
+          })
+          .catch(err => console.error('Error during Service Worker registration:', err));
+
+        // When the new SW takes control, reload the page
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          console.log('New Service Worker activated, reloading page');
+          window.location.reload();
+        });
+      }
+
+      // 4. “Update” button clears caches via SW message
+      const updateBtn = document.getElementById('update-btn');
+      if (updateBtn) {
+        updateBtn.addEventListener('click', () => {
+          console.log('Update button clicked; clearing caches');
+          if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ action: 'CLEAR_CACHE' });
+          }
+        });
       }
     });
-  }
+  })
+  .catch(err => console.error('Loader error:', err));
 
-  // Register the Service Worker if supported by the browser.
-  if ('serviceWorker' in navigator) {
-    try {
-      const registration = await navigator.serviceWorker.register(`${BASE_PATH}/sw.js`);
-      console.log('Service Worker registered with scope:', registration.scope);
-    } catch (error) {
-      console.error('Error during Service Worker registration:', error);
+// 5. Preloader fade-out after full load
+window.addEventListener('load', () => {
+  const preloader = document.getElementById('preloader');
+  if (!preloader) return;
+  preloader.style.opacity = '1';
+  const fade = setInterval(() => {
+    const current = parseFloat(preloader.style.opacity);
+    if (current > 0) {
+      preloader.style.opacity = (current - 0.1).toString();
+    } else {
+      clearInterval(fade);
+      preloader.style.display = 'none';
     }
-  }
-
-  // Update mechanism: attach an event listener to the update button.
-  // This calls the clearCache() method on the ViewManager, which should trigger a cache clear in the Service Worker.
-  const updateBtn = document.getElementById("update-btn");
-  if (updateBtn) {
-    updateBtn.addEventListener("click", () => {
-      console.log("Update button clicked.");
-      app.viewManager.clearCache();
-    });
-  }
-});
-
-// Hide the preloader after all resources have loaded.
-window.addEventListener("load", () => {
-  const preloader = document.getElementById("preloader");
-  if (preloader) {
-    preloader.style.opacity = 1;
-    const fadeEffect = setInterval(() => {
-      if (preloader.style.opacity > 0) {
-        preloader.style.opacity -= 0.1;
-      } else {
-        clearInterval(fadeEffect);
-        preloader.style.display = "none";
-      }
-    }, 50);
-  }
+  }, 50);
 });

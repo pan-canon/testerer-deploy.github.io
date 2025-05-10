@@ -4,9 +4,10 @@ const BASE_PATH = self.location.hostname.includes("github.io")
   ? "/testerer-deploy.github.io/Testerer/game"
   : "";
 
-const CACHE_NAME = "game-cache-v6";
+import { SW_VERSION, BASE_PATH } from './src/config/paths.js';
 
-const urlsToCache = [
+const CACHE_NAME    = `game-cache-${SW_VERSION}`;
+const urlsToCache   = [
   // Root
   `${BASE_PATH}/`,
   `${BASE_PATH}/index.html`,
@@ -109,54 +110,43 @@ const urlsToCache = [
   `${BASE_PATH}/src/utils/TemplateEngine.js`
 ];
 
-self.addEventListener("install", event => {
+self.addEventListener('install', event => {
+  // Ensure new SW activates immediately
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
 });
 
-self.addEventListener("activate", (event) => {
-  console.log("✅ Activating Service Worker...");
+self.addEventListener('activate', event => {
+  console.log('✅ Activating Service Worker...');
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log(`🗑 Deleting old cache: ${cacheName}`);
-            return caches.delete(cacheName);
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.map(key => {
+          if (key !== CACHE_NAME) {
+            console.log(`🗑 Deleting old cache: ${key}`);
+            return caches.delete(key);
           }
         })
-      );
-    }).then(() => self.clients.claim())
+      )
+    ).then(() => self.clients.claim())
   );
 });
 
-self.addEventListener("message", (event) => {
-  if (event.data) {
-    if (event.data.type === "SKIP_WAITING") {
-      console.log("Service Worker skipping waiting...");
-      self.skipWaiting();
-    }
-    // Clear all caches upon receiving the CLEAR_CACHE command.
-    if (event.data.action === "CLEAR_CACHE") {
-      console.log("Received CLEAR_CACHE command.");
-      caches.keys().then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cacheName) => {
-            console.log(`🗑 Deleting cache: ${cacheName}`);
-            return caches.delete(cacheName);
-          })
-        );
-      }).then(() => {
-        console.log("All caches cleared.");
-        // Reload all clients to update the page.
-        self.clients.matchAll().then((clients) => {
-          clients.forEach(client => client.navigate(client.url));
-        });
-      });
-    }
+self.addEventListener('message', event => {
+  const msg = event.data;
+  if (msg?.type === 'SKIP_WAITING') {
+    console.log('SW: skipWaiting received');
+    self.skipWaiting();
+    return;
+  }
+  if (msg?.action === 'CLEAR_CACHE') {
+    console.log('SW: clear all caches');
+    caches.keys()
+      .then(keys => Promise.all(keys.map(key => caches.delete(key))))
+      .then(() => self.clients.matchAll())
+      .then(clients => clients.forEach(c => c.navigate(c.url)));
   }
 });
 

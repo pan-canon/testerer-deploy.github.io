@@ -1,3 +1,4 @@
+import { BASE_PATH } from '../config/paths.js';
 import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
 import { ImageUtils } from '../utils/ImageUtils.js';
@@ -44,12 +45,6 @@ export class ViewManager {
       StateManager.set(StateManager.KEYS.POST_BUTTON_DISABLED, "true");
       console.log("[ViewManager] Post button disabled on initialization.");
     }
-  }
-
-  getBasePath() {
-    const loc = window.location;
-    const path = loc.pathname.substring(0, loc.pathname.lastIndexOf('/'));
-    return loc.origin + path;
   }
 
   setCameraManager(cameraManager) {
@@ -130,8 +125,7 @@ export class ViewManager {
   // ------------------ Dynamic Template Loading Methods ------------------
 
   async loadTemplate(screenId, data = {}) {
-    const basePath = this.getBasePath();
-    const templateUrl = `${basePath}/src/templates/${screenId}_template.html`;
+    const templateUrl = `${BASE_PATH}/src/templates/${screenId}_template.html`;
     try {
       const response = await fetch(templateUrl);
       if (!response.ok) {
@@ -773,7 +767,7 @@ export class ViewManager {
       transform: "translate(-50%, -50%)",
       width: "200px",
       height: "200px",
-      background: `url('images/${ghostId}.png') no-repeat center center`,
+      background: `url('${BASE_PATH}/assets/images/${ghostId}.png') no-repeat center center`,
       backgroundSize: "contain",
       opacity: "0.7",
       transition: "opacity 2s"
@@ -1129,7 +1123,7 @@ export class ViewManager {
   async addSingleDiaryPost(entryData) {
     if (!this.diaryContainer) return;
 
-    // разбираем текст на до изображения и само изображение (если есть)
+    // разбираем текст на до изображения и само изображение (если есть)
     let textPart = entryData.text;
     let imgSrc = "";
     if (entryData.text.includes("data:image")) {
@@ -1144,7 +1138,7 @@ export class ViewManager {
       : "";
 
     // абсолютный URL к шаблону
-    const templateUrl = `${this.getBasePath()}/src/templates/diaryentry_screen-template.html`;
+    const templateUrl = `${BASE_PATH}/src/templates/diaryentry_screen-template.html`;
 
     // рендерим, подставляя разделённый текст и картинку
     const html = await TemplateEngine.renderFile(templateUrl, {
@@ -1173,7 +1167,7 @@ export class ViewManager {
     allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     // Берём следующий кусок
     const nextChunk = allEntries.slice(displayed, displayed + step);
-    const templateUrl = `${this.getBasePath()}/src/templates/diaryentry_screen-template.html`;
+    const templateUrl = `${BASE_PATH}/src/templates/diaryentry_screen-template.html`;
 
     for (const entry of nextChunk) {
       // разбираем текст и картинку

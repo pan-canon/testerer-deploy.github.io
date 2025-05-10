@@ -1,3 +1,4 @@
+import { BASE_PATH } from '../config/paths.js';
 import { StateManager } from './StateManager.js';
 
 export class ChatScenarioManager {
@@ -50,7 +51,7 @@ export class ChatScenarioManager {
   async init() {
     if (!this.scenarioConfig) {
       try {
-        const response = await fetch('src/config/chatDialogueConfig.json');
+        const response = await fetch(`${BASE_PATH}/src/config/chatDialogueConfig.json`);
         if (!response.ok) {
           throw new Error("Failed to load dialogue configuration from 'src/config/chatDialogueConfig.json'");
         }

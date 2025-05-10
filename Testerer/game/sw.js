@@ -1,77 +1,120 @@
-// Define BASE_PATH based on current URL.
-// If the URL contains "/Testerer/", assume GitHub Pages environment and set BASE_PATH accordingly.
+// sw.js
+// Determine BASE_PATH in ServiceWorker context
 const BASE_PATH = self.location.hostname.includes("github.io")
   ? "/testerer-deploy.github.io/Testerer/game"
   : "";
 
-// Define the cache name. Update the version whenever any file changes.
-const CACHE_NAME = "game-cache-v3";
+const CACHE_NAME = "game-cache-v4";
 
-// List of URLs to cache based on your current structure.
-// Note: Files related to dynamic database management are excluded.
 const urlsToCache = [
-  // Root files (outside of /src and /assets)
+  // Root
   `${BASE_PATH}/`,
   `${BASE_PATH}/index.html`,
   `${BASE_PATH}/main.js`,
   `${BASE_PATH}/manifest.json`,
 
-  // CSS from CDN
+  // CSS
   "https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css",
 
-  // Source files in /src:
-  
-  // Managers (located in /src/managers/)
+  // Libraries
+  `${BASE_PATH}/assets/libs/tf.min.js`,
+  `${BASE_PATH}/assets/libs/tf.min.js.map`,
+  `${BASE_PATH}/assets/libs/coco-ssd.min.js`,
+  `${BASE_PATH}/assets/libs/three.js`,
+
+  // SQLite WASM
+  `${BASE_PATH}/assets/libs/db/sql-wasm.js`,
+  `${BASE_PATH}/assets/libs/db/sql-wasm.wasm`,
+
+  // Audio
+  `${BASE_PATH}/assets/audio/ghost_effect.mp3`,
+  `${BASE_PATH}/assets/audio/type_sound.mp3`,
+
+  // Images
+  `${BASE_PATH}/assets/images/pencil.png`,
+  `${BASE_PATH}/assets/images/static-image.webp`,
+
+  // Models (COCO-SSD)
+  `${BASE_PATH}/assets/models/coco-ssd/model.json`,
+  `${BASE_PATH}/assets/models/coco-ssd/group1-shard1of5`,
+  `${BASE_PATH}/assets/models/coco-ssd/group1-shard2of5`,
+  `${BASE_PATH}/assets/models/coco-ssd/group1-shard3of5`,
+  `${BASE_PATH}/assets/models/coco-ssd/group1-shard4of5`,
+  `${BASE_PATH}/assets/models/coco-ssd/group1-shard5of5`,
+
+  // Config JSON
+  `${BASE_PATH}/src/config/chatDialogueConfig.json`,
+  `${BASE_PATH}/src/config/detectableItems.js`,
+  `${BASE_PATH}/src/config/gameEntities.json`,
+  `${BASE_PATH}/src/config/stateKeys.js`,
+
+  // DI Container
+  `${BASE_PATH}/src/container/DIContainer.js`,
+
+  // Events
+  `${BASE_PATH}/src/events/BaseEvent.js`,
+  `${BASE_PATH}/src/events/FinalEvent.js`,
+  `${BASE_PATH}/src/events/PostMirrorEvent.js`,
+  `${BASE_PATH}/src/events/PostRepeatingEvent.js`,
+  `${BASE_PATH}/src/events/WelcomeEvent.js`,
+
+  // Locales
+  `${BASE_PATH}/src/locales/chatLocales_en.js`,
+  `${BASE_PATH}/src/locales/chatLocales_ru.js`,
+  `${BASE_PATH}/src/locales/chatLocales_uk.js`,
+  `${BASE_PATH}/src/locales/locales.js`,
+  `${BASE_PATH}/src/locales/locales.json`,
+
+  // Managers
   `${BASE_PATH}/src/managers/ApartmentPlanManager.js`,
   `${BASE_PATH}/src/managers/CameraSectionManager.js`,
+  `${BASE_PATH}/src/managers/ChatManager.js`,
+  `${BASE_PATH}/src/managers/ChatScenarioManager.js`,
+  `${BASE_PATH}/src/managers/DatabaseManager.js`,
+  `${BASE_PATH}/src/managers/ErrorManager.js`,
   `${BASE_PATH}/src/managers/EventManager.js`,
   `${BASE_PATH}/src/managers/GameEventManager.js`,
   `${BASE_PATH}/src/managers/GhostManager.js`,
   `${BASE_PATH}/src/managers/LanguageManager.js`,
+  `${BASE_PATH}/src/managers/NotificationManager.js`,
   `${BASE_PATH}/src/managers/ProfileManager.js`,
   `${BASE_PATH}/src/managers/QuestManager.js`,
   `${BASE_PATH}/src/managers/ShowProfileModal.js`,
-  `${BASE_PATH}/src/managers/ViewManager.js`,
+  `${BASE_PATH}/src/managers/SQLiteDataManager.js`,
   `${BASE_PATH}/src/managers/StateManager.js`,
-  `${BASE_PATH}/src/managers/ErrorManager.js`,
-  `${BASE_PATH}/src/managers/NotificationManager.js`,
+  `${BASE_PATH}/src/managers/ViewManager.js`,
   `${BASE_PATH}/src/managers/VisualEffectsManager.js`,
-  // (Include any additional manager files if needed)
 
-  // Events (located in /src/events/)
-  `${BASE_PATH}/src/events/BaseEvent.js`,
-  `${BASE_PATH}/src/events/WelcomeEvent.js`,
-  `${BASE_PATH}/src/events/PostMirrorEvent.js`,
-  `${BASE_PATH}/src/events/PostRepeatingEvent.js`,
-  `${BASE_PATH}/src/events/FinalEvent.js`,
-
-  // Quests (located in /src/quests/)
+  // Quests
   `${BASE_PATH}/src/quests/BaseMirrorQuest.js`,
   `${BASE_PATH}/src/quests/BaseRepeatingQuest.js`,
   `${BASE_PATH}/src/quests/FinalQuest.js`,
 
-  // Locales (located in /src/locales/)
-  `${BASE_PATH}/src/locales/locales.js`,
-  `${BASE_PATH}/src/locales/locales.json`,
+  // Templates
+  `${BASE_PATH}/src/templates/apartment-plan-screen_template.html`,
+  `${BASE_PATH}/src/templates/chat_template.html`,
+  `${BASE_PATH}/src/templates/diaryentry_screen-template.html`,
+  `${BASE_PATH}/src/templates/landing-screen_template.html`,
+  `${BASE_PATH}/src/templates/main-screen_template.html`,
+  `${BASE_PATH}/src/templates/registration-screen_template.html`,
+  `${BASE_PATH}/src/templates/selfie-screen_template.html`,
 
-  // Utilities (located in /src/utils/)
-  `${BASE_PATH}/src/utils/ImageUtils.js`
-
-  // Optionally, add any additional configuration files if needed.
+  // Utils
+  `${BASE_PATH}/src/utils/DeviceOrientationControls.js`,
+  `${BASE_PATH}/src/utils/GameEntityLoader.js`,
+  `${BASE_PATH}/src/utils/ImageUtils.js`,
+  `${BASE_PATH}/src/utils/QuestControlUtils.js`,
+  `${BASE_PATH}/src/utils/SequenceManager.js`,
+  `${BASE_PATH}/src/utils/SpiritBoardUtils.js`,
+  `${BASE_PATH}/src/utils/TemplateEngine.js`
 ];
 
-self.addEventListener("install", (event) => {
-  console.log("🛠 Installing Service Worker...");
+self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log("Caching files:", urlsToCache);
-        return cache.addAll(urlsToCache);
-      })
-      .catch((err) => console.error("❌ Caching error:", err))
+      .then(cache => cache.addAll(urlsToCache))
+      .then(() => self.skipWaiting())
   );
-  // Activate the new service worker immediately.
-  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
@@ -123,7 +166,7 @@ self.addEventListener("fetch", (event) => {
       event.request.url.includes("SQLiteDataManager.js")) {
     return event.respondWith(fetch(event.request));
   }
-  
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {

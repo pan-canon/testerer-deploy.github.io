@@ -1,3 +1,4 @@
+import { BASE_PATH } from '../config/paths.js';
 import { TemplateEngine } from '../utils/TemplateEngine.js';
 import { animateText } from '../utils/SpiritBoardUtils.js';
 import { StateManager } from './StateManager.js';
@@ -13,8 +14,8 @@ export class ChatManager {
    *  - sectionKey: (optional) unique identifier for the chat section.
    */
   constructor(options = {}) {
-    const basePath = options.basePath || ChatManager.getBasePath();
-    this.templateUrl = options.templateUrl || `${basePath}/src/templates/chat_template.html`;
+    import { BASE_PATH } from '../config/paths.js';
+    this.templateUrl = options.templateUrl || `${BASE_PATH}/src/templates/chat_template.html`;
     this.mode = options.mode || 'full';
     this.container = null; // DOM element for the chat section
     this.databaseManager = options.databaseManager || null;
@@ -27,17 +28,6 @@ export class ChatManager {
   }
 
   /**
-   * Static method to get the base URL dynamically.
-   *
-   * @returns {string} The base URL (origin + path without the file name).
-   */
-  static getBasePath() {
-    const loc = window.location;
-    const path = loc.pathname.substring(0, loc.pathname.lastIndexOf('/'));
-    return loc.origin + path;
-  }
-
-  /**
    * Static method to create a ChatManager instance with default options merged with any provided overrides.
    *
    * @param {Object} options - Custom options to override default values.
@@ -45,7 +35,7 @@ export class ChatManager {
    */
   static createChatManagerWrapper(options = {}) {
     const defaultOptions = {
-      templateUrl: `${ChatManager.getBasePath()}/src/templates/chat_template.html`,
+      templateUrl: `${BASE_PATH}/src/templates/chat_template.html`,
       mode: 'full'
     };
     return new ChatManager({ ...defaultOptions, ...options });

@@ -1,5 +1,6 @@
 // CameraSectionManager.js
 import { ErrorManager } from './ErrorManager.js';
+import { COCO_SSD_MODEL } from '../config/paths.js';
 
 export class CameraSectionManager {
   /**
@@ -249,7 +250,10 @@ export class CameraSectionManager {
 
     if (!this.aiModel) {
       try {
-        this.aiModel = await cocoSsd.load();
+        // Load local COCO-SSD model from our assets
+        this.aiModel = await cocoSsd.load({
+          modelUrl: COCO_SSD_MODEL
+        });
         console.log("AI model loaded successfully.");
       } catch (error) {
         ErrorManager.logError(error, "CameraSectionManager.startAIDetection");

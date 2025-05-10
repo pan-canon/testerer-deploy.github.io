@@ -1,5 +1,6 @@
 // App.js
 // Import utility modules and managers
+import { BASE_PATH, COCO_SSD_MODEL } from './config/paths.js';
 import { ImageUtils } from './utils/ImageUtils.js';
 import { VisualEffectsManager } from './managers/VisualEffectsManager.js';
 
@@ -74,17 +75,6 @@ export class App {
 
     // Begin application initialization.
     this.init();
-  }
-
-  /**
-   * Returns the base URL dynamically.
-   *
-   * @returns {string} The base URL (origin + path without the file name).
-   */
-  getBasePath() {
-    const loc = window.location;
-    const path = loc.pathname.substring(0, loc.pathname.lastIndexOf('/'));
-    return loc.origin + path;
   }
 
   /**

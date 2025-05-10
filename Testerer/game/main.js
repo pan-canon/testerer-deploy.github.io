@@ -1,7 +1,26 @@
 /*import { DIContainer } from './src/container/DIContainer.js';
 const container = new DIContainer();
 const app = container.getApp();*/
+import { BASE_PATH, SQL_WASM_URL, TFJS_URL, COCO_SSD_URL } from './src/config/paths.js';
 import { App } from './src/App.js';
+
+// Load SQL.js
+const scriptSql = document.createElement('script');
+scriptSql.src    = SQL_WASM_URL;
+scriptSql.async  = false;  // сохранить порядок
+document.head.appendChild(scriptSql);
+
+// Load TensorFlow.js
+const scriptTf = document.createElement('script');
+scriptTf.src   = TFJS_URL;
+scriptTf.async = false;
+document.head.appendChild(scriptTf);
+
+// Load COCO-SSD
+const scriptCoco = document.createElement('script');
+scriptCoco.src   = COCO_SSD_URL;
+scriptCoco.async = false;
+document.head.appendChild(scriptCoco);
 
 // Wait until the DOM is fully loaded, then initialize the application.
 document.addEventListener("DOMContentLoaded", async () => {
@@ -34,16 +53,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Register the Service Worker if supported by the browser.
-  if ('sw' in navigator) {
+  if ('serviceWorker' in navigator) {
     try {
-      // Determine BASE_PATH based on the URL.
-      const BASE_PATH = window.location.hostname.includes("github.io")
-        ? "/testerer-deploy.github.io/Testerer/game"
-        : "";
-      const registration = await navigator.sw.register(`${BASE_PATH}/sw.js`);
-      console.log('✅ Service Worker registered with scope:', registration.scope);
+      const registration = await navigator.serviceWorker.register(`${BASE_PATH}/sw.js`);
+      console.log('Service Worker registered with scope:', registration.scope);
     } catch (error) {
-      console.error('❌ Error during Service Worker registration:', error);
+      console.error('Error during Service Worker registration:', error);
     }
   }
 

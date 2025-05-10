@@ -1,3 +1,4 @@
+import { ASSETS_PATH } from '../config/paths.js';
 import { ErrorManager } from './ErrorManager.js';
 
 /**
@@ -147,7 +148,7 @@ export class VisualEffectsManager {
       }
     }
     // Play the ringtone audio for 3 seconds.
-    this.playAudioWithStop('../../../../assets/audio/phone_ringtone.mp3', 3000);
+    this.playAudioWithStop(`${ASSETS_PATH}/audio/phone_ringtone.mp3`, 3000);
   }
 
   /**
@@ -175,7 +176,7 @@ export class VisualEffectsManager {
           transform: "translate(-50%, -50%)",
           width: "200px",
           height: "200px",
-          background: `url('images/${ghostId}.png') no-repeat center center`,
+          background: `url('${ASSETS_PATH}/images/${ghostId}.png') no-repeat center center`,
           backgroundSize: "contain",
           opacity: "0.7",
           transition: "opacity 2s"
@@ -194,7 +195,7 @@ export class VisualEffectsManager {
    * Triggers the whisper effect by playing a whisper audio for 5 seconds.
    */
   triggerWhisperEffect() {
-    this.playAudioWithStop('../../../../assets/audio/whisper.mp3', 5000);
+    this.playAudioWithStop('${ASSETS_PATH}/audio/whisper.mp3', 5000);
   }
 
   /**

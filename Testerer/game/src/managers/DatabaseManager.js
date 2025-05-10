@@ -1,4 +1,5 @@
 import { SQLiteDataManager } from './SQLiteDataManager.js';
+import { BASE_PATH } from '../config/paths.js';
 import { ErrorManager } from './ErrorManager.js';
 
 /**
@@ -40,7 +41,7 @@ export class DatabaseManager {
     try {
       // Load SQL.js, providing a locateFile function to find necessary files.
       const SQL = await initSqlJs({
-        locateFile: file => `assets/libs/db/${file}`
+        locateFile: file => `${BASE_PATH}/assets/libs/db/${file}`
       });
       
       // Restore database from IndexedDB if saved, otherwise create a new instance.

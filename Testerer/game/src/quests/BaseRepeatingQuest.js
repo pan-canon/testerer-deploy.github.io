@@ -147,12 +147,12 @@ export class BaseRepeatingQuest extends BaseEvent {
     if (this.app.viewManager?.startRepeatingQuestUI) {
       this.app.viewManager.startRepeatingQuestUI({
         statusElementId: this.statusElementId,
-        shootButtonId:    this.shootButtonId,
-        stage:            this.currentStage,
-        totalStages:      this.totalStages,
-        target:           this.currentTarget,
-        onShoot:          () => this.finishStage(),
-        quest:            this
+        shootButtonId:   this.shootButtonId,
+        stage:           this.currentStage,
+        totalStages:     this.totalStages,
+        target:          this.currentTarget,
+        onShoot:         () => this.finishStage(),
+        quest:           this
       });
     } else {
       console.error("[BaseRepeatingQuest] ViewManager.startRepeatingQuestUI is not available.");

@@ -1,5 +1,5 @@
 // src/config/paths.js
-export const BASE_PATH = window.location.hostname.includes("github.io")
+export const BASE_PATH = globalThis.location.hostname.includes("github.io")
   ? "/testerer-deploy.github.io/Testerer/game"
   : "";
 export const ASSETS_PATH    = `${BASE_PATH}/assets`;

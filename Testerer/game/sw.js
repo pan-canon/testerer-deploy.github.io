@@ -1,4 +1,3 @@
-// sw.js
 // Determine BASE_PATH in ServiceWorker context
 import { SW_VERSION, BASE_PATH } from './src/config/paths.js';
 

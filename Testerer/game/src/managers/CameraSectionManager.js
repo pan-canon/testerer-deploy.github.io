@@ -333,16 +333,4 @@ export class CameraSectionManager {
   stopAIDetection() {
     clearTimeout(this.aiDetectionTimer);
   }
-
-  /**
-   * generateDetectionConfig
-   * Chooses a random target from the centralized detectableItems list.
-   * @returns {{ target: string }}
-   */
-  generateDetectionConfig() {
-    const randomIndex = Math.floor(Math.random() * detectableItems.length);
-    const randomTarget = detectableItems[randomIndex];
-    console.log(`[CameraSectionManager] Detection config generated: target = "${randomTarget}"`);
-    return { target: randomTarget };
-  }
 }

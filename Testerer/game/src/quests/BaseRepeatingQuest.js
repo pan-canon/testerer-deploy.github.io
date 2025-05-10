@@ -34,6 +34,17 @@ export class BaseRepeatingQuest extends BaseEvent {
     // Restore saved quest state from StateManager.
     this.loadState();
 
+    /**
+     * generateDetectionConfig
+     * Returns an object with current target for AI detection.
+     * @returns {{ target: string }}
+     */
+    generateDetectionConfig() {
+      // Use the quest’s currentTarget (set in constructor)
+      console.log(`[BaseRepeatingQuest] Providing detection target: ${this.currentTarget}`);
+      return { target: this.currentTarget };
+    }
+
     // ==== new: initialize remaining items and pick the currentTarget ====
     // Restore the list of remaining items from StateManager or use the default array
     const savedItems = StateManager.get('remainingItems');

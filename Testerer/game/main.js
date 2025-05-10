@@ -49,7 +49,10 @@ Promise.all([
 
       // 3. Service Worker registration with auto-update hooks
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register(`${BASE_PATH}/sw.js`, { type: 'module' })
+        navigator.serviceWorker.register(`${BASE_PATH}/sw.js`, {
+          type: 'module',
+          scope: './'
+        })
           .then(reg => {
             console.log('Service Worker registered with scope:', reg.scope);
 

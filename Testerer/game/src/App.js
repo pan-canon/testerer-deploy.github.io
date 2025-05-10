@@ -97,8 +97,7 @@ export class App {
     await this.databaseManager.initDatabasePromise;
     console.log("Database initialization complete.");
     this.loadAppState();
-    await this.questManager.syncQuestState();
-    this.questManager.restoreAllActiveQuests();
+
     // If after reload camera was open — reopen it and trigger AI-detection loop
     if (StateManager.isCameraOpen()) {
       this.viewManager.setCameraButtonActive(true);
@@ -112,6 +111,9 @@ export class App {
       // the CameraSectionManager already does this on loadedmetadata
       console.log("Camera reopened; awaiting cameraReady to restart detection.");
     }
+
+    await this.questManager.syncQuestState();
+    this.questManager.restoreAllActiveQuests();
 
     this.viewManager.showToggleCameraButton();
     this.viewManager.createTopCameraControls();

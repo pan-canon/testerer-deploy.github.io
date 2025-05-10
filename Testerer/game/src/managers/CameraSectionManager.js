@@ -123,9 +123,14 @@ export class CameraSectionManager {
     if (this.stream) {
       this.stream.getTracks().forEach(track => track.stop());
       this.stream = null;
+
+      // Notify listeners that camera has been closed
       if (typeof this.onCameraClosed === "function") {
         this.onCameraClosed();
       }
+      // Dispatch a global event so quests can stop detection
+      document.dispatchEvent(new CustomEvent("cameraClosed"));
+      console.log("CameraSectionManager: cameraClosed event dispatched");
     }
   }
 

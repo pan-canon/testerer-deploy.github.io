@@ -57,6 +57,11 @@ export class QuestManager {
             );
           }
         }
+
+        // После того как список this.quests заполнен, восстанавливаем UI всех активных квестов
+        console.log("[QuestManager] Quests loaded; restoring UI for active quests");
+        this.restoreAllActiveQuests();
+
         console.log("Quests loaded from configuration:", this.quests.map(q => q.key));
       })
       .catch(error => {
@@ -66,11 +71,6 @@ export class QuestManager {
 
     this.initCameraListeners();
 
-    // Restore UI state for the repeating quest if a saved state exists.
-    if (StateManager.get(StateManager.KEYS.REPEATING_QUEST_STATE)) {
-      console.log("[QuestManager] Detected saved state for repeating quest.");
-      this.restoreRepeatingQuestUI();
-    }
     if (this.app.viewManager && typeof this.app.viewManager.restoreCameraButtonState === 'function') {
       this.app.viewManager.restoreCameraButtonState();
     }
@@ -88,6 +88,13 @@ export class QuestManager {
     if (!cameraManager) return;
     cameraManager.onVideoReady = () => {
       console.log("[QuestManager] onVideoReady signal received.");
+
+      // Если повторяющийся квест активен и не окончен — перезапускаем цикл детекции
+      const repeatingQuest = this.quests.find(q => q.key === 'repeating_quest');
+      if (repeatingQuest && repeatingQuest.activated && !repeatingQuest.finished) {
+        console.log("[QuestManager] Resuming AI detection for repeating quest");
+        repeatingQuest.startCheckLoop();
+      }
     };
     cameraManager.onCameraClosed = () => {
       console.log("[QuestManager] onCameraClosed signal received.");

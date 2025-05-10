@@ -62,14 +62,15 @@ export class ProfileManager {
         }
       }
 
-      // NEW: Clear Service Worker caches to force script update.
-      if ('sw' in navigator && navigator.sw.controller) {
-        navigator.sw.controller.postMessage({ action: 'CLEAR_CACHE' });
-        console.log("Service Worker cache clear message sent.");
+      // NEW: Tell the Service Worker to skip waiting and clear caches
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        // ask the new SW to activate immediately
+        navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+        // clear all caches so that clients navigates and picks up the new version
+        navigator.serviceWorker.controller.postMessage({ action: 'CLEAR_CACHE' });
+        console.log("Service Worker skipWaiting and CLEAR_CACHE messages sent.");
       }
-
-      console.log("Profile, database, and transient state have been reset. Reloading page...");
-      window.location.reload();
+      // Reload will be handled by the SW via controllerchange → clients.navigate()
     }).catch((err) => {
       ErrorManager.logError(err, "resetProfile");
     });

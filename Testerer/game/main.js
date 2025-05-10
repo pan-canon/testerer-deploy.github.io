@@ -69,10 +69,9 @@ Promise.all([
             });
           })
           .catch(err => console.error('Error during Service Worker registration:', err));
-
-        // When the new SW takes control, reload the page
+        // When a new SW takes control, reload the page so that all clients use the new version
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          console.log('New Service Worker activated, reloading page');
+          console.log("New Service Worker activated; reloading page");
           window.location.reload();
         });
       }

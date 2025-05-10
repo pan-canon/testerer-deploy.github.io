@@ -89,10 +89,12 @@ export class QuestManager {
 
     cameraManager.onVideoReady = async () => {
       console.log("[QuestManager] onVideoReady signal received.");
+
       if (StateManager.getActiveQuestKey() === "repeating_quest") {
-        // Получаем инстанс повторяющегося квеста
         const repeatingQuest = this.quests.find(q => q.key === "repeating_quest");
-        // Генерируем конфиг прямо там
+
+        console.log(`[QuestManager] Detection target is "${repeatingQuest.currentTarget}"`);
+
         const config = repeatingQuest.generateDetectionConfig();
         await this.app.cameraSectionManager.startAIDetection(config);
       }

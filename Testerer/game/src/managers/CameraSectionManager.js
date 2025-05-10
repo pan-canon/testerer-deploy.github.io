@@ -18,6 +18,7 @@ export class CameraSectionManager {
     this.onCameraClosed = null;
 
     // New properties for extended functionality
+    this.isDetecting = false;
     this.aiDetectionTimer = null;
     this.aiModel = null;
     this.aiDetectionInterval = 5000; // 5 seconds default
@@ -261,22 +262,19 @@ export class CameraSectionManager {
    * @param {{ target?: string }} config
    */
   async startAIDetection(config = {}) {
-    // Save only the target for repeating quest logic.
     this.currentDetectionConfig = { target: config.target || null };
+    this.isDetecting = true;
     console.log(`[CameraSectionManager] startAIDetection(): target = "${this.currentDetectionConfig.target}"`);
 
     if (!this.aiModel) {
-      try {
-        // Load local COCO-SSD model from our assets
-        this.aiModel = await cocoSsd.load({
-          modelUrl: COCO_SSD_MODEL
-        });
-        console.log("AI model loaded successfully.");
-      } catch (error) {
-        ErrorManager.logError(error, "CameraSectionManager.startAIDetection");
+      console.log("[CameraSectionManager] Waiting for preloaded model…");
+      await this.modelPromise; // если вы уже сделали preloadModel
+      if (!this.aiModel) {
+        console.error("[CameraSectionManager] Model failed to preload");
         return;
       }
     }
+
     this.runAIDetection();
   }
 
@@ -285,15 +283,24 @@ export class CameraSectionManager {
    * Performs object detection on the current video frame and processes predictions.
    */
   async runAIDetection() {
-    console.log("[CameraSectionManager] runAIDetection() — beginning new detection cycle");
-    if (!this.videoElement || this.videoElement.readyState < 2) return;
+    if (!this.isDetecting) {
+      return;
+    }
+
+    if (!this.videoElement || this.videoElement.readyState < 2) {
+      // video not ready yet; try again shortly
+      this.aiDetectionTimer = setTimeout(() => this.runAIDetection(), this.aiDetectionInterval);
+      return;
+    }
+
     try {
       const predictions = await this.aiModel.detect(this.videoElement);
       console.log("[CameraSectionManager] predictions:", predictions);
       this.handleAIPredictions(predictions);
     } catch (error) {
-      ErrorManager.logError(error, "runAIDetection");
+      console.error("[CameraSectionManager] Error during detect():", error);
     }
+
     this.aiDetectionTimer = setTimeout(() => this.runAIDetection(), this.aiDetectionInterval);
   }
 
@@ -348,6 +355,11 @@ export class CameraSectionManager {
    * Stops the AI detection loop.
    */
   stopAIDetection() {
-    clearTimeout(this.aiDetectionTimer);
+    this.isDetecting = false;
+    if (this.aiDetectionTimer) {
+      clearTimeout(this.aiDetectionTimer);
+      this.aiDetectionTimer = null;
+    }
+    console.log("[CameraSectionManager] AI detection stopped.");
   }
 }

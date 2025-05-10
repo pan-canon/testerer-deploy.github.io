@@ -91,22 +91,6 @@ Promise.all([
   })
   .catch(err => console.error('Loader error:', err));
 
-// 5. Preloader fade-out after full load
-window.addEventListener('load', () => {
-  const preloader = document.getElementById('preloader');
-  if (!preloader) return;
-  preloader.style.opacity = '1';
-  const fade = setInterval(() => {
-    const current = parseFloat(preloader.style.opacity);
-    if (current > 0) {
-      preloader.style.opacity = (current - 0.1).toString();
-    } else {
-      clearInterval(fade);
-      preloader.style.display = 'none';
-    }
-  }, 50);
-});
-
 // File: src\App.js
 // App.js
 // Import utility modules and managers
@@ -207,6 +191,8 @@ export class App {
     await this.databaseManager.initDatabasePromise;
     console.log("Database initialization complete.");
     this.loadAppState();
+    // Preload AI model before any camera usage
+    await this.cameraSectionManager.preloadModel();
     await this.questManager.syncQuestState();
     this.questManager.restoreAllActiveQuests();
     // Если перед перезагрузкой камера помечена как активная — просто подсветим кнопку,
@@ -247,6 +233,13 @@ export class App {
 
       // ALSO pass `this` here. Without it, `app` will be undefined in `ViewManager`.
       await this.viewManager.switchScreen('landing-screen', 'landing-buttons', this);
+    }
+
+    // In src/App.js, at the very end of init():
+    const preloader = document.getElementById('preloader');
+    if (preloader) {
+      preloader.style.display = 'none';
+      console.log("[App] Preloader hidden after AI model preload and app init.");
     }
   }
 }
@@ -1498,6 +1491,23 @@ export class CameraSectionManager {
 
     this.recordingStartTime = null;
     this.recordingTimerId = null;
+  }
+
+  /**
+   * preloadModel – Preloads the COCO-SSD model so that detection can start immediately later.
+   * Stores the loading promise to avoid double-loading.
+   */
+  async preloadModel() {
+    if (!this.modelPromise) {
+      console.log("[CameraSectionManager] Preloading AI model...");
+      this.modelPromise = cocoSsd.load({ modelUrl: COCO_SSD_MODEL });
+    }
+    try {
+      this.aiModel = await this.modelPromise;
+      console.log("[CameraSectionManager] AI model preloaded successfully.");
+    } catch (error) {
+      ErrorManager.logError(error, "CameraSectionManager.preloadModel");
+    }
   }
 
   /**
@@ -7619,7 +7629,7 @@ const BASE_PATH = self.location.hostname.includes("github.io")
   ? "/testerer-deploy.github.io/Testerer/game"
   : "";
 
-const CACHE_VERSION = 'v15'; // bump this on each release
+const CACHE_VERSION = 'v16'; // bump this on each release
 const CACHE_NAME    = `game-cache-${CACHE_VERSION}`;
 
 const urlsToCache = [

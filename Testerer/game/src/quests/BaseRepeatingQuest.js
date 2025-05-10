@@ -45,7 +45,6 @@ export class BaseRepeatingQuest extends BaseEvent {
 
     // Pick the first item from the list as the current target
     this.currentTarget = this.remainingItems.length > 0 ? this.remainingItems[0] : null;
-    console.log(`[BaseRepeatingQuest] Current detection target: ${this.currentTarget}`);
 
     // subscribe to AI‐detection events and enable Shoot button when target is found
     document.addEventListener("objectDetected", this.onObjectDetected.bind(this));

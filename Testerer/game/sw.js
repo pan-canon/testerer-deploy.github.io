@@ -4,7 +4,7 @@ const BASE_PATH = self.location.hostname.includes("github.io")
   ? "/testerer-deploy.github.io/Testerer/game"
   : "";
 
-const CACHE_NAME = "game-cache-v5";
+const CACHE_NAME = "game-cache-v6";
 
 const urlsToCache = [
   // Root

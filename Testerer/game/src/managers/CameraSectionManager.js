@@ -76,6 +76,16 @@ export class CameraSectionManager {
     container.appendChild(this.videoElement);
   }
 
+// Persistent detection frame element
+this.detectionFrame = null;
+
+// Reset detection frame when repeating quest completes
+document.addEventListener('questCompleted', (e) => {
+  if (e.detail === 'repeating_quest') {
+    this.resetDetectionFrame();
+  }
+});
+
   /**
    * startCamera – Starts the camera by requesting access via getUserMedia.
    * If already running, logs a message and does nothing.
@@ -117,6 +127,8 @@ export class CameraSectionManager {
           this.onVideoReady();
         }
         document.dispatchEvent(new CustomEvent("cameraReady"));
+        // Create persistent detection frame once video is ready
+        this.createDetectionFrame();
       } else {
         // Иначе ждём обычный loadedmetadata
         this.videoElement.addEventListener("loadedmetadata", () => {
@@ -125,6 +137,8 @@ export class CameraSectionManager {
             this.onVideoReady();
           }
           document.dispatchEvent(new CustomEvent("cameraReady"));
+          // Create persistent detection frame once video is ready
+          this.createDetectionFrame();
         }, { once: true });
       }
     } catch (error) {
@@ -148,6 +162,68 @@ export class CameraSectionManager {
   }
 
   // ---------------- Extended Methods ----------------
+
+  /**
+   * createDetectionFrame – Creates a full-screen white border that pulses.
+   */
+  createDetectionFrame() {
+    // Inject pulsing keyframes once
+    if (!document.getElementById('detection-frame-style')) {
+      const style = document.createElement('style');
+      style.id = 'detection-frame-style';
+      style.textContent = `
+  @keyframes detectionPulse {
+    0%   { transform: scale(1);   opacity: 0.8; }
+    50%  { transform: scale(1.02);opacity: 1;   }
+    100% { transform: scale(1);   opacity: 0.8; }
+  }`;
+      document.head.appendChild(style);
+    }
+
+    this.detectionFrame = document.createElement('div');
+    Object.assign(this.detectionFrame.style, {
+      position:       'absolute',
+      top:            '0',
+      left:           '0',
+      width:          '100%',
+      height:         '100%',
+      border:         '3px solid #fff',
+      boxSizing:      'border-box',
+      pointerEvents:  'none',
+      animation:      'detectionPulse 2s infinite'
+    });
+    document.body.appendChild(this.detectionFrame);
+    console.log('Detection frame initialized and pulsing.');
+  }
+
+  /**
+   * updateDetectionFrame – Shrinks the frame to match detected object's bbox.
+   * @param {Array<number>} bbox – [x, y, width, height]
+   */
+  updateDetectionFrame(bbox) {
+    const [x, y, w, h] = bbox;
+    this.detectionFrame.style.transition = 'all 0.3s ease-out';
+    this.detectionFrame.style.left       = `${x}px`;
+    this.detectionFrame.style.top        = `${y}px`;
+    this.detectionFrame.style.width      = `${w}px`;
+    this.detectionFrame.style.height     = `${h}px`;
+    // Stop pulsing while focused on object
+    this.detectionFrame.style.animation  = '';
+    console.log(`Detection frame moved to bbox: ${bbox}`);
+  }
+
+  /**
+   * resetDetectionFrame – Returns the frame back to full-screen and re-enables pulsing.
+   */
+  resetDetectionFrame() {
+    this.detectionFrame.style.transition = 'all 0.5s ease-out';
+    this.detectionFrame.style.left       = '0';
+    this.detectionFrame.style.top        = '0';
+    this.detectionFrame.style.width      = '100%';
+    this.detectionFrame.style.height     = '100%';
+    this.detectionFrame.style.animation  = 'detectionPulse 2s infinite';
+    console.log('Detection frame reset to full-screen and pulsing.');
+  }
 
   /**
    * startARMode
@@ -327,27 +403,11 @@ export class CameraSectionManager {
   }
 
   /**
-   * animateCornerFrame
-   * Creates an animated corner frame around the detected object's bounding box.
-   * @param {Array} bbox - [x, y, width, height]
+   * animateCornerFrame – Shrinks the persistent frame to bbox instead of creating a new one.
    */
   animateCornerFrame(bbox) {
-    const [x, y, width, height] = bbox;
-    const frame = document.createElement('div');
-    frame.style.position = 'absolute';
-    frame.style.border = '3px solid red';
-    frame.style.boxSizing = 'border-box';
-    frame.style.left = `${x}px`;
-    frame.style.top = `${y}px`;
-    frame.style.width = `${width}px`;
-    frame.style.height = `${height}px`;
-    frame.style.pointerEvents = 'none';
-    frame.style.transition = 'opacity 0.5s ease-out';
-    document.body.appendChild(frame);
-    setTimeout(() => {
-      frame.style.opacity = '0';
-      setTimeout(() => frame.remove(), 500);
-    }, 500);
+    if (!this.detectionFrame) return;
+    this.updateDetectionFrame(bbox);
   }
 
   /**

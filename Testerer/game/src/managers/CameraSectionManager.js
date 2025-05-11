@@ -26,6 +26,16 @@ export class CameraSectionManager {
 
     this.recordingStartTime = null;
     this.recordingTimerId = null;
+
+    // Persistent detection frame element
+    this.detectionFrame = null;
+
+    // Reset detection frame when repeating quest completes
+    document.addEventListener('questCompleted', (e) => {
+      if (e.detail === 'repeating_quest') {
+        this.resetDetectionFrame();
+      }
+    });
   }
 
   /**
@@ -75,16 +85,6 @@ export class CameraSectionManager {
     container.innerHTML = "";
     container.appendChild(this.videoElement);
   }
-
-// Persistent detection frame element
-this.detectionFrame = null;
-
-// Reset detection frame when repeating quest completes
-document.addEventListener('questCompleted', (e) => {
-  if (e.detail === 'repeating_quest') {
-    this.resetDetectionFrame();
-  }
-});
 
   /**
    * startCamera – Starts the camera by requesting access via getUserMedia.
@@ -387,8 +387,7 @@ document.addEventListener('questCompleted', (e) => {
    * @param {Array<{class: string, score: number, bbox: number[]}>} predictions
    */
   handleAIPredictions(predictions) {
-    // Determine current target without optional chaining
-    const target = this.currentDetectionConfig && this.currentDetectionConfig.target;
+    const target = this.currentDetectionConfig?.target;
     console.log(`[CameraSectionManager] handleAIPredictions(): looking for "${target}"`);
     if (!target) return;
 

@@ -387,7 +387,8 @@ document.addEventListener('questCompleted', (e) => {
    * @param {Array<{class: string, score: number, bbox: number[]}>} predictions
    */
   handleAIPredictions(predictions) {
-    const target = this.currentDetectionConfig?.target;
+    // Determine current target without optional chaining
+    const target = this.currentDetectionConfig && this.currentDetectionConfig.target;
     console.log(`[CameraSectionManager] handleAIPredictions(): looking for "${target}"`);
     if (!target) return;
 

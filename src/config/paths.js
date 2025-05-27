@@ -1,6 +1,6 @@
 // src/config/paths.js
 export const BASE_PATH = window.location.hostname.includes("github.io")
-  ? "/testerer-deploy.github.io/Testerer/game"
+  ? "/testerer-deploy.github.io"
   : "";
 export const ASSETS_PATH    = `${BASE_PATH}/assets`;
 export const SQL_WASM_URL   = `${ASSETS_PATH}/libs/db/sql-wasm.js`;

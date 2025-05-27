@@ -1,7 +1,7 @@
 // sw.js
 // Determine BASE_PATH in ServiceWorker context
 const BASE_PATH = self.location.hostname.includes("github.io")
-  ? "/testerer-deploy.github.io/Testerer/game"
+  ? "/testerer-deploy.github.io"
   : "";
 
 const CACHE_VERSION = 'v21'; // bump this on each release

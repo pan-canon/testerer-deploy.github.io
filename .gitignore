@@ -1,0 +1,15 @@
+# dependencies
+node_modules/
+
+# build artifacts
+dist/
+
+# logs
+npm-debug.log*
+yarn-error.log*
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -9,8 +9,8 @@ module.exports = {
   ...base,
 
   // Override the entry point to the project's main script
-  entry: { 
-    main: './main.js' 
+  entry: {
+    main: './main.js'
   },
 
   // Allow switching between production and development modes

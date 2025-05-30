@@ -11,7 +11,7 @@ const CACHE_VERSION = 'v22'; // bump this on each release
 const CACHE_NAME    = `game-cache-${CACHE_VERSION}`;
 
 // Precache manifest will be injected here by InjectManifest
-// self.__WB_MANIFEST is replaced at build time with an array of URLs and revisions
+// self WB MANIFEST is replaced at build time with an array of URLs and revisions
 precacheAndRoute(self.__WB_MANIFEST);
 
 // Fallback: cache additional runtime requests into named cache

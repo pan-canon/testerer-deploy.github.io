@@ -44,8 +44,7 @@ class ChatScenarioManager {
    *   ]
    * }
    */
-  constructor(chatManager) {
-    let scenarioConfig = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+  constructor(chatManager, scenarioConfig = null) {
     this.chatManager = chatManager;
     this.scenarioConfig = scenarioConfig; // Scenario configuration data
     this.currentDialogueIndex = 0;
@@ -171,4 +170,4 @@ class ChatScenarioManager {
 /***/ })
 
 }]);
-//# sourceMappingURL=src_managers_ChatScenarioManager_js.110f3ee6e1ef576800e4.js.map
+//# sourceMappingURL=src_managers_ChatScenarioManager_js.9309a9abf9bf1f1c71de.js.map

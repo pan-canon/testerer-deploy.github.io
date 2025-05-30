@@ -60,8 +60,7 @@ __webpack_require__.r(__webpack_exports__);
  * is encapsulated within ChatManager.
  */
 class App {
-  constructor() {
-    let deps = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  constructor(deps = {}) {
     // Initialize or inject ViewManager and bind UI events.
     this.viewManager = deps.viewManager || new _managers_ViewManager_js__WEBPACK_IMPORTED_MODULE_7__.ViewManager(this);
     this.viewManager.bindEvents(this);
@@ -868,8 +867,7 @@ class CameraSectionManager {
    * @param {string} containerId - The ID of the container.
    * @param {Object} [options={}] - CSS style properties for the video element.
    */
-  attachTo(containerId) {
-    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  attachTo(containerId, options = {}) {
     const container = document.getElementById(containerId);
     if (!container) {
       _ErrorManager_js__WEBPACK_IMPORTED_MODULE_0__.ErrorManager.logError(`Container with id "${containerId}" not found!`, "attachTo");
@@ -1145,8 +1143,7 @@ class CameraSectionManager {
    * Stores only the `target` property from config for quest logic.
    * @param {{ target?: string }} config
    */
-  async startAIDetection() {
-    let config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  async startAIDetection(config = {}) {
     this.currentDetectionConfig = {
       target: config.target || null
     };
@@ -1262,8 +1259,7 @@ class ChatManager {
    *  - languageManager: (optional) instance of LanguageManager for locale integration.
    *  - sectionKey: (optional) unique identifier for the chat section.
    */
-  constructor() {
-    let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  constructor(options = {}) {
     this.templateUrl = options.templateUrl || `${_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.BASE_PATH}/src/templates/chat_template.html`;
     this.mode = options.mode || 'full';
     this.container = null; // DOM element for the chat section
@@ -1282,8 +1278,7 @@ class ChatManager {
    * @param {Object} options - Custom options to override default values.
    * @returns {ChatManager} A new instance of ChatManager.
    */
-  static createChatManagerWrapper() {
-    let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  static createChatManagerWrapper(options = {}) {
     const defaultOptions = {
       templateUrl: `${_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.BASE_PATH}/src/templates/chat_template.html`,
       mode: 'full'
@@ -1611,8 +1606,7 @@ class ChatManager {
    *
    * @param {number} delay - Delay in milliseconds before restarting the conversation (default: 5000 ms).
    */
-  scheduleConversationStartIfInactive() {
-    let delay = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 5000;
+  scheduleConversationStartIfInactive(delay = 5000) {
     setTimeout(() => {
       if (!this.isConversationActive()) {
         this.restartConversation();
@@ -1992,8 +1986,7 @@ class DatabaseManager {
    * @param {string} message - The chat message text.
    * @param {string} [timestamp] - Optional timestamp; if not provided, current ISO string is used.
    */
-  addChatMessage(sender, message) {
-    let timestamp = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : new Date().toISOString();
+  addChatMessage(sender, message, timestamp = new Date().toISOString()) {
     if (!this.db) {
       _ErrorManager_js__WEBPACK_IMPORTED_MODULE_2__.ErrorManager.logError("Database not initialized!", "addChatMessage");
       return;
@@ -2055,8 +2048,7 @@ class ErrorManager {
    * @param {any} error - The error object or message.
    * @param {string} [context] - Optional context indicating where the error occurred.
    */
-  static logError(error) {
-    let context = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "";
+  static logError(error, context = "") {
     console.error(`Error${context ? " in " + context : ""}:`, error);
   }
 
@@ -2140,8 +2132,7 @@ class EventManager {
    * @param {string} entry - The text of the diary entry.
    * @param {boolean} [isPostFromGhost=false] - Flag to mark the entry as a ghost post.
    */
-  async addDiaryEntry(entry) {
-    let isPostFromGhost = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+  async addDiaryEntry(entry, isPostFromGhost = false) {
     // Determine post class based on the source.
     const postClass = isPostFromGhost ? "ghost-post" : "user-post";
     const entryData = {
@@ -2613,8 +2604,7 @@ class GhostManager {
    * @param {string} eventKey - The event key to start.
    * @param {boolean} [isFollowup=false] - If true, bypasses the sequence check.
    */
-  async startEvent(eventKey) {
-    let isFollowup = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+  async startEvent(eventKey, isFollowup = false) {
     if (!isFollowup && !this.isNextEvent(eventKey)) {
       console.error(`Event "${eventKey}" is not next in sequence.`);
       return;
@@ -2903,8 +2893,7 @@ class LanguageManager {
    * @param {string} [defaultValue=key] - The default value if no translation is found.
    * @returns {string} The localized text.
    */
-  translate(key) {
-    let defaultValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : key;
+  translate(key, defaultValue = key) {
     if (this.locales[this.currentLanguage] && this.locales[this.currentLanguage][key]) {
       return this.locales[this.currentLanguage][key];
     }
@@ -3462,8 +3451,7 @@ class SQLiteDataManager {
    *   - storeName: Name of the object store (default: 'dbStore').
    *   - key: Key under which the database is stored (default: 'sqlite').
    */
-  constructor() {
-    let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  constructor(options = {}) {
     this.dbName = options.dbName || 'sqliteDB';
     this.storeName = options.storeName || 'dbStore';
     this.key = options.key || 'sqlite';
@@ -4155,7 +4143,7 @@ __webpack_require__.r(__webpack_exports__);
  */
 class StateManager {
   // Load all state-keys from external JS module
-  static KEYS = (() => _config_stateKeys_js__WEBPACK_IMPORTED_MODULE_1__["default"])();
+  static KEYS = _config_stateKeys_js__WEBPACK_IMPORTED_MODULE_1__["default"];
 
   /**
    * Retrieves the value associated with the specified key from localStorage.
@@ -4392,8 +4380,7 @@ class ViewManager {
 
   // ------------------ Dynamic Template Loading Methods ------------------
 
-  async loadTemplate(screenId) {
-    let data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  async loadTemplate(screenId, data = {}) {
     const templateUrl = `${_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.BASE_PATH}/src/templates/${screenId}_template.html`;
     try {
       const response = await fetch(templateUrl);
@@ -4903,12 +4890,11 @@ class ViewManager {
     this.setShootButtonActive(false);
     console.log("[ViewManager] Repeating quest UI stopped.");
   }
-  updateUIAfterQuestStage(_ref) {
-    let {
-      postEnabled,
-      cameraActive,
-      shootActive
-    } = _ref;
+  updateUIAfterQuestStage({
+    postEnabled,
+    cameraActive,
+    shootActive
+  }) {
     if (typeof postEnabled === 'boolean') {
       this.setPostButtonEnabled(postEnabled);
     }
@@ -5331,8 +5317,7 @@ class ViewManager {
   /**
    * Loads and renders the latest `limit` diary posts, newest first.
    */
-  async loadLatestDiaryPosts() {
-    let limit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 3;
+  async loadLatestDiaryPosts(limit = 3) {
     // Получаем все записи
     const entries = await this.app.databaseManager.getDiaryEntries();
     // Сортируем по timestamp: от новых к старым
@@ -5382,8 +5367,7 @@ class ViewManager {
       this.app.visualEffectsManager.applyEffectsToNewElements([p]);
     }
   }
-  async loadEarlierDiaryPosts() {
-    let step = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 3;
+  async loadEarlierDiaryPosts(step = 3) {
     const displayed = this.diaryContainer.querySelectorAll('.diary-entry').length;
     const allEntries = await this.app.databaseManager.getDiaryEntries();
     // Сортируем от новых к старым
@@ -5737,9 +5721,7 @@ class VisualEffectsManager {
    * @param {number} duration - Animation duration in milliseconds.
    * @param {string} soundPath - Path to the sound to play during the animation.
    */
-  slideUpPanel(panel) {
-    let duration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1000;
-    let soundPath = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'assets/audio/panel_slide.mp3';
+  slideUpPanel(panel, duration = 1000, soundPath = 'assets/audio/panel_slide.mp3') {
     if (!panel) return;
     // Set initial state: slide the panel out of view (translateY(100%)) and transparent.
     panel.style.transition = `transform ${duration}ms ease-out, opacity ${duration}ms ease-out`;
@@ -6171,8 +6153,7 @@ class TemplateEngine {
    * @param {string} templatePath – relative / absolute URL to the HTML file.
    * @param {Object} [data={}] – placeholder values.
    */
-  static async renderFile(templatePath) {
-    let data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  static async renderFile(templatePath, data = {}) {
     const response = await fetch(templatePath);
     if (!response.ok) {
       throw new Error(`[TemplateEngine] Failed to load template: ${templatePath}`);
@@ -6244,7 +6225,7 @@ class TemplateEngine {
 /******/ 		// This function allow to reference async chunks
 /******/ 		__webpack_require__.u = (chunkId) => {
 /******/ 			// return url for filenames based on template
-/******/ 			return "" + chunkId + "." + "110f3ee6e1ef576800e4" + ".js";
+/******/ 			return "" + chunkId + "." + "9309a9abf9bf1f1c71de" + ".js";
 /******/ 		};
 /******/ 	})();
 /******/ 	
@@ -6540,4 +6521,4 @@ Promise.all([loadScript(_src_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.SQL_WA
 
 /******/ })()
 ;
-//# sourceMappingURL=main.04cd0b8c36beda2c3031.js.map
+//# sourceMappingURL=main.c34ae44d847e63dd05da.js.map

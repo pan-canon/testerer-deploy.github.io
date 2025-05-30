@@ -3,7 +3,6 @@ name: CI Build & Auto-Deploy to Main
 on:
   push:
     branches: [ main ]
-    # Don’t re-run when only dist/ changes
     paths-ignore:
       - 'dist/**'
 
@@ -12,32 +11,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout code, with credentials to push back
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           persist-credentials: true
           fetch-depth: 0
 
-      # 2. Setup Node.js v16
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
 
-      # 3. Install dependencies exactly from lockfile
       - name: Install dependencies
         run: npm ci
 
-      # 4. Build the project into dist/
       - name: Build
         run: npm run build
 
-      # 5. Commit and push dist/ back to main
       - name: Commit dist to main
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add dist
+          git add -f dist
           git diff --cached --quiet || git commit -m "chore: rebuild dist [skip ci]"
           git push origin main

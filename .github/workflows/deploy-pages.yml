@@ -1,0 +1,47 @@
+# .github/workflows/deploy-to-gh-pages.yml
+
+name: CI Build & Deploy to gh-pages
+
+# Триггер — пуш в main, но игнорируем изменения только в dist/
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'dist/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1) Checkout исходников
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          # нам нужен полный history для корректной генерации changelog, если будет
+          fetch-depth: 0
+
+      # 2) Set up Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      # 3) Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # 4) Build project
+      - name: Build
+        run: npm run build
+
+      # 5) Deploy the contents of dist/ to gh-pages
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          publish_dir: ./dist
+          # по умолчанию ветка: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # (необязательно) Можно задать свой коммит-месседж:
+          # commit_message: 'chore: deploy to gh-pages [skip ci]'

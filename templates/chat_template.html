@@ -1,0 +1,15 @@
+<!-- Chat Template Fragment -->
+<div id="chat-container" style="font-family: sans-serif; border: 1px solid #ccc; border-radius: 5px; background-color: #f5f5f5; overflow: hidden;">
+  <!-- Container for chat messages; content will be dynamically injected -->
+  <div id="chat-messages" style="padding: 1rem; overflow-y: auto; height: 300px;">
+    {{ messages }}
+  </div>
+  <!-- Spirit board area for visual effects (e.g., animated letters) -->
+  <div id="spirit-board" style="margin: 1rem; padding: 1rem; background-color: #333; color: #fff; text-align: center; font-size: 1.5rem; border-radius: 5px; min-height: 50px;">
+    {{ spiritBoardContent }}
+  </div>
+  <!-- Chat options (e.g., dialogue choices buttons) -->
+  <div id="chat-options" style="padding: 0.5rem; border-top: 1px solid #ddd; background-color: #fff; text-align: center;">
+    {{ options }}
+  </div>
+</div>

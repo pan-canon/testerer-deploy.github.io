@@ -1,0 +1,79 @@
+{
+  "events": [
+    {
+      "key": "welcome",
+      "className": "WelcomeEvent",
+      "dependencies": ["eventManager", "app", "languageManager"],
+      "effects": {
+        "userText": { "speed": 100 },
+        "ghostText": { "speed": 100 }
+      }
+    },
+    {
+      "key": "post_mirror_event",
+      "className": "PostMirrorEvent",
+      "dependencies": ["eventManager", "app"],
+      "effects": {
+        "userText": { "speed": 100 },
+        "ghostText": { "speed": 100 }
+      }
+    },
+    {
+      "key": "post_repeating_event",
+      "className": "PostRepeatingEvent",
+      "dependencies": ["eventManager", "app"],
+      "effects": {
+        "userText": { "speed": 100 },
+        "ghostText": { "speed": 100 }
+      }
+    },
+    {
+      "key": "final_event",
+      "className": "FinalEvent",
+      "dependencies": ["eventManager", "app", "languageManager"],
+      "effects": {
+        "userText": { "speed": 100 },
+        "ghostText": { "speed": 100 }
+      }
+    }
+  ],
+  "quests": [
+    {
+      "key": "mirror_quest",
+      "className": "BaseMirrorQuest",
+      "dependencies": ["eventManager", "app"],
+      "effects": {
+        "userText": { "speed": 100 },
+        "ghostText": { "speed": 100 }
+      }
+    },
+    {
+      "key": "repeating_quest",
+      "className": "BaseRepeatingQuest",
+      "dependencies": ["eventManager", "app"],
+      "config": {
+        "totalStages": 5,
+        "statusElementId": "repeating-quest-status",
+        "shootButtonId": "btn_shoot"
+      },
+      "effects": {
+        "userText": { "speed": 100 },
+        "ghostText": { "speed": 100 }
+      }
+    },
+    {
+      "key": "final_quest",
+      "className": "FinalQuest",
+      "dependencies": ["eventManager", "app"],
+      "effects": {
+        "userText": { "speed": 100 },
+        "ghostText": { "speed": 100 }
+      }
+    }
+  ],
+  "sequence": [
+    { "eventKey": "welcome", "questKey": "mirror_quest", "nextEventKey": "post_repeating_event" },
+    { "eventKey": "post_repeating_event", "questKey": "repeating_quest", "nextEventKey": "final_event" },
+    { "eventKey": "final_event", "questKey": "final_quest", "nextEventKey": null }
+  ]
+}

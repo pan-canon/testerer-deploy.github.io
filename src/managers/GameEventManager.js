@@ -35,14 +35,17 @@ export class GameEventManager {
           };
           const params = eventCfg.dependencies.map(dep => dependencyMapping[dep]);
 
-          // Dynamically import the event class from ../events/<ClassName>.js
-          const modulePath = `../events/${eventCfg.className}.js`;
+          // Dynamically import the event class from the triad entry for eventCfg.key
           try {
-            const module = await import(modulePath);
+            // Import the entire triad bundle for this eventKey
+            const module = await import(
+              /* webpackChunkName: "triad-[request]" */
+              `../triads/triad-${eventCfg.key}.js`
+            );
             const EventClass = module[eventCfg.className];
             if (!EventClass) {
               ErrorManager.logError(
-                `Event class "${eventCfg.className}" is not exported from ${modulePath}.`,
+                `Event class "${eventCfg.className}" is not exported from triads/triad-${eventCfg.key}.js.`,
                 "GameEventManager"
               );
               continue;
@@ -53,7 +56,7 @@ export class GameEventManager {
             this.events.push(instance);
           } catch (error) {
             ErrorManager.logError(
-              `Failed to import event class "${eventCfg.className}" from ${modulePath}: ${error.message}`,
+              `Failed to import triad for event "${eventCfg.key}": ${error.message}`,
               "GameEventManager"
             );
           }

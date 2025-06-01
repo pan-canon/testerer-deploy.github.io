@@ -11,10 +11,10 @@ const CACHE_VERSION = 'v27'; // bump this on each release
 const CACHE_NAME    = `game-cache-${CACHE_VERSION}`;
 
 // Precache manifest will be injected here by InjectManifest
-// self WB MANIFEST is replaced at build time with an array of URLs and revisions
+// self.__WB_MANIFEST is replaced at build time with an array of URLs and revisions
+// This will include main bundle, triad chunks, and other assets.
 precacheAndRoute(self.__WB_MANIFEST);
 
-// Fallback: cache additional runtime requests into named cache
 self.addEventListener('install', event => {
   // Force this SW to become active immediately
   self.skipWaiting();

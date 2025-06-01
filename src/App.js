@@ -101,8 +101,8 @@ export class App {
     await this.cameraSectionManager.preloadModel();
     await this.questManager.syncQuestState();
     this.questManager.restoreAllActiveQuests();
-    // Если перед перезагрузкой камера помечена как активная — просто подсветим кнопку,
-    // но НЕ будем её автоматически открывать и не запускать getUserMedia.
+    // If the camera was marked as open before reload, restore the button state,
+    // but do NOT reopen the camera or call getUserMedia automatically.
     if (StateManager.isCameraOpen()) {
       this.viewManager.setCameraButtonActive(true);
       console.log("Camera button active state restored based on saved state.");
@@ -125,7 +125,7 @@ export class App {
       await this.viewManager.switchScreen('main-screen', 'main-buttons', this);
       this.viewManager.showToggleCameraButton();
 
-      // Читаем состояние из предыдущего сохранения
+      // Read state from previous save
       const postButtonDisabled = StateManager.get("postButtonDisabled") === "true";
       this.viewManager.setPostButtonEnabled(!postButtonDisabled);
 

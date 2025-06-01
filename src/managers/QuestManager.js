@@ -2,7 +2,7 @@
 
 import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
-import { loadGameEntitiesConfig } from '../utils/GameEntityLoader.js';
+import { loadGameEntitiesConfig, getQuestKeyToEventKeyMap } from '../utils/GameEntityLoader.js';
 
 /**
  * QuestManager class
@@ -21,8 +21,9 @@ export class QuestManager {
     this.quests = [];
 
     // Load the unified configuration and instantiate quests dynamically.
-    loadGameEntitiesConfig()
-      .then(async config => {
+    // Also prepare a mapping from questKey to its parent eventKey.
+    Promise.all([ loadGameEntitiesConfig(), getQuestKeyToEventKeyMap() ])
+      .then(async ([config, questKeyToEventKey]) => {
         for (const questCfg of config.quests) {
           // Build dependency mapping.
           const dependencyMapping = {
@@ -34,14 +35,27 @@ export class QuestManager {
           if (questCfg.config) {
             params.push(questCfg.config);
           }
-          // Dynamically import the quest class from ../quests/<ClassName>.js
-          const modulePath = `../quests/${questCfg.className}.js`;
+
+          // Determine which triad chunk this quest belongs to.
+          const eventKey = questKeyToEventKey[questCfg.key];
+          if (!eventKey) {
+            ErrorManager.logError(
+              `Cannot find parent eventKey for quest "${questCfg.key}".`,
+              "QuestManager"
+            );
+            continue;
+          }
+
+          // Dynamically import the triad bundle for that eventKey instead of individual quest file.
           try {
-            const module = await import(modulePath);
+            const module = await import(
+              /* webpackChunkName: "triad-[request]" */
+              `../triads/triad-${eventKey}.js`
+            );
             const QuestClass = module[questCfg.className];
             if (!QuestClass) {
               ErrorManager.logError(
-                `Quest class "${questCfg.className}" is not exported from ${modulePath}.`,
+                `Quest class "${questCfg.className}" is not exported from triads/triad-${eventKey}.js.`,
                 "QuestManager"
               );
               continue;
@@ -52,7 +66,7 @@ export class QuestManager {
             this.quests.push(instance);
           } catch (error) {
             ErrorManager.logError(
-              `Failed to import quest class "${questCfg.className}" from ${modulePath}: ${error.message}`,
+              `Failed to import triad for quest "${questCfg.key}": ${error.message}`,
               "QuestManager"
             );
           }
@@ -74,7 +88,7 @@ export class QuestManager {
     if (this.app.viewManager && typeof this.app.viewManager.restoreCameraButtonState === 'function') {
       this.app.viewManager.restoreCameraButtonState();
     }
-    // *** Добавляем восcтановление для кнопки Shoot ***
+    // *** Add restoration for the Shoot button ***
     if (this.app.viewManager && typeof this.app.viewManager.restoreShootButtonState === 'function') {
       this.app.viewManager.restoreShootButtonState();
     }

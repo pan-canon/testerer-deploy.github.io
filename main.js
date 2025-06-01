@@ -187,7 +187,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   SQL_WASM_URL: () => (/* binding */ SQL_WASM_URL),
 /* harmony export */   TFJS_URL: () => (/* binding */ TFJS_URL)
 /* harmony export */ });
-// src/config/paths.js
+// config/paths.js
 const BASE_PATH = window.location.hostname.includes("github.io") ? "/testerer-deploy.github.io" : "";
 const ASSETS_PATH = `${BASE_PATH}/assets`;
 const SQL_WASM_URL = `${ASSETS_PATH}/libs/db/sql-wasm.js`;
@@ -208,7 +208,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-// src/config/stateKeys.js
+// config/stateKeys.js
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   CURRENT_SEQUENCE_INDEX: 'currentSequenceIndex',
   POST_BUTTON_DISABLED: 'postButtonDisabled',
@@ -1252,7 +1252,7 @@ __webpack_require__.r(__webpack_exports__);
 class ChatManager {
   /**
    * @param {Object} options - Configuration options for the chat.
-   *  - templateUrl: URL to fetch the chat template fragment (default: dynamic base path + '/src/templates/chat_template.html')
+   *  - templateUrl: URL to fetch the chat template fragment (default: dynamic base path + '/templates/chat_template.html')
    *  - mode: 'full' (default) for full chat, or 'board-only' for displaying only the spirit board.
    *  - basePath: (optional) override for the base path.
    *  - databaseManager: (optional) instance of DatabaseManager to load chat messages.
@@ -1260,7 +1260,7 @@ class ChatManager {
    *  - sectionKey: (optional) unique identifier for the chat section.
    */
   constructor(options = {}) {
-    this.templateUrl = options.templateUrl || `${_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.BASE_PATH}/src/templates/chat_template.html`;
+    this.templateUrl = options.templateUrl || `${_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.BASE_PATH}/templates/chat_template.html`;
     this.mode = options.mode || 'full';
     this.container = null; // DOM element for the chat section
     this.databaseManager = options.databaseManager || null;
@@ -1280,7 +1280,7 @@ class ChatManager {
    */
   static createChatManagerWrapper(options = {}) {
     const defaultOptions = {
-      templateUrl: `${_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.BASE_PATH}/src/templates/chat_template.html`,
+      templateUrl: `${_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.BASE_PATH}/templates/chat_template.html`,
       mode: 'full'
     };
     return new ChatManager({
@@ -4381,7 +4381,7 @@ class ViewManager {
   // ------------------ Dynamic Template Loading Methods ------------------
 
   async loadTemplate(screenId, data = {}) {
-    const templateUrl = `${_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.BASE_PATH}/src/templates/${screenId}_template.html`;
+    const templateUrl = `${_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.BASE_PATH}/templates/${screenId}_template.html`;
     try {
       const response = await fetch(templateUrl);
       if (!response.ok) {
@@ -5348,7 +5348,7 @@ class ViewManager {
     const imgTag = imgSrc ? `<img src="${imgSrc}" alt="Diary image" />` : "";
 
     // абсолютный URL к шаблону
-    const templateUrl = `${_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.BASE_PATH}/src/templates/diaryentry_screen-template.html`;
+    const templateUrl = `${_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.BASE_PATH}/templates/diaryentry_screen-template.html`;
 
     // рендерим, подставляя разделённый текст и картинку
     const html = await _utils_TemplateEngine_js__WEBPACK_IMPORTED_MODULE_5__.TemplateEngine.renderFile(templateUrl, {
@@ -5374,7 +5374,7 @@ class ViewManager {
     allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     // Берём следующий кусок
     const nextChunk = allEntries.slice(displayed, displayed + step);
-    const templateUrl = `${_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.BASE_PATH}/src/templates/diaryentry_screen-template.html`;
+    const templateUrl = `${_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.BASE_PATH}/templates/diaryentry_screen-template.html`;
     for (const entry of nextChunk) {
       // разбираем текст и картинку
       let text = entry.entry;
@@ -5857,7 +5857,7 @@ __webpack_require__.r(__webpack_exports__);
  * from a unified JSON file.
  */
 async function loadGameEntitiesConfig() {
-  const response = await fetch('./src/config/gameEntities.json');
+  const response = await fetch('config/gameEntities.json');
   if (!response.ok) {
     throw new Error('Failed to load game entities configuration');
   }
@@ -6425,7 +6425,7 @@ var __webpack_exports__ = {};
   !*** ./main.js ***!
   \*****************/
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _src_config_paths_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./src/config/paths.js */ "./src/config/paths.js");
+/* harmony import */ var config_paths_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! config/paths.js */ "./src/config/paths.js");
 /* harmony import */ var _src_App_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./src/App.js */ "./src/App.js");
 
 
@@ -6443,7 +6443,7 @@ function loadScript(src) {
 }
 
 // 1. Load SQL.js, TF.js and COCO-SSD in sequence before doing anything else
-Promise.all([loadScript(_src_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.SQL_WASM_URL), loadScript(_src_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.TFJS_URL), loadScript(_src_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.COCO_SSD_URL)]).then(() => {
+Promise.all([loadScript(config_paths_js__WEBPACK_IMPORTED_MODULE_0__.SQL_WASM_URL), loadScript(config_paths_js__WEBPACK_IMPORTED_MODULE_0__.TFJS_URL), loadScript(config_paths_js__WEBPACK_IMPORTED_MODULE_0__.COCO_SSD_URL)]).then(() => {
   console.log('All external libraries loaded');
 
   // 2. Wait for DOM, then initialize App and PWA logic
@@ -6474,7 +6474,7 @@ Promise.all([loadScript(_src_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.SQL_WA
 
     // 3. Service Worker registration with auto-update hooks
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register(`${_src_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.BASE_PATH}/sw.js`).then(reg => {
+      navigator.serviceWorker.register(`${config_paths_js__WEBPACK_IMPORTED_MODULE_0__.BASE_PATH}/sw.js`).then(reg => {
         console.log('Service Worker registered with scope:', reg.scope);
 
         // If there's an update ready, tell it to skip waiting

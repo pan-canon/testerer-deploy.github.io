@@ -55,7 +55,7 @@ class ChatScenarioManager {
   /**
    * Asynchronously initializes the scenario manager.
    * If no configuration is provided, it fetches the dialogue configuration from
-   * 'src/config/chatDialogueConfig.json'. This method also restores any saved dialogue
+   * 'config/chatDialogueConfig.json'. This method also restores any saved dialogue
    * state unless the conversation has been marked as completed.
    * Previously, if chat messages were already present in the database, dialogue initialization
    * was skipped, which caused the dialogue options to disappear after a page reload.
@@ -65,9 +65,9 @@ class ChatScenarioManager {
   async init() {
     if (!this.scenarioConfig) {
       try {
-        const response = await fetch(`${_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.BASE_PATH}/src/config/chatDialogueConfig.json`);
+        const response = await fetch(`${_config_paths_js__WEBPACK_IMPORTED_MODULE_0__.BASE_PATH}/config/chatDialogueConfig.json`);
         if (!response.ok) {
-          throw new Error("Failed to load dialogue configuration from 'src/config/chatDialogueConfig.json'");
+          throw new Error("Failed to load dialogue configuration from 'config/chatDialogueConfig.json'");
         }
         this.scenarioConfig = await response.json();
       } catch (error) {

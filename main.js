@@ -123,8 +123,8 @@ class App {
     await this.cameraSectionManager.preloadModel();
     await this.questManager.syncQuestState();
     this.questManager.restoreAllActiveQuests();
-    // Если перед перезагрузкой камера помечена как активная — просто подсветим кнопку,
-    // но НЕ будем её автоматически открывать и не запускать getUserMedia.
+    // If the camera was marked as open before reload, restore the button state,
+    // but do NOT reopen the camera or call getUserMedia automatically.
     if (_managers_StateManager_js__WEBPACK_IMPORTED_MODULE_5__.StateManager.isCameraOpen()) {
       this.viewManager.setCameraButtonActive(true);
       console.log("Camera button active state restored based on saved state.");
@@ -145,7 +145,7 @@ class App {
       await this.viewManager.switchScreen('main-screen', 'main-buttons', this);
       this.viewManager.showToggleCameraButton();
 
-      // Читаем состояние из предыдущего сохранения
+      // Read state from previous save
       const postButtonDisabled = _managers_StateManager_js__WEBPACK_IMPORTED_MODULE_5__.StateManager.get("postButtonDisabled") === "true";
       this.viewManager.setPostButtonEnabled(!postButtonDisabled);
       this.viewManager.updateProfileDisplay(profile);
@@ -438,28 +438,6 @@ const locales = {
   }
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (locales);
-
-/***/ }),
-
-/***/ "./src/managers lazy recursive":
-/*!*********************************************!*\
-  !*** ./src/managers/ lazy namespace object ***!
-  \*********************************************/
-/***/ ((module) => {
-
-function webpackEmptyAsyncContext(req) {
-	// Here Promise.resolve().then() is used instead of new Promise() to prevent
-	// uncaught exception popping up in devtools
-	return Promise.resolve().then(() => {
-		var e = new Error("Cannot find module '" + req + "'");
-		e.code = 'MODULE_NOT_FOUND';
-		throw e;
-	});
-}
-webpackEmptyAsyncContext.keys = () => ([]);
-webpackEmptyAsyncContext.resolve = webpackEmptyAsyncContext;
-webpackEmptyAsyncContext.id = "./src/managers lazy recursive";
-module.exports = webpackEmptyAsyncContext;
 
 /***/ }),
 
@@ -2249,13 +2227,13 @@ class GameEventManager {
         };
         const params = eventCfg.dependencies.map(dep => dependencyMapping[dep]);
 
-        // Dynamically import the event class from ../events/<ClassName>.js
-        const modulePath = `../events/${eventCfg.className}.js`;
+        // Dynamically import the event class from the triad entry for eventCfg.key
         try {
-          const module = await __webpack_require__("./src/managers lazy recursive")(modulePath);
+          // Import the entire triad bundle for this eventKey
+          const module = await __webpack_require__("./src/triads lazy recursive ^\\.\\/triad\\-.*\\.js$")(`./triad-${eventCfg.key}.js`);
           const EventClass = module[eventCfg.className];
           if (!EventClass) {
-            _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Event class "${eventCfg.className}" is not exported from ${modulePath}.`, "GameEventManager");
+            _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Event class "${eventCfg.className}" is not exported from triads/triad-${eventCfg.key}.js.`, "GameEventManager");
             continue;
           }
           const instance = new EventClass(...params);
@@ -2263,7 +2241,7 @@ class GameEventManager {
           instance.key = eventCfg.key;
           this.events.push(instance);
         } catch (error) {
-          _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Failed to import event class "${eventCfg.className}" from ${modulePath}: ${error.message}`, "GameEventManager");
+          _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Failed to import triad for event "${eventCfg.key}": ${error.message}`, "GameEventManager");
         }
       }
       console.log("Game events loaded from configuration:", this.events.map(e => e.key));
@@ -3240,7 +3218,8 @@ class QuestManager {
     this.quests = [];
 
     // Load the unified configuration and instantiate quests dynamically.
-    (0,_utils_GameEntityLoader_js__WEBPACK_IMPORTED_MODULE_2__.loadGameEntitiesConfig)().then(async config => {
+    // Also prepare a mapping from questKey to its parent eventKey.
+    Promise.all([(0,_utils_GameEntityLoader_js__WEBPACK_IMPORTED_MODULE_2__.loadGameEntitiesConfig)(), (0,_utils_GameEntityLoader_js__WEBPACK_IMPORTED_MODULE_2__.getQuestKeyToEventKeyMap)()]).then(async ([config, questKeyToEventKey]) => {
       for (const questCfg of config.quests) {
         // Build dependency mapping.
         const dependencyMapping = {
@@ -3252,13 +3231,20 @@ class QuestManager {
         if (questCfg.config) {
           params.push(questCfg.config);
         }
-        // Dynamically import the quest class from ../quests/<ClassName>.js
-        const modulePath = `../quests/${questCfg.className}.js`;
+
+        // Determine which triad chunk this quest belongs to.
+        const eventKey = questKeyToEventKey[questCfg.key];
+        if (!eventKey) {
+          _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Cannot find parent eventKey for quest "${questCfg.key}".`, "QuestManager");
+          continue;
+        }
+
+        // Dynamically import the triad bundle for that eventKey instead of individual quest file.
         try {
-          const module = await __webpack_require__("./src/managers lazy recursive")(modulePath);
+          const module = await __webpack_require__("./src/triads lazy recursive ^\\.\\/triad\\-.*\\.js$")(`./triad-${eventKey}.js`);
           const QuestClass = module[questCfg.className];
           if (!QuestClass) {
-            _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Quest class "${questCfg.className}" is not exported from ${modulePath}.`, "QuestManager");
+            _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Quest class "${questCfg.className}" is not exported from triads/triad-${eventKey}.js.`, "QuestManager");
             continue;
           }
           const instance = new QuestClass(...params);
@@ -3266,7 +3252,7 @@ class QuestManager {
           instance.key = questCfg.key;
           this.quests.push(instance);
         } catch (error) {
-          _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Failed to import quest class "${questCfg.className}" from ${modulePath}: ${error.message}`, "QuestManager");
+          _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Failed to import triad for quest "${questCfg.key}": ${error.message}`, "QuestManager");
         }
       }
       console.log("Quests loaded from configuration:", this.quests.map(q => q.key));
@@ -3284,7 +3270,7 @@ class QuestManager {
     if (this.app.viewManager && typeof this.app.viewManager.restoreCameraButtonState === 'function') {
       this.app.viewManager.restoreCameraButtonState();
     }
-    // *** Добавляем восcтановление для кнопки Shoot ***
+    // *** Add restoration for the Shoot button ***
     if (this.app.viewManager && typeof this.app.viewManager.restoreShootButtonState === 'function') {
       this.app.viewManager.restoreShootButtonState();
     }
@@ -5839,6 +5825,46 @@ class TypewriterEffect extends BaseEffect {
 
 /***/ }),
 
+/***/ "./src/triads lazy recursive ^\\.\\/triad\\-.*\\.js$":
+/*!******************************************************************************************!*\
+  !*** ./src/triads/ lazy ^\.\/triad\-.*\.js$ chunkName: triad-[request] namespace object ***!
+  \******************************************************************************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+var map = {
+	"./triad-final_event.js": [
+		"./src/triads/triad-final_event.js",
+		"triad-triad-final_event-js"
+	],
+	"./triad-post_repeating_event.js": [
+		"./src/triads/triad-post_repeating_event.js",
+		"triad-triad-post_repeating_event-js"
+	],
+	"./triad-welcome.js": [
+		"./src/triads/triad-welcome.js",
+		"triad-triad-welcome-js"
+	]
+};
+function webpackAsyncContext(req) {
+	if(!__webpack_require__.o(map, req)) {
+		return Promise.resolve().then(() => {
+			var e = new Error("Cannot find module '" + req + "'");
+			e.code = 'MODULE_NOT_FOUND';
+			throw e;
+		});
+	}
+
+	var ids = map[req], id = ids[0];
+	return __webpack_require__.e(ids[1]).then(() => {
+		return __webpack_require__(id);
+	});
+}
+webpackAsyncContext.keys = () => (Object.keys(map));
+webpackAsyncContext.id = "./src/triads lazy recursive ^\\.\\/triad\\-.*\\.js$";
+module.exports = webpackAsyncContext;
+
+/***/ }),
+
 /***/ "./src/utils/GameEntityLoader.js":
 /*!***************************************!*\
   !*** ./src/utils/GameEntityLoader.js ***!
@@ -5848,13 +5874,19 @@ class TypewriterEffect extends BaseEffect {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   getQuestKeyToEventKeyMap: () => (/* binding */ getQuestKeyToEventKeyMap),
 /* harmony export */   loadGameEntitiesConfig: () => (/* binding */ loadGameEntitiesConfig)
 /* harmony export */ });
 /**
  * GameEntityLoader.js
  * 
- * Provides a function to load the game entities configuration (events, quests, and sequence)
- * from a unified JSON file.
+ * Provides functions to load the game entities configuration (events, quests, and sequence)
+ * from a unified JSON file and derive mappings for use in managers.
+ */
+
+/**
+ * Loads the game entities configuration by fetching the JSON file.
+ * Returns an object containing `events`, `quests`, and `sequence`.
  */
 async function loadGameEntitiesConfig() {
   const response = await fetch('config/gameEntities.json');
@@ -5863,6 +5895,29 @@ async function loadGameEntitiesConfig() {
   }
   const config = await response.json();
   return config;
+}
+
+/**
+ * Constructs a mapping from questKey to its parent eventKey based on the sequence.
+ * 
+ * Example return value:
+ * {
+ *   "mirror_quest": "welcome",
+ *   "repeating_quest": "post_repeating_event",
+ *   "final_quest": "final_event"
+ * }
+ * 
+ * Usage:
+ *   const questKeyToEventKey = await getQuestKeyToEventKeyMap();
+ */
+async function getQuestKeyToEventKeyMap() {
+  const config = await loadGameEntitiesConfig();
+  const map = {};
+  config.sequence.forEach(triad => {
+    // triad: { eventKey, questKey, nextEventKey }
+    map[triad.questKey] = triad.eventKey;
+  });
+  return map;
 }
 
 /***/ }),

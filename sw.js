@@ -7,11 +7,11 @@ const BASE_PATH = self.location.hostname.includes("github.io")
   ? "/testerer-deploy.github.io"
   : "";
 
-const CACHE_VERSION = 'v27'; // bump this on each release
+const CACHE_VERSION = 'v28'; // bump this on each release
 const CACHE_NAME    = `game-cache-${CACHE_VERSION}`;
 
 // Precache manifest will be injected here by InjectManifest
-// self.__WB_MANIFEST is replaced at build time with an array of URLs and revisions
+// self. __WB_MANIFEST is replaced at build time with an array of URLs and revisions
 // This will include main bundle, triad chunks, and other assets.
 precacheAndRoute(self.__WB_MANIFEST);
 

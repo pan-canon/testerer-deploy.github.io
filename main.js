@@ -1,5 +1,4 @@
 /******/ (() => { // webpackBootstrap
-/******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
 /***/ "./src/App.js":
@@ -8,6 +7,7 @@
   \********************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   App: () => (/* binding */ App)
@@ -177,6 +177,7 @@ class App {
   \*****************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   ASSETS_PATH: () => (/* binding */ ASSETS_PATH),
@@ -202,6 +203,7 @@ const COCO_SSD_MODEL = `${ASSETS_PATH}/models/coco-ssd/model.json`;
   \*********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
@@ -227,6 +229,7 @@ __webpack_require__.r(__webpack_exports__);
   \***************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
@@ -266,6 +269,7 @@ const chatLocales_en = {
   \***************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
@@ -305,6 +309,7 @@ const chatLocales_ru = {
   \***************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
@@ -344,6 +349,7 @@ const chatLocales_uk = {
   \********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
@@ -441,6 +447,7 @@ const locales = {
   \**********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   ApartmentPlanManager: () => (/* binding */ ApartmentPlanManager)
@@ -764,6 +771,7 @@ class ApartmentPlanManager {
   \**********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   CameraSectionManager: () => (/* binding */ CameraSectionManager)
@@ -1206,6 +1214,7 @@ class CameraSectionManager {
   \*************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   ChatManager: () => (/* binding */ ChatManager)
@@ -1610,6 +1619,7 @@ class ChatManager {
   \*****************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   DatabaseManager: () => (/* binding */ DatabaseManager)
@@ -1995,6 +2005,7 @@ class DatabaseManager {
   \**************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   ErrorManager: () => (/* binding */ ErrorManager)
@@ -2039,6 +2050,7 @@ class ErrorManager {
   \**************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   EventManager: () => (/* binding */ EventManager)
@@ -2171,6 +2183,7 @@ class EventManager {
   \******************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   GameEventManager: () => (/* binding */ GameEventManager)
@@ -2217,7 +2230,7 @@ class GameEventManager {
         // Dynamically import the event class from the triad entry for eventCfg.key
         try {
           // Import the entire triad bundle for this eventKey
-          const module = await Object(function webpackMissingModule() { var e = new Error("Cannot find module 'undefined'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
+          const module = await __webpack_require__("./src/triads lazy recursive ^\\.\\/triad\\-.*\\.js$")(`./triad-${eventCfg.key}.js`);
           const EventClass = module[eventCfg.className];
           if (!EventClass) {
             _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Event class "${eventCfg.className}" is not exported from triads/triad-${eventCfg.key}.js.`, "GameEventManager");
@@ -2281,6 +2294,7 @@ class GameEventManager {
   \**************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   GhostManager: () => (/* binding */ GhostManager)
@@ -2688,6 +2702,7 @@ class GhostManager {
   \*****************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   LanguageManager: () => (/* binding */ LanguageManager)
@@ -2872,6 +2887,7 @@ class LanguageManager {
   \*********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   NotificationManager: () => (/* binding */ NotificationManager)
@@ -2902,6 +2918,7 @@ class NotificationManager {
   \****************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   ProfileManager: () => (/* binding */ ProfileManager)
@@ -3170,6 +3187,7 @@ class ProfileManager {
   \**************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   QuestManager: () => (/* binding */ QuestManager)
@@ -3223,7 +3241,7 @@ class QuestManager {
 
         // Dynamically import the triad bundle for that eventKey instead of individual quest file.
         try {
-          const module = await Object(function webpackMissingModule() { var e = new Error("Cannot find module 'undefined'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
+          const module = await __webpack_require__("./src/triads lazy recursive ^\\.\\/triad\\-.*\\.js$")(`./triad-${eventKey}.js`);
           const QuestClass = module[questCfg.className];
           if (!QuestClass) {
             _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Quest class "${questCfg.className}" is not exported from triads/triad-${eventKey}.js.`, "QuestManager");
@@ -3406,6 +3424,7 @@ class QuestManager {
   \*******************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   SQLiteDataManager: () => (/* binding */ SQLiteDataManager)
@@ -3719,6 +3738,7 @@ class SQLiteDataManager {
   \******************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   ShowProfileModal: () => (/* binding */ ShowProfileModal)
@@ -4087,6 +4107,7 @@ class ShowProfileModal {
   \**************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   StateManager: () => (/* binding */ StateManager)
@@ -4213,6 +4234,7 @@ class StateManager {
   \*************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   ViewManager: () => (/* binding */ ViewManager)
@@ -5381,6 +5403,7 @@ class ViewManager {
   \**********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   BaseEffect: () => (/* binding */ BaseEffect),
@@ -5802,12 +5825,53 @@ class TypewriterEffect extends BaseEffect {
 
 /***/ }),
 
+/***/ "./src/triads lazy recursive ^\\.\\/triad\\-.*\\.js$":
+/*!******************************************************************************************!*\
+  !*** ./src/triads/ lazy ^\.\/triad\-.*\.js$ chunkName: triad-[request] namespace object ***!
+  \******************************************************************************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+var map = {
+	"./triad-final_event.js": [
+		"./src/triads/triad-final_event.js",
+		"triad-triad-final_event-js"
+	],
+	"./triad-post_repeating_event.js": [
+		"./src/triads/triad-post_repeating_event.js",
+		"triad-triad-post_repeating_event-js"
+	],
+	"./triad-welcome.js": [
+		"./src/triads/triad-welcome.js",
+		"triad-triad-welcome-js"
+	]
+};
+function webpackAsyncContext(req) {
+	if(!__webpack_require__.o(map, req)) {
+		return Promise.resolve().then(() => {
+			var e = new Error("Cannot find module '" + req + "'");
+			e.code = 'MODULE_NOT_FOUND';
+			throw e;
+		});
+	}
+
+	var ids = map[req], id = ids[0];
+	return __webpack_require__.e(ids[1]).then(() => {
+		return __webpack_require__(id);
+	});
+}
+webpackAsyncContext.keys = () => (Object.keys(map));
+webpackAsyncContext.id = "./src/triads lazy recursive ^\\.\\/triad\\-.*\\.js$";
+module.exports = webpackAsyncContext;
+
+/***/ }),
+
 /***/ "./src/utils/GameEntityLoader.js":
 /*!***************************************!*\
   !*** ./src/utils/GameEntityLoader.js ***!
   \***************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   getQuestKeyToEventKeyMap: () => (/* binding */ getQuestKeyToEventKeyMap),
@@ -5864,6 +5928,7 @@ async function getQuestKeyToEventKeyMap() {
   \*********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   ImageUtils: () => (/* binding */ ImageUtils)
@@ -5975,6 +6040,7 @@ class ImageUtils {
   \**************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   SequenceManager: () => (/* binding */ SequenceManager)
@@ -6052,6 +6118,7 @@ class SequenceManager {
   \***************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   animateText: () => (/* binding */ animateText)
@@ -6102,6 +6169,7 @@ function animateText(element, text) {
   \*************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   TemplateEngine: () => (/* binding */ TemplateEngine)
@@ -6405,8 +6473,9 @@ class TemplateEngine {
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
-// This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
+// This entry needs to be wrapped in an IIFE because it needs to be in strict mode.
 (() => {
+"use strict";
 /*!*****************!*\
   !*** ./main.js ***!
   \*****************/

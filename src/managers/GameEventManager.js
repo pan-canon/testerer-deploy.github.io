@@ -18,10 +18,10 @@ export class GameEventManager {
    * @param {LanguageManager} languageManager - Localization manager.
    */
   constructor(eventManager, appInstance, languageManager) {
-    this.eventManager = eventManager;
-    this.app = appInstance;
+    this.eventManager    = eventManager;
+    this.app             = appInstance;
     this.languageManager = languageManager;
-    this.events = [];
+    this.events          = [];
 
     // Load the unified configuration and instantiate events dynamically.
     loadGameEntitiesConfig()
@@ -29,18 +29,18 @@ export class GameEventManager {
         for (const eventCfg of config.events) {
           // Build dependency mapping.
           const dependencyMapping = {
-            "eventManager": this.eventManager,
-            "app": this.app,
+            "eventManager":    this.eventManager,
+            "app":             this.app,
             "languageManager": this.languageManager
           };
           const params = eventCfg.dependencies.map(dep => dependencyMapping[dep]);
 
           // Dynamically import the event class from the triad entry for eventCfg.key
           try {
-            // Import the entire triad bundle for this eventKey
+            // Import the entire triad bundle for this eventKey via alias "triads"
             const module = await import(
-              /* webpackChunkName: "triad-[request]" */
-              `../triads/triad-${eventCfg.key}.js`
+              /* webpackChunkName: "triads/triad-[request]" */
+              `triads/triad-${eventCfg.key}.js`
             );
             const EventClass = module[eventCfg.className];
             if (!EventClass) {

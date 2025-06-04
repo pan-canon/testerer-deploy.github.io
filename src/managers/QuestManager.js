@@ -17,8 +17,8 @@ export class QuestManager {
    */
   constructor(eventManager, appInstance) {
     this.eventManager = eventManager;
-    this.app = appInstance;
-    this.quests = [];
+    this.app          = appInstance;
+    this.quests       = [];
 
     // Load the unified configuration and instantiate quests dynamically.
     // Also prepare a mapping from questKey to its parent eventKey.
@@ -28,7 +28,7 @@ export class QuestManager {
           // Build dependency mapping.
           const dependencyMapping = {
             "eventManager": this.eventManager,
-            "app": this.app
+            "app":          this.app
           };
           const params = questCfg.dependencies.map(dep => dependencyMapping[dep]);
           // If quest-specific configuration exists, append it.
@@ -48,9 +48,10 @@ export class QuestManager {
 
           // Dynamically import the triad bundle for that eventKey instead of individual quest file.
           try {
+            // Import via alias "triads" so Webpack resolves build/triads/triad-<eventKey>.js
             const module = await import(
-              /* webpackChunkName: "triad-[request]" */
-              `../triads/triad-${eventKey}.js`
+              /* webpackChunkName: "triads/triad-[request]" */
+              `triads/triad-${eventKey}.js`
             );
             const QuestClass = module[questCfg.className];
             if (!QuestClass) {
@@ -194,7 +195,7 @@ export class QuestManager {
    */
   async updateQuestProgress(questKey, currentStage, totalStages, status) {
     const questData = {
-      quest_key: questKey,
+      quest_key:    questKey,
       current_stage: currentStage,
       total_stages: totalStages,
       status
@@ -236,7 +237,7 @@ export class QuestManager {
         }
       }
     });
-    // Обновляем кнопку Post после восстановления UI
+    // Update the Post button state after UI restoration
     if (this.app.ghostManager && typeof this.app.ghostManager.updatePostButtonState === 'function') {
       this.app.ghostManager.updatePostButtonState();
     }

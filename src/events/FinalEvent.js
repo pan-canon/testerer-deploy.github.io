@@ -1,3 +1,5 @@
+// File: src/events/FinalEvent.js
+
 import { BaseEvent } from './BaseEvent.js';
 import { StateManager } from '../managers/StateManager.js';
 import { ErrorManager } from '../managers/ErrorManager.js';
@@ -17,13 +19,14 @@ export class FinalEvent extends BaseEvent {
   /**
    * @param {EventManager} eventManager - The diary/event manager.
    * @param {App} appInstance - The main application instance.
+   * @param {Object} config - Configuration object from gameEntities.json, contains `key`.
    * @param {LanguageManager} [languageManager] - Optional localization manager.
    */
-  constructor(eventManager, appInstance, languageManager) {
+  constructor(eventManager, appInstance, config, languageManager) {
     super(eventManager);
     this.app = appInstance;
     this.languageManager = languageManager;
-    this.key = "final_event";
+    this.key = config.key;
   }
 
   async activate() {
@@ -39,7 +42,10 @@ export class FinalEvent extends BaseEvent {
     StateManager.set(StateManager.KEYS.GAME_FINALIZED, "true");
 
     // Trigger the ghost fade-out effect.
-    if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerGhostAppearanceEffect === "function") {
+    if (
+      this.app.visualEffectsManager &&
+      typeof this.app.visualEffectsManager.triggerGhostAppearanceEffect === "function"
+    ) {
       this.app.visualEffectsManager.triggerGhostAppearanceEffect("ghost_fade_out");
     }
 
@@ -47,12 +53,18 @@ export class FinalEvent extends BaseEvent {
     await this.app.ghostManager.finishCurrentGhost();
 
     // Disable active UI elements (e.g. Post button).
-    if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
+    if (
+      this.app.viewManager &&
+      typeof this.app.viewManager.setPostButtonEnabled === "function"
+    ) {
       this.app.viewManager.setPostButtonEnabled(false);
     }
 
     // Re-sync UI state.
-    if (this.app.questManager && typeof this.app.questManager.syncQuestState === "function") {
+    if (
+      this.app.questManager &&
+      typeof this.app.questManager.syncQuestState === "function"
+    ) {
       await this.app.questManager.syncQuestState();
     }
 
@@ -60,7 +72,10 @@ export class FinalEvent extends BaseEvent {
     StateManager.setActiveQuestKey(null);
 
     // Notify the user that the scenario is finished.
-    if (this.app.viewManager && typeof this.app.viewManager.showNotification === "function") {
+    if (
+      this.app.viewManager &&
+      typeof this.app.viewManager.showNotification === "function"
+    ) {
       this.app.viewManager.showNotification("🎉 Congratulations, the scenario is finished!");
     } else {
       console.log("🎉 Congratulations, the scenario is finished!");

@@ -24,11 +24,15 @@ export class QuestManager {
     // Also prepare a mapping from questKey to its parent eventKey.
     Promise.all([ loadGameEntitiesConfig(), getQuestKeyToEventKeyMap() ])
       .then(async ([config, questKeyToEventKey]) => {
+        // Build a Map of questKey → eventKey from configuration
+        this.questKeyToEventKey = questKeyToEventKey;
+
+        // Instantiate each quest class based on config
         for (const questCfg of config.quests) {
           // Build dependency mapping.
           const dependencyMapping = {
-            "eventManager": this.eventManager,
-            "app":          this.app
+            eventManager: this.eventManager,
+            app:          this.app
           };
           const params = questCfg.dependencies.map(dep => dependencyMapping[dep]);
           // If quest-specific configuration exists, append it.
@@ -72,7 +76,29 @@ export class QuestManager {
             );
           }
         }
+
         console.log("Quests loaded from configuration:", this.quests.map(q => q.key));
+
+        // Register listener for questCompleted events
+        document.addEventListener("questCompleted", async (e) => {
+          const completedQuestKey = e.detail; // e.g. "mirror_quest"
+          const nextEventKey = this.questKeyToEventKey[completedQuestKey];
+          if (!nextEventKey) {
+            ErrorManager.logError(
+              `No next eventKey defined for quest "${completedQuestKey}".`,
+              "QuestManager"
+            );
+            return;
+          }
+          try {
+            await this.eventManager.activateEvent(nextEventKey);
+          } catch (err) {
+            ErrorManager.logError(
+              `Failed to activate event "${nextEventKey}" after quest "${completedQuestKey}": ${err.message}`,
+              "QuestManager"
+            );
+          }
+        });
       })
       .catch(error => {
         ErrorManager.logError(error, "QuestManager.loadConfig");

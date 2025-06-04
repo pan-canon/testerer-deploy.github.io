@@ -1,3 +1,5 @@
+// File: src/events/PostRepeatingEvent.js
+
 import { BaseEvent } from './BaseEvent.js';
 import { StateManager } from '../managers/StateManager.js';
 import { ErrorManager } from '../managers/ErrorManager.js';
@@ -15,13 +17,14 @@ import { ErrorManager } from '../managers/ErrorManager.js';
 export class PostRepeatingEvent extends BaseEvent {
   /**
    * @param {EventManager} eventManager - Manager handling diary operations.
-   * @param {App} appInstance - Reference to the main application instance.
+   * @param {App} appInstance  - Reference to the main application instance.
+   * @param {Object} config    - Configuration object from gameEntities.json, contains `key`.
    */
-  constructor(eventManager, appInstance) {
+  constructor(eventManager, appInstance, config) {
     super(eventManager);
     this.app = appInstance;
-    // Base key for post repeating event.
-    this.key = "post_repeating_event";
+    // Use key from config instead of hardcoded literal
+    this.key = config.key;
   }
 
   /**

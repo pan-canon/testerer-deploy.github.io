@@ -1,3 +1,5 @@
+// File: src/events/PostMirrorEvent.js
+
 import { BaseEvent } from './BaseEvent.js';
 import { StateManager } from '../managers/StateManager.js';
 import { ErrorManager } from '../managers/ErrorManager.js';
@@ -15,11 +17,12 @@ export class PostMirrorEvent extends BaseEvent {
   /**
    * @param {EventManager} eventManager - Manager handling diary operations.
    * @param {App} appInstance - Reference to the main application instance.
+   * @param {Object} config - Configuration object from gameEntities.json, contains `key`.
    */
-  constructor(eventManager, appInstance) {
+  constructor(eventManager, appInstance, config) {
     super(eventManager);
     this.app = appInstance;
-    this.key = "post_mirror_event";
+    this.key = config.key;
   }
 
   async activate() {

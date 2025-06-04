@@ -1,3 +1,5 @@
+// File: src/managers/GameEventManager.js
+
 import { StateManager } from './StateManager.js';
 import { ErrorManager } from './ErrorManager.js';
 import { loadGameEntitiesConfig } from '../utils/GameEntityLoader.js';
@@ -23,45 +25,70 @@ export class GameEventManager {
     this.languageManager = languageManager;
     this.events          = [];
 
-    // Load the unified configuration and instantiate events dynamically.
+    // Load the unified configuration and instantiate only those events
+    // whose keys appear in the "sequence" array.
     loadGameEntitiesConfig()
       .then(async config => {
-        for (const eventCfg of config.events) {
-          // Build dependency mapping.
-          const dependencyMapping = {
-            "eventManager":    this.eventManager,
-            "app":             this.app,
-            "languageManager": this.languageManager
-          };
-          const params = eventCfg.dependencies.map(dep => dependencyMapping[dep]);
+        // Build a Set of all eventKeys that are part of the sequence
+        const sequenceKeys = new Set(config.sequence.map(triad => triad.eventKey));
 
-          // Dynamically import the event class from the triad entry for eventCfg.key
+        // Build a lookup from eventKey to its corresponding config object
+        const eventConfigByKey = {};
+        for (const ev of config.events) {
+          eventConfigByKey[ev.key] = ev;
+        }
+
+        // Dependency mapping template for all events
+        const dependencyMappingTemplate = {
+          eventManager:    this.eventManager,
+          app:             this.app,
+          languageManager: this.languageManager
+        };
+
+        // Iterate over each key in the sequence
+        for (const eventKey of sequenceKeys) {
+          const eventCfg = eventConfigByKey[eventKey];
+          if (!eventCfg) {
+            ErrorManager.logError(
+              `No event configuration found for key "${eventKey}" in sequence.`,
+              "GameEventManager"
+            );
+            continue;
+          }
+
+          // Build parameters array based on declared dependencies
+          const params = eventCfg.dependencies.map(dep => dependencyMappingTemplate[dep]);
+
           try {
-            // Import the entire triad bundle for this eventKey via alias "triads"
+            // Dynamically import the triad bundle for this eventKey via alias "triads"
             const module = await import(
               /* webpackChunkName: "triads/[request]" */
-              `triads/triad-${eventCfg.key}`
+              `triads/triad-${eventKey}`
             );
             const EventClass = module[eventCfg.className];
             if (!EventClass) {
               ErrorManager.logError(
-                `Event class "${eventCfg.className}" is not exported from triads/triad-${eventCfg.key}.js.`,
+                `Event class "${eventCfg.className}" is not exported from triads/triad-${eventKey}.js.`,
                 "GameEventManager"
               );
               continue;
             }
             const instance = new EventClass(...params);
             // Set the key as specified in the config.
-            instance.key = eventCfg.key;
+            instance.key = eventKey;
             this.events.push(instance);
           } catch (error) {
             ErrorManager.logError(
-              `Failed to import triad for event "${eventCfg.key}": ${error.message}`,
+              `Failed to import triad for event "${eventKey}": ${error.message}`,
               "GameEventManager"
             );
           }
         }
-        console.log("Game events loaded from configuration:", this.events.map(e => e.key));
+
+        console.log(
+          "Game events loaded from sequence:",
+          this.events.map(e => e.key)
+        );
       })
       .catch(error => {
         ErrorManager.logError(error, "GameEventManager.loadConfig");
@@ -83,7 +110,10 @@ export class GameEventManager {
       await event.activate(key);
       console.log(`Event '${key}' activated.`);
     } else {
-      ErrorManager.logError(`Event "${key}" not found`, "GameEventManager.activateEvent");
+      ErrorManager.logError(
+        `Event "${key}" not found`,
+        "GameEventManager.activateEvent"
+      );
       ErrorManager.showError(`Cannot activate event "${key}"`);
     }
   }

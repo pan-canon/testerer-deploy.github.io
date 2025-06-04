@@ -18,8 +18,9 @@ export class PostMirrorEvent extends BaseEvent {
    * @param {EventManager} eventManager - Manager handling diary operations.
    * @param {App} appInstance - Reference to the main application instance.
    * @param {Object} config - Configuration object from gameEntities.json, contains `key`.
+   * @param {LanguageManager} [languageManager] - (unused here, but kept for signature consistency)
    */
-  constructor(eventManager, appInstance, config) {
+  constructor(eventManager, appInstance, config, languageManager) {
     super(eventManager);
     this.app = appInstance;
     this.key = config.key;

@@ -20,10 +20,10 @@ export class WelcomeEvent extends BaseEvent {
   /**
    * @param {EventManager} eventManager - Manager handling diary operations.
    * @param {App} appInstance - Reference to the main application instance.
-   * @param {LanguageManager} [languageManager] - Optional localization manager.
    * @param {Object} config - Configuration object from gameEntities.json, contains `key`.
+   * @param {LanguageManager} [languageManager] - Optional localization manager.
    */
-  constructor(eventManager, appInstance, languageManager, config) {
+  constructor(eventManager, appInstance, config, languageManager) {
     super(eventManager);
     this.app = appInstance;
     this.languageManager = languageManager;

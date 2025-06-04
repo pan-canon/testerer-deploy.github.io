@@ -38,14 +38,7 @@ export class GameEventManager {
           eventConfigByKey[ev.key] = ev;
         }
 
-        // Dependency mapping template for all events
-        const dependencyMappingTemplate = {
-          eventManager:    this.eventManager,
-          app:             this.app,
-          languageManager: this.languageManager
-        };
-
-        // Iterate over each key in the sequence
+        // For each eventKey in the sequence, create one instance
         for (const eventKey of sequenceKeys) {
           const eventCfg = eventConfigByKey[eventKey];
           if (!eventCfg) {
@@ -56,8 +49,13 @@ export class GameEventManager {
             continue;
           }
 
-          // Build parameters array based on declared dependencies
-          const params = eventCfg.dependencies.map(dep => dependencyMappingTemplate[dep]);
+          // Build params for constructor: [eventManager, app, config, languageManager]
+          const params = [
+            this.eventManager,
+            this.app,
+            eventCfg,
+            this.languageManager
+          ];
 
           try {
             // Dynamically import the triad bundle for this eventKey via alias "triads"
@@ -73,9 +71,8 @@ export class GameEventManager {
               );
               continue;
             }
+            // Pass config object as third argument
             const instance = new EventClass(...params);
-            // Set the key as specified in the config.
-            instance.key = eventKey;
             this.events.push(instance);
           } catch (error) {
             ErrorManager.logError(

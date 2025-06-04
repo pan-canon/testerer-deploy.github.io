@@ -1,24 +1,36 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "./build/triads lazy recursive ^\\.\\/triad\\-.*\\.js$":
-/*!***************************************************************************************************!*\
-  !*** ./build/triads/ lazy ^\.\/triad\-.*\.js$ chunkName: triads/triad-[request] namespace object ***!
-  \***************************************************************************************************/
+/***/ "./build/triads lazy recursive ^\\.\\/triad\\-.*$":
+/*!*****************************************************************************************!*\
+  !*** ./build/triads/ lazy ^\.\/triad\-.*$ chunkName: triads/[request] namespace object ***!
+  \*****************************************************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 var map = {
+	"./triad-final_event": [
+		"./build/triads/triad-final_event.js",
+		"triads/triad-final_event"
+	],
 	"./triad-final_event.js": [
 		"./build/triads/triad-final_event.js",
-		"triads/triad-triad-final_event-js"
+		"triads/triad-final_event"
+	],
+	"./triad-post_repeating_event": [
+		"./build/triads/triad-post_repeating_event.js",
+		"triads/triad-post_repeating_event"
 	],
 	"./triad-post_repeating_event.js": [
 		"./build/triads/triad-post_repeating_event.js",
-		"triads/triad-triad-post_repeating_event-js"
+		"triads/triad-post_repeating_event"
+	],
+	"./triad-welcome": [
+		"./build/triads/triad-welcome.js",
+		"triads/triad-welcome"
 	],
 	"./triad-welcome.js": [
 		"./build/triads/triad-welcome.js",
-		"triads/triad-triad-welcome-js"
+		"triads/triad-welcome"
 	]
 };
 function webpackAsyncContext(req) {
@@ -36,7 +48,7 @@ function webpackAsyncContext(req) {
 	});
 }
 webpackAsyncContext.keys = () => (Object.keys(map));
-webpackAsyncContext.id = "./build/triads lazy recursive ^\\.\\/triad\\-.*\\.js$";
+webpackAsyncContext.id = "./build/triads lazy recursive ^\\.\\/triad\\-.*$";
 module.exports = webpackAsyncContext;
 
 /***/ }),
@@ -2270,7 +2282,7 @@ class GameEventManager {
         // Dynamically import the event class from the triad entry for eventCfg.key
         try {
           // Import the entire triad bundle for this eventKey via alias "triads"
-          const module = await __webpack_require__("./build/triads lazy recursive ^\\.\\/triad\\-.*\\.js$")(`./triad-${eventCfg.key}.js`);
+          const module = await __webpack_require__("./build/triads lazy recursive ^\\.\\/triad\\-.*$")(`./triad-${eventCfg.key}`);
           const EventClass = module[eventCfg.className];
           if (!EventClass) {
             _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Event class "${eventCfg.className}" is not exported from triads/triad-${eventCfg.key}.js.`, "GameEventManager");
@@ -3282,7 +3294,7 @@ class QuestManager {
         // Dynamically import the triad bundle for that eventKey instead of individual quest file.
         try {
           // Import via alias "triads" so Webpack resolves build/triads/triad-<eventKey>.js
-          const module = await __webpack_require__("./build/triads lazy recursive ^\\.\\/triad\\-.*\\.js$")(`./triad-${eventKey}.js`);
+          const module = await __webpack_require__("./build/triads lazy recursive ^\\.\\/triad\\-.*$")(`./triad-${eventKey}`);
           const QuestClass = module[questCfg.className];
           if (!QuestClass) {
             _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Quest class "${questCfg.className}" is not exported from triads/triad-${eventKey}.js.`, "QuestManager");

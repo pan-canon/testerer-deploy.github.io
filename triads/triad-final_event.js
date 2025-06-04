@@ -1,5 +1,5 @@
 "use strict";
-(self["webpackChunktesterer_deploy_github_io"] = self["webpackChunktesterer_deploy_github_io"] || []).push([["triads/triad-triad-final_event-js"],{
+(self["webpackChunktesterer_deploy_github_io"] = self["webpackChunktesterer_deploy_github_io"] || []).push([["triads/triad-final_event"],{
 
 /***/ "./build/triads/triad-final_event.js":
 /*!*******************************************!*\
@@ -290,4 +290,4 @@ class FinalQuest extends _events_BaseEvent_js__WEBPACK_IMPORTED_MODULE_0__.BaseE
 /***/ })
 
 }]);
-//# sourceMappingURL=triad-triad-final_event-js.js.map
+//# sourceMappingURL=triad-final_event.js.map

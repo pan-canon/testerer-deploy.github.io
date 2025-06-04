@@ -1,5 +1,5 @@
 "use strict";
-(self["webpackChunktesterer_deploy_github_io"] = self["webpackChunktesterer_deploy_github_io"] || []).push([["triads/triad-triad-welcome-js"],{
+(self["webpackChunktesterer_deploy_github_io"] = self["webpackChunktesterer_deploy_github_io"] || []).push([["triads/triad-welcome"],{
 
 /***/ "./build/triads/triad-welcome.js":
 /*!***************************************!*\
@@ -542,4 +542,4 @@ class BaseMirrorQuest extends _events_BaseEvent_js__WEBPACK_IMPORTED_MODULE_0__.
 /***/ })
 
 }]);
-//# sourceMappingURL=triad-triad-welcome-js.js.map
+//# sourceMappingURL=triad-welcome.js.map

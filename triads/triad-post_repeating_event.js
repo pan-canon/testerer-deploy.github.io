@@ -1,5 +1,5 @@
 "use strict";
-(self["webpackChunktesterer_deploy_github_io"] = self["webpackChunktesterer_deploy_github_io"] || []).push([["triads/triad-triad-post_repeating_event-js"],{
+(self["webpackChunktesterer_deploy_github_io"] = self["webpackChunktesterer_deploy_github_io"] || []).push([["triads/triad-post_repeating_event"],{
 
 /***/ "./build/triads/triad-post_repeating_event.js":
 /*!****************************************************!*\
@@ -682,4 +682,4 @@ class BaseRepeatingQuest extends _events_BaseEvent_js__WEBPACK_IMPORTED_MODULE_0
 /***/ })
 
 }]);
-//# sourceMappingURL=triad-triad-post_repeating_event-js.js.map
+//# sourceMappingURL=triad-post_repeating_event.js.map

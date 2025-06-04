@@ -39,8 +39,8 @@ export class GameEventManager {
           try {
             // Import the entire triad bundle for this eventKey via alias "triads"
             const module = await import(
-              /* webpackChunkName: "triads/triad-[request]" */
-              `triads/triad-${eventCfg.key}.js`
+              /* webpackChunkName: "triads/[request]" */
+              `triads/triad-${eventCfg.key}`
             );
             const EventClass = module[eventCfg.className];
             if (!EventClass) {

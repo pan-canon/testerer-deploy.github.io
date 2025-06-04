@@ -89,8 +89,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _managers_GameEventManager_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./managers/GameEventManager.js */ "./src/managers/GameEventManager.js");
 /* harmony import */ var _managers_ShowProfileModal_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./managers/ShowProfileModal.js */ "./src/managers/ShowProfileModal.js");
 /* harmony import */ var _managers_ChatManager_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./managers/ChatManager.js */ "./src/managers/ChatManager.js");
-// App.js
-// Import utility modules and managers
+// File: src/App.js
+
 
 
 
@@ -141,11 +141,17 @@ class App {
     this.visualEffectsManager = deps.visualEffectsManager || new _managers_VisualEffectsManager_js__WEBPACK_IMPORTED_MODULE_2__.VisualEffectsManager(this, this.viewManager.controlsPanel);
     const savedSequenceIndex = parseInt(_managers_StateManager_js__WEBPACK_IMPORTED_MODULE_5__.StateManager.get('currentSequenceIndex'), 10) || 0;
     this.ghostManager = deps.ghostManager || new _managers_GhostManager_js__WEBPACK_IMPORTED_MODULE_11__.GhostManager(savedSequenceIndex, this.profileManager, this);
+
+    // Create EventManager first (handles diary operations, persists posts, etc.).
     this.eventManager = deps.eventManager || new _managers_EventManager_js__WEBPACK_IMPORTED_MODULE_12__.EventManager(this.databaseManager, this.languageManager, this.ghostManager, this.visualEffectsManager);
     this.eventManager.viewManager = this.viewManager;
     this.ghostManager.eventManager = this.eventManager;
-    this.questManager = deps.questManager || new _managers_QuestManager_js__WEBPACK_IMPORTED_MODULE_13__.QuestManager(this.eventManager, this);
+
+    // Then create GameEventManager (wraps EventManager, loads event classes, etc.).
     this.gameEventManager = deps.gameEventManager || new _managers_GameEventManager_js__WEBPACK_IMPORTED_MODULE_14__.GameEventManager(this.eventManager, this, this.languageManager);
+
+    // Now pass GameEventManager into QuestManager (so activateEvent is available).
+    this.questManager = deps.questManager || new _managers_QuestManager_js__WEBPACK_IMPORTED_MODULE_13__.QuestManager(this.gameEventManager, this);
     this.showProfileModal = deps.showProfileModal || new _managers_ShowProfileModal_js__WEBPACK_IMPORTED_MODULE_15__.ShowProfileModal(this);
 
     // Initialize ChatManager for the "support" chat section using the wrapper.

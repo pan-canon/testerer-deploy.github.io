@@ -151,7 +151,7 @@ class App {
     this.gameEventManager = deps.gameEventManager || new _managers_GameEventManager_js__WEBPACK_IMPORTED_MODULE_14__.GameEventManager(this.eventManager, this, this.languageManager);
 
     // Now pass GameEventManager into QuestManager (so activateEvent is available).
-    this.questManager = deps.questManager || new _managers_QuestManager_js__WEBPACK_IMPORTED_MODULE_13__.QuestManager(this.gameEventManager, this);
+    this.questManager = deps.questManager || new _managers_QuestManager_js__WEBPACK_IMPORTED_MODULE_13__.QuestManager(this.eventManager, this.gameEventManager, this);
     this.showProfileModal = deps.showProfileModal || new _managers_ShowProfileModal_js__WEBPACK_IMPORTED_MODULE_15__.ShowProfileModal(this);
 
     // Initialize ChatManager for the "support" chat section using the wrapper.
@@ -185,10 +185,12 @@ class App {
     await this.databaseManager.initDatabasePromise;
     console.log("Database initialization complete.");
     this.loadAppState();
+
     // Preload AI model before any camera usage
     await this.cameraSectionManager.preloadModel();
     await this.questManager.syncQuestState();
     this.questManager.restoreAllActiveQuests();
+
     // If the camera was marked as open before reload, restore the button state,
     // but do NOT reopen the camera or call getUserMedia automatically.
     if (_managers_StateManager_js__WEBPACK_IMPORTED_MODULE_5__.StateManager.isCameraOpen()) {

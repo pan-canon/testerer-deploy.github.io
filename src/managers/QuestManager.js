@@ -182,16 +182,24 @@ export class QuestManager {
 
   /**
    * Finds a quest by its key and activates it.
+   * If the key is null or undefined, logs a warning and does nothing.
    * After activation, updates the universal active quest key.
    * @param {string} key - The quest key.
    */
   async activateQuest(key) {
+    // If key is null or undefined, skip activation
+    if (!key) {
+      console.warn("QuestManager.activateQuest called with null/undefined key; skipping.");
+      return;
+    }
+
     const quest = this.quests.find(q => q.key === key);
     if (!quest) {
       ErrorManager.logError(`Quest "${key}" not found`, "QuestManager.activateQuest");
       ErrorManager.showError(`Cannot activate quest "${key}"`);
       return;
     }
+
     console.log(`[QuestManager] Activating quest: ${key}`);
     await quest.activate();
     StateManager.setActiveQuestKey(key);

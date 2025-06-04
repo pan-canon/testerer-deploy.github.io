@@ -131,8 +131,9 @@ class PostMirrorEvent extends _BaseEvent_js__WEBPACK_IMPORTED_MODULE_0__.BaseEve
    * @param {EventManager} eventManager - Manager handling diary operations.
    * @param {App} appInstance - Reference to the main application instance.
    * @param {Object} config - Configuration object from gameEntities.json, contains `key`.
+   * @param {LanguageManager} [languageManager] - (unused here, but kept for signature consistency)
    */
-  constructor(eventManager, appInstance, config) {
+  constructor(eventManager, appInstance, config, languageManager) {
     super(eventManager);
     this.app = appInstance;
     this.key = config.key;
@@ -197,10 +198,11 @@ __webpack_require__.r(__webpack_exports__);
 class PostRepeatingEvent extends _BaseEvent_js__WEBPACK_IMPORTED_MODULE_0__.BaseEvent {
   /**
    * @param {EventManager} eventManager - Manager handling diary operations.
-   * @param {App} appInstance  - Reference to the main application instance.
-   * @param {Object} config    - Configuration object from gameEntities.json, contains `key`.
+   * @param {App} appInstance - Reference to the main application instance.
+   * @param {Object} config - Configuration object from gameEntities.json, contains `key`.
+   * @param {LanguageManager} [languageManager] - (unused here, but kept for signature consistency)
    */
-  constructor(eventManager, appInstance, config) {
+  constructor(eventManager, appInstance, config, languageManager) {
     super(eventManager);
     this.app = appInstance;
     // Use key from config instead of hardcoded literal

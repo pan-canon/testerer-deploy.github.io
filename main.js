@@ -2290,14 +2290,7 @@ class GameEventManager {
         eventConfigByKey[ev.key] = ev;
       }
 
-      // Dependency mapping template for all events
-      const dependencyMappingTemplate = {
-        eventManager: this.eventManager,
-        app: this.app,
-        languageManager: this.languageManager
-      };
-
-      // Iterate over each key in the sequence
+      // For each eventKey in the sequence, create one instance
       for (const eventKey of sequenceKeys) {
         const eventCfg = eventConfigByKey[eventKey];
         if (!eventCfg) {
@@ -2305,8 +2298,8 @@ class GameEventManager {
           continue;
         }
 
-        // Build parameters array based on declared dependencies
-        const params = eventCfg.dependencies.map(dep => dependencyMappingTemplate[dep]);
+        // Build params for constructor: [eventManager, app, config, languageManager]
+        const params = [this.eventManager, this.app, eventCfg, this.languageManager];
         try {
           // Dynamically import the triad bundle for this eventKey via alias "triads"
           const module = await __webpack_require__("./build/triads lazy recursive ^\\.\\/triad\\-.*$")(`./triad-${eventKey}`);
@@ -2315,9 +2308,8 @@ class GameEventManager {
             _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Event class "${eventCfg.className}" is not exported from triads/triad-${eventKey}.js.`, "GameEventManager");
             continue;
           }
+          // Pass config object as third argument
           const instance = new EventClass(...params);
-          // Set the key as specified in the config.
-          instance.key = eventKey;
           this.events.push(instance);
         } catch (error) {
           _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Failed to import triad for event "${eventKey}": ${error.message}`, "GameEventManager");

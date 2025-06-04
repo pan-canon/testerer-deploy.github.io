@@ -1,5 +1,27 @@
 "use strict";
-(self["webpackChunktesterer_deploy_github_io"] = self["webpackChunktesterer_deploy_github_io"] || []).push([["triad-triad-post_repeating_event-js"],{
+(self["webpackChunktesterer_deploy_github_io"] = self["webpackChunktesterer_deploy_github_io"] || []).push([["triads/triad-triad-post_repeating_event-js"],{
+
+/***/ "./build/triads/triad-post_repeating_event.js":
+/*!****************************************************!*\
+  !*** ./build/triads/triad-post_repeating_event.js ***!
+  \****************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   BaseRepeatingQuest: () => (/* reexport safe */ quests_BaseRepeatingQuest_js__WEBPACK_IMPORTED_MODULE_1__.BaseRepeatingQuest),
+/* harmony export */   FinalEvent: () => (/* reexport safe */ events_FinalEvent_js__WEBPACK_IMPORTED_MODULE_2__.FinalEvent),
+/* harmony export */   PostRepeatingEvent: () => (/* reexport safe */ events_PostRepeatingEvent_js__WEBPACK_IMPORTED_MODULE_0__.PostRepeatingEvent)
+/* harmony export */ });
+/* harmony import */ var events_PostRepeatingEvent_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! events/PostRepeatingEvent.js */ "./src/events/PostRepeatingEvent.js");
+/* harmony import */ var quests_BaseRepeatingQuest_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! quests/BaseRepeatingQuest.js */ "./src/quests/BaseRepeatingQuest.js");
+/* harmony import */ var events_FinalEvent_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! events/FinalEvent.js */ "./src/events/FinalEvent.js");
+
+
+
+
+
+/***/ }),
 
 /***/ "./src/config/detectableItems.js":
 /*!***************************************!*\
@@ -656,28 +678,6 @@ class BaseRepeatingQuest extends _events_BaseEvent_js__WEBPACK_IMPORTED_MODULE_0
     }
   }
 }
-
-/***/ }),
-
-/***/ "./src/triads/triad-post_repeating_event.js":
-/*!**************************************************!*\
-  !*** ./src/triads/triad-post_repeating_event.js ***!
-  \**************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   BaseRepeatingQuest: () => (/* reexport safe */ _quests_BaseRepeatingQuest_js__WEBPACK_IMPORTED_MODULE_1__.BaseRepeatingQuest),
-/* harmony export */   FinalEvent: () => (/* reexport safe */ _events_FinalEvent_js__WEBPACK_IMPORTED_MODULE_2__.FinalEvent),
-/* harmony export */   PostRepeatingEvent: () => (/* reexport safe */ _events_PostRepeatingEvent_js__WEBPACK_IMPORTED_MODULE_0__.PostRepeatingEvent)
-/* harmony export */ });
-/* harmony import */ var _events_PostRepeatingEvent_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../events/PostRepeatingEvent.js */ "./src/events/PostRepeatingEvent.js");
-/* harmony import */ var _quests_BaseRepeatingQuest_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../quests/BaseRepeatingQuest.js */ "./src/quests/BaseRepeatingQuest.js");
-/* harmony import */ var _events_FinalEvent_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../events/FinalEvent.js */ "./src/events/FinalEvent.js");
-
-
-
-
 
 /***/ })
 

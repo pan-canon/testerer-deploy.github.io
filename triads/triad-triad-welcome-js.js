@@ -1,5 +1,27 @@
 "use strict";
-(self["webpackChunktesterer_deploy_github_io"] = self["webpackChunktesterer_deploy_github_io"] || []).push([["triad-triad-welcome-js"],{
+(self["webpackChunktesterer_deploy_github_io"] = self["webpackChunktesterer_deploy_github_io"] || []).push([["triads/triad-triad-welcome-js"],{
+
+/***/ "./build/triads/triad-welcome.js":
+/*!***************************************!*\
+  !*** ./build/triads/triad-welcome.js ***!
+  \***************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   BaseMirrorQuest: () => (/* reexport safe */ quests_BaseMirrorQuest_js__WEBPACK_IMPORTED_MODULE_1__.BaseMirrorQuest),
+/* harmony export */   PostRepeatingEvent: () => (/* reexport safe */ events_PostRepeatingEvent_js__WEBPACK_IMPORTED_MODULE_2__.PostRepeatingEvent),
+/* harmony export */   WelcomeEvent: () => (/* reexport safe */ events_WelcomeEvent_js__WEBPACK_IMPORTED_MODULE_0__.WelcomeEvent)
+/* harmony export */ });
+/* harmony import */ var events_WelcomeEvent_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! events/WelcomeEvent.js */ "./src/events/WelcomeEvent.js");
+/* harmony import */ var quests_BaseMirrorQuest_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! quests/BaseMirrorQuest.js */ "./src/quests/BaseMirrorQuest.js");
+/* harmony import */ var events_PostRepeatingEvent_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! events/PostRepeatingEvent.js */ "./src/events/PostRepeatingEvent.js");
+
+
+
+
+
+/***/ }),
 
 /***/ "./src/events/BaseEvent.js":
 /*!*********************************!*\
@@ -516,28 +538,6 @@ class BaseMirrorQuest extends _events_BaseEvent_js__WEBPACK_IMPORTED_MODULE_0__.
     return letters[Math.floor(Math.random() * letters.length)];
   }
 }
-
-/***/ }),
-
-/***/ "./src/triads/triad-welcome.js":
-/*!*************************************!*\
-  !*** ./src/triads/triad-welcome.js ***!
-  \*************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   BaseMirrorQuest: () => (/* reexport safe */ _quests_BaseMirrorQuest_js__WEBPACK_IMPORTED_MODULE_1__.BaseMirrorQuest),
-/* harmony export */   PostRepeatingEvent: () => (/* reexport safe */ _events_PostRepeatingEvent_js__WEBPACK_IMPORTED_MODULE_2__.PostRepeatingEvent),
-/* harmony export */   WelcomeEvent: () => (/* reexport safe */ _events_WelcomeEvent_js__WEBPACK_IMPORTED_MODULE_0__.WelcomeEvent)
-/* harmony export */ });
-/* harmony import */ var _events_WelcomeEvent_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../events/WelcomeEvent.js */ "./src/events/WelcomeEvent.js");
-/* harmony import */ var _quests_BaseMirrorQuest_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../quests/BaseMirrorQuest.js */ "./src/quests/BaseMirrorQuest.js");
-/* harmony import */ var _events_PostRepeatingEvent_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../events/PostRepeatingEvent.js */ "./src/events/PostRepeatingEvent.js");
-
-
-
-
 
 /***/ })
 

@@ -2686,24 +2686,49 @@ class GhostManager {
 
   /**
    * Handles the Post button click.
-   * Immediately disables the button, retrieves the next sequence entry, and checks if the quest can be started.
+   * Disables the button, retrieves the next sequence entry, and either starts the event directly
+   * if there is no quest, or starts the quest if permitted.
    */
   async handlePostButtonClick() {
     // Disable the Post button immediately to prevent double-clicks.
     this.app.viewManager.setPostButtonEnabled(false);
     const nextEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
     if (!nextEntry) {
-      console.warn("No next sequence entry found.");
+      console.warn("GhostManager: No next sequence entry found.");
       this.updatePostButtonState();
       return;
     }
-    console.log(`GhostManager: Handling Post button click. Next expected quest: ${nextEntry.questKey}`);
+
+    // If there is no quest for this entry, activate the next event directly.
+    if (nextEntry.questKey === null) {
+      if (nextEntry.nextEventKey) {
+        try {
+          console.log(`[GhostManager] No quest to start; activating event "${nextEntry.nextEventKey}" directly.`);
+          // Pass `true` to skip normal sequence checks when starting the event
+          await this.startEvent(nextEntry.nextEventKey, true);
+        } catch (err) {
+          console.error(`[GhostManager] Failed to activate event "${nextEntry.nextEventKey}":`, err);
+        }
+      } else {
+        console.warn("[GhostManager] Both questKey and nextEventKey are null; nothing to activate.");
+      }
+      // Advance the sequence index and persist it
+      this.sequenceManager.increment();
+      _StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.set(_StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
+
+      // Update the Post button state for the next step
+      this.updatePostButtonState();
+      return;
+    }
+
+    // Otherwise, attempt to start the quest if allowed
+    console.log(`GhostManager: Handling Post button click. Next expected quest: "${nextEntry.questKey}".`);
     if (!this.canStartQuest(nextEntry.questKey)) {
       this.updatePostButtonState();
       return;
     }
     await this.startQuest(nextEntry.questKey);
-    // After starting the quest, update the Post button state.
+    // After starting the quest, update the Post button state
     this.updatePostButtonState();
   }
 
@@ -3431,10 +3456,16 @@ class QuestManager {
 
   /**
    * Finds a quest by its key and activates it.
+   * If the key is null or undefined, logs a warning and does nothing.
    * After activation, updates the universal active quest key.
    * @param {string} key - The quest key.
    */
   async activateQuest(key) {
+    // If key is null or undefined, skip activation
+    if (!key) {
+      console.warn("QuestManager.activateQuest called with null/undefined key; skipping.");
+      return;
+    }
     const quest = this.quests.find(q => q.key === key);
     if (!quest) {
       _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Quest "${key}" not found`, "QuestManager.activateQuest");

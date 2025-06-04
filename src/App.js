@@ -1,5 +1,5 @@
-// App.js
-// Import utility modules and managers
+// File: src/App.js
+
 import { BASE_PATH, COCO_SSD_MODEL } from './config/paths.js';
 import { ImageUtils } from './utils/ImageUtils.js';
 import { VisualEffectsManager } from './managers/VisualEffectsManager.js';
@@ -54,6 +54,8 @@ export class App {
     this.visualEffectsManager = deps.visualEffectsManager || new VisualEffectsManager(this, this.viewManager.controlsPanel);
     const savedSequenceIndex = parseInt(StateManager.get('currentSequenceIndex'), 10) || 0;
     this.ghostManager = deps.ghostManager || new GhostManager(savedSequenceIndex, this.profileManager, this);
+
+    // Create EventManager first (handles diary operations, persists posts, etc.).
     this.eventManager = deps.eventManager || new EventManager(
       this.databaseManager,
       this.languageManager,
@@ -62,8 +64,17 @@ export class App {
     );
     this.eventManager.viewManager = this.viewManager;
     this.ghostManager.eventManager = this.eventManager;
-    this.questManager = deps.questManager || new QuestManager(this.eventManager, this);
-    this.gameEventManager = deps.gameEventManager || new GameEventManager(this.eventManager, this, this.languageManager);
+
+    // Then create GameEventManager (wraps EventManager, loads event classes, etc.).
+    this.gameEventManager = deps.gameEventManager || new GameEventManager(
+      this.eventManager,
+      this,
+      this.languageManager
+    );
+
+    // Now pass GameEventManager into QuestManager (so activateEvent is available).
+    this.questManager = deps.questManager || new QuestManager(this.gameEventManager, this);
+
     this.showProfileModal = deps.showProfileModal || new ShowProfileModal(this);
 
     // Initialize ChatManager for the "support" chat section using the wrapper.

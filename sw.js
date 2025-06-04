@@ -4518,7 +4518,7 @@ __webpack_require__.r(__webpack_exports__);
 
 // Determine BASE_PATH in ServiceWorker context
 const BASE_PATH = self.location.hostname.includes("github.io") ? "/testerer-deploy.github.io" : "";
-const CACHE_VERSION = 'v33'; // bump this on each release
+const CACHE_VERSION = 'v34'; // bump this on each release
 const CACHE_NAME = `game-cache-${CACHE_VERSION}`;
 
 // Precache manifest will be injected here by InjectManifest

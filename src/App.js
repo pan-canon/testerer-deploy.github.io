@@ -40,18 +40,19 @@ export class App {
 
     // Create or inject persistence managers.
     this.sqliteDataManager = deps.sqliteDataManager || new SQLiteDataManager();
-    this.databaseManager = deps.databaseManager || new DatabaseManager(this.sqliteDataManager);
+    this.databaseManager   = deps.databaseManager || new DatabaseManager(this.sqliteDataManager);
 
     // Application state variables.
     this.isCameraOpen = false;
-    this.selfieData = null;
+    this.selfieData   = null;
 
     // Initialize core domain managers.
-    this.languageManager = deps.languageManager || new LanguageManager('language-selector');
-    this.cameraSectionManager = deps.cameraSectionManager || new CameraSectionManager();
+    this.languageManager       = deps.languageManager || new LanguageManager('language-selector');
+    this.cameraSectionManager  = deps.cameraSectionManager || new CameraSectionManager();
     this.viewManager.setCameraManager(this.cameraSectionManager);
-    this.profileManager = deps.profileManager || new ProfileManager(this.sqliteDataManager);
-    this.visualEffectsManager = deps.visualEffectsManager || new VisualEffectsManager(this, this.viewManager.controlsPanel);
+    this.profileManager        = deps.profileManager || new ProfileManager(this.sqliteDataManager);
+    this.visualEffectsManager  = deps.visualEffectsManager || new VisualEffectsManager(this, this.viewManager.controlsPanel);
+
     const savedSequenceIndex = parseInt(StateManager.get('currentSequenceIndex'), 10) || 0;
     this.ghostManager = deps.ghostManager || new GhostManager(savedSequenceIndex, this.profileManager, this);
 
@@ -63,7 +64,7 @@ export class App {
       this.visualEffectsManager
     );
     this.eventManager.viewManager = this.viewManager;
-    this.ghostManager.eventManager = this.eventManager;
+    this.ghostManager.eventManager  = this.eventManager;
 
     // Then create GameEventManager (wraps EventManager, loads event classes, etc.).
     this.gameEventManager = deps.gameEventManager || new GameEventManager(
@@ -73,7 +74,11 @@ export class App {
     );
 
     // Now pass GameEventManager into QuestManager (so activateEvent is available).
-    this.questManager = deps.questManager || new QuestManager(this.gameEventManager, this);
+    this.questManager = deps.questManager || new QuestManager(
+      this.eventManager,
+      this.gameEventManager,
+      this
+    );
 
     this.showProfileModal = deps.showProfileModal || new ShowProfileModal(this);
 
@@ -108,10 +113,12 @@ export class App {
     await this.databaseManager.initDatabasePromise;
     console.log("Database initialization complete.");
     this.loadAppState();
+
     // Preload AI model before any camera usage
     await this.cameraSectionManager.preloadModel();
     await this.questManager.syncQuestState();
     this.questManager.restoreAllActiveQuests();
+
     // If the camera was marked as open before reload, restore the button state,
     // but do NOT reopen the camera or call getUserMedia automatically.
     if (StateManager.isCameraOpen()) {

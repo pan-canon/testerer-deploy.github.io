@@ -12,13 +12,15 @@ import { loadGameEntitiesConfig, getQuestKeyToEventKeyMap } from '../utils/GameE
  */
 export class QuestManager {
   /**
-   * @param {EventManager} eventManager - The event manager handling diary entries.
-   * @param {App} appInstance - The main application instance.
+   * @param {EventManager} eventManager     - The event manager handling diary entries.
+   * @param {GameEventManager} gameEventMgr - The game event manager for activating next events.
+   * @param {App} appInstance               - The main application instance.
    */
-  constructor(eventManager, appInstance) {
-    this.eventManager = eventManager;
-    this.app          = appInstance;
-    this.quests       = [];
+  constructor(eventManager, gameEventMgr, appInstance) {
+    this.eventManager     = eventManager;
+    this.gameEventManager = gameEventMgr;
+    this.app              = appInstance;
+    this.quests           = [];
 
     // Load the unified configuration and instantiate quests dynamically.
     // Also prepare a mapping from questKey to its parent eventKey.
@@ -91,7 +93,7 @@ export class QuestManager {
             return;
           }
           try {
-            await this.eventManager.activateEvent(nextEventKey);
+            await this.gameEventManager.activateEvent(nextEventKey);
           } catch (err) {
             ErrorManager.logError(
               `Failed to activate event "${nextEventKey}" after quest "${completedQuestKey}": ${err.message}`,
@@ -221,9 +223,9 @@ export class QuestManager {
    */
   async updateQuestProgress(questKey, currentStage, totalStages, status) {
     const questData = {
-      quest_key:    questKey,
+      quest_key:     questKey,
       current_stage: currentStage,
-      total_stages: totalStages,
+      total_stages:  totalStages,
       status
     };
     await this.app.databaseManager.saveQuestRecord(questData);

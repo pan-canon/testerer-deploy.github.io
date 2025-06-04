@@ -50,7 +50,7 @@ export class QuestManager {
           try {
             const module = await import(
               /* webpackChunkName: "triad-[request]" */
-              `./triads/triad-${eventKey}.js`
+              `../triads/triad-${eventKey}.js`
             );
             const QuestClass = module[questCfg.className];
             if (!QuestClass) {

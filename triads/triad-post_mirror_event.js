@@ -111,6 +111,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _BaseEvent_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./BaseEvent.js */ "./src/events/BaseEvent.js");
 /* harmony import */ var _managers_StateManager_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../managers/StateManager.js */ "./src/managers/StateManager.js");
 /* harmony import */ var _managers_ErrorManager_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../managers/ErrorManager.js */ "./src/managers/ErrorManager.js");
+// File: src/events/PostMirrorEvent.js
+
 
 
 
@@ -128,11 +130,12 @@ class PostMirrorEvent extends _BaseEvent_js__WEBPACK_IMPORTED_MODULE_0__.BaseEve
   /**
    * @param {EventManager} eventManager - Manager handling diary operations.
    * @param {App} appInstance - Reference to the main application instance.
+   * @param {Object} config - Configuration object from gameEntities.json, contains `key`.
    */
-  constructor(eventManager, appInstance) {
+  constructor(eventManager, appInstance, config) {
     super(eventManager);
     this.app = appInstance;
-    this.key = "post_mirror_event";
+    this.key = config.key;
   }
   async activate() {
     if (this.eventManager.isEventLogged(this.key)) {
@@ -175,6 +178,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _BaseEvent_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./BaseEvent.js */ "./src/events/BaseEvent.js");
 /* harmony import */ var _managers_StateManager_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../managers/StateManager.js */ "./src/managers/StateManager.js");
 /* harmony import */ var _managers_ErrorManager_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../managers/ErrorManager.js */ "./src/managers/ErrorManager.js");
+// File: src/events/PostRepeatingEvent.js
+
 
 
 
@@ -192,13 +197,14 @@ __webpack_require__.r(__webpack_exports__);
 class PostRepeatingEvent extends _BaseEvent_js__WEBPACK_IMPORTED_MODULE_0__.BaseEvent {
   /**
    * @param {EventManager} eventManager - Manager handling diary operations.
-   * @param {App} appInstance - Reference to the main application instance.
+   * @param {App} appInstance  - Reference to the main application instance.
+   * @param {Object} config    - Configuration object from gameEntities.json, contains `key`.
    */
-  constructor(eventManager, appInstance) {
+  constructor(eventManager, appInstance, config) {
     super(eventManager);
     this.app = appInstance;
-    // Base key for post repeating event.
-    this.key = "post_repeating_event";
+    // Use key from config instead of hardcoded literal
+    this.key = config.key;
   }
 
   /**

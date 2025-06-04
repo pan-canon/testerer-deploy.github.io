@@ -111,6 +111,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _BaseEvent_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./BaseEvent.js */ "./src/events/BaseEvent.js");
 /* harmony import */ var _managers_StateManager_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../managers/StateManager.js */ "./src/managers/StateManager.js");
 /* harmony import */ var _managers_ErrorManager_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../managers/ErrorManager.js */ "./src/managers/ErrorManager.js");
+// File: src/events/FinalEvent.js
+
 
 
 
@@ -130,13 +132,14 @@ class FinalEvent extends _BaseEvent_js__WEBPACK_IMPORTED_MODULE_0__.BaseEvent {
   /**
    * @param {EventManager} eventManager - The diary/event manager.
    * @param {App} appInstance - The main application instance.
+   * @param {Object} config - Configuration object from gameEntities.json, contains `key`.
    * @param {LanguageManager} [languageManager] - Optional localization manager.
    */
-  constructor(eventManager, appInstance, languageManager) {
+  constructor(eventManager, appInstance, config, languageManager) {
     super(eventManager);
     this.app = appInstance;
     this.languageManager = languageManager;
-    this.key = "final_event";
+    this.key = config.key;
   }
   async activate() {
     if (this.eventManager.isEventLogged(this.key)) {

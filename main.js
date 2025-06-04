@@ -2251,6 +2251,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _StateManager_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./StateManager.js */ "./src/managers/StateManager.js");
 /* harmony import */ var _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ErrorManager.js */ "./src/managers/ErrorManager.js");
 /* harmony import */ var _utils_GameEntityLoader_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/GameEntityLoader.js */ "./src/utils/GameEntityLoader.js");
+// File: src/managers/GameEventManager.js
+
 
 
 
@@ -2276,35 +2278,52 @@ class GameEventManager {
     this.languageManager = languageManager;
     this.events = [];
 
-    // Load the unified configuration and instantiate events dynamically.
+    // Load the unified configuration and instantiate only those events
+    // whose keys appear in the "sequence" array.
     (0,_utils_GameEntityLoader_js__WEBPACK_IMPORTED_MODULE_2__.loadGameEntitiesConfig)().then(async config => {
-      for (const eventCfg of config.events) {
-        // Build dependency mapping.
-        const dependencyMapping = {
-          "eventManager": this.eventManager,
-          "app": this.app,
-          "languageManager": this.languageManager
-        };
-        const params = eventCfg.dependencies.map(dep => dependencyMapping[dep]);
+      // Build a Set of all eventKeys that are part of the sequence
+      const sequenceKeys = new Set(config.sequence.map(triad => triad.eventKey));
 
-        // Dynamically import the event class from the triad entry for eventCfg.key
+      // Build a lookup from eventKey to its corresponding config object
+      const eventConfigByKey = {};
+      for (const ev of config.events) {
+        eventConfigByKey[ev.key] = ev;
+      }
+
+      // Dependency mapping template for all events
+      const dependencyMappingTemplate = {
+        eventManager: this.eventManager,
+        app: this.app,
+        languageManager: this.languageManager
+      };
+
+      // Iterate over each key in the sequence
+      for (const eventKey of sequenceKeys) {
+        const eventCfg = eventConfigByKey[eventKey];
+        if (!eventCfg) {
+          _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`No event configuration found for key "${eventKey}" in sequence.`, "GameEventManager");
+          continue;
+        }
+
+        // Build parameters array based on declared dependencies
+        const params = eventCfg.dependencies.map(dep => dependencyMappingTemplate[dep]);
         try {
-          // Import the entire triad bundle for this eventKey via alias "triads"
-          const module = await __webpack_require__("./build/triads lazy recursive ^\\.\\/triad\\-.*$")(`./triad-${eventCfg.key}`);
+          // Dynamically import the triad bundle for this eventKey via alias "triads"
+          const module = await __webpack_require__("./build/triads lazy recursive ^\\.\\/triad\\-.*$")(`./triad-${eventKey}`);
           const EventClass = module[eventCfg.className];
           if (!EventClass) {
-            _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Event class "${eventCfg.className}" is not exported from triads/triad-${eventCfg.key}.js.`, "GameEventManager");
+            _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Event class "${eventCfg.className}" is not exported from triads/triad-${eventKey}.js.`, "GameEventManager");
             continue;
           }
           const instance = new EventClass(...params);
           // Set the key as specified in the config.
-          instance.key = eventCfg.key;
+          instance.key = eventKey;
           this.events.push(instance);
         } catch (error) {
-          _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Failed to import triad for event "${eventCfg.key}": ${error.message}`, "GameEventManager");
+          _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Failed to import triad for event "${eventKey}": ${error.message}`, "GameEventManager");
         }
       }
-      console.log("Game events loaded from configuration:", this.events.map(e => e.key));
+      console.log("Game events loaded from sequence:", this.events.map(e => e.key));
     }).catch(error => {
       _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(error, "GameEventManager.loadConfig");
       _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.showError("Failed to load game events configuration");
@@ -3280,11 +3299,15 @@ class QuestManager {
     // Load the unified configuration and instantiate quests dynamically.
     // Also prepare a mapping from questKey to its parent eventKey.
     Promise.all([(0,_utils_GameEntityLoader_js__WEBPACK_IMPORTED_MODULE_2__.loadGameEntitiesConfig)(), (0,_utils_GameEntityLoader_js__WEBPACK_IMPORTED_MODULE_2__.getQuestKeyToEventKeyMap)()]).then(async ([config, questKeyToEventKey]) => {
+      // Build a Map of questKey → eventKey from configuration
+      this.questKeyToEventKey = questKeyToEventKey;
+
+      // Instantiate each quest class based on config
       for (const questCfg of config.quests) {
         // Build dependency mapping.
         const dependencyMapping = {
-          "eventManager": this.eventManager,
-          "app": this.app
+          eventManager: this.eventManager,
+          app: this.app
         };
         const params = questCfg.dependencies.map(dep => dependencyMapping[dep]);
         // If quest-specific configuration exists, append it.
@@ -3317,6 +3340,21 @@ class QuestManager {
         }
       }
       console.log("Quests loaded from configuration:", this.quests.map(q => q.key));
+
+      // Register listener for questCompleted events
+      document.addEventListener("questCompleted", async e => {
+        const completedQuestKey = e.detail; // e.g. "mirror_quest"
+        const nextEventKey = this.questKeyToEventKey[completedQuestKey];
+        if (!nextEventKey) {
+          _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`No next eventKey defined for quest "${completedQuestKey}".`, "QuestManager");
+          return;
+        }
+        try {
+          await this.eventManager.activateEvent(nextEventKey);
+        } catch (err) {
+          _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Failed to activate event "${nextEventKey}" after quest "${completedQuestKey}": ${err.message}`, "QuestManager");
+        }
+      });
     }).catch(error => {
       _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(error, "QuestManager.loadConfig");
       _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.showError("Failed to load quests configuration");

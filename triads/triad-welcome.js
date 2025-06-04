@@ -10,12 +10,12 @@
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   BaseMirrorQuest: () => (/* reexport safe */ quests_BaseMirrorQuest_js__WEBPACK_IMPORTED_MODULE_1__.BaseMirrorQuest),
-/* harmony export */   PostRepeatingEvent: () => (/* reexport safe */ events_PostRepeatingEvent_js__WEBPACK_IMPORTED_MODULE_2__.PostRepeatingEvent),
+/* harmony export */   PostMirrorEvent: () => (/* reexport safe */ events_PostMirrorEvent_js__WEBPACK_IMPORTED_MODULE_2__.PostMirrorEvent),
 /* harmony export */   WelcomeEvent: () => (/* reexport safe */ events_WelcomeEvent_js__WEBPACK_IMPORTED_MODULE_0__.WelcomeEvent)
 /* harmony export */ });
 /* harmony import */ var events_WelcomeEvent_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! events/WelcomeEvent.js */ "./src/events/WelcomeEvent.js");
 /* harmony import */ var quests_BaseMirrorQuest_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! quests/BaseMirrorQuest.js */ "./src/quests/BaseMirrorQuest.js");
-/* harmony import */ var events_PostRepeatingEvent_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! events/PostRepeatingEvent.js */ "./src/events/PostRepeatingEvent.js");
+/* harmony import */ var events_PostMirrorEvent_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! events/PostMirrorEvent.js */ "./src/events/PostMirrorEvent.js");
 
 
 
@@ -101,15 +101,15 @@ class BaseEvent {
 
 /***/ }),
 
-/***/ "./src/events/PostRepeatingEvent.js":
-/*!******************************************!*\
-  !*** ./src/events/PostRepeatingEvent.js ***!
-  \******************************************/
+/***/ "./src/events/PostMirrorEvent.js":
+/*!***************************************!*\
+  !*** ./src/events/PostMirrorEvent.js ***!
+  \***************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   PostRepeatingEvent: () => (/* binding */ PostRepeatingEvent)
+/* harmony export */   PostMirrorEvent: () => (/* binding */ PostMirrorEvent)
 /* harmony export */ });
 /* harmony import */ var _BaseEvent_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./BaseEvent.js */ "./src/events/BaseEvent.js");
 /* harmony import */ var _managers_StateManager_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../managers/StateManager.js */ "./src/managers/StateManager.js");
@@ -119,16 +119,15 @@ __webpack_require__.r(__webpack_exports__);
 
 
 /**
- * PostRepeatingEvent
+ * PostMirrorEvent
  * 
- * This event finalizes the mirror quest cycle and prepares the system for the repeating quest cycle.
- * It logs a ghost post and, if the current ghost is not finished, enables the Post button and triggers the mirror effect.
- * It does not directly set quest-specific flags; these are managed via the universal state.
+ * This event publishes a ghost post and signals that the mirror quest cycle has ended.
+ * It updates the UI via ViewManager without directly setting quest-specific flags.
  *
- * NOTE: This event does not automatically trigger quest activation;
- * it simply performs its task and dispatches a "gameEventCompleted" event.
+ * NOTE: This event is part of the sequential chain managed by GhostManager.
+ * It only performs its task and then dispatches a "gameEventCompleted" event.
  */
-class PostRepeatingEvent extends _BaseEvent_js__WEBPACK_IMPORTED_MODULE_0__.BaseEvent {
+class PostMirrorEvent extends _BaseEvent_js__WEBPACK_IMPORTED_MODULE_0__.BaseEvent {
   /**
    * @param {EventManager} eventManager - Manager handling diary operations.
    * @param {App} appInstance - Reference to the main application instance.
@@ -136,45 +135,30 @@ class PostRepeatingEvent extends _BaseEvent_js__WEBPACK_IMPORTED_MODULE_0__.Base
   constructor(eventManager, appInstance) {
     super(eventManager);
     this.app = appInstance;
-    // Base key for post repeating event.
-    this.key = "post_repeating_event";
+    this.key = "post_mirror_event";
   }
-
-  /**
-   * activate - Activates the post repeating event.
-   * Accepts an optional dynamicKey to generate a unique event id (e.g., "post_repeating_event_stage_2").
-   *
-   * @param {string} [dynamicKey] - Optional unique event key.
-   */
-  async activate(dynamicKey) {
-    const eventKey = dynamicKey || this.key;
-    if (this.eventManager.isEventLogged(eventKey)) {
-      console.log(`[PostRepeatingEvent] Event '${eventKey}' is already logged, skipping activation.`);
+  async activate() {
+    if (this.eventManager.isEventLogged(this.key)) {
+      console.log(`[PostMirrorEvent] Event '${this.key}' is already logged, skipping activation.`);
       return;
     }
-    console.log(`[PostRepeatingEvent] Activating event '${eventKey}'.`);
-    await this.addDiaryEntry(eventKey, true);
+    console.log(`[PostMirrorEvent] Activating event '${this.key}'.`);
+    await this.addDiaryEntry(this.key, true);
 
-    // Check if the current ghost is finished.
-    const ghost = this.app.ghostManager.getCurrentGhost();
-    if (ghost && ghost.isFinished) {
-      console.log("[PostRepeatingEvent] Ghost is finished; ready to dispatch event completion.");
-      // No additional processing is needed if the ghost is finished.
-    } else {
-      // Instead of setting a mirrorQuestReady flag,
-      // simply enable the Post button and trigger the mirror effect.
-      if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
-        this.app.viewManager.setPostButtonEnabled(true);
-      }
-      if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === "function") {
-        this.app.visualEffectsManager.triggerMirrorEffect();
-      }
-      console.log("[PostRepeatingEvent] Repeating quest cycle ended; waiting for user action.");
+    // Instead of directly setting mirrorQuestReady or isRepeatingCycle,
+    // signal that the mirror quest cycle has completed by enabling the Post button 
+    // and triggering the mirror effect. The universal active quest state is managed elsewhere.
+    if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {
+      this.app.viewManager.setPostButtonEnabled(true);
     }
+    if (this.app.visualEffectsManager && typeof this.app.visualEffectsManager.triggerMirrorEffect === "function") {
+      this.app.visualEffectsManager.triggerMirrorEffect();
+    }
+    console.log("[PostMirrorEvent] Mirror quest cycle ended; waiting for user action to trigger the next quest.");
 
-    // Dispatch an event to signal completion of this event.
+    // Dispatch an event to signal that this event has completed.
     document.dispatchEvent(new CustomEvent("gameEventCompleted", {
-      detail: eventKey
+      detail: this.key
     }));
   }
 }

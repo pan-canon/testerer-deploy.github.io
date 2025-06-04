@@ -16,6 +16,14 @@ var map = {
 		"./build/triads/triad-final_event.js",
 		"triads/triad-final_event"
 	],
+	"./triad-post_mirror_event": [
+		"./build/triads/triad-post_mirror_event.js",
+		"triads/triad-post_mirror_event"
+	],
+	"./triad-post_mirror_event.js": [
+		"./build/triads/triad-post_mirror_event.js",
+		"triads/triad-post_mirror_event"
+	],
 	"./triad-post_repeating_event": [
 		"./build/triads/triad-post_repeating_event.js",
 		"triads/triad-post_repeating_event"

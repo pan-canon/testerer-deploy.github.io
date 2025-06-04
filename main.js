@@ -3286,11 +3286,13 @@ __webpack_require__.r(__webpack_exports__);
  */
 class QuestManager {
   /**
-   * @param {EventManager} eventManager - The event manager handling diary entries.
-   * @param {App} appInstance - The main application instance.
+   * @param {EventManager} eventManager     - The event manager handling diary entries.
+   * @param {GameEventManager} gameEventMgr - The game event manager for activating next events.
+   * @param {App} appInstance               - The main application instance.
    */
-  constructor(eventManager, appInstance) {
+  constructor(eventManager, gameEventMgr, appInstance) {
     this.eventManager = eventManager;
+    this.gameEventManager = gameEventMgr;
     this.app = appInstance;
     this.quests = [];
 
@@ -3348,7 +3350,7 @@ class QuestManager {
           return;
         }
         try {
-          await this.eventManager.activateEvent(nextEventKey);
+          await this.gameEventManager.activateEvent(nextEventKey);
         } catch (err) {
           _ErrorManager_js__WEBPACK_IMPORTED_MODULE_1__.ErrorManager.logError(`Failed to activate event "${nextEventKey}" after quest "${completedQuestKey}": ${err.message}`, "QuestManager");
         }

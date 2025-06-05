@@ -1,3 +1,5 @@
+// File: src/managers/GhostManager.js
+
 import { ErrorManager } from './ErrorManager.js';
 import { StateManager } from './StateManager.js';
 import { loadGameEntitiesConfig } from '../utils/GameEntityLoader.js';
@@ -290,15 +292,15 @@ export class GhostManager {
    * If an active quest exists, the button is disabled; otherwise, it is enabled.
    */
   updatePostButtonState() {
-    // Get the next sequence entry (or null).
+    // Получаем следующий элемент последовательности (или null)
     const nextEntry = this.sequenceManager
       ? this.sequenceManager.getCurrentEntry()
       : null;
-    // Determine if there is a valid questKey and if it can be started.
+    // Есть ли валидный questKey и можно ли его запустить?
     const canStart = nextEntry
       ? this.canStartQuest(nextEntry.questKey)
       : false;
-    // Apply to ViewManager.
+    // Применяем к ViewManager
     this.app.viewManager.setPostButtonEnabled(canStart);
     console.log(
       `[GhostManager] Post button state updated: enabled=${canStart}`
@@ -307,7 +309,8 @@ export class GhostManager {
 
   /**
    * Handles the Post button click.
-   * Disables the button and then simply updates its state.
+   * Disables the button, retrieves the next sequence entry, and either starts the event directly
+   * if there is no quest, or starts the quest if permitted.
    */
   async handlePostButtonClick() {
     // Disable the Post button immediately to prevent double-clicks.
@@ -320,32 +323,51 @@ export class GhostManager {
       return;
     }
 
-    // We no longer start repeating_quest here; it is auto-started in onEventCompleted.
+    // If there is no quest for this entry, activate the next event directly.
+    if (nextEntry.questKey === null) {
+      if (nextEntry.nextEventKey) {
+        try {
+          console.log(`[GhostManager] No quest to start; activating event "${nextEntry.nextEventKey}" directly.`);
+          // Pass `true` to skip normal sequence checks when starting the event
+          await this.startEvent(nextEntry.nextEventKey, true);
+        } catch (err) {
+          console.error(`[GhostManager] Failed to activate event "${nextEntry.nextEventKey}":`, err);
+        }
+      } else {
+        console.warn("[GhostManager] Both questKey and nextEventKey are null; nothing to activate.");
+      }
+      // Advance the sequence index and persist it
+      this.sequenceManager.increment();
+      StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
+
+      // Update the Post button state for the next step
+      this.updatePostButtonState();
+      return;
+    }
+
+    // Otherwise, attempt to start the quest if allowed
+    console.log(`GhostManager: Handling Post button click. Next expected quest: "${nextEntry.questKey}".`);
+    if (!this.canStartQuest(nextEntry.questKey)) {
+      this.updatePostButtonState();
+      return;
+    }
+
+    await this.startQuest(nextEntry.questKey);
+    // After starting the quest, update the Post button state
     this.updatePostButtonState();
   }
 
   /**
    * Called when a game event completes.
    * Increments the sequence index if the completed event matches the expected next event.
-   * If the new entry is the repeating_quest, starts it immediately.
    * @param {string} eventKey - The completed event key.
    */
-  async onEventCompleted(eventKey) {
+  onEventCompleted(eventKey) {
     console.log(`GhostManager: Event completed with key: ${eventKey}`);
-    const currentEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
-    if (currentEntry && currentEntry.nextEventKey === eventKey) {
-      // Advance index
+    if (this.sequenceManager && this.sequenceManager.getCurrentEntry().nextEventKey === eventKey) {
       this.sequenceManager.increment();
       StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
       console.log(`GhostManager: Sequence index incremented to ${this.sequenceManager.currentIndex}`);
-
-      // If the new entry corresponds to post_repeating_event → repeating_quest, start it
-      const newEntry = this.sequenceManager.getCurrentEntry();
-      if (newEntry && newEntry.eventKey === "post_repeating_event" && newEntry.questKey === "repeating_quest") {
-        console.log(`[GhostManager] Auto-starting repeat quest: "${newEntry.questKey}"`);
-        await this.startQuest(newEntry.questKey);
-        return;
-      }
     }
   }
 
@@ -378,6 +400,7 @@ export class GhostManager {
         const dynamicEventKey = `post_repeating_event_stage_${questStatus.currentStage}`;
         console.log(`Repeating quest stage completed. Triggering generated event: ${dynamicEventKey}`);
         await this.startEvent(dynamicEventKey, true);
+        return;
       } else {
         // Quest has reached its final stage: use the final event key from config.
         const currentEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
@@ -387,23 +410,16 @@ export class GhostManager {
         } else {
           console.warn("No final event configured for repeating quest completion. Unable to start final event.");
         }
-        // Move sequence index past the repeating_quest entry
         this.sequenceManager.increment();
         StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
+        return;
       }
-      return;
     }
 
-    // For non-repeating quests
     const currentEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
-    if (currentEntry && currentEntry.questKey === questKey) {
-      if (currentEntry.nextEventKey) {
-        console.log(`GhostManager: Quest completed. Now starting ghost event: ${currentEntry.nextEventKey}`);
-        await this.startEvent(currentEntry.nextEventKey, true);
-      }
-      // Advance sequence index past this quest entry
-      this.sequenceManager.increment();
-      StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
+    if (currentEntry && currentEntry.questKey === questKey && currentEntry.nextEventKey) {
+      console.log(`GhostManager: Quest completed. Now starting ghost event: ${currentEntry.nextEventKey}`);
+      await this.startEvent(currentEntry.nextEventKey, true);
     }
   }
 }

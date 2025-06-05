@@ -202,13 +202,8 @@ export class QuestManager {
 
     console.log(`[QuestManager] Activating quest: ${key}`);
     await quest.activate();
-
-    // Persist the active quest key
     StateManager.setActiveQuestKey(key);
     await this.syncQuestState();
-
-    // Enable the camera button (does not auto-open camera)
-    this.app.viewManager.setCameraButtonActive(true);
   }
 
   /**

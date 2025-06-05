@@ -464,53 +464,29 @@ export class ViewManager {
 
   /**
    * setPostButtonEnabled
-   * Sets the Post button state (enabled/disabled) and persists it.
-   * @param {boolean} isEnabled – true to enable; false to disable.
+   * Sets the Post button state.
+   * The passed parameter (isEnabled) is assumed to be pre-computed based on the universal quest state,
+   * such as the presence of an active quest key ("activeQuestKey").
    */
   setPostButtonEnabled(isEnabled) {
     const postBtn = document.getElementById("post-btn");
     if (postBtn) {
       const gameFinalized = StateManager.get(StateManager.KEYS.GAME_FINALIZED) === "true";
       if (gameFinalized) {
-        // If the game is already finalized, always keep "Post" disabled.
         postBtn.disabled = true;
         StateManager.set(StateManager.KEYS.POST_BUTTON_DISABLED, "true");
         console.log("[ViewManager] Game finalized. Post button disabled.");
       } else {
-        // Otherwise, honor the passed-in flag and persist it.
         postBtn.disabled = !isEnabled;
         StateManager.set(StateManager.KEYS.POST_BUTTON_DISABLED, isEnabled ? "false" : "true");
         console.log(`[ViewManager] Post button set to ${isEnabled ? "enabled" : "disabled"}.`);
       }
-    } else {
-      ErrorManager.logError("Post button (id='post-btn') not found in the DOM.", "setPostButtonEnabled");
-    }
-  }
-
-  /**
-   * restorePostButtonState
-   * On app startup, read the persisted flag and re‐apply disabled/enabled state.
-   */
-  restorePostButtonState() {
-    const postBtn = document.getElementById("post-btn");
-    if (postBtn) {
-      // Read the stored value (defaults to "true" if absent).
-      const wasDisabled = StateManager.get(StateManager.KEYS.POST_BUTTON_DISABLED) === "true";
-      postBtn.disabled = wasDisabled;
-      console.log(
-        "[ViewManager] Restored Post button state:",
-        wasDisabled ? "disabled" : "enabled"
-      );
-    } else {
-      ErrorManager.logError("Post button (id='post-btn') not found in the DOM.", "restorePostButtonState");
     }
   }
 
   /**
    * setCameraButtonActive
-   * Sets only the CSS “active” state of the camera‐toggle button and persists it.
-   * Does NOT open the camera by itself.
-   * @param {boolean} isActive – true to mark it active; false to mark inactive.
+   * Sets the active state of the camera button.
    */
   setCameraButtonActive(isActive) {
     const cameraBtn = document.getElementById("toggle-camera");
@@ -520,11 +496,9 @@ export class ViewManager {
       } else {
         cameraBtn.classList.remove("active");
       }
-      // Persist the “active” flag so that on reload we can restore the highlight.
+      // Optionally, you might remove the old fixed key and rely on universal state instead.
       StateManager.set(StateManager.KEYS.CAMERA_BUTTON_ACTIVE, JSON.stringify(isActive));
       console.log(`[ViewManager] Camera button active state set to ${isActive}.`);
-    } else {
-      ErrorManager.logError("Camera button (id='toggle-camera') not found in the DOM.", "setCameraButtonActive");
     }
   }
 
@@ -542,12 +516,12 @@ export class ViewManager {
 
   /**
    * setShootButtonActive
-   * Sets the active (enabled) state of the “Shoot” button and controls pointer events.
-   * @param {boolean} isActive – true to enable; false to disable.
+   * Sets the active state of the Shoot button.
    */
   setShootButtonActive(isActive) {
     const shootBtn = document.getElementById("btn_shoot");
     if (shootBtn) {
+      // disabled и pointerEvents в одном месте
       shootBtn.disabled = !isActive;
       shootBtn.style.pointerEvents = isActive ? "auto" : "none";
       if (isActive) {
@@ -557,15 +531,16 @@ export class ViewManager {
       }
       console.log(`[ViewManager] Shoot button active state set to ${isActive}.`);
     } else {
-      ErrorManager.logError("Shoot button (id='btn_shoot') not found in the DOM.", "setShootButtonActive");
+      ErrorManager.logError("Shoot button not found.", "setShootButtonActive");
     }
   }
 
   /**
    * restoreShootButtonState
-   * On load, always disable the Shoot button. The quest logic will toggle it later.
+   * Restores the Shoot button state based on the universal quest state ("activeQuestKey").
    */
   restoreShootButtonState() {
+    // Always start with Shoot disabled on page load.
     this.setShootButtonActive(false);
     console.log("[ViewManager] Shoot button state reset to disabled on restore.");
   }

@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack --config config/webpack.config.js --mode production",
+    "build": "webpack --config config/webpack.config.js",
     "start": "webpack serve --config config/webpack.config.js --open",
     "lint": "eslint -c config/.eslintrc.js \"src/**/*.{js,jsx}\"",
     "format": "prettier --config config/prettier.config.js --write \"src/**/*.{js,json,css,md}\""

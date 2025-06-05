@@ -2382,6 +2382,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _StateManager_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./StateManager.js */ "./src/managers/StateManager.js");
 /* harmony import */ var _utils_GameEntityLoader_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/GameEntityLoader.js */ "./src/utils/GameEntityLoader.js");
 /* harmony import */ var _utils_SequenceManager_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/SequenceManager.js */ "./src/utils/SequenceManager.js");
+// File: src/managers/GhostManager.js
+
 
 
 
@@ -2673,18 +2675,19 @@ class GhostManager {
    * If an active quest exists, the button is disabled; otherwise, it is enabled.
    */
   updatePostButtonState() {
-    // Get the next sequence entry (or null).
+    // Получаем следующий элемент последовательности (или null)
     const nextEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
-    // Determine if there is a valid questKey and if it can be started.
+    // Есть ли валидный questKey и можно ли его запустить?
     const canStart = nextEntry ? this.canStartQuest(nextEntry.questKey) : false;
-    // Apply to ViewManager.
+    // Применяем к ViewManager
     this.app.viewManager.setPostButtonEnabled(canStart);
     console.log(`[GhostManager] Post button state updated: enabled=${canStart}`);
   }
 
   /**
    * Handles the Post button click.
-   * Disables the button and then simply updates its state.
+   * Disables the button, retrieves the next sequence entry, and either starts the event directly
+   * if there is no quest, or starts the quest if permitted.
    */
   async handlePostButtonClick() {
     // Disable the Post button immediately to prevent double-clicks.
@@ -2696,32 +2699,50 @@ class GhostManager {
       return;
     }
 
-    // We no longer start repeating_quest here; it is auto-started in onEventCompleted.
+    // If there is no quest for this entry, activate the next event directly.
+    if (nextEntry.questKey === null) {
+      if (nextEntry.nextEventKey) {
+        try {
+          console.log(`[GhostManager] No quest to start; activating event "${nextEntry.nextEventKey}" directly.`);
+          // Pass `true` to skip normal sequence checks when starting the event
+          await this.startEvent(nextEntry.nextEventKey, true);
+        } catch (err) {
+          console.error(`[GhostManager] Failed to activate event "${nextEntry.nextEventKey}":`, err);
+        }
+      } else {
+        console.warn("[GhostManager] Both questKey and nextEventKey are null; nothing to activate.");
+      }
+      // Advance the sequence index and persist it
+      this.sequenceManager.increment();
+      _StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.set(_StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
+
+      // Update the Post button state for the next step
+      this.updatePostButtonState();
+      return;
+    }
+
+    // Otherwise, attempt to start the quest if allowed
+    console.log(`GhostManager: Handling Post button click. Next expected quest: "${nextEntry.questKey}".`);
+    if (!this.canStartQuest(nextEntry.questKey)) {
+      this.updatePostButtonState();
+      return;
+    }
+    await this.startQuest(nextEntry.questKey);
+    // After starting the quest, update the Post button state
     this.updatePostButtonState();
   }
 
   /**
    * Called when a game event completes.
    * Increments the sequence index if the completed event matches the expected next event.
-   * If the new entry is the repeating_quest, starts it immediately.
    * @param {string} eventKey - The completed event key.
    */
-  async onEventCompleted(eventKey) {
+  onEventCompleted(eventKey) {
     console.log(`GhostManager: Event completed with key: ${eventKey}`);
-    const currentEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
-    if (currentEntry && currentEntry.nextEventKey === eventKey) {
-      // Advance index
+    if (this.sequenceManager && this.sequenceManager.getCurrentEntry().nextEventKey === eventKey) {
       this.sequenceManager.increment();
       _StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.set(_StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
       console.log(`GhostManager: Sequence index incremented to ${this.sequenceManager.currentIndex}`);
-
-      // If the new entry corresponds to post_repeating_event → repeating_quest, start it
-      const newEntry = this.sequenceManager.getCurrentEntry();
-      if (newEntry && newEntry.eventKey === "post_repeating_event" && newEntry.questKey === "repeating_quest") {
-        console.log(`[GhostManager] Auto-starting repeat quest: "${newEntry.questKey}"`);
-        await this.startQuest(newEntry.questKey);
-        return;
-      }
     }
   }
 
@@ -2754,6 +2775,7 @@ class GhostManager {
         const dynamicEventKey = `post_repeating_event_stage_${questStatus.currentStage}`;
         console.log(`Repeating quest stage completed. Triggering generated event: ${dynamicEventKey}`);
         await this.startEvent(dynamicEventKey, true);
+        return;
       } else {
         // Quest has reached its final stage: use the final event key from config.
         const currentEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
@@ -2763,23 +2785,15 @@ class GhostManager {
         } else {
           console.warn("No final event configured for repeating quest completion. Unable to start final event.");
         }
-        // Move sequence index past the repeating_quest entry
         this.sequenceManager.increment();
         _StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.set(_StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
+        return;
       }
-      return;
     }
-
-    // For non-repeating quests
     const currentEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
-    if (currentEntry && currentEntry.questKey === questKey) {
-      if (currentEntry.nextEventKey) {
-        console.log(`GhostManager: Quest completed. Now starting ghost event: ${currentEntry.nextEventKey}`);
-        await this.startEvent(currentEntry.nextEventKey, true);
-      }
-      // Advance sequence index past this quest entry
-      this.sequenceManager.increment();
-      _StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.set(_StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
+    if (currentEntry && currentEntry.questKey === questKey && currentEntry.nextEventKey) {
+      console.log(`GhostManager: Quest completed. Now starting ghost event: ${currentEntry.nextEventKey}`);
+      await this.startEvent(currentEntry.nextEventKey, true);
     }
   }
 }
@@ -3460,13 +3474,8 @@ class QuestManager {
     }
     console.log(`[QuestManager] Activating quest: ${key}`);
     await quest.activate();
-
-    // Persist the active quest key
     _StateManager_js__WEBPACK_IMPORTED_MODULE_0__.StateManager.setActiveQuestKey(key);
     await this.syncQuestState();
-
-    // Enable the camera button (does not auto-open camera)
-    this.app.viewManager.setCameraButtonActive(true);
   }
 
   /**
@@ -4813,50 +4822,29 @@ class ViewManager {
 
   /**
    * setPostButtonEnabled
-   * Sets the Post button state (enabled/disabled) and persists it.
-   * @param {boolean} isEnabled – true to enable; false to disable.
+   * Sets the Post button state.
+   * The passed parameter (isEnabled) is assumed to be pre-computed based on the universal quest state,
+   * such as the presence of an active quest key ("activeQuestKey").
    */
   setPostButtonEnabled(isEnabled) {
     const postBtn = document.getElementById("post-btn");
     if (postBtn) {
       const gameFinalized = _StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.get(_StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.KEYS.GAME_FINALIZED) === "true";
       if (gameFinalized) {
-        // If the game is already finalized, always keep "Post" disabled.
         postBtn.disabled = true;
         _StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.set(_StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.KEYS.POST_BUTTON_DISABLED, "true");
         console.log("[ViewManager] Game finalized. Post button disabled.");
       } else {
-        // Otherwise, honor the passed-in flag and persist it.
         postBtn.disabled = !isEnabled;
         _StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.set(_StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.KEYS.POST_BUTTON_DISABLED, isEnabled ? "false" : "true");
         console.log(`[ViewManager] Post button set to ${isEnabled ? "enabled" : "disabled"}.`);
       }
-    } else {
-      _ErrorManager_js__WEBPACK_IMPORTED_MODULE_2__.ErrorManager.logError("Post button (id='post-btn') not found in the DOM.", "setPostButtonEnabled");
-    }
-  }
-
-  /**
-   * restorePostButtonState
-   * On app startup, read the persisted flag and re‐apply disabled/enabled state.
-   */
-  restorePostButtonState() {
-    const postBtn = document.getElementById("post-btn");
-    if (postBtn) {
-      // Read the stored value (defaults to "true" if absent).
-      const wasDisabled = _StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.get(_StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.KEYS.POST_BUTTON_DISABLED) === "true";
-      postBtn.disabled = wasDisabled;
-      console.log("[ViewManager] Restored Post button state:", wasDisabled ? "disabled" : "enabled");
-    } else {
-      _ErrorManager_js__WEBPACK_IMPORTED_MODULE_2__.ErrorManager.logError("Post button (id='post-btn') not found in the DOM.", "restorePostButtonState");
     }
   }
 
   /**
    * setCameraButtonActive
-   * Sets only the CSS “active” state of the camera‐toggle button and persists it.
-   * Does NOT open the camera by itself.
-   * @param {boolean} isActive – true to mark it active; false to mark inactive.
+   * Sets the active state of the camera button.
    */
   setCameraButtonActive(isActive) {
     const cameraBtn = document.getElementById("toggle-camera");
@@ -4866,11 +4854,9 @@ class ViewManager {
       } else {
         cameraBtn.classList.remove("active");
       }
-      // Persist the “active” flag so that on reload we can restore the highlight.
+      // Optionally, you might remove the old fixed key and rely on universal state instead.
       _StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.set(_StateManager_js__WEBPACK_IMPORTED_MODULE_1__.StateManager.KEYS.CAMERA_BUTTON_ACTIVE, JSON.stringify(isActive));
       console.log(`[ViewManager] Camera button active state set to ${isActive}.`);
-    } else {
-      _ErrorManager_js__WEBPACK_IMPORTED_MODULE_2__.ErrorManager.logError("Camera button (id='toggle-camera') not found in the DOM.", "setCameraButtonActive");
     }
   }
 
@@ -4888,12 +4874,12 @@ class ViewManager {
 
   /**
    * setShootButtonActive
-   * Sets the active (enabled) state of the “Shoot” button and controls pointer events.
-   * @param {boolean} isActive – true to enable; false to disable.
+   * Sets the active state of the Shoot button.
    */
   setShootButtonActive(isActive) {
     const shootBtn = document.getElementById("btn_shoot");
     if (shootBtn) {
+      // disabled и pointerEvents в одном месте
       shootBtn.disabled = !isActive;
       shootBtn.style.pointerEvents = isActive ? "auto" : "none";
       if (isActive) {
@@ -4903,15 +4889,16 @@ class ViewManager {
       }
       console.log(`[ViewManager] Shoot button active state set to ${isActive}.`);
     } else {
-      _ErrorManager_js__WEBPACK_IMPORTED_MODULE_2__.ErrorManager.logError("Shoot button (id='btn_shoot') not found in the DOM.", "setShootButtonActive");
+      _ErrorManager_js__WEBPACK_IMPORTED_MODULE_2__.ErrorManager.logError("Shoot button not found.", "setShootButtonActive");
     }
   }
 
   /**
    * restoreShootButtonState
-   * On load, always disable the Shoot button. The quest logic will toggle it later.
+   * Restores the Shoot button state based on the universal quest state ("activeQuestKey").
    */
   restoreShootButtonState() {
+    // Always start with Shoot disabled on page load.
     this.setShootButtonActive(false);
     console.log("[ViewManager] Shoot button state reset to disabled on restore.");
   }

@@ -309,8 +309,8 @@ export class GhostManager {
 
   /**
    * Handles the Post button click.
-   * Disables the button, retrieves the next sequence entry, and either starts the event directly
-   * if there is no quest, or starts the quest if permitted.
+   * Disables the button to prevent double-clicks, then either starts the next event
+   * directly (if there is no quest in this sequence entry) or starts the quest (if allowed).
    */
   async handlePostButtonClick() {
     // Disable the Post button immediately to prevent double-clicks.
@@ -323,51 +323,147 @@ export class GhostManager {
       return;
     }
 
-    // If there is no quest for this entry, activate the next event directly.
+    // ----------------------------------------------------------
+    // Case 1: If this entry has no questKey (i.e., questKey === null),
+    // we activate the next event directly and do NOT advance the sequence index here,
+    // because onEventCompleted(...) will take care of incrementing exactly once.
     if (nextEntry.questKey === null) {
       if (nextEntry.nextEventKey) {
         try {
-          console.log(`[GhostManager] No quest to start; activating event "${nextEntry.nextEventKey}" directly.`);
-          // Pass `true` to skip normal sequence checks when starting the event
+          console.log(
+            `[GhostManager] No quest to start; activating event "${nextEntry.nextEventKey}" directly.`
+          );
+          // Pass `true` to skip the normal sequence checks when starting the event
           await this.startEvent(nextEntry.nextEventKey, true);
         } catch (err) {
-          console.error(`[GhostManager] Failed to activate event "${nextEntry.nextEventKey}":`, err);
+          console.error(
+            `[GhostManager] Failed to activate event "${nextEntry.nextEventKey}":`,
+            err
+          );
         }
       } else {
-        console.warn("[GhostManager] Both questKey and nextEventKey are null; nothing to activate.");
+        console.warn(
+          "[GhostManager] Both questKey and nextEventKey are null; nothing to activate."
+        );
       }
-      // Advance the sequence index and persist it
-      this.sequenceManager.increment();
-      StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
 
-      // Update the Post button state for the next step
+      // NOTE: We have removed the following manual increment() and StateManager.set():
+      // this.sequenceManager.increment();
+      // StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
+      //
+      // By removing these lines, we ensure that the sequence index is incremented only once
+      // inside onEventCompleted("post_mirror_event"), avoiding a double‐increment that
+      // would skip the repeating_quest stage.
+
+      // Update the Post button state for whatever is next.
       this.updatePostButtonState();
       return;
     }
 
-    // Otherwise, attempt to start the quest if allowed
-    console.log(`GhostManager: Handling Post button click. Next expected quest: "${nextEntry.questKey}".`);
+    // ----------------------------------------------------------
+    // Case 2: Otherwise, attempt to start the quest if allowed.
+    console.log(
+      `GhostManager: Handling Post button click. Next expected quest: "${nextEntry.questKey}".`
+    );
     if (!this.canStartQuest(nextEntry.questKey)) {
       this.updatePostButtonState();
       return;
     }
 
     await this.startQuest(nextEntry.questKey);
-    // After starting the quest, update the Post button state
+    // After starting the quest, update the Post button state.
+    this.updatePostButtonState();
+  }
+
+  /**
+   * Handles the Post button click.
+   * Disables the button to prevent double-clicks, then either starts the next event
+   * directly (if there is no quest in this sequence entry) or starts the quest (if allowed).
+   */
+  async handlePostButtonClick() {
+    // Disable the Post button immediately to prevent double-clicks.
+    this.app.viewManager.setPostButtonEnabled(false);
+
+    const nextEntry = this.sequenceManager ? this.sequenceManager.getCurrentEntry() : null;
+    if (!nextEntry) {
+      console.warn("GhostManager: No next sequence entry found.");
+      this.updatePostButtonState();
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // Case 1: If this entry has no questKey (i.e., questKey === null),
+    // we activate the next event directly and do NOT advance the sequence index here,
+    // because onEventCompleted(...) will take care of incrementing exactly once.
+    if (nextEntry.questKey === null) {
+      if (nextEntry.nextEventKey) {
+        try {
+          console.log(
+            `[GhostManager] No quest to start; activating event "${nextEntry.nextEventKey}" directly.`
+          );
+          // Pass `true` to skip the normal sequence checks when starting the event
+          await this.startEvent(nextEntry.nextEventKey, true);
+        } catch (err) {
+          console.error(
+            `[GhostManager] Failed to activate event "${nextEntry.nextEventKey}":`,
+            err
+          );
+        }
+      } else {
+        console.warn(
+          "[GhostManager] Both questKey and nextEventKey are null; nothing to activate."
+        );
+      }
+
+      // NOTE: We have removed the following manual increment() and StateManager.set():
+      // this.sequenceManager.increment();
+      // StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
+      //
+      // By removing these lines, we ensure that the sequence index is incremented only once
+      // inside onEventCompleted("post_mirror_event"), avoiding a double‐increment that
+      // would skip the repeating_quest stage.
+
+      // Update the Post button state for whatever is next.
+      this.updatePostButtonState();
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // Case 2: Otherwise, attempt to start the quest if allowed.
+    console.log(
+      `GhostManager: Handling Post button click. Next expected quest: "${nextEntry.questKey}".`
+    );
+    if (!this.canStartQuest(nextEntry.questKey)) {
+      this.updatePostButtonState();
+      return;
+    }
+
+    await this.startQuest(nextEntry.questKey);
+    // After starting the quest, update the Post button state.
     this.updatePostButtonState();
   }
 
   /**
    * Called when a game event completes.
-   * Increments the sequence index if the completed event matches the expected next event.
-   * @param {string} eventKey - The completed event key.
+   * Increments the sequence index if the completed event matches the expected nextEventKey.
+   * @param {string} eventKey - The key of the event that just completed.
    */
   onEventCompleted(eventKey) {
     console.log(`GhostManager: Event completed with key: ${eventKey}`);
-    if (this.sequenceManager && this.sequenceManager.getCurrentEntry().nextEventKey === eventKey) {
+    if (
+      this.sequenceManager &&
+      this.sequenceManager.getCurrentEntry().nextEventKey === eventKey
+    ) {
+      // Only advance the sequence index here (once),
+      // ensuring that the next quest or event lines up correctly.
       this.sequenceManager.increment();
-      StateManager.set(StateManager.KEYS.CURRENT_SEQUENCE_INDEX, String(this.sequenceManager.currentIndex));
-      console.log(`GhostManager: Sequence index incremented to ${this.sequenceManager.currentIndex}`);
+      StateManager.set(
+        StateManager.KEYS.CURRENT_SEQUENCE_INDEX,
+        String(this.sequenceManager.currentIndex)
+      );
+      console.log(
+        `GhostManager: Sequence index incremented to ${this.sequenceManager.currentIndex}`
+      );
     }
   }
 

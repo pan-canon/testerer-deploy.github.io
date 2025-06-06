@@ -7,7 +7,7 @@ const BASE_PATH = self.location.hostname.includes("github.io")
   ? "/testerer-deploy.github.io"
   : "";
 
-const CACHE_VERSION = 'v46'; // bump this on each release
+const CACHE_VERSION = 'v47'; // bump this on each release
 const CACHE_NAME    = `game-cache-${CACHE_VERSION}`;
 
 // Precache manifest will be injected here by InjectManifest

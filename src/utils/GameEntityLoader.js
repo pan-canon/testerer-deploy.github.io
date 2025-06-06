@@ -10,7 +10,7 @@
  * Returns an object containing `events`, `quests`, and `sequence`.
  */
 export async function loadGameEntitiesConfig() {
-  const response = await fetch('config/gameEntities.json');
+  const response = await fetch('./config/gameEntities.json');
   if (!response.ok) {
     throw new Error('Failed to load game entities configuration');
   }

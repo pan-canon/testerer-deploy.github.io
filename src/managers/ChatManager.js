@@ -14,7 +14,7 @@ export class ChatManager {
    *  - sectionKey: (optional) unique identifier for the chat section.
    */
   constructor(options = {}) {
-    this.templateUrl = options.templateUrl || `${BASE_PATH}/src/templates/chat_template.html`;
+    this.templateUrl = options.templateUrl || `${BASE_PATH}/templates/chat_template.html`;
     this.mode = options.mode || 'full';
     this.container = null; // DOM element for the chat section
     this.databaseManager = options.databaseManager || null;
@@ -34,7 +34,7 @@ export class ChatManager {
    */
   static createChatManagerWrapper(options = {}) {
     const defaultOptions = {
-      templateUrl: `${BASE_PATH}/src/templates/chat_template.html`,
+      templateUrl: `${BASE_PATH}/templates/chat_template.html`,
       mode: 'full'
     };
     return new ChatManager({ ...defaultOptions, ...options });

@@ -125,7 +125,7 @@ export class ViewManager {
   // ------------------ Dynamic Template Loading Methods ------------------
 
   async loadTemplate(screenId, data = {}) {
-    const templateUrl = `${BASE_PATH}/src/templates/${screenId}_template.html`;
+    const templateUrl = `${BASE_PATH}/templates/${screenId}_template.html`;
     try {
       const response = await fetch(templateUrl);
       if (!response.ok) {
@@ -1138,7 +1138,7 @@ export class ViewManager {
       : "";
 
     // абсолютный URL к шаблону
-    const templateUrl = `${BASE_PATH}/src/templates/diaryentry_screen-template.html`;
+    const templateUrl = `${BASE_PATH}/templates/diaryentry_screen-template.html`;
 
     // рендерим, подставляя разделённый текст и картинку
     const html = await TemplateEngine.renderFile(templateUrl, {
@@ -1167,7 +1167,7 @@ export class ViewManager {
     allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     // Берём следующий кусок
     const nextChunk = allEntries.slice(displayed, displayed + step);
-    const templateUrl = `${BASE_PATH}/src/templates/diaryentry_screen-template.html`;
+    const templateUrl = `${BASE_PATH}/templates/diaryentry_screen-template.html`;
 
     for (const entry of nextChunk) {
       // разбираем текст и картинку

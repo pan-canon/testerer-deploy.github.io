@@ -51,7 +51,7 @@ export class ChatScenarioManager {
   async init() {
     if (!this.scenarioConfig) {
       try {
-        const response = await fetch(`${BASE_PATH}/src/config/chatDialogueConfig.json`);
+        const response = await fetch(`${BASE_PATH}/config/chatDialogueConfig.json`);
         if (!response.ok) {
           throw new Error("Failed to load dialogue configuration from 'src/config/chatDialogueConfig.json'");
         }

@@ -12,11 +12,20 @@
  * 6) Navigation fallback (SPA)
  */
 
-import { setCacheNameDetails }                     from 'workbox-core';
-import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
-import { registerRoute, createHandlerBoundToURL }  from 'workbox-routing';
-import { CacheFirst, StaleWhileRevalidate }        from 'workbox-strategies';
-import { ExpirationPlugin }                        from 'workbox-expiration';
+// 🔄 Use importScripts to pull in Workbox from the CDN instead of ES imports:
+importScripts(
+  'https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-core.prod.js',
+  'https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-precaching.prod.js',
+  'https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-routing.prod.js',
+  'https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-strategies.prod.js',
+  'https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-expiration.prod.js'
+);
+// Pull modules off the global workbox namespace
+const { setCacheNameDetails }                             = workbox.core;
+const { precacheAndRoute, cleanupOutdatedCaches }         = workbox.precaching;
+const { registerRoute, createHandlerBoundToURL }          = workbox.routing;
+const { CacheFirst, StaleWhileRevalidate }                = workbox.strategies;
+const { ExpirationPlugin }                                = workbox.expiration;
 
 // 0) MANUAL VERSIONING — override all Workbox cache names
 const CACHE_VERSION = 'v58';

@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Register the Service Worker first to ensure it can intercept asset requests
   if ('serviceWorker' in navigator) {
     // ▶️ Back to classic registration (script), since sw.js now uses importScripts:
-    navigator.serviceWorker.register(`${BASE_PATH}/sw.js`)
+    navigator.serviceWorker.register(`${BASE_PATH}/sw.js`, { type: 'module' })
       .then(registration => {
         console.log('Service Worker registered with scope:', registration.scope);
 

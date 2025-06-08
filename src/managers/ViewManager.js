@@ -778,33 +778,75 @@ export class ViewManager {
     console.log(`[ViewManager] Ghost appearance effect triggered for ghost ${ghostId}.`);
   }
 
-  showNotification(message) {
-    const notification = document.createElement("div");
-    notification.textContent = message;
-    Object.assign(notification.style, {
-      position: "fixed",
-      bottom: "20px",
-      left: "50%",
-      transform: "translateX(-50%)",
-      backgroundColor: "rgba(0,0,0,0.8)",
-      color: "white",
-      padding: "10px 20px",
-      borderRadius: "5px",
-      zIndex: 10000,
-      opacity: "0",
-      transition: "opacity 0.5s"
-    });
-    document.body.appendChild(notification);
-    setTimeout(() => {
-      notification.style.opacity = "1";
-    }, 100);
-    setTimeout(() => {
-      notification.style.opacity = "0";
-      setTimeout(() => {
-        notification.remove();
-      }, 500);
-    }, 3000);
-    console.log("[ViewManager] Notification shown:", message);
+  /**
+   * Show an in-app notification at the bottom center.
+   *
+   * @param {string} message — the text to display
+   * @param {Object} [options]
+   * @param {string} [options.actionText] — label for an action button
+   * @param {Function} [options.onAction] — callback when button is clicked
+   * @param {number} [options.duration] — ms to show (0 = persistent; default = 3000)
+   */
+  showNotification(message, { actionText, onAction, duration } = {}) {
+    const display = () => {
+      const notification = document.createElement('div');
+      notification.textContent = message;
+      Object.assign(notification.style, {
+        position: 'fixed',
+        bottom: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        color: 'white',
+        padding: '10px 20px',
+        borderRadius: '5px',
+        zIndex: 10000,
+        opacity: '0',
+        transition: 'opacity 0.5s'
+      });
+
+      if (actionText && typeof onAction === 'function') {
+        const btn = document.createElement('button');
+        btn.textContent = actionText;
+        Object.assign(btn.style, {
+          marginLeft: '10px',
+          background: 'white',
+          color: 'black',
+          border: 'none',
+          padding: '5px 10px',
+          borderRadius: '3px',
+          cursor: 'pointer'
+        });
+        btn.addEventListener('click', onAction);
+        notification.appendChild(btn);
+      }
+
+      document.body.appendChild(notification);
+      setTimeout(() => { notification.style.opacity = '1'; }, 100);
+
+      const ms = duration != null ? duration : 3000;
+      if (ms > 0) {
+        setTimeout(() => {
+          notification.style.opacity = '0';
+          setTimeout(() => notification.remove(), 500);
+        }, ms);
+      }
+      console.log('[ViewManager] Notification shown:', message);
+    };
+
+    // If there's a loader element, wait until it's removed
+    const loader = document.getElementById('loader') || document.querySelector('.loader');
+    if (loader) {
+      const observer = new MutationObserver((_, obs) => {
+        if (!document.body.contains(loader)) {
+          obs.disconnect();
+          display();
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    } else {
+      display();
+    }
   }
 
   setControlsBlocked(shouldBlock) {

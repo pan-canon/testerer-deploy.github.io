@@ -78,7 +78,10 @@ export class FinalQuest extends BaseEvent {
     }
 
     if (this.app.viewManager && typeof this.app.viewManager.showNotification === "function") {
-      this.app.viewManager.showNotification("🎉 Final quest completed! Scenario ended!");
+      this.app.viewManager.showNotification(
+        "🎉 Final quest completed! Scenario ended!",
+        { duration: 15000 }
+      );
     } else {
       console.log("🎉 Final quest completed! Scenario ended!");
     }

@@ -1,7 +1,7 @@
 // sw.js (Service Worker template for production)
 
 // Versioned cache name — bump on each release
-const CACHE_VERSION = 'v52';
+const CACHE_VERSION = 'v53';
 const CACHE_NAME    = `game-cache-${CACHE_VERSION}`;
 
 // The manifest array will be injected here by InjectManifest.
@@ -18,11 +18,12 @@ self.addEventListener('install', event => {
       .then(() => self.clients.matchAll({ includeUncontrolled: true }))
       .then(clients => {
         clients.forEach(client =>
-          client.postMessage({ type: 'NEW_VERSION_AVAILABLE' })
+          client.postMessage({
+            type: 'NEW_VERSION_AVAILABLE',
+            persistent: true
+          })
         );
-      })
-  );
-  // NOTE: no skipWaiting() here — we wait for user action
+        // NOTE: no skipWaiting() here — we wait for user action
 });
 
 // Activate: remove old caches (keep only CACHE_NAME)

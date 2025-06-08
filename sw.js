@@ -15,7 +15,6 @@
 
 // Load Workbox runtime in classic (non-ESM) mode
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
-self.__WB_MANIFEST = self.__WB_MANIFEST || [];
 
 const { setCacheNameDetails, clientsClaim }             = workbox.core;
 const { precacheAndRoute, cleanupOutdatedCaches }       = workbox.precaching;
@@ -24,7 +23,7 @@ const { CacheFirst, StaleWhileRevalidate }              = workbox.strategies;
 const { ExpirationPlugin }                              = workbox.expiration;
 
 // 0) MANUAL VERSIONING — override all Workbox cache names
-const CACHE_VERSION = 'v59';
+const CACHE_VERSION = 'v60';
 setCacheNameDetails({
   prefix:   '',                              // remove "workbox-" prefix
   suffix:   '',                              // remove "-<hash>" suffix

@@ -14,7 +14,14 @@
  */
 
 // Load Workbox runtime in classic (non-ESM) mode
-importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
+try {
+  importScripts("https://storage.googleapis.com/workbox-cdn/releases/6.6.0/workbox-sw.js");
+  console.log('[SW] importScripts OK, workbox:', typeof workbox);
+} catch (err) {
+  console.error('[SW] importScripts FAILED:', err);
+  // пробросить дальше, чтобы регистрация упала там же
+  throw err;
+}
 
 const { setCacheNameDetails, clientsClaim }             = workbox.core;
 const { precacheAndRoute, cleanupOutdatedCaches }       = workbox.precaching;
@@ -33,6 +40,7 @@ setCacheNameDetails({
 
 // 1) PRECACHE: inject manifest & remove outdated precaches
 cleanupOutdatedCaches();
+console.log('[SW] __WB_MANIFEST =', self.__WB_MANIFEST);
 precacheAndRoute(self.__WB_MANIFEST);
 
 // 1.5) CLIENTS CLAIM — immediately take control of all clients once this SW activates

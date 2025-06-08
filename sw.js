@@ -39,9 +39,9 @@ setCacheNameDetails({
 });
 
 // 1) PRECACHE: inject manifest & remove outdated precaches
-cleanupOutdatedCaches();
-console.log('[SW] __WB_MANIFEST =', self.__WB_MANIFEST);
-precacheAndRoute(self.__WB_MANIFEST);
+const WB_MANIFEST = self.__WB_MANIFEST;
+console.log('[SW] __WB_MANIFEST =', WB_MANIFEST);
+precacheAndRoute(WB_MANIFEST);
 
 // 1.5) CLIENTS CLAIM — immediately take control of all clients once this SW activates
 clientsClaim();

@@ -3,7 +3,7 @@
 // Import Workbox precaching utilities
 import { precacheAndRoute } from 'workbox-precaching';
 
-const CACHE_VERSION = 'v49'; // bump this on each release
+const CACHE_VERSION = 'v50'; // bump this on each release
 const CACHE_NAME    = `game-cache-${CACHE_VERSION}`;
 
 // Precache manifest will be injected here by InjectManifest

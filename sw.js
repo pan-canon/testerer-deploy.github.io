@@ -1,3 +1,4 @@
+// sw.js
 /**
  * Service Worker (sw.js) - Workbox‐powered with structured runtime caching
  *

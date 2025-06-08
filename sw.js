@@ -1,46 +1,21 @@
-// sw.js
-/**
- * Service Worker (sw.js) - Workbox‐powered with structured runtime caching
- *
- * Sections:
- * 0) Manual versioning & cache‐name override
- * 1) Precache + Cleanup outdated precaches
- * 1.5) Clients claim immediately upon activation
- * 2) Install event: notify clients about new version
- * 3) Activate event: cleanup old caches
- * 4) Message handler: SKIP_WAITING & CLEAR_CACHE
- * 5) Runtime caching routes (libs, models, triads, statics, modules, templates)
- * 6) Navigation fallback (SPA)
- */
+// sw.js (Service Worker template for production)
 
-import { setCacheNameDetails, clientsClaim }             from 'workbox-core';
-import { precacheAndRoute, cleanupOutdatedCaches }       from 'workbox-precaching';
-import { registerRoute, createHandlerBoundToURL }        from 'workbox-routing';
-import { CacheFirst, StaleWhileRevalidate }              from 'workbox-strategies';
-import { ExpirationPlugin }                              from 'workbox-expiration';
+// Versioned cache name — bump on each release
+const CACHE_VERSION = 'v54';
+const CACHE_NAME    = `game-cache-${CACHE_VERSION}`;
 
-// 0) MANUAL VERSIONING — override all Workbox cache names
-const CACHE_VERSION = 'v58';
-setCacheNameDetails({
-  prefix:   '',                              // remove "workbox-" prefix
-  suffix:   '',                              // remove "-<hash>" suffix
-  precache: `game-cache-${CACHE_VERSION}`,   // your versioned precache
-  runtime:  ''                               // unused (we name each runtime group explicitly)
-});
+// The manifest array will be injected here by InjectManifest.
+// It looks like: [{ url: '/index.html', revision: '...' }, …]
+const PRECACHE_MANIFEST = self.__WB_MANIFEST;
 
-// 1) PRECACHE: inject manifest & remove outdated precaches
-cleanupOutdatedCaches();
-precacheAndRoute(self.__WB_MANIFEST);
-
-// 1.5) CLIENTS CLAIM — immediately take control of all clients once this SW activates
-clientsClaim();
-
-// 2) INSTALL: notify clients of new version
+// Install: pre-cache all assets + notify clients about new version
 self.addEventListener('install', event => {
-  console.log('[SW] install → notifying clients about new version');
   event.waitUntil(
-    self.clients
-      .matchAll({ includeUncontrolled: true })
+    // 1) Open our single cache and add all manifest URLs
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(PRECACHE_MANIFEST.map(item => item.url)))
+      // 2) Tell all clients that a new version is available
+      .then(() => self.clients.matchAll({ includeUncontrolled: true }))
       .then(clients => {
         clients.forEach(client =>
           client.postMessage({
@@ -50,168 +25,79 @@ self.addEventListener('install', event => {
         );
       })
   );
-  // NOTE: no skipWaiting() here — wait for SKIP_WAITING from client
+  // NOTE: no skipWaiting() here — we wait for explicit user action
 });
 
-// 3) ACTIVATE: delete any caches not in our allow‐list
-const ALLOWED_CACHES = [
-  `game-cache-${CACHE_VERSION}`,
-  'cache-libs',
-  'cache-models',
-  'cache-triads',
-  'cache-statics',
-  'cache-modules',
-  'cache-templates'
-];
+// Activate: remove old caches (keep only CACHE_NAME)
 self.addEventListener('activate', event => {
-  console.log('[SW] activate → cleaning up old caches');
   event.waitUntil(
-    caches
-      .keys()
+    caches.keys()
       .then(keys =>
         Promise.all(
           keys
-            .filter(key => !ALLOWED_CACHES.includes(key))
-            .map(key => {
-              console.log(`[SW] deleting cache: ${key}`);
-              return caches.delete(key);
-            })
+            .filter(key => key !== CACHE_NAME)
+            .map(key => caches.delete(key))
         )
       )
-      .then(() => {
-        console.log('[SW] claim clients after cleanup');
-        return self.clients.claim();
-      })
   );
+  // NOTE: no clients.claim() here — we'll claim on SKIP_WAITING
 });
 
-// 4) MESSAGE: SKIP_WAITING & CLEAR_CACHE
+// Handle messages from the page
 self.addEventListener('message', event => {
   const msg = event.data || {};
 
   if (msg.type === 'SKIP_WAITING') {
-    console.log('[SW] SKIP_WAITING received → activating new SW');
+    // User chose to update — activate new SW and take control
     event.waitUntil(
-      self.skipWaiting().then(() => self.clients.claim())
+      self.skipWaiting()
+        .then(() => self.clients.claim())
     );
     return;
   }
 
   if (msg.action === 'CLEAR_CACHE') {
-    console.log('[SW] CLEAR_CACHE received → purging all caches');
+    // Clear everything and reload clients
     event.waitUntil(
-      caches
-        .keys()
-        .then(keys =>
-          Promise.all(
-            keys.map(k => {
-              console.log(`[SW] removing cache: ${k}`);
-              return caches.delete(k);
-            })
-          )
-        )
+      caches.keys()
+        .then(keys => Promise.all(keys.map(k => caches.delete(k))))
         .then(() => self.clients.matchAll())
-        .then(clients => {
-          clients.forEach(client => {
-            console.log(`[SW] reloading client: ${client.url}`);
-            client.navigate(client.url);
-          });
-        })
+        .then(clients =>
+          clients.forEach(client => client.navigate(client.url))
+        )
     );
-    return;
   }
 });
 
-// 5) RUNTIME CACHING ROUTES
+// Fetch: cache-first strategy using our single cache, with index.html fallback
+self.addEventListener('fetch', event => {
+  const url = event.request.url;
 
-// 5.1 — Libraries (.js, .wasm) under /assets/libs/
-registerRoute(
-  ({ url }) => url.pathname.startsWith('/assets/libs/'),
-  new CacheFirst({
-    cacheName: 'cache-libs',
-    plugins: [
-      new ExpirationPlugin({
-        maxEntries:    20,
-        maxAgeSeconds: 30 * 24 * 60 * 60
+  // Bypass dynamic DB-management scripts
+  if (url.includes('DatabaseManager.js') || url.includes('SQLiteDataManager.js')) {
+    return event.respondWith(fetch(event.request));
+  }
+
+  event.respondWith(
+    caches.match(event.request)
+      .then(cached => {
+        if (cached) return cached;
+        return fetch(event.request).then(networkResponse => {
+          // Only cache valid GET responses
+          if (
+            networkResponse &&
+            networkResponse.status === 200 &&
+            networkResponse.type === 'basic'
+          ) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          }
+          return networkResponse;
+        });
       })
-    ]
-  })
-);
-
-// 5.2 — Models (COCO-SSD) under /assets/models/
-registerRoute(
-  ({ url }) => url.pathname.startsWith('/assets/models/'),
-  new CacheFirst({
-    cacheName: 'cache-models',
-    plugins: [
-      new ExpirationPlugin({
-        maxEntries:    15,
-        maxAgeSeconds: 30 * 24 * 60 * 60
+      .catch(() => {
+        // On error (e.g. offline navigation), serve index.html
+        return caches.match('index.html');
       })
-    ]
-  })
-);
-
-// 5.3 — Triads under /triads/
-registerRoute(
-  ({ url }) => url.pathname.startsWith('/triads/'),
-  new CacheFirst({
-    cacheName: 'cache-triads',
-    plugins: [
-      new ExpirationPlugin({
-        maxEntries:    50,
-        maxAgeSeconds: 30 * 24 * 60 * 60
-      })
-    ]
-  })
-);
-
-// 5.4 — Static assets (images, audio, JSON)
-registerRoute(
-  ({ url }) =>
-    url.pathname.startsWith('/assets/images/') ||
-    /\.(?:png|jpe?g|webp|gif|svg|mp3|wav|ogg|json)$/.test(url.pathname),
-  new StaleWhileRevalidate({
-    cacheName: 'cache-statics',
-    plugins: [
-      new ExpirationPlugin({
-        maxEntries:    100,
-        maxAgeSeconds: 90 * 24 * 60 * 60
-      })
-    ]
-  })
-);
-
-// 5.5 — JavaScript modules (.js) not under /assets/libs/
-registerRoute(
-  ({ url }) => url.pathname.endsWith('.js'),
-  new StaleWhileRevalidate({
-    cacheName: 'cache-modules',
-    plugins: [
-      new ExpirationPlugin({
-        maxEntries:    30,
-        maxAgeSeconds: 30 * 24 * 60 * 60
-      })
-    ]
-  })
-);
-
-// 5.6 — HTML templates under /templates/
-registerRoute(
-  ({ url }) => url.pathname.startsWith('/templates/') && url.pathname.endsWith('.html'),
-  new StaleWhileRevalidate({
-    cacheName: 'cache-templates',
-    plugins: [
-      new ExpirationPlugin({
-        maxEntries:    50,
-        maxAgeSeconds: 30 * 24 * 60 * 60
-      })
-    ]
-  })
-);
-
-// 6) Navigation fallback for SPA routing
-registerRoute(
-  ({ request }) => request.mode === 'navigate',
-  createHandlerBoundToURL('/index.html')
-);
+  );
+});

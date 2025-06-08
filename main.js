@@ -26,19 +26,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const loader = document.getElementById('loader');
   if (loader) loader.style.display = 'block';
 
-  // Register the Service Worker first to ensure it can intercept asset requests
+  // ▶️ SERVICE WORKER REGISTRATION (does NOT block app initialization)
+  // We try to register SW in parallel, but we catch errors so that SW failure
+  // won't prevent the game from loading.
+  let swReady = Promise.resolve();
+
   if ('serviceWorker' in navigator) {
-    // ▶️ Back to classic registration (script), since sw.js now uses importScripts:
-    navigator.serviceWorker.register(`${BASE_PATH}/sw.js`)
+    swReady = navigator.serviceWorker.register(`${BASE_PATH}/sw.js`)
       .then(registration => {
         console.log('Service Worker registered with scope:', registration.scope);
 
-        // Check for waiting Service Worker from previous sessions
+        // If there's already a waiting SW, prompt user to update
         if (registration.waiting) {
           promptUserToUpdate();
         }
 
-        // Listen for updates to Service Worker
+        // Listen for new SW being installed
         registration.addEventListener('updatefound', () => {
           const newSW = registration.installing;
           newSW.addEventListener('statechange', () => {
@@ -50,101 +53,108 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return navigator.serviceWorker.ready;
       })
-      .then(() => {
-        // Load external libraries sequentially, then initialize the App
-        return Promise.all([
-          loadScript(SQL_WASM_URL),
-          loadScript(TFJS_URL),
-          loadScript(COCO_SSD_URL)
-        ]);
-      })
-      .then(() => {
-        console.log('All external libraries loaded');
+      .catch(err => {
+        console.warn('Service Worker registration failed, continuing without it:', err);
+        // Continue without SW
+      });
 
-        // Initialize main application
-        const app = new App();
+    // Listen for runtime messages from SW
+    navigator.serviceWorker.addEventListener('message', event => {
+      if (event.data?.type === 'NEW_VERSION_AVAILABLE') {
+        promptUserToUpdate();
+      }
+    });
 
-        // Hide loader/spinner after initialization
-        if (loader) loader.style.display = 'none';
+    // Reload page upon new SW activation
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      console.log('New Service Worker activated; reloading page');
+      window.location.reload();
+    });
+  }
 
-        // ----------------------------------------
-        // PWA: beforeinstallprompt handling
-        // ----------------------------------------
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', event => {
-          event.preventDefault();
-          deferredPrompt = event;
-          const installBtn = document.getElementById('install-btn');
-          if (installBtn) {
-            installBtn.style.display = 'block';
-          }
-        });
+  // ▶️ LOAD EXTERNAL LIBRARIES & INITIALIZE APP
+  // Wait for both SW registration (success or silent failure) and library loads.
+  Promise.all([
+    swReady,
+    loadScript(SQL_WASM_URL),
+    loadScript(TFJS_URL),
+    loadScript(COCO_SSD_URL)
+  ])
+    .then(() => {
+      console.log('All external libraries loaded');
 
+      // Initialize main application
+      const app = new App();
+
+      // Hide loader/spinner after initialization
+      if (loader) loader.style.display = 'none';
+
+      // ----------------------------------------
+      // PWA: beforeinstallprompt handling
+      // ----------------------------------------
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', event => {
+        event.preventDefault();
+        deferredPrompt = event;
         const installBtn = document.getElementById('install-btn');
         if (installBtn) {
-          installBtn.addEventListener('click', async () => {
-            if (!deferredPrompt) return;
-
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response to the install prompt: ${outcome}`);
-
-            installBtn.style.display = 'none';
-            deferredPrompt = null;
-          });
+          installBtn.style.display = 'block';
         }
-
-        // ----------------------------------------
-        // Profile “Update” button: clear caches via SW message
-        // ----------------------------------------
-        const updateBtn = document.getElementById('update-btn');
-        if (updateBtn) {
-          updateBtn.addEventListener('click', () => {
-            console.log('Update button clicked; clearing caches');
-            if (navigator.serviceWorker.controller) {
-              navigator.serviceWorker.controller.postMessage({ action: 'CLEAR_CACHE' });
-            }
-          });
-        }
-
-        // Listen for messages from the Service Worker
-        navigator.serviceWorker.addEventListener('message', event => {
-          if (event.data?.type === 'NEW_VERSION_AVAILABLE') {
-            promptUserToUpdate();
-          }
-        });
-
-        // Reload page upon new Service Worker activation
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          console.log('New Service Worker activated; reloading page');
-          window.location.reload();
-        });
-
-        // Helper: prompt user to update
-        function promptUserToUpdate() {
-          const message = '🔄 A new version of the game is available! Update now?';
-
-          if (app.viewManager && typeof app.viewManager.showNotification === 'function') {
-            app.viewManager.showNotification(message, {
-              actionText: 'Update',
-              onAction: () => {
-                if (navigator.serviceWorker.controller) {
-                  navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
-                }
-              }
-            });
-          } else if (confirm(message)) {
-            if (navigator.serviceWorker.controller) {
-              navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
-            }
-          }
-        }
-
-        // Additional initialization logic here (if needed)
-      })
-      .catch(err => {
-        console.error('Initialization failed:', err);
-        if (loader) loader.style.display = 'none';
       });
-  }
+
+      const installBtn = document.getElementById('install-btn');
+      if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+          if (!deferredPrompt) return;
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log(`User response to the install prompt: ${outcome}`);
+          installBtn.style.display = 'none';
+          deferredPrompt = null;
+        });
+      }
+
+      // ----------------------------------------
+      // Profile “Update” button: clear caches via SW message
+      // ----------------------------------------
+      const updateBtn = document.getElementById('update-btn');
+      if (updateBtn) {
+        updateBtn.addEventListener('click', () => {
+          console.log('Update button clicked; clearing caches');
+          if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ action: 'CLEAR_CACHE' });
+          }
+        });
+      }
+
+      // Helper: prompt user to update when a new SW is waiting
+      function promptUserToUpdate() {
+        const message = '🔄 A new version of the game is available! Update now?';
+
+        // If your App has a viewManager with notifications, use it:
+        if (app.viewManager && typeof app.viewManager.showNotification === 'function') {
+          app.viewManager.showNotification(message, {
+            actionText: 'Update',
+            onAction: () => {
+              if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+              }
+            }
+          });
+        }
+        // Fallback to native confirm dialog
+        else if (confirm(message)) {
+          if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+          }
+        }
+      }
+
+      // Additional initialization logic here (if needed)
+    })
+    .catch(err => {
+      // Initialization errors (e.g. failed to load a script)
+      console.error('Initialization failed:', err);
+      if (loader) loader.style.display = 'none';
+    });
 });

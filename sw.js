@@ -1,39 +1,41 @@
 // sw.js (Service Worker template for production)
+
 // Import Workbox precaching utilities
 import { precacheAndRoute } from 'workbox-precaching';
-
-// Determine BASE_PATH in ServiceWorker context
-const BASE_PATH = self.location.hostname.includes("github.io")
-  ? "/testerer-deploy.github.io"
-  : "";
 
 const CACHE_VERSION = 'v49'; // bump this on each release
 const CACHE_NAME    = `game-cache-${CACHE_VERSION}`;
 
 // Precache manifest will be injected here by InjectManifest
-// self. __WB_MANIFEST is replaced at build time with an array of URLs and revisions
+// self.__WB_MANIFEST is replaced at build time with an array of URLs and revisions
 // This will include main bundle, triad chunks, and other assets.
 precacheAndRoute(self.__WB_MANIFEST);
 
 self.addEventListener('install', event => {
-  // Force this SW to become active immediately
-  self.skipWaiting();
+  // Broadcast to all clients that a new version is available
+  event.waitUntil(
+    self.clients.matchAll({ includeUncontrolled: true }).then(clients => {
+      clients.forEach(client => {
+        client.postMessage({ type: 'NEW_VERSION_AVAILABLE' });
+      });
+    })
+  );
+  // NOTE: do NOT call skipWaiting() here – we wait for explicit user action
 });
 
 self.addEventListener('activate', event => {
   console.log('✅ Activating Service Worker...');
   event.waitUntil(
+    // Delete only old caches, keep the current CACHE_NAME
     caches.keys().then(keys =>
       Promise.all(
-        keys.map(key => {
-          if (key !== CACHE_NAME) {
-            console.log(`🗑 Deleting old cache: ${key}`);
-            return caches.delete(key);
-          }
-        })
+        keys
+          .filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
       )
-    ).then(() => self.clients.claim())
+    )
   );
+  // NOTE: do NOT auto-claim clients here – we claim on SKIP_WAITING
 });
 
 self.addEventListener('message', event => {
@@ -42,21 +44,24 @@ self.addEventListener('message', event => {
 
   if (msg.type === 'SKIP_WAITING') {
     console.log('SW received SKIP_WAITING, activating immediately');
-    self.skipWaiting();
+    // Activate this SW and take control of all clients
+    event.waitUntil(
+      self.skipWaiting()
+        .then(() => self.clients.claim())
+    );
     return;
   }
 
   if (msg.action === 'CLEAR_CACHE') {
     console.log('SW received CLEAR_CACHE, deleting all caches');
-    caches.keys()
-      .then(keys => Promise.all(keys.map(key => caches.delete(key))))
-      .then(() => {
-        console.log('All caches cleared; reloading clients');
-        return self.clients.matchAll();
-      })
-      .then(clients => {
-        clients.forEach(client => client.navigate(client.url));
-      });
+    event.waitUntil(
+      caches.keys()
+        .then(keys => Promise.all(keys.map(key => caches.delete(key))))
+        .then(() => self.clients.matchAll())
+        .then(clients => {
+          clients.forEach(client => client.navigate(client.url));
+        })
+    );
   }
 });
 
@@ -88,6 +93,6 @@ self.addEventListener('fetch', event => {
           });
       })
       // Fallback to index.html for navigation requests.
-      .catch(() => caches.match(`${BASE_PATH}/index.html`))
+      .catch(() => caches.match('index.html'))
   );
 });

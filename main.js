@@ -1,19 +1,24 @@
+// main.js
+
 import { BASE_PATH, SQL_WASM_URL, TFJS_URL, COCO_SSD_URL } from './src/config/paths.js';
 import { App } from './src/App.js';
 
-// Function to dynamically load a script and return a Promise
+/**
+ * Dynamically load a script and return a Promise that resolves when it's loaded.
+ * Ensures execution order by setting async = false.
+ */
 function loadScript(src) {
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src     = src;
-    script.async   = false;           // preserve execution order
+    script.async   = false;
     script.onload  = () => resolve(src);
     script.onerror = () => reject(new Error(`Failed to load ${src}`));
     document.head.appendChild(script);
   });
 }
 
-// 1. Load SQL.js, TF.js and COCO-SSD in sequence before doing anything else
+// Load external libraries in sequence before initializing the app
 Promise.all([
   loadScript(SQL_WASM_URL),
   loadScript(TFJS_URL),
@@ -22,61 +27,83 @@ Promise.all([
   .then(() => {
     console.log('All external libraries loaded');
 
-    // 2. Wait for DOM, then initialize App and PWA logic
     document.addEventListener('DOMContentLoaded', () => {
       const app = new App();
 
-      // PWA installation prompt handling
+      // ----------------------------------------
+      // PWA: beforeinstallprompt handling
+      // ----------------------------------------
       let deferredPrompt;
-      window.addEventListener('beforeinstallprompt', e => {
-        e.preventDefault();
-        deferredPrompt = e;
-        const btn = document.getElementById('install-btn');
-        if (btn) btn.style.display = 'block';
+      window.addEventListener('beforeinstallprompt', event => {
+        // Prevent the mini-infobar from appearing on mobile
+        event.preventDefault();
+        deferredPrompt = event;
+        const installBtn = document.getElementById('install-btn');
+        if (installBtn) {
+          installBtn.style.display = 'block';
+        }
       });
 
       const installBtn = document.getElementById('install-btn');
       if (installBtn) {
         installBtn.addEventListener('click', async () => {
-          if (!deferredPrompt) return;
+          if (!deferredPrompt) {
+            return;
+          }
+          // Show the install prompt
           deferredPrompt.prompt();
+          // Wait for the user's response
           const { outcome } = await deferredPrompt.userChoice;
           console.log(`User response to the install prompt: ${outcome}`);
+          // Hide the install button after prompt
           installBtn.style.display = 'none';
           deferredPrompt = null;
         });
       }
 
-      // 3. Service Worker registration with auto-update hooks
+      // ----------------------------------------
+      // PWA: Service Worker registration & update prompt
+      // ----------------------------------------
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register(`${BASE_PATH}/sw.js`)
-          .then(reg => {
-            console.log('Service Worker registered with scope:', reg.scope);
+          .then(registration => {
+            console.log('Service Worker registered with scope:', registration.scope);
 
-            // If there's an update ready, tell it to skip waiting
-            if (reg.waiting) {
-              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            // 1) If there's already a waiting Service Worker from a previous session, prompt update
+            if (registration.waiting) {
+              promptUserToUpdate();
             }
 
-            // Listen for new SW installations
-            reg.addEventListener('updatefound', () => {
-              const newSW = reg.installing;
+            // 2) Listen for new SW installations
+            registration.addEventListener('updatefound', () => {
+              const newSW = registration.installing;
               newSW.addEventListener('statechange', () => {
+                // When the new SW is installed and there is an active controller, prompt update
                 if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-                  newSW.postMessage({ type: 'SKIP_WAITING' });
+                  promptUserToUpdate();
                 }
               });
             });
           })
-          .catch(err => console.error('Error during Service Worker registration:', err));
-        // When a new SW takes control, reload the page so that all clients use the new version
+          .catch(err => console.error('Service Worker registration error:', err));
+
+        // Listen for messages from the Service Worker (e.g., NEW_VERSION_AVAILABLE)
+        navigator.serviceWorker.addEventListener('message', event => {
+          if (event.data?.type === 'NEW_VERSION_AVAILABLE') {
+            promptUserToUpdate();
+          }
+        });
+
+        // Reload the page when the new Service Worker activates
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          console.log("New Service Worker activated; reloading page");
+          console.log('New Service Worker activated; reloading page');
           window.location.reload();
         });
       }
 
-      // 4. “Update” button clears caches via SW message
+      // ----------------------------------------
+      // Profile “Update” button: clear caches via SW message
+      // ----------------------------------------
       const updateBtn = document.getElementById('update-btn');
       if (updateBtn) {
         updateBtn.addEventListener('click', () => {
@@ -86,6 +113,33 @@ Promise.all([
           }
         });
       }
+
+      // ----------------------------------------
+      // Helper: show update notification and handle user action
+      // ----------------------------------------
+      function promptUserToUpdate() {
+        const message = '🔄 A new version of the game is available! Update now?';
+
+        if (app.viewManager && typeof app.viewManager.showNotification === 'function') {
+          app.viewManager.showNotification(message, {
+            actionText: 'Update',
+            onAction: () => {
+              if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+              }
+            }
+          });
+        } else {
+          // Fallback to native confirm dialog if viewManager is unavailable
+          if (confirm(message)) {
+            if (navigator.serviceWorker.controller) {
+              navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+            }
+          }
+        }
+      }
+
+      // ... any additional application initialization logic can go here ...
     });
   })
   .catch(err => console.error('Loader error:', err));

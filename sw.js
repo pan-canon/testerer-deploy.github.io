@@ -1,50 +1,51 @@
 // sw.js (Service Worker template for production)
 
-// Import Workbox precaching utilities
-import { precacheAndRoute } from 'workbox-precaching';
-
-const CACHE_VERSION = 'v51'; // bump this on each release
+// Versioned cache name — bump on each release
+const CACHE_VERSION = 'v52';
 const CACHE_NAME    = `game-cache-${CACHE_VERSION}`;
 
-// Precache manifest will be injected here by InjectManifest
-// self.__WB_MANIFEST is replaced at build time with an array of URLs and revisions
-// This will include main bundle, triad chunks, and other assets.
-precacheAndRoute(self.__WB_MANIFEST);
+// The manifest array will be injected here by InjectManifest.
+// It looks like: [{ url: '/index.html', revision: '...' }, …]
+const PRECACHE_MANIFEST = self.__WB_MANIFEST;
 
+// Install: pre-cache all assets + notify clients about new version
 self.addEventListener('install', event => {
-  // Broadcast to all clients that a new version is available
   event.waitUntil(
-    self.clients.matchAll({ includeUncontrolled: true }).then(clients => {
-      clients.forEach(client => {
-        client.postMessage({ type: 'NEW_VERSION_AVAILABLE' });
-      });
-    })
+    // 1) Open our single cache and add all manifest URLs
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(PRECACHE_MANIFEST.map(item => item.url)))
+      // 2) Tell all clients that a new version is available
+      .then(() => self.clients.matchAll({ includeUncontrolled: true }))
+      .then(clients => {
+        clients.forEach(client =>
+          client.postMessage({ type: 'NEW_VERSION_AVAILABLE' })
+        );
+      })
   );
-  // NOTE: do NOT call skipWaiting() here – we wait for explicit user action
+  // NOTE: no skipWaiting() here — we wait for user action
 });
 
+// Activate: remove old caches (keep only CACHE_NAME)
 self.addEventListener('activate', event => {
-  console.log('✅ Activating Service Worker...');
   event.waitUntil(
-    // Delete only old caches, keep the current CACHE_NAME
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
+    caches.keys()
+      .then(keys =>
+        Promise.all(
+          keys
+            .filter(key => key !== CACHE_NAME)
+            .map(key => caches.delete(key))
+        )
       )
-    )
   );
-  // NOTE: do NOT auto-claim clients here – we claim on SKIP_WAITING
+  // NOTE: no clients.claim() here — we'll claim on SKIP_WAITING
 });
 
+// Handle messages from the page
 self.addEventListener('message', event => {
-  const msg = event.data;
-  if (!msg) return;
+  const msg = event.data || {};
 
   if (msg.type === 'SKIP_WAITING') {
-    console.log('SW received SKIP_WAITING, activating immediately');
-    // Activate this SW and take control of all clients
+    // User chose to update — activate new SW and take control
     event.waitUntil(
       self.skipWaiting()
         .then(() => self.clients.claim())
@@ -53,46 +54,47 @@ self.addEventListener('message', event => {
   }
 
   if (msg.action === 'CLEAR_CACHE') {
-    console.log('SW received CLEAR_CACHE, deleting all caches');
+    // Clear everything and reload clients
     event.waitUntil(
       caches.keys()
-        .then(keys => Promise.all(keys.map(key => caches.delete(key))))
+        .then(keys => Promise.all(keys.map(k => caches.delete(k))))
         .then(() => self.clients.matchAll())
-        .then(clients => {
-          clients.forEach(client => client.navigate(client.url));
-        })
+        .then(clients =>
+          clients.forEach(client => client.navigate(client.url))
+        )
     );
   }
 });
 
+// Fetch: cache-first strategy using our single cache, with index.html fallback
 self.addEventListener('fetch', event => {
-  // Bypass caching for dynamic database management files.
-  if (event.request.url.includes('DatabaseManager.js') ||
-      event.request.url.includes('SQLiteDataManager.js')) {
+  const url = event.request.url;
+
+  // Bypass dynamic DB-management scripts
+  if (url.includes('DatabaseManager.js') || url.includes('SQLiteDataManager.js')) {
     return event.respondWith(fetch(event.request));
   }
 
   event.respondWith(
     caches.match(event.request)
-      .then(response => {
-        // Return cached file if found.
-        if (response) {
-          return response;
-        }
-        // Otherwise, fetch from network and cache the response.
-        return fetch(event.request)
-          .then(networkResponse => {
-            if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-              return networkResponse;
-            }
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request, responseClone);
-            });
-            return networkResponse;
-          });
+      .then(cached => {
+        if (cached) return cached;
+        return fetch(event.request).then(networkResponse => {
+          // Only cache valid GET responses
+          if (
+            networkResponse &&
+            networkResponse.status === 200 &&
+            networkResponse.type === 'basic'
+          ) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          }
+          return networkResponse;
+        });
       })
-      // Fallback to index.html for navigation requests.
-      .catch(() => caches.match('index.html'))
+      .catch(() => {
+        // On error (e.g. offline navigation), serve index.html
+        return caches.match('index.html');
+      })
   );
 });

@@ -5,6 +5,7 @@
  * Sections:
  * 0) Manual versioning & cache‐name override
  * 1) Precache + Cleanup outdated precaches
+ * 1.5) Clients claim immediately upon activation
  * 2) Install event: notify clients about new version
  * 3) Activate event: cleanup old caches
  * 4) Message handler: SKIP_WAITING & CLEAR_CACHE
@@ -12,53 +13,49 @@
  * 6) Navigation fallback (SPA)
  */
 
-// 🔄 Use importScripts to pull in Workbox from the CDN instead of ES imports:
-importScripts(
-  'https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-core.prod.js',
-  'https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-precaching.prod.js',
-  'https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-routing.prod.js',
-  'https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-strategies.prod.js',
-  'https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-expiration.prod.js'
-);
-// Pull modules off the global workbox namespace
-const { setCacheNameDetails }                             = workbox.core;
-const { precacheAndRoute, cleanupOutdatedCaches }         = workbox.precaching;
-const { registerRoute, createHandlerBoundToURL }          = workbox.routing;
-const { CacheFirst, StaleWhileRevalidate }                = workbox.strategies;
-const { ExpirationPlugin }                                = workbox.expiration;
+import { setCacheNameDetails, clientsClaim }             from 'workbox-core';
+import { precacheAndRoute, cleanupOutdatedCaches }       from 'workbox-precaching';
+import { registerRoute, createHandlerBoundToURL }        from 'workbox-routing';
+import { CacheFirst, StaleWhileRevalidate }              from 'workbox-strategies';
+import { ExpirationPlugin }                              from 'workbox-expiration';
 
 // 0) MANUAL VERSIONING — override all Workbox cache names
 const CACHE_VERSION = 'v58';
 setCacheNameDetails({
-  prefix:    '',                             // remove "workbox-" prefix
-  suffix:    '',                             // remove "-<hash>" suffix
-  precache:  `game-cache-${CACHE_VERSION}`,  // your versioned precache
-  runtime:   ''                              // unused (we name each runtime group explicitly)
+  prefix:   '',                              // remove "workbox-" prefix
+  suffix:   '',                              // remove "-<hash>" suffix
+  precache: `game-cache-${CACHE_VERSION}`,   // your versioned precache
+  runtime:  ''                               // unused (we name each runtime group explicitly)
 });
 
 // 1) PRECACHE: inject manifest & remove outdated precaches
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
+// 1.5) CLIENTS CLAIM — immediately take control of all clients once this SW activates
+clientsClaim();
+
 // 2) INSTALL: notify clients of new version
 self.addEventListener('install', event => {
   console.log('[SW] install → notifying clients about new version');
   event.waitUntil(
-    self.clients.matchAll({ includeUncontrolled: true }).then(clients => {
-      clients.forEach(client =>
-        client.postMessage({
-          type: 'NEW_VERSION_AVAILABLE',
-          persistent: true
-        })
-      );
-    })
+    self.clients
+      .matchAll({ includeUncontrolled: true })
+      .then(clients => {
+        clients.forEach(client =>
+          client.postMessage({
+            type: 'NEW_VERSION_AVAILABLE',
+            persistent: true
+          })
+        );
+      })
   );
   // NOTE: no skipWaiting() here — wait for SKIP_WAITING from client
 });
 
 // 3) ACTIVATE: delete any caches not in our allow‐list
 const ALLOWED_CACHES = [
-  `game-cache-${CACHE_VERSION}`, 
+  `game-cache-${CACHE_VERSION}`,
   'cache-libs',
   'cache-models',
   'cache-triads',
@@ -69,19 +66,22 @@ const ALLOWED_CACHES = [
 self.addEventListener('activate', event => {
   console.log('[SW] activate → cleaning up old caches');
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => !ALLOWED_CACHES.includes(key))
-          .map(key => {
-            console.log(`[SW] deleting cache: ${key}`);
-            return caches.delete(key);
-          })
+    caches
+      .keys()
+      .then(keys =>
+        Promise.all(
+          keys
+            .filter(key => !ALLOWED_CACHES.includes(key))
+            .map(key => {
+              console.log(`[SW] deleting cache: ${key}`);
+              return caches.delete(key);
+            })
+        )
       )
-    ).then(() => {
-      console.log('[SW] claim clients');
-      return self.clients.claim();
-    })
+      .then(() => {
+        console.log('[SW] claim clients after cleanup');
+        return self.clients.claim();
+      })
   );
 });
 
@@ -91,20 +91,25 @@ self.addEventListener('message', event => {
 
   if (msg.type === 'SKIP_WAITING') {
     console.log('[SW] SKIP_WAITING received → activating new SW');
-    event.waitUntil(self.skipWaiting().then(() => self.clients.claim()));
+    event.waitUntil(
+      self.skipWaiting().then(() => self.clients.claim())
+    );
     return;
   }
 
   if (msg.action === 'CLEAR_CACHE') {
     console.log('[SW] CLEAR_CACHE received → purging all caches');
     event.waitUntil(
-      caches.keys()
-        .then(keys => Promise.all(
-          keys.map(k => {
-            console.log(`[SW] removing cache: ${k}`);
-            return caches.delete(k);
-          })
-        ))
+      caches
+        .keys()
+        .then(keys =>
+          Promise.all(
+            keys.map(k => {
+              console.log(`[SW] removing cache: ${k}`);
+              return caches.delete(k);
+            })
+          )
+        )
         .then(() => self.clients.matchAll())
         .then(clients => {
           clients.forEach(client => {
@@ -125,7 +130,10 @@ registerRoute(
   new CacheFirst({
     cacheName: 'cache-libs',
     plugins: [
-      new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 30 * 24 * 60 * 60 })
+      new ExpirationPlugin({
+        maxEntries:    20,
+        maxAgeSeconds: 30 * 24 * 60 * 60
+      })
     ]
   })
 );
@@ -136,7 +144,10 @@ registerRoute(
   new CacheFirst({
     cacheName: 'cache-models',
     plugins: [
-      new ExpirationPlugin({ maxEntries: 15, maxAgeSeconds: 30 * 24 * 60 * 60 })
+      new ExpirationPlugin({
+        maxEntries:    15,
+        maxAgeSeconds: 30 * 24 * 60 * 60
+      })
     ]
   })
 );
@@ -147,12 +158,15 @@ registerRoute(
   new CacheFirst({
     cacheName: 'cache-triads',
     plugins: [
-      new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 30 * 24 * 60 * 60 })
+      new ExpirationPlugin({
+        maxEntries:    50,
+        maxAgeSeconds: 30 * 24 * 60 * 60
+      })
     ]
   })
 );
 
-// 5.4 — Static assets (images, audio, JSON) — **no HTML here**
+// 5.4 — Static assets (images, audio, JSON)
 registerRoute(
   ({ url }) =>
     url.pathname.startsWith('/assets/images/') ||
@@ -160,7 +174,10 @@ registerRoute(
   new StaleWhileRevalidate({
     cacheName: 'cache-statics',
     plugins: [
-      new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 90 * 24 * 60 * 60 })
+      new ExpirationPlugin({
+        maxEntries:    100,
+        maxAgeSeconds: 90 * 24 * 60 * 60
+      })
     ]
   })
 );
@@ -171,7 +188,10 @@ registerRoute(
   new StaleWhileRevalidate({
     cacheName: 'cache-modules',
     plugins: [
-      new ExpirationPlugin({ maxEntries: 30, maxAgeSeconds: 30 * 24 * 60 * 60 })
+      new ExpirationPlugin({
+        maxEntries:    30,
+        maxAgeSeconds: 30 * 24 * 60 * 60
+      })
     ]
   })
 );
@@ -182,7 +202,10 @@ registerRoute(
   new StaleWhileRevalidate({
     cacheName: 'cache-templates',
     plugins: [
-      new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 30 * 24 * 60 * 60 })
+      new ExpirationPlugin({
+        maxEntries:    50,
+        maxAgeSeconds: 30 * 24 * 60 * 60
+      })
     ]
   })
 );

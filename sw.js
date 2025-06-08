@@ -1,20 +1,21 @@
 // sw.js (Service Worker template for production)
 
+import { registerRoute } from 'workbox-routing';
+import { CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
+import { ExpirationPlugin } from 'workbox-expiration';
+
 // Versioned cache name — bump on each release
-const CACHE_VERSION = 'v54';
+const CACHE_VERSION = 'v55';
 const CACHE_NAME    = `game-cache-${CACHE_VERSION}`;
 
-// The manifest array will be injected here by InjectManifest.
-// It looks like: [{ url: '/index.html', revision: '...' }, …]
+// The manifest array injected by InjectManifest
 const PRECACHE_MANIFEST = self.__WB_MANIFEST;
 
-// Install: pre-cache all assets + notify clients about new version
+// Install: pre-cache critical assets + notify clients about new version
 self.addEventListener('install', event => {
   event.waitUntil(
-    // 1) Open our single cache and add all manifest URLs
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(PRECACHE_MANIFEST.map(item => item.url)))
-      // 2) Tell all clients that a new version is available
       .then(() => self.clients.matchAll({ includeUncontrolled: true }))
       .then(clients => {
         clients.forEach(client =>
@@ -25,10 +26,9 @@ self.addEventListener('install', event => {
         );
       })
   );
-  // NOTE: no skipWaiting() here — we wait for explicit user action
 });
 
-// Activate: remove old caches (keep only CACHE_NAME)
+// Activate: remove old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
@@ -40,7 +40,6 @@ self.addEventListener('activate', event => {
         )
       )
   );
-  // NOTE: no clients.claim() here — we'll claim on SKIP_WAITING
 });
 
 // Handle messages from the page
@@ -48,32 +47,87 @@ self.addEventListener('message', event => {
   const msg = event.data || {};
 
   if (msg.type === 'SKIP_WAITING') {
-    // User chose to update — activate new SW and take control
     event.waitUntil(
-      self.skipWaiting()
-        .then(() => self.clients.claim())
+      self.skipWaiting().then(() => self.clients.claim())
     );
     return;
   }
 
   if (msg.action === 'CLEAR_CACHE') {
-    // Clear everything and reload clients
     event.waitUntil(
       caches.keys()
         .then(keys => Promise.all(keys.map(k => caches.delete(k))))
         .then(() => self.clients.matchAll())
-        .then(clients =>
-          clients.forEach(client => client.navigate(client.url))
-        )
+        .then(clients => clients.forEach(client => client.navigate(client.url)))
     );
   }
 });
 
-// Fetch: cache-first strategy using our single cache, with index.html fallback
+// ----------------------------------------
+// Runtime caching routes
+// ----------------------------------------
+
+// Libraries (e.g., large JS and WASM files)
+registerRoute(
+  ({ url }) => url.pathname.startsWith('/assets/libs/'),
+  new CacheFirst({
+    cacheName: 'cache-libs',
+    plugins: [
+      new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 30 })
+    ],
+  })
+);
+
+// Models (heavy assets like COCO-SSD shards)
+registerRoute(
+  ({ url }) => url.pathname.startsWith('/assets/models/'),
+  new CacheFirst({
+    cacheName: 'cache-models',
+    plugins: [
+      new ExpirationPlugin({ maxEntries: 15, maxAgeSeconds: 60 * 60 * 24 * 30 })
+    ],
+  })
+);
+
+// Triads (game-specific data files)
+registerRoute(
+  ({ url }) => url.pathname.startsWith('/assets/triads/'),
+  new CacheFirst({
+    cacheName: 'cache-triads',
+    plugins: [
+      new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 30 })
+    ],
+  })
+);
+
+// Static assets (images, audio)
+registerRoute(
+  ({ request, url }) =>
+    url.pathname.startsWith('/assets/images/') ||
+    /\.(?:png|jpg|jpeg|webp|gif|svg|mp3|wav|ogg)$/.test(url.pathname),
+  new StaleWhileRevalidate({
+    cacheName: 'cache-statics',
+    plugins: [
+      new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 90 })
+    ],
+  })
+);
+
+// Modules & scripts (other JS files)
+registerRoute(
+  ({ url }) => url.pathname.endsWith('.js'),
+  new StaleWhileRevalidate({
+    cacheName: 'cache-modules',
+    plugins: [
+      new ExpirationPlugin({ maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 30 })
+    ],
+  })
+);
+
+// Fallback fetch handler (cache-first, index.html fallback)
 self.addEventListener('fetch', event => {
   const url = event.request.url;
 
-  // Bypass dynamic DB-management scripts
   if (url.includes('DatabaseManager.js') || url.includes('SQLiteDataManager.js')) {
     return event.respondWith(fetch(event.request));
   }
@@ -83,7 +137,6 @@ self.addEventListener('fetch', event => {
       .then(cached => {
         if (cached) return cached;
         return fetch(event.request).then(networkResponse => {
-          // Only cache valid GET responses
           if (
             networkResponse &&
             networkResponse.status === 200 &&
@@ -95,9 +148,6 @@ self.addEventListener('fetch', event => {
           return networkResponse;
         });
       })
-      .catch(() => {
-        // On error (e.g. offline navigation), serve index.html
-        return caches.match('index.html');
-      })
+      .catch(() => caches.match('index.html'))
   );
 });

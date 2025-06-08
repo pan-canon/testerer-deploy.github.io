@@ -1,55 +1,59 @@
 /**
- * Service Worker (sw.js) – Workbox-powered with structured runtime caching
+ * Service Worker (sw.js) - Workbox‐powered with structured runtime caching
  *
  * Sections:
- *   1) Load Workbox from CDN
- *   2) Precache + cleanup outdated precaches
- *   3) Install event: notify clients about new version
- *   4) Activate event: cleanup old runtime caches
- *   5) Message handler: SKIP_WAITING & CLEAR_CACHE
- *   6) Runtime caching routes (libs, models, triads, statics, modules, config, templates)
- *   7) Navigation fallback (SPA)
+ * 0) Manual versioning & cache‐name override
+ * 1) Precache + Cleanup outdated precaches
+ * 2) Install event: notify clients about new version
+ * 3) Activate event: cleanup old caches
+ * 4) Message handler: SKIP_WAITING & CLEAR_CACHE
+ * 5) Runtime caching routes (libs, models, triads, statics, modules, templates)
+ * 6) Navigation fallback (SPA)
  */
 
-// 1) Load Workbox core and plugins via importScripts
-importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
+import { setCacheNameDetails }                     from 'workbox-core';
+import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
+import { registerRoute, createHandlerBoundToURL }  from 'workbox-routing';
+import { CacheFirst, StaleWhileRevalidate }        from 'workbox-strategies';
+import { ExpirationPlugin }                        from 'workbox-expiration';
 
-if (!workbox) {
-  console.error('Workbox failed to load.');
-}
-
-// 2) Pull out the modules we need
-const { precacheAndRoute, cleanupOutdatedCaches } = workbox.precaching;
-const { registerRoute, createHandlerBoundToURL }  = workbox.routing;
-const { CacheFirst, StaleWhileRevalidate }        = workbox.strategies;
-const { ExpirationPlugin }                        = workbox.expiration;
-
-// --- 2) PRECACHE: remove old precaches, then cache manifest entries ---
-cleanupOutdatedCaches();
-// `self.__WB_MANIFEST` will be replaced by your InjectManifest plugin at build time
-precacheAndRoute(self.__WB_MANIFEST);
-
-// --- 3) INSTALL: notify clients that a new version is available ---
-self.addEventListener('install', event => {
-  console.log('[SW] install → notifying clients of new version');
-  event.waitUntil(
-    self.clients.matchAll({ includeUncontrolled: true }).then(clients =>
-      clients.forEach(c =>
-        c.postMessage({ type: 'NEW_VERSION_AVAILABLE', persistent: true })
-      )
-    )
-  );
-  // Note: we do NOT call skipWaiting() here; we wait for the client to request it
+// 0) MANUAL VERSIONING — override all Workbox cache names
+const CACHE_VERSION = 'v58';
+setCacheNameDetails({
+  prefix:    '',                             // remove "workbox-" prefix
+  suffix:    '',                             // remove "-<hash>" suffix
+  precache:  `game-cache-${CACHE_VERSION}`,  // your versioned precache
+  runtime:   ''                              // unused (we name each runtime group explicitly)
 });
 
-// --- 4) ACTIVATE: delete any non-runtime caches, then claim clients ---
-const RUNTIME_CACHES = [
+// 1) PRECACHE: inject manifest & remove outdated precaches
+cleanupOutdatedCaches();
+precacheAndRoute(self.__WB_MANIFEST);
+
+// 2) INSTALL: notify clients of new version
+self.addEventListener('install', event => {
+  console.log('[SW] install → notifying clients about new version');
+  event.waitUntil(
+    self.clients.matchAll({ includeUncontrolled: true }).then(clients => {
+      clients.forEach(client =>
+        client.postMessage({
+          type: 'NEW_VERSION_AVAILABLE',
+          persistent: true
+        })
+      );
+    })
+  );
+  // NOTE: no skipWaiting() here — wait for SKIP_WAITING from client
+});
+
+// 3) ACTIVATE: delete any caches not in our allow‐list
+const ALLOWED_CACHES = [
+  `game-cache-${CACHE_VERSION}`, 
   'cache-libs',
   'cache-models',
   'cache-triads',
   'cache-statics',
   'cache-modules',
-  'cache-config',
   'cache-templates'
 ];
 self.addEventListener('activate', event => {
@@ -58,47 +62,54 @@ self.addEventListener('activate', event => {
     caches.keys().then(keys =>
       Promise.all(
         keys
-          // remove any cache not in our runtime list or the precache prefix
-          .filter(key => 
-            !RUNTIME_CACHES.includes(key) && !key.startsWith('workbox-precache')
-          )
-          .map(key => caches.delete(key))
+          .filter(key => !ALLOWED_CACHES.includes(key))
+          .map(key => {
+            console.log(`[SW] deleting cache: ${key}`);
+            return caches.delete(key);
+          })
       )
-    )
-    .then(() => {
+    ).then(() => {
       console.log('[SW] claim clients');
       return self.clients.claim();
     })
   );
 });
 
-// --- 5) MESSAGE: handle skipWaiting & clear all caches on demand ---
+// 4) MESSAGE: SKIP_WAITING & CLEAR_CACHE
 self.addEventListener('message', event => {
   const msg = event.data || {};
 
   if (msg.type === 'SKIP_WAITING') {
     console.log('[SW] SKIP_WAITING received → activating new SW');
-    return event.waitUntil(
-      self.skipWaiting().then(() => self.clients.claim())
-    );
+    event.waitUntil(self.skipWaiting().then(() => self.clients.claim()));
+    return;
   }
 
   if (msg.action === 'CLEAR_CACHE') {
     console.log('[SW] CLEAR_CACHE received → purging all caches');
-    return event.waitUntil(
+    event.waitUntil(
       caches.keys()
-        .then(keys => Promise.all(keys.map(k => caches.delete(k))))
+        .then(keys => Promise.all(
+          keys.map(k => {
+            console.log(`[SW] removing cache: ${k}`);
+            return caches.delete(k);
+          })
+        ))
         .then(() => self.clients.matchAll())
-        .then(clients =>
-          clients.forEach(c => c.navigate(c.url))
-        )
+        .then(clients => {
+          clients.forEach(client => {
+            console.log(`[SW] reloading client: ${client.url}`);
+            client.navigate(client.url);
+          });
+        })
     );
+    return;
   }
 });
 
-// --- 6) RUNTIME CACHING ROUTES ---
+// 5) RUNTIME CACHING ROUTES
 
-// 6.1 Libraries (.js, .wasm) under /assets/libs/
+// 5.1 — Libraries (.js, .wasm) under /assets/libs/
 registerRoute(
   ({ url }) => url.pathname.startsWith('/assets/libs/'),
   new CacheFirst({
@@ -109,7 +120,7 @@ registerRoute(
   })
 );
 
-// 6.2 Models (COCO-SSD) under /assets/models/
+// 5.2 — Models (COCO-SSD) under /assets/models/
 registerRoute(
   ({ url }) => url.pathname.startsWith('/assets/models/'),
   new CacheFirst({
@@ -120,7 +131,7 @@ registerRoute(
   })
 );
 
-// 6.3 Triads under /triads/
+// 5.3 — Triads under /triads/
 registerRoute(
   ({ url }) => url.pathname.startsWith('/triads/'),
   new CacheFirst({
@@ -131,11 +142,11 @@ registerRoute(
   })
 );
 
-// 6.4 Static media (images, audio)
+// 5.4 — Static assets (images, audio, JSON) — **no HTML here**
 registerRoute(
   ({ url }) =>
     url.pathname.startsWith('/assets/images/') ||
-    /\.(?:png|jpe?g|webp|gif|svg|mp3|wav|ogg)$/.test(url.pathname),
+    /\.(?:png|jpe?g|webp|gif|svg|mp3|wav|ogg|json)$/.test(url.pathname),
   new StaleWhileRevalidate({
     cacheName: 'cache-statics',
     plugins: [
@@ -144,7 +155,7 @@ registerRoute(
   })
 );
 
-// 6.5 JavaScript modules (.js)
+// 5.5 — JavaScript modules (.js) not under /assets/libs/
 registerRoute(
   ({ url }) => url.pathname.endsWith('.js'),
   new StaleWhileRevalidate({
@@ -155,24 +166,9 @@ registerRoute(
   })
 );
 
-// 6.6 JSON/JS config under /config/
+// 5.6 — HTML templates under /templates/
 registerRoute(
-  ({ url }) => 
-    url.pathname.startsWith('/config/') &&
-    /\.(?:json|js)$/.test(url.pathname),
-  new StaleWhileRevalidate({
-    cacheName: 'cache-config',
-    plugins: [
-      new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 30 * 24 * 60 * 60 })
-    ]
-  })
-);
-
-// 6.7 HTML templates under /templates/
-registerRoute(
-  ({ url }) => 
-    url.pathname.startsWith('/templates/') &&
-    url.pathname.endsWith('.html'),
+  ({ url }) => url.pathname.startsWith('/templates/') && url.pathname.endsWith('.html'),
   new StaleWhileRevalidate({
     cacheName: 'cache-templates',
     plugins: [
@@ -181,7 +177,7 @@ registerRoute(
   })
 );
 
-// --- 7) Navigation fallback for SPA routing ---
+// 6) Navigation fallback for SPA routing
 registerRoute(
   ({ request }) => request.mode === 'navigate',
   createHandlerBoundToURL('/index.html')

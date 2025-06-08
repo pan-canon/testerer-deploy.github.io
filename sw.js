@@ -13,14 +13,18 @@
  * 6) Navigation fallback (SPA)
  */
 
-import { setCacheNameDetails, clientsClaim }             from 'workbox-core';
-import { precacheAndRoute, cleanupOutdatedCaches }       from 'workbox-precaching';
-import { registerRoute, createHandlerBoundToURL }        from 'workbox-routing';
-import { CacheFirst, StaleWhileRevalidate }              from 'workbox-strategies';
-import { ExpirationPlugin }                              from 'workbox-expiration';
+// Load Workbox runtime in classic (non-ESM) mode
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
+self.__WB_MANIFEST = self.__WB_MANIFEST || [];
+
+const { setCacheNameDetails, clientsClaim }             = workbox.core;
+const { precacheAndRoute, cleanupOutdatedCaches }       = workbox.precaching;
+const { registerRoute, createHandlerBoundToURL }        = workbox.routing;
+const { CacheFirst, StaleWhileRevalidate }              = workbox.strategies;
+const { ExpirationPlugin }                              = workbox.expiration;
 
 // 0) MANUAL VERSIONING — override all Workbox cache names
-const CACHE_VERSION = 'v58';
+const CACHE_VERSION = 'v59';
 setCacheNameDetails({
   prefix:   '',                              // remove "workbox-" prefix
   suffix:   '',                              // remove "-<hash>" suffix

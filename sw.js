@@ -7,7 +7,7 @@ import { ExpirationPlugin }         from 'workbox-expiration';
 /**
  * Versioned cache name — bump this on each release to purge old caches
  */
-const CACHE_VERSION = 'v57';
+const CACHE_VERSION = 'v58';
 const PRECACHE_CACHE = `game-cache-${CACHE_VERSION}`;
 
 /**
@@ -42,26 +42,24 @@ self.addEventListener('install', event => {
 ——————————————————————————————————————————————————————————*/
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys()
-      .then(keys =>
-        Promise.all(
-          keys
-            // Keep only our current caches; delete any others
-            .filter(key =>
-              ![
-                PRECACHE_CACHE,
-                'cache-libs',
-                'cache-models',
-                'cache-triads',
-                'cache-statics',
-                'cache-modules'
-              ].includes(key)
-            )
-            .map(key => caches.delete(key))
-        )
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          // keep only the current precache and the five runtime caches
+          .filter(key =>
+            ![
+              PRECACHE_CACHE,  // current precache cache name
+              'cache-libs',
+              'cache-models',
+              'cache-triads',
+              'cache-statics',
+              'cache-modules'
+            ].includes(key)
+          )
+          .map(key => caches.delete(key))
       )
+    )
   );
-  // Note: we do NOT call clients.claim() here — we wait for explicit SKIP_WAITING
 });
 
 /*——————————————————————————————————————————————————————————
@@ -95,7 +93,7 @@ self.addEventListener('message', event => {
 
 // 4.1 — Libraries (e.g., large JS & WASM files)
 registerRoute(
-  ({ url }) => url.pathname.startsWith('/assets/libs/'),
+  ({ url }) => url.pathname.includes('/assets/libs/'),
   new CacheFirst({
     cacheName: 'cache-libs',
     plugins: [
@@ -109,7 +107,7 @@ registerRoute(
 
 // 4.2 — Models (COCO-SSD shards & model.json)
 registerRoute(
-  ({ url }) => url.pathname.startsWith('/assets/models/'),
+  ({ url }) => url.pathname.includes('/assets/models/'),
   new CacheFirst({
     cacheName: 'cache-models',
     plugins: [
@@ -123,7 +121,7 @@ registerRoute(
 
 // 4.3 — Triads (game-specific data bundles)
 registerRoute(
-  ({ url }) => url.pathname.startsWith('/assets/triads/'),
+  ({ url }) => url.pathname.includes('/triads/'),
   new CacheFirst({
     cacheName: 'cache-triads',
     plugins: [

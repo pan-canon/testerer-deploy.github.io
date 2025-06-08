@@ -1,5 +1,5 @@
 /**
- * Service Worker (sw.js) - Workbox-powered with structured runtime caching
+ * Service Worker (sw.js) - Workbox‐powered with structured runtime caching
  *
  * Sections:
  * 0) Manual versioning & cache‐name override
@@ -11,26 +11,26 @@
  * 6) Navigation fallback (SPA)
  */
 
-import { setCacheNameDetails }                  from 'workbox-core';
+import { setCacheNameDetails }                     from 'workbox-core';
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
-import { registerRoute, createHandlerBoundToURL }   from 'workbox-routing';
-import { CacheFirst, StaleWhileRevalidate }         from 'workbox-strategies';
-import { ExpirationPlugin }                         from 'workbox-expiration';
+import { registerRoute, createHandlerBoundToURL }  from 'workbox-routing';
+import { CacheFirst, StaleWhileRevalidate }        from 'workbox-strategies';
+import { ExpirationPlugin }                        from 'workbox-expiration';
 
-/// 0) MANUAL VERSIONING — define your own precache name
+// 0) MANUAL VERSIONING — override all Workbox cache names
 const CACHE_VERSION = 'v58';
 setCacheNameDetails({
-  prefix: '',                            // remove default "workbox-" prefix
-  suffix: '',                            // remove default "-<hash>" suffix
-  precache: `game-cache-${CACHE_VERSION}`, // your versioned precache cache
-  runtime: ''                            // not used (we use explicit names below)
+  prefix:    '',                             // remove "workbox-" prefix
+  suffix:    '',                             // remove "-<hash>" suffix
+  precache:  `game-cache-${CACHE_VERSION}`,  // your versioned precache
+  runtime:   ''                              // unused (we name each runtime group explicitly)
 });
 
-/// 1) PRECACHE: inject manifest & cleanup outdated precaches
+// 1) PRECACHE: inject manifest & remove outdated precaches
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
-/// 2) INSTALL: notify clients about a new SW version
+// 2) INSTALL: notify clients of new version
 self.addEventListener('install', event => {
   console.log('[SW] install → notifying clients about new version');
   event.waitUntil(
@@ -43,10 +43,10 @@ self.addEventListener('install', event => {
       );
     })
   );
-  // NOTE: no skipWaiting() here — we wait for the client to send SKIP_WAITING
+  // NOTE: no skipWaiting() here — wait for SKIP_WAITING from client
 });
 
-/// 3) ACTIVATE: delete any caches not in our allow‐list
+// 3) ACTIVATE: delete any caches not in our allow‐list
 const ALLOWED_CACHES = [
   `game-cache-${CACHE_VERSION}`, 
   'cache-libs',
@@ -75,24 +75,26 @@ self.addEventListener('activate', event => {
   );
 });
 
-/// 4) MESSAGE: SKIP_WAITING & CLEAR_CACHE
+// 4) MESSAGE: SKIP_WAITING & CLEAR_CACHE
 self.addEventListener('message', event => {
   const msg = event.data || {};
-  // 4.1) Skip waiting → activate new SW immediately
+
   if (msg.type === 'SKIP_WAITING') {
     console.log('[SW] SKIP_WAITING received → activating new SW');
     event.waitUntil(self.skipWaiting().then(() => self.clients.claim()));
     return;
   }
-  // 4.2) Clear all caches & reload clients
+
   if (msg.action === 'CLEAR_CACHE') {
-    console.log('[SW] CLEAR_CACHE received → purging caches');
+    console.log('[SW] CLEAR_CACHE received → purging all caches');
     event.waitUntil(
       caches.keys()
-        .then(keys => Promise.all(keys.map(k => {
-          console.log(`[SW] removing cache: ${k}`);
-          return caches.delete(k);
-        })))
+        .then(keys => Promise.all(
+          keys.map(k => {
+            console.log(`[SW] removing cache: ${k}`);
+            return caches.delete(k);
+          })
+        ))
         .then(() => self.clients.matchAll())
         .then(clients => {
           clients.forEach(client => {
@@ -105,7 +107,7 @@ self.addEventListener('message', event => {
   }
 });
 
-/// 5) RUNTIME CACHING ROUTES
+// 5) RUNTIME CACHING ROUTES
 
 // 5.1 — Libraries (.js, .wasm) under /assets/libs/
 registerRoute(
@@ -140,7 +142,7 @@ registerRoute(
   })
 );
 
-// 5.4 — Static assets (images, audio, JSON)
+// 5.4 — Static assets (images, audio, JSON) — **no HTML here**
 registerRoute(
   ({ url }) =>
     url.pathname.startsWith('/assets/images/') ||
@@ -175,7 +177,7 @@ registerRoute(
   })
 );
 
-/// 6) Navigation fallback for SPA routing
+// 6) Navigation fallback for SPA routing
 registerRoute(
   ({ request }) => request.mode === 'navigate',
   createHandlerBoundToURL('/index.html')

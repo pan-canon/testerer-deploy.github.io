@@ -86,19 +86,22 @@ export class ViewManager {
     if (this.resetDataBtn) {
       this.resetDataBtn.addEventListener("click", () => {
         console.log("Reset Data button clicked.");
+        this.showLoader('Resetting…');
         app.profileManager.resetProfile();
+      });
+    }
+
+    if (this.updateBtn) {
+      this.updateBtn.addEventListener("click", () => {
+        console.log("Update button clicked.");
+        this.showLoader('Loading updates…');
+        this.updateServiceWorker();
       });
     }
     if (this.exportProfileBtn) {
       this.exportProfileBtn.addEventListener("click", () => {
         console.log("Export Profile button clicked.");
         this.exportProfile(app);
-      });
-    }
-    if (this.updateBtn) {
-      this.updateBtn.addEventListener("click", () => {
-        console.log("Update button clicked.");
-        this.clearCache();
       });
     }
     const chatBtn = document.getElementById("chat-btn");
@@ -856,12 +859,52 @@ export class ViewManager {
     }
   }
 
-  clearCache() {
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({ action: 'CLEAR_CACHE' });
-      console.log("Clear cache message sent to Service Worker.");
+  /**
+   * Show the global loader with a custom message.
+   * @param {string} message
+   */
+  showLoader(message) {
+    const loader = document.getElementById('loader') || document.querySelector('.loader');
+    if (loader) {
+      loader.style.display = 'block';
+      loader.textContent = message;
+      console.log(`[ViewManager] Loader shown with message: "${message}"`);
+    }
+  }
+
+  /**
+   * Hide the global loader.
+   */
+  hideLoader() {
+    const loader = document.getElementById('loader') || document.querySelector('.loader');
+    if (loader) {
+      loader.style.display = 'none';
+      console.log('[ViewManager] Loader hidden');
+    }
+  }
+
+  /**
+   * Check for a Service Worker update, install if found, and rely on controllerchange → reload.
+   */
+  async updateServiceWorker() {
+    console.log('🔍 Checking for Service Worker update…');
+    const registration = await navigator.serviceWorker.getRegistration();
+    if (!registration) {
+      console.log('❌ No Service Worker registration found.');
+      this.hideLoader();
+      return;
+    }
+
+    // Force SW to fetch & install new sw.js if available
+    await registration.update();
+
+    if (registration.waiting) {
+      console.log('🔄 Update found. Installing new Service Worker…');
+      console.log('⏳ Page will reload automatically after SW activation.');
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
     } else {
-      console.warn("No active Service Worker controller found.");
+      console.log('ℹ️ No updates found. Hiding loader.');
+      this.hideLoader();
     }
   }
 

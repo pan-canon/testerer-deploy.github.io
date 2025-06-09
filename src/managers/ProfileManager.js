@@ -62,13 +62,7 @@ export class ProfileManager {
         }
       }
 
-      // Show a “Resetting…” message in the UI
-      const loader = document.getElementById('loader');
-      if (loader) {
-        loader.style.display = 'block';
-        loader.textContent = 'Сбрасываем...';
-      }
-
+       // After data reset, check for Service Worker update
       if ('serviceWorker' in navigator) {
         console.log('🔍 Checking for Service Worker update after profile reset…');
         const registration = await navigator.serviceWorker.getRegistration();

@@ -55,9 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           });
         });
-
-        // Wait until the SW is active
-        return navigator.serviceWorker.ready;
       })
       .catch(err => {
         console.error('❌ SW registration failed:', err);

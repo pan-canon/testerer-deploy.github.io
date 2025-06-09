@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const loader = document.getElementById('loader');
   if (loader) loader.style.display = 'block';
 
-  // ─── SERVICE WORKER REGISTRATION ───────────────────────────────────────────
+  // SERVICE WORKER REGISTRATION
   let swReady = Promise.resolve();
 
   if ('serviceWorker' in navigator) {
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ─── LOAD EXTERNAL LIBRARIES & INITIALIZE APP ──────────────────────────────
+  // LOAD EXTERNAL LIBRARIES & INITIALIZE APP
   // Wait for SW registration (or its failure) and all external scripts.
   Promise.all([
     swReady,
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Hide the loader/spinner once initialization is complete
       if (loader) loader.style.display = 'none';
 
-      // ─── PWA: BEFOREINSTALLPROMPT HANDLING ────────────────────────────────
+      // PWA: BEFOREINSTALLPROMPT HANDLING
       let deferredPrompt = null;
       window.addEventListener('beforeinstallprompt', event => {
         event.preventDefault();
@@ -85,16 +85,63 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
 
-      // ─── PROFILE UPDATE BUTTON ──────────────────────────────────────────────
-      // Manually trigger activation of the new Service Worker
-      function fullSWUpdate() {
-        if (navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
-          console.log('🔄 Sent SKIP_WAITING to Service Worker');
+      // PROFILE UPDATE BUTTON
+      const updateBtn = document.getElementById('update-btn');
+      let isUpdating = false;
+      let originalBtnText = '';
+      let beforeUnloadHandler = null;
+
+      async function fullSWUpdate() {
+        if (isUpdating) return;
+        isUpdating = true;
+
+        if (!updateBtn) {
+          console.log('❌ Update button not found');
+          return;
+        }
+
+        // Show loading state on the button
+        originalBtnText = updateBtn.textContent;
+        updateBtn.disabled = true;
+        updateBtn.textContent = 'Loading updates…';
+
+        // Prevent accidental navigation away during update
+        beforeUnloadHandler = event => {
+          event.preventDefault();
+          event.returnValue = 'Updates are being installed. Are you sure you want to leave?';
+        };
+        window.addEventListener('beforeunload', beforeUnloadHandler);
+
+        // Check for a new Service Worker version
+        console.log('🔍 Checking for Service Worker update…');
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (!registration) {
+          console.log('❌ No Service Worker registration found.');
+          cleanup();
+          return;
+        }
+
+        await registration.update();
+
+        // If there's a waiting Service Worker, install it
+        if (registration.waiting) {
+          console.log('🔄 Update found. Installing new Service Worker…');
+          console.log('⏳ Page will reload automatically after installation.');
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        } else {
+          console.log('ℹ️ No updates found. Your application is up to date.');
+          cleanup();
         }
       }
 
-      const updateBtn = document.getElementById('update-btn');
+      function cleanup() {
+        // Restore button state and remove navigation guard
+        isUpdating = false;
+        updateBtn.disabled = false;
+        updateBtn.textContent = originalBtnText;
+        window.removeEventListener('beforeunload', beforeUnloadHandler);
+      }
+
       if (updateBtn) {
         updateBtn.addEventListener('click', fullSWUpdate);
       }

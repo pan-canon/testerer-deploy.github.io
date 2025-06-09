@@ -50,11 +50,11 @@ export class ProfileManager {
    */
   resetProfile() {
     Promise.all([
-      this.dataManager.resetProfile(),    // Deletes the 'profile' key.
-      this.dataManager.resetDatabase()      // Deletes the SQL database saved under 'sqlite', fully clearing tables.
-    ]).then(() => {
+      this.dataManager.resetProfile(),
+      this.dataManager.resetDatabase()
+    ]).then(async () => {
       // Clear all keys from localStorage except the language-related key.
-      const preserveKeys = ["language"]; // Adjust this array if language key is stored under a different name.
+      const preserveKeys = ["language"];
       for (let i = localStorage.length - 1; i >= 0; i--) {
         const key = localStorage.key(i);
         if (!preserveKeys.includes(key)) {
@@ -62,16 +62,42 @@ export class ProfileManager {
         }
       }
 
-      // NEW: Tell the Service Worker to skip waiting (activate the new version)
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
-        console.log('🔄 Sent SKIP_WAITING to Service Worker');
+      // Show a “Resetting…” message in the UI
+      const loader = document.getElementById('loader');
+      if (loader) {
+        loader.style.display = 'block';
+        loader.textContent = 'Сбрасываем...';
       }
-      // Reload will be handled by the SW via controllerchange → clients.navigate()
+
+      if ('serviceWorker' in navigator) {
+        console.log('🔍 Checking for Service Worker update after profile reset…');
+        const registration = await navigator.serviceWorker.getRegistration();
+
+        if (!registration) {
+          console.log('❌ No Service Worker registration found.');
+          window.location.reload();
+          return;
+        }
+
+        // Force the SW to check for a new version
+        await registration.update();
+
+        if (registration.waiting) {
+          console.log('🔄 Update found. Installing new Service Worker…');
+          console.log('🛠️ Reset in progress and SW update installation started.');
+          console.log('⏳ Page will reload automatically after SW activation.');
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        } else {
+          console.log('ℹ️ No updates found. Reloading to complete profile reset.');
+          window.location.reload();
+        }
+      } else {
+        // If no SW support, just reload to finish UI reset
+        window.location.reload();
+      }
     }).catch((err) => {
       ErrorManager.logError(err, "resetProfile");
     });
-  }
 
   /**
    * exportProfileData – Exports the profile along with diary entries, apartment plan,

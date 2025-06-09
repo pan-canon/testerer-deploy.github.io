@@ -98,6 +98,7 @@ export class ProfileManager {
     }).catch((err) => {
       ErrorManager.logError(err, "resetProfile");
     });
+  }
 
   /**
    * exportProfileData – Exports the profile along with diary entries, apartment plan,

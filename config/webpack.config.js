@@ -1,92 +1,62 @@
+// config/webpack.config.js
+
 /**
- * Local Webpack configuration that extends the shared/base config
- * from @pan-canon/pd_game-config, but overrides only the service-worker
- * plugin to create separate runtime‐cache “subfolders.”
+ * Local Webpack configuration that extends the shared/base config from @pan-canon/pd_game-config.
+ *
+ * We import the base config (which itself generates triad wrappers and configures triad entry points),
+ * then override only what we need:
+ *
+ * - Instead of including base.entry (which already contains triad entry points), we supply our own
+ *   single entry point (“main: './main.js'”). This allows dynamic import(...) calls for triads
+ *   to function as lazy-loaded chunks rather than initial entries.
+ * - We preserve all other baseConfig properties: output, module.rules, resolve (including triads alias),
+ *   plugins, and optimization (including Terser settings).
+ * - We explicitly set `mode` and conditionally add `devServer` in development mode.
  */
 
 const path = require('path');
+// Import the shared/base configuration from the pd_game-config package
 const base = require('@pan-canon/pd_game-config/webpack.config.js');
-const { GenerateSW } = require('workbox-webpack-plugin');
-
-// Base URL for all assets and navigation fallback
-const BASE_PATH = process.env.PUBLIC_URL || '';
 
 module.exports = (env, argv) => {
-  const isProd    = argv.mode === 'production';
+  // Determine if we are in production mode
+  const isProd = argv.mode === 'production';
+
+  // Obtain the entire base configuration object (entry, output, module, resolve, plugins, optimization, etc.)
+  // by invoking base() with the same env/argv. We pass through env/argv so that base sees the correct mode.
   const baseConfig = base(env, argv);
 
-  // 1) Remove the default GenerateSW instance from the base plugins
-  const filteredPlugins = baseConfig.plugins.filter(
-    plugin => plugin.constructor.name !== 'GenerateSW'
-  );
-
-  // 2) Add our customized GenerateSW with per‐folder runtime caches
-  filteredPlugins.push(
-    new GenerateSW({
-      swDest: 'sw.js',
-      clientsClaim: true,            // Take control of clients as soon as SW activates
-      skipWaiting: false,            // Wait for manual SKIP_WAITING
-      cleanupOutdatedCaches: true,   // Purge old cache entries
-      cacheId: 'game-cache',         // Prefix for precache
-
-      // SPA navigation fallback
-      navigateFallback: `${BASE_PATH}/index.html`,
-      navigateFallbackDenylist: [
-        /\/assets\//,
-        /\/triads\//,
-        /\/templates\//
-      ],
-
-      // Runtime caching rules, each with its own cacheName (“subfolder”)
-      runtimeCaching: [
-        {
-          urlPattern: new RegExp(`${BASE_PATH}/assets/libs/`),
-          handler: 'CacheFirst',
-          options: { cacheName: 'runtime/cache-libs' }
-        },
-        {
-          urlPattern: new RegExp(`${BASE_PATH}/assets/models/`),
-          handler: 'CacheFirst',
-          options: { cacheName: 'runtime/cache-models' }
-        },
-        {
-          urlPattern: new RegExp(`${BASE_PATH}/triads/`),
-          handler: 'CacheFirst',
-          options: { cacheName: 'runtime/cache-triads' }
-        },
-        {
-          urlPattern: /\.(?:png|jpe?g|webp|gif|svg|mp3|wav|ogg|json)$/,
-          handler: 'StaleWhileRevalidate',
-          options: { cacheName: 'runtime/cache-statics' }
-        },
-        {
-          urlPattern: /\.js$/,
-          handler: 'StaleWhileRevalidate',
-          options: { cacheName: 'runtime/cache-js' }
-        },
-        {
-          urlPattern: new RegExp(`${BASE_PATH}/templates/.*\\.html$`),
-          handler: 'StaleWhileRevalidate',
-          options: { cacheName: 'runtime/cache-templates' }
-        }
-      ],
-
-      // Allow caching of larger assets (e.g. WASM)
-      maximumFileSizeToCacheInBytes: 10 * 1024 * 1024
-    })
-  );
-
-  // 3) Return the final config, preserving everything else from baseConfig
   return {
-    entry:        { main: './main.js' },
+    // 1) We override the `entry` entirely to only include our local “main.js”.
+    //    We DO NOT spread baseConfig.entry here, because baseConfig.entry already includes
+    //    triad entrypoints. If they were included as initial entries, dynamic import(...) of the same
+    //    chunk names would fail (“initial chunk cannot be loaded on demand”).
+    entry: {
+      main: './main.js'
+    },
+
+    // 2) Preserve all other settings from the base config (output, module.rules, resolve, plugins, optimization).
+    //    In particular, resolve.alias.triads still points to build/triads, and optimization.minimizer
+    //    still has TerserPlugin configured to preserve only `webpackChunkName` comments.
     output:       baseConfig.output,
     module:       baseConfig.module,
     resolve:      baseConfig.resolve,
-    plugins:      filteredPlugins,
+    plugins:      baseConfig.plugins,
     optimization: baseConfig.optimization,
-    mode:         isProd ? 'production' : 'development',
 
-    // In development, reuse the baseConfig.devServer settings
-    ...( !isProd && { devServer: baseConfig.devServer })
+    // 3) Set the mode explicitly (needed in case someone runs `npm run build` without --mode)
+    mode: isProd ? 'production' : 'development',
+
+    // 4) In development mode, enable webpack-dev-server
+    ...( !isProd && {
+      devServer: {
+        static: {
+          directory: path.resolve(__dirname, '../dist') // serve built files from dist/
+        },
+        open: true,     // automatically open browser
+        hot: true,      // enable Hot Module Replacement
+        port: 8080      // local dev server port
+      }
+    })
   };
 };

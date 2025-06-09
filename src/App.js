@@ -48,6 +48,7 @@ export class App {
 
     // Initialize core domain managers.
     this.languageManager       = deps.languageManager || new LanguageManager('language-selector');
+    this.viewManager.setLanguageManager(this.languageManager);
     this.cameraSectionManager  = deps.cameraSectionManager || new CameraSectionManager();
     this.viewManager.setCameraManager(this.cameraSectionManager);
     this.profileManager        = deps.profileManager || new ProfileManager(this.sqliteDataManager);

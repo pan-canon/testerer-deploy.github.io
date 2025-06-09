@@ -62,13 +62,10 @@ export class ProfileManager {
         }
       }
 
-      // NEW: Tell the Service Worker to skip waiting and clear caches
+      // NEW: Tell the Service Worker to skip waiting (activate the new version)
       if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        // ask the new SW to activate immediately
         navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
-        // clear all caches so that clients navigates and picks up the new version
-        navigator.serviceWorker.controller.postMessage({ action: 'CLEAR_CACHE' });
-        console.log("Service Worker skipWaiting and CLEAR_CACHE messages sent.");
+        console.log('🔄 Sent SKIP_WAITING to Service Worker');
       }
       // Reload will be handled by the SW via controllerchange → clients.navigate()
     }).catch((err) => {

@@ -60,4 +60,4 @@ export class BaseEvent {
       ErrorManager.showError("An error occurred while adding a diary entry.");
     }
   }
-}
+}s

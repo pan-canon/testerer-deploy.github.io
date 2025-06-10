@@ -41,7 +41,7 @@ export class WelcomeEvent extends BaseEvent {
     }
     
     // If the event is already logged, check the universal active quest key for enabling the Post button.
-    if (this.eventManager.isEventLogged(this.key)) {
+    if (await this.eventManager.isEventLogged(this.key)) {
       console.log(`Event '${this.key}' is already logged.`);
       if (StateManager.get(StateManager.KEYS.ACTIVE_QUEST_KEY) === "mirror_quest") {
         if (this.app.viewManager && typeof this.app.viewManager.setPostButtonEnabled === "function") {

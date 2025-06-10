@@ -27,7 +27,7 @@ export class PostMirrorEvent extends BaseEvent {
   }
 
   async activate() {
-    if (this.eventManager.isEventLogged(this.key)) {
+    if (await this.eventManager.isEventLogged(this.key)) {
       console.log(`[PostMirrorEvent] Event '${this.key}' is already logged, skipping activation.`);
       return;
     }

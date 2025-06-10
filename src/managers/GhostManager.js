@@ -70,7 +70,7 @@ export class GhostManager {
           const firstEntry = this.sequenceManager.getCurrentEntry();
           if (firstEntry) {
             console.log(`Auto-launching initial event: ${firstEntry.eventKey}`);
-            this.eventManager.activateEvent(firstEntry.eventKey);
+            this.app.gameEventManager.activateEvent(firstEntry.eventKey);
             // Save the active quest key using the universal mechanism.
             this.activeQuestKey = firstEntry.questKey;
             StateManager.set("activeQuestKey", this.activeQuestKey);

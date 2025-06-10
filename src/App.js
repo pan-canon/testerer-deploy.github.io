@@ -69,6 +69,9 @@ export class App {
       this.languageManager
     );
 
+    // Provide GameEventManager to GhostManager so it can activate events
+    this.ghostManager.gameEventManager = this.gameEventManager;
+
     // Now pass GameEventManager into QuestManager (so activateEvent is available).
     this.questManager = deps.questManager || new QuestManager(
       this.eventManager,

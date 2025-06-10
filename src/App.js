@@ -21,16 +21,11 @@ import { QuestManager } from './managers/QuestManager.js';
 import { GameEventManager } from './managers/GameEventManager.js';
 import { ShowProfileModal } from './managers/ShowProfileModal.js';
 
-// NEW IMPORTS FOR CHAT MODULE using the wrapper for simplified instantiation
-import { ChatManager } from './managers/ChatManager.js';
-
 /**
  * Main application class.
  * This class initializes core managers, sets up the UI,
  * loads persisted state, and launches the test chat section ("support").
  *
- * All chat-related logic (state management, dialogue, localization)
- * is encapsulated within ChatManager.
  */
 export class App {
   constructor(deps = {}) {
@@ -83,13 +78,6 @@ export class App {
 
     this.showProfileModal = deps.showProfileModal || new ShowProfileModal(this);
 
-    // Initialize ChatManager for the "support" chat section using the wrapper.
-    this.chatManager = deps.chatManager || ChatManager.createChatManagerWrapper({
-      databaseManager: this.databaseManager,
-      languageManager: this.languageManager,
-      sectionKey: 'support'
-    });
-
     // Begin application initialization.
     this.init();
   }
@@ -129,11 +117,6 @@ export class App {
 
     this.viewManager.showToggleCameraButton();
     this.viewManager.createTopCameraControls();
-
-    // Initialize the chat section for "support"
-    await this.chatManager.init();
-    // Schedule support chat conversation to start after 5 seconds.
-    this.chatManager.scheduleConversationStartIfInactive(5000);
 
     // If a profile exists, switch to main screen (and only then re-call updateDiaryDisplay).
     // IMPORTANT: Pass `this` as the third param so `ViewManager` can reference your main app instance.

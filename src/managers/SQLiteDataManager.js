@@ -42,7 +42,7 @@ export class SQLiteDataManager {
    *
    * After restoration or creation, migration queries are executed
    * to ensure that all required tables (diary, apartment_plan, quest_progress,
-   * ghosts, events, quests, chat_messages) exist.
+   * ghosts, events, quests) exist.
    *
    * @param {Object} SQL - The SQL.js module.
    * @returns {Promise<SQL.Database>} Resolves to the SQL.js database instance.
@@ -78,17 +78,29 @@ export class SQLiteDataManager {
 
   /**
    * migrateDatabase – Runs migration queries to update the database schema.
-   * Ensures that all required tables exist.
+   * Ensures that all required tables exist and that old `diary` is renamed.
    *
-   * @param {SQL.Database} dbInstance - The SQL.js database instance.
+   * @param {SQL.Database} dbInstance – The SQL.js database instance.
    */
   migrateDatabase(dbInstance) {
+    // try to rename old diary table into messenger_entries
+    try {
+      dbInstance.run("ALTER TABLE diary RENAME TO messenger_entries;");
+    } catch (e) {
+      console.warn("Table 'diary' not found or already renamed, skipping.", e);
+    }
+
+    // create messenger_entries with source column instead of separate chat table
     dbInstance.run(`
-      CREATE TABLE IF NOT EXISTS diary (
+      CREATE TABLE IF NOT EXISTS messenger_entries (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        entry TEXT,
-        timestamp TEXT
+        entry TEXT NOT NULL,
+        source TEXT NOT NULL DEFAULT 'ghost',
+        timestamp TEXT NOT NULL
       );
+      CREATE INDEX IF NOT EXISTS idx_messenger_timestamp
+        ON messenger_entries(timestamp);
+
       CREATE TABLE IF NOT EXISTS apartment_plan (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         floor_number INTEGER,
@@ -118,12 +130,6 @@ export class SQLiteDataManager {
         status TEXT,
         current_stage INTEGER,
         total_stages INTEGER
-      );
-      CREATE TABLE IF NOT EXISTS chat_messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        sender TEXT,
-        message TEXT,
-        timestamp TEXT
       );
     `);
   }

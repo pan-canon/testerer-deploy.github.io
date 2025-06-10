@@ -32,6 +32,26 @@ export class DatabaseManager {
   }
 
   /**
+   * createRecord – Inserts a record into any table.
+   * @param {string} tableName – Name of the target table.
+   * @param {Object} record – An object of { columnName: value, ... }.
+   * @returns {Promise<number>} – Last inserted row ID.
+   */
+  async createRecord(tableName, record) {
+    const columns = Object.keys(record);
+    const placeholders = columns.map((_, i) => `$${i + 1}`);
+    const values = Object.values(record);
+    const sql = `
+      INSERT INTO ${tableName}
+        (${columns.join(', ')})
+      VALUES
+        (${placeholders.join(', ')})
+    `;
+    const result = await this.db.run(sql, values);
+    return result.lastID;
+  }
+
+  /**
    * initDatabase – Asynchronously initializes the database.
    * Restores the database from persistence if available;
    * otherwise creates a new database instance and sets up the required tables.
@@ -87,31 +107,17 @@ export class DatabaseManager {
   }
 
   /**
-   * getDiaryEntries – Returns an array of diary entries sorted by descending timestamp.
-   * Each entry is parsed from JSON, so that the "entry" property can be used for comparisons.
-   *
-   * @returns {Array} Array of entry objects: { id, entry, postClass, timestamp }.
+   * getMessengerEntries – Retrieves all messages from messenger_entries.
+   * @returns {Promise<Array>} – Array of row objects with { id, entry, source, timestamp }.
    */
-  getDiaryEntries() {
-    if (!this.db) {
-      ErrorManager.logError("Database not initialized!", "getDiaryEntries");
-      return [];
-    }
-    const result = this.db.exec("SELECT * FROM diary ORDER BY timestamp DESC");
-    if (result.length > 0) {
-      return result[0].values.map(row => {
-        let parsed;
-        try {
-          parsed = JSON.parse(row[1]);
-        } catch (e) {
-          // Fallback: if parsing fails, assume a plain entry.
-          parsed = { entry: row[1], postClass: "user-post" };
-          ErrorManager.logError(e, "getDiaryEntries JSON.parse");
-        }
-        return { id: row[0], ...parsed, timestamp: row[2] };
-      });
-    }
-    return [];
+  async getMessengerEntries() {
+    const sql = `
+      SELECT id, entry, source, timestamp
+      FROM messenger_entries
+      ORDER BY timestamp DESC
+    `;
+    const rows = await this.db.all(sql);
+    return rows;
   }
 
   /**
@@ -318,46 +324,5 @@ export class DatabaseManager {
       };
     }
     return null;
-  }
-
-  // ===== New Methods for Chat Integration =====
-
-  /**
-   * addChatMessage – Inserts a new chat message record into the chat_messages table.
-   *
-   * @param {string} sender - The sender of the message (e.g., 'user' or 'spirit').
-   * @param {string} message - The chat message text.
-   * @param {string} [timestamp] - Optional timestamp; if not provided, current ISO string is used.
-   */
-  addChatMessage(sender, message, timestamp = new Date().toISOString()) {
-    if (!this.db) {
-      ErrorManager.logError("Database not initialized!", "addChatMessage");
-      return;
-    }
-    this.db.run("INSERT INTO chat_messages (sender, message, timestamp) VALUES (?, ?, ?)", [sender, message, timestamp]);
-    console.log(`✅ Chat message added: [${sender}] ${message}`);
-    this.saveDatabase();
-  }
-
-  /**
-   * getChatMessages – Retrieves all chat message records from the chat_messages table.
-   *
-   * @returns {Array} Array of chat message objects: { id, sender, message, timestamp }.
-   */
-  getChatMessages() {
-    if (!this.db) {
-      ErrorManager.logError("Database not initialized!", "getChatMessages");
-      return [];
-    }
-    const result = this.db.exec("SELECT * FROM chat_messages ORDER BY timestamp ASC");
-    if (result.length > 0) {
-      return result[0].values.map(row => ({
-        id: row[0],
-        sender: row[1],
-        message: row[2],
-        timestamp: row[3]
-      }));
-    }
-    return [];
   }
 }

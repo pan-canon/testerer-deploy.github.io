@@ -104,15 +104,6 @@ export class ViewManager {
         this.exportProfile(app);
       });
     }
-    const chatBtn = document.getElementById("chat-btn");
-    if (chatBtn) {
-      chatBtn.addEventListener("click", () => {
-        console.log("Chat button clicked. Triggering toggleChat().");
-        this.toggleChat(app);
-      });
-    } else {
-      console.error("Chat button (id='chat-btn') not found in the DOM.");
-    }
 
     // >>> Add missing event listener for the Post button.
     if (this.postBtn) {
@@ -321,14 +312,6 @@ export class ViewManager {
         }
         console.log(`[ViewManager] Controls panel updated for group: ${buttonsGroupId}`);
       }
-    }
-
-    // Make the chat button visible
-    const chatContainer = document.getElementById("chat-button-container");
-    if (chatContainer) {
-      chatContainer.style.display = 'flex';
-      chatContainer.style.pointerEvents = 'auto';
-      console.log("[ViewManager] Chat button container set to visible.");
     }
 
     // Show/hide the global language container depending on the screen
@@ -1035,18 +1018,6 @@ export class ViewManager {
     app.profileManager.importProfileData(file, app.databaseManager, app.apartmentPlanManager);
   }
 
-  toggleChat(app) {
-    if (app.chatManager && app.chatManager.container) {
-      if (app.chatManager.container.style.display === 'block') {
-        app.chatManager.hide();
-      } else {
-        app.chatManager.show();
-      }
-    } else {
-      console.error("ChatManager is not initialized or chat container not found.");
-    }
-  }
-
   showLocationTypeModal(onConfirm, onCancel) {
     const modalOverlay = document.createElement("div");
     modalOverlay.id = "location-type-modal-overlay";
@@ -1133,6 +1104,11 @@ export class ViewManager {
    */
   renderDiary(entries, currentLanguage, visualEffectsManager) {
     if (!this.diaryContainer) {
+    // ensure each entry has CSS-class based on its source
+    entries = entries.map(e => ({
+      ...e,
+      postClass: e.source === 'ghost' ? 'ghost-post' : 'user-post'
+    }));
       console.error("Diary container not set. Cannot render diary entries.");
       return;
     }
@@ -1192,7 +1168,12 @@ export class ViewManager {
    */
   async loadLatestDiaryPosts(limit = 3) {
     // Получаем все записи
-    const entries = await this.app.databaseManager.getDiaryEntries();
+    const rawEntries = await this.app.databaseManager.getMessengerEntries();
+    // вычисляем CSS-класс для каждого поста
+    const entries = rawEntries.map(e => ({
+      ...e,
+      postClass: e.source === 'ghost' ? 'ghost-post' : 'user-post'
+    }));
     // Сортируем по timestamp: от новых к старым
     entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     // Берём первые `limit` самых свежих
@@ -1247,7 +1228,12 @@ export class ViewManager {
 
   async loadEarlierDiaryPosts(step = 3) {
     const displayed = this.diaryContainer.querySelectorAll('.diary-entry').length;
-    const allEntries = await this.app.databaseManager.getDiaryEntries();
+    const rawEntries = await this.app.databaseManager.getMessengerEntries();
+    // вычисляем CSS-класс для каждого поста
+    const allEntries = rawEntries.map(e => ({
+      ...e,
+      postClass: e.source === 'ghost' ? 'ghost-post' : 'user-post'
+    }));
     // Сортируем от новых к старым
     allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     // Берём следующий кусок

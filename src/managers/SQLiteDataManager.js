@@ -90,6 +90,12 @@ export class SQLiteDataManager {
       console.warn("Table 'diary' not found or already renamed, skipping.", e);
     }
 
+    try {
+      dbInstance.run("ALTER TABLE messenger_entries ADD COLUMN source TEXT NOT NULL DEFAULT 'ghost';");
+    } catch (e) {
+      console.warn("Column 'source' already exists or messenger_entries missing, skipping.", e);
+    }
+
     // create messenger_entries with source column instead of separate chat table
     dbInstance.run(`
       CREATE TABLE IF NOT EXISTS messenger_entries (

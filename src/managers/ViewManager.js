@@ -30,6 +30,7 @@ export class ViewManager {
     this.toggleDiaryBtn = document.getElementById("toggle-diary");
     this.resetDataBtn = document.getElementById("reset-data");
     this.exportProfileBtn = document.getElementById("export-profile-btn");
+    this.importProfileBtn = document.getElementById("import-profile-btn");
     this.updateBtn = document.getElementById("update-btn");
     
     // Initially, we assign the diaryContainer from the hidden placeholder
@@ -98,6 +99,16 @@ export class ViewManager {
         this.updateServiceWorker();
       });
     }
+
+    if (this.importProfileBtn) {
+      this.importProfileBtn.addEventListener("click", () => {
+        console.log("📥 Import Profile button clicked");
+        this.importProfile(this.app);
+      });
+    } else {
+      console.error("❌ #import-profile-btn not found in the DOM.");
+    }
+
     if (this.exportProfileBtn) {
       this.exportProfileBtn.addEventListener("click", () => {
         console.log("Export Profile button clicked.");

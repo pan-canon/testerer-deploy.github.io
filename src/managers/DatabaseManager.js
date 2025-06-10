@@ -52,6 +52,28 @@ export class DatabaseManager {
   }
 
   /**
+   * addMessengerEntry – Inserts a new message into messenger_entries table.
+   *
+   * @param {string} entryKey – localization key or raw text.
+   * @param {string} source – 'ghost' or 'user'.
+   * @returns {Promise<number>} – ID of the inserted row.
+   */
+  async addMessengerEntry(entryKey, source = 'ghost') {
+    // timestamp we attach automatically
+    const timestamp = new Date().toISOString();
+    const record = {
+      entry: entryKey,
+      source: source,
+      timestamp: timestamp
+    };
+    const id = await this.createRecord('messenger_entries', record);
+    console.log("✅ Messenger entry inserted with ID", id);
+    // persist DB immediately
+    await this.saveDatabase();
+    return id;
+  }
+
+  /**
    * initDatabase – Asynchronously initializes the database.
    * Restores the database from persistence if available;
    * otherwise creates a new database instance and sets up the required tables.
@@ -86,24 +108,6 @@ export class DatabaseManager {
     const base64 = btoa(binaryStr);
     await this.dataManager.saveDatabase(base64);
     console.log("Database saved (persisted) successfully.");
-  }
-
-  /**
-   * addDiaryEntry – Adds a new entry to the diary table.
-   * The entry is stored as a JSON string containing an "entry" property and a "postClass" property.
-   * This format ensures that isEventLogged (which checks the "entry" field) works correctly.
-   *
-   * @param {string} entry - The text of the entry (usually a key or message).
-   */
-  async addDiaryEntry(entry) {
-    if (!this.db) {
-      ErrorManager.logError("Database not initialized!", "addDiaryEntry");
-      return;
-    }
-    const timestamp = new Date().toISOString();
-    this.db.run("INSERT INTO diary (entry, timestamp) VALUES (?, ?)", [entry, timestamp]);
-    console.log("✅ Entry added:", entry);
-    await this.saveDatabase();
   }
 
   /**

@@ -159,21 +159,38 @@ export class ProfileManager {
    * @param {Object} databaseManager - The database manager.
    * @param {Object} apartmentPlanManager - The apartment plan manager.
    */
-  importProfileData(file, databaseManager, apartmentPlanManager) {
+  importProfileData(fileOrEvent, databaseManager, apartmentPlanManager) {
+    // 1. Figure out if we got an Event (from <input>) or a File directly
+    let file = fileOrEvent;
+    if (fileOrEvent && fileOrEvent.target && fileOrEvent.target.files) {
+      file = fileOrEvent.target.files[0];
+    }
+
+    // 2. Bail out if no file
+    if (!file) {
+      alert("No file selected for import.");
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = async (e) => {
       try {
         const importedData = JSON.parse(e.target.result);
-        // Validate essential profile fields.
-        if (!importedData.profile || !importedData.profile.name || !importedData.profile.gender ||
-            !importedData.profile.selfie || !importedData.profile.language) {
+
+        // 3. Validate essential profile fields
+        if (!importedData.profile
+            || !importedData.profile.name
+            || !importedData.profile.gender
+            || !importedData.profile.selfie
+            || !importedData.profile.language) {
           alert("Invalid profile file. Required profile fields are missing.");
           return;
         }
-        // Save the profile via DataManager.
-        this.saveProfile(importedData.profile);
 
-        // Import diary entries.
+        // 4. Await profile save
+        await this.saveProfile(importedData.profile);
+
+        // 5. Import diary entries
         if (importedData.diary && Array.isArray(importedData.diary)) {
           for (const entry of importedData.diary) {
             if (entry.entry && entry.timestamp) {
@@ -186,28 +203,27 @@ export class ProfileManager {
           }
         }
 
-        // Import apartment plan data, if available.
-        if (importedData.apartment && Array.isArray(importedData.apartment)) {
-          if (apartmentPlanManager) {
-            apartmentPlanManager.rooms = importedData.apartment;
-            apartmentPlanManager.renderRooms();
-          }
-        }
-  
-        // Import quest progress.
-        if (importedData.quests && Array.isArray(importedData.quests)) {
-          importedData.quests.forEach(progress => {
-            if (progress.quest_key && progress.status) {
-              databaseManager.addQuestProgress(progress.quest_key, progress.status);
-            }
-          });
+        // 6. Import apartment plan
+        if (importedData.apartment && Array.isArray(importedData.apartment) && apartmentPlanManager) {
+          apartmentPlanManager.rooms = importedData.apartment;
+          apartmentPlanManager.renderRooms();
         }
 
-        // Clear transient state keys using StateManager.
+        // 7. Import quest progress
+        if (importedData.quests && Array.isArray(importedData.quests)) {
+          for (const progress of importedData.quests) {
+            if (progress.quest_key && progress.status) {
+              // await in case order matters before reload
+              await databaseManager.addQuestProgress(progress.quest_key, progress.status);
+            }
+          }
+        }
+
+        // 8. Clear transient state keys
         StateManager.remove("cameraButtonActive");
         StateManager.remove("shootButtonActive");
         StateManager.remove("quest_state_repeating_quest");
-  
+
         alert("Profile imported successfully. Reloading page.");
         window.location.reload();
       } catch (err) {
@@ -215,6 +231,8 @@ export class ProfileManager {
         alert("Error parsing the profile file.");
       }
     };
+
+    // start reading
     reader.readAsText(file);
   }
 

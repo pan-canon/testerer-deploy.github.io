@@ -92,6 +92,12 @@ document.addEventListener('DOMContentLoaded', () => {
       let beforeUnloadHandler = null;
 
       async function fullSWUpdate() {
+        // If Service Worker API is unavailable, bail out immediately.
+        if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
+          console.warn('⚠️ Service Worker is not supported or disabled in this environment; update aborted.');
+          return;
+        }
+
         if (isUpdating) return;
         isUpdating = true;
 

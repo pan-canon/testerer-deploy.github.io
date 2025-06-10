@@ -46,16 +46,15 @@ export class BaseEvent {
   }
 
   /**
-   * addDiaryEntry - Convenience method to add a diary entry.
-   * Delegates the addition to the eventManager.
+   * addDiaryEntry – Convenience method to add a messenger entry.
+   * Delegates the addition to the eventManager's addMessengerEntry.
    *
-   * @param {string} text - The text of the entry to be added to the diary.
-   * @param {boolean} [isGhostPost=false] - Flag indicating if this is a ghost post.
-   * @returns {Promise<void>} Asynchronous execution.
+   * @param {string} text – The text key or raw text.
+   * @param {boolean} [isGhostPost=false] – true for ghost posts.
    */
   async addDiaryEntry(text, isGhostPost = false) {
     try {
-      await this.eventManager.addDiaryEntry(text, isGhostPost);
+      await this.eventManager.addMessengerEntry(text, isGhostPost);
     } catch (error) {
       ErrorManager.logError(error, "BaseEvent.addDiaryEntry");
       ErrorManager.showError("An error occurred while adding a diary entry.");

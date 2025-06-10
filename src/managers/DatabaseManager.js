@@ -108,16 +108,28 @@ export class DatabaseManager {
 
   /**
    * getMessengerEntries – Retrieves all messages from messenger_entries.
-   * @returns {Promise<Array>} – Array of row objects with { id, entry, source, timestamp }.
+   * Uses db.exec() to fetch rows since SQL.js does not support .all().
+   *
+   * @returns {Promise<Array>} – Array of row objects: { id, entry, source, timestamp }.
    */
   async getMessengerEntries() {
     const sql = `
       SELECT id, entry, source, timestamp
       FROM messenger_entries
-      ORDER BY timestamp DESC
+      ORDER BY timestamp DESC;
     `;
-    const rows = await this.db.all(sql);
-    return rows;
+    const result = this.db.exec(sql);
+    // result is an array of result sets; take the first one
+    if (result.length === 0 || !result[0].values) {
+      return [];
+    }
+    // Map each row array to an object
+    return result[0].values.map(row => ({
+      id:        row[0],
+      entry:     row[1],
+      source:    row[2],
+      timestamp: row[3]
+    }));
   }
 
   /**

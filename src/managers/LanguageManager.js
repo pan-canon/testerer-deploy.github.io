@@ -2,11 +2,7 @@
 import baseLocales from '../locales/locales.js';
 
 // Merge base locales for each language
-const mergedLocales = {
-  en: { ...baseLocales.en },
-  ru: { ...baseLocales.ru },
-  uk: { ...baseLocales.uk }
-};
+const mergedLocales = { ...baseLocales };
 
 /**
  * LanguageManager is responsible for managing localization in the application.

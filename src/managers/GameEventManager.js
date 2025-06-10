@@ -20,7 +20,6 @@ export class GameEventManager {
    * @param {LanguageManager} languageManager - Localization manager.
    */
   constructor(eventManager, appInstance, languageManager) {
-    // Use the passed-in eventManager and appInstance directly
     this.eventManager    = eventManager;
     this.app             = appInstance;
     this.languageManager = languageManager;

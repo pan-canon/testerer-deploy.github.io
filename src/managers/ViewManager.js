@@ -1104,11 +1104,6 @@ export class ViewManager {
    */
   renderDiary(entries, currentLanguage, visualEffectsManager) {
     if (!this.diaryContainer) {
-    // ensure each entry has CSS-class based on its source
-    entries = entries.map(e => ({
-      ...e,
-      postClass: e.source === 'ghost' ? 'ghost-post' : 'user-post'
-    }));
       console.error("Diary container not set. Cannot render diary entries.");
       return;
     }
@@ -1168,12 +1163,7 @@ export class ViewManager {
    */
   async loadLatestDiaryPosts(limit = 3) {
     // Получаем все записи
-    const rawEntries = await this.app.databaseManager.getMessengerEntries();
-    // вычисляем CSS-класс для каждого поста
-    const entries = rawEntries.map(e => ({
-      ...e,
-      postClass: e.source === 'ghost' ? 'ghost-post' : 'user-post'
-    }));
+    const entries = await this.app.databaseManager.getDiaryEntries();
     // Сортируем по timestamp: от новых к старым
     entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     // Берём первые `limit` самых свежих
@@ -1228,12 +1218,7 @@ export class ViewManager {
 
   async loadEarlierDiaryPosts(step = 3) {
     const displayed = this.diaryContainer.querySelectorAll('.diary-entry').length;
-    const rawEntries = await this.app.databaseManager.getMessengerEntries();
-    // вычисляем CSS-класс для каждого поста
-    const allEntries = rawEntries.map(e => ({
-      ...e,
-      postClass: e.source === 'ghost' ? 'ghost-post' : 'user-post'
-    }));
+    const allEntries = await this.app.databaseManager.getDiaryEntries();
     // Сортируем от новых к старым
     allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     // Берём следующий кусок

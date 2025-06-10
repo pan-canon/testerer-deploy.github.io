@@ -30,7 +30,7 @@ export class FinalEvent extends BaseEvent {
   }
 
   async activate() {
-    if (await this.eventManager.isEventLogged(this.key)) {
+    if (this.eventManager.isEventLogged(this.key)) {
       console.log(`Event '${this.key}' is already logged, skipping activation.`);
       return;
     }

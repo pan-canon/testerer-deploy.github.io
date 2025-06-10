@@ -23,9 +23,7 @@ import { ShowProfileModal } from './managers/ShowProfileModal.js';
 
 /**
  * Main application class.
- * This class initializes core managers, sets up the UI,
- * loads persisted state, and launches the test chat section ("support").
- *
+ * This class initializes core managers, sets up the UI, loads persisted state.
  */
 export class App {
   constructor(deps = {}) {
@@ -69,9 +67,6 @@ export class App {
       this.languageManager
     );
 
-    // Provide GameEventManager to GhostManager so it can activate events
-    this.ghostManager.gameEventManager = this.gameEventManager;
-
     // Now pass GameEventManager into QuestManager (so activateEvent is available).
     this.questManager = deps.questManager || new QuestManager(
       this.eventManager,
@@ -99,7 +94,6 @@ export class App {
 
   /**
    * Initializes the application.
-   * Among other tasks, this method launches the support chat section.
    */
   async init() {
     await this.databaseManager.initDatabasePromise;

@@ -36,7 +36,7 @@ export class PostRepeatingEvent extends BaseEvent {
    */
   async activate(dynamicKey) {
     const eventKey = dynamicKey || this.key;
-    if (await this.eventManager.isEventLogged(eventKey)) {
+    if (this.eventManager.isEventLogged(eventKey)) {
       console.log(`[PostRepeatingEvent] Event '${eventKey}' is already logged, skipping activation.`);
       return;
     }

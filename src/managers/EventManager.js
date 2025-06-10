@@ -34,53 +34,61 @@ export class EventManager {
    * @param {string} eventKey - The event key to check.
    * @returns {boolean} True if the event is already logged, otherwise false.
    */
-  async isEventLogged(eventKey) {
-    const entries = await this.databaseManager.getMessengerEntries();
+  isEventLogged(eventKey) {
+    const entries = this.databaseManager.getDiaryEntries();
     // Compare the stored entry key with the provided key.
     return entries.some(entry => entry.entry === eventKey);
   }
 
   /**
-   * addMessengerEntry – Adds a new message into messenger_entries.
+   * addDiaryEntry
+   * Adds an entry to the diary. It constructs an object with the entry text and post type,
+   * serializes it as JSON, and saves it to the database. If the entry represents a system event
+   * (e.g., from a ghost), it is additionally saved to the events table.
    *
-   * @param {string} entryKey – localization key or raw text.
-   * @param {boolean} [isPostFromGhost=false] – true for ghost messages.
+   * After saving, it delegates the UI update (diary rendering) to the ViewManager.
+   * Then, it calls the centralized visual effects method to animate the newly added entry.
+   *
+   * @param {string} entry - The text of the diary entry.
+   * @param {boolean} [isPostFromGhost=false] - Flag to mark the entry as a ghost post.
    */
-  async addMessengerEntry(entryKey, isPostFromGhost = false) {
-    // determine source and postClass for UI
-    const source = isPostFromGhost ? 'ghost' : 'user';
-    const postClass = isPostFromGhost ? 'ghost-post' : 'user-post';
+  async addDiaryEntry(entry, isPostFromGhost = false) {
+    // Determine post class based on the source.
+    const postClass = isPostFromGhost ? "ghost-post" : "user-post";
+    const entryData = { entry, postClass };
+    const serializedEntry = JSON.stringify(entryData);
 
-    // 1) save into messenger_entries via DatabaseManager
-    await this.databaseManager.addMessengerEntry(entryKey, source);
+    // Save the diary entry to the database.
+    await this.databaseManager.addDiaryEntry(serializedEntry);
 
-    // 2) if ghost event, also record in events table
+    // If this is a system event (ghost post), also record it in the events table.
     if (isPostFromGhost) {
       const eventData = {
-        event_key:  entryKey,
-        event_text: entryKey,
-        timestamp:  new Date().toISOString(),
-        completed:  0
+        event_key: entry,
+        event_text: entry,
+        timestamp: new Date().toISOString(),
+        completed: 0
       };
-      await this.databaseManager.saveEvent(eventData);
+      this.databaseManager.saveEvent(eventData);
     }
 
-    // 3) UI update via ViewManager
+    // Delegate UI update of the diary to the ViewManager.
     if (this.viewManager?.addSingleDiaryPost) {
       this.viewManager.addSingleDiaryPost({
-        text:       entryKey,
-        img:        entryKey.startsWith('data:image') ? entryKey : '',
-        timestamp:  new Date().toLocaleString(),
+        text: entry,               // original message
+        img: entry.startsWith("data:image") ? entry : "", // best‑effort
+        timestamp: new Date().toLocaleString(),
         postClass
       });
     } else {
       this.updateDiaryDisplay();
     }
 
-    // 4) apply visual effects to newly added entries
-    if (this.viewManager?.diaryContainer && this.visualEffectsManager) {
-      const newEntries = this.viewManager.diaryContainer
-        .querySelectorAll('[data-animate-on-board="true"]');
+    // After updating the diary display, apply visual effects to newly added diary entries.
+    // It is expected that the rendered diary entries have the attribute data-animate-on-board="true"
+    // if they need to be animated.
+    if (this.viewManager && this.visualEffectsManager && this.viewManager.diaryContainer) {
+      const newEntries = this.viewManager.diaryContainer.querySelectorAll('[data-animate-on-board="true"]');
       this.visualEffectsManager.applyEffectsToNewElements(newEntries);
     }
   }
@@ -90,9 +98,9 @@ export class EventManager {
    * Retrieves diary entries from the database and instructs the ViewManager
    * to render them. Uses the current language from the LanguageManager.
    */
-  async updateDiaryDisplay() {
+  updateDiaryDisplay() {
     if (this.viewManager && typeof this.viewManager.renderDiary === 'function') {
-      const entries = await this.databaseManager.getMessengerEntries();
+      const entries = this.databaseManager.getDiaryEntries();
       const currentLanguage = this.languageManager.getLanguage();
       // Delegate rendering of the diary entries to the ViewManager.
       this.viewManager.renderDiary(entries, currentLanguage, this.visualEffectsManager);

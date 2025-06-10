@@ -96,7 +96,7 @@ export class ProfileManager {
 
   /**
    * exportProfileData – Exports the profile along with diary entries, apartment plan,
-   * quest progress, and chat messages to a JSON file.
+   * and quest progress to a JSON file.
    * @param {Object} databaseManager - The database manager for retrieving diary, quest, and chat data.
    * @param {Object} apartmentPlanManager - The apartment plan manager.
    */
@@ -116,8 +116,6 @@ export class ProfileManager {
 
       // Retrieve diary entries.
       const diaryEntries = databaseManager.getDiaryEntries();
-      // Retrieve chat messages.
-      const chatMessages = databaseManager.getChatMessages();
       // Retrieve apartment plan data if available.
       const apartmentPlanData = apartmentPlanManager ? apartmentPlanManager.rooms : [];
       
@@ -137,8 +135,7 @@ export class ProfileManager {
         profile: filteredProfile,
         diary: diaryEntries,
         apartment: apartmentPlanData,
-        quests: questProgressData,
-        chat: chatMessages
+        quests: questProgressData
       };
   
       // Create a Blob from the JSON string.
@@ -156,14 +153,15 @@ export class ProfileManager {
 
   /**
    * importProfileData – Imports profile data from the selected JSON file.
-   * After import, updates the profile, diary, apartment plan, quest progress, and chat messages, then reloads the page.
+   * After import, updates the profile, diary, apartment plan, and quest progress,
+   * then reloads the page.
    * @param {File} file - The file containing the profile data.
    * @param {Object} databaseManager - The database manager.
    * @param {Object} apartmentPlanManager - The apartment plan manager.
    */
   importProfileData(file, databaseManager, apartmentPlanManager) {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const importedData = JSON.parse(e.target.result);
         // Validate essential profile fields.
@@ -174,20 +172,20 @@ export class ProfileManager {
         }
         // Save the profile via DataManager.
         this.saveProfile(importedData.profile);
-  
+
         // Import diary entries.
         if (importedData.diary && Array.isArray(importedData.diary)) {
-          importedData.diary.forEach(entry => {
+          for (const entry of importedData.diary) {
             if (entry.entry && entry.timestamp) {
-              databaseManager.db.run(
-                "INSERT INTO diary (entry, timestamp) VALUES (?, ?)",
-                [entry.entry, entry.timestamp]
+              await databaseManager.insertOrUpdate(
+                'diary',
+                { entry: entry.entry, timestamp: entry.timestamp }
               );
+              console.log('✅ Diary entry imported:', entry);
             }
-          });
-          databaseManager.saveDatabase();
+          }
         }
-  
+
         // Import apartment plan data, if available.
         if (importedData.apartment && Array.isArray(importedData.apartment)) {
           if (apartmentPlanManager) {
@@ -204,20 +202,7 @@ export class ProfileManager {
             }
           });
         }
-  
-        // Import chat messages.
-        if (importedData.chat && Array.isArray(importedData.chat)) {
-          importedData.chat.forEach(msg => {
-            if (msg.sender && msg.message && msg.timestamp) {
-              databaseManager.db.run(
-                "INSERT INTO chat_messages (sender, message, timestamp) VALUES (?, ?, ?)",
-                [msg.sender, msg.message, msg.timestamp]
-              );
-            }
-          });
-          databaseManager.saveDatabase();
-        }
-  
+
         // Clear transient state keys using StateManager.
         StateManager.remove("cameraButtonActive");
         StateManager.remove("shootButtonActive");

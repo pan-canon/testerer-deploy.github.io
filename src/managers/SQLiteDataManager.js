@@ -42,7 +42,7 @@ export class SQLiteDataManager {
    *
    * After restoration or creation, migration queries are executed
    * to ensure that all required tables (diary, apartment_plan, quest_progress,
-   * ghosts, events, quests, chat_messages) exist.
+   * ghosts, events, quests) exist.
    *
    * @param {Object} SQL - The SQL.js module.
    * @returns {Promise<SQL.Database>} Resolves to the SQL.js database instance.
@@ -66,7 +66,11 @@ export class SQLiteDataManager {
     }
 
     // Run migration queries to ensure all required tables exist.
-    this.migrateDatabase(dbInstance);
+    try {
+      this.migrateDatabase(dbInstance);
+    } catch (err) {
+      console.warn("⚠️ Database migration warning (ignored):", err);
+    }
 
     if (!savedDbBase64) {
       console.log("New database created and tables initialized.");
@@ -118,12 +122,6 @@ export class SQLiteDataManager {
         status TEXT,
         current_stage INTEGER,
         total_stages INTEGER
-      );
-      CREATE TABLE IF NOT EXISTS chat_messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        sender TEXT,
-        message TEXT,
-        timestamp TEXT
       );
     `);
   }

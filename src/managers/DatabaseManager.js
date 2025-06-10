@@ -12,7 +12,6 @@ import { ErrorManager } from './ErrorManager.js';
  * - Ghost states
  * - Events
  * - Quests
- * - Chat messages (new)
  *
  * It uses SQLiteDataManager for persistence (IndexedDB) and ensures that
  * entries (such as diary entries) are stored in a way that the event key checks
@@ -69,6 +68,36 @@ export class DatabaseManager {
   }
 
   /**
+   * insertOrUpdate – Performs a generic INSERT or INSERT OR REPLACE into any table.
+   *
+   * @param {string} tableName – Name of the table.
+   * @param {Object} data – Key/value pairs matching columns and their values.
+   * @param {Object} [options] – Optional flags.
+   * @param {boolean} [options.replace=false] – If true, uses INSERT OR REPLACE.
+   */
+  async insertOrUpdate(tableName, data, options = {}) {
+    if (!this.db) {
+      ErrorManager.logError("Database not initialized!", "insertOrUpdate");
+      return;
+    }
+    const columns = Object.keys(data);
+    const placeholders = columns.map(() => '?').join(', ');
+    const values = Object.values(data);
+    const verb = options.replace ? 'INSERT OR REPLACE' : 'INSERT';
+    const sql = `${verb} INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`;
+    try {
+      this.db.run(sql, values);
+      await this.saveDatabase();
+    } catch (err) {
+      if (err.message && err.message.includes("no such table")) {
+        console.warn(`⚠️ Skipping write to missing table "${tableName}"`);
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  /**
    * addDiaryEntry – Adds a new entry to the diary table.
    * The entry is stored as a JSON string containing an "entry" property and a "postClass" property.
    * This format ensures that isEventLogged (which checks the "entry" field) works correctly.
@@ -81,9 +110,8 @@ export class DatabaseManager {
       return;
     }
     const timestamp = new Date().toISOString();
-    this.db.run("INSERT INTO diary (entry, timestamp) VALUES (?, ?)", [entry, timestamp]);
+    await this.insertOrUpdate('diary', { entry, timestamp });
     console.log("✅ Entry added:", entry);
-    await this.saveDatabase();
   }
 
   /**
@@ -120,14 +148,13 @@ export class DatabaseManager {
    * @param {string} questKey - The key of the quest.
    * @param {string} status - The status of the quest.
    */
-  addQuestProgress(questKey, status) {
+  async addQuestProgress(questKey, status) {
     if (!this.db) {
       ErrorManager.logError("Database not initialized!", "addQuestProgress");
       return;
     }
-    this.db.run("INSERT INTO quest_progress (quest_key, status) VALUES (?, ?)", [questKey, status]);
+    await this.insertOrUpdate('quest_progress', { quest_key: questKey, status });
     console.log(`✅ Quest progress added: ${questKey} - ${status}`);
-    this.saveDatabase();
   }
 
   /**
@@ -154,16 +181,15 @@ export class DatabaseManager {
    * @param {number} floor - The floor number.
    * @param {Array} rooms - An array of room objects.
    */
-  addApartmentRooms(floor, rooms) {
+  async addApartmentRooms(floor, rooms) {
     if (!this.db) {
       ErrorManager.logError("Database not initialized!", "addApartmentRooms");
       return;
     }
     const roomData = JSON.stringify(rooms);
-    this.db.run("DELETE FROM apartment_plan WHERE floor_number = ?", [floor]);
-    this.db.run("INSERT INTO apartment_plan (floor_number, room_data) VALUES (?, ?)", [floor, roomData]);
+    // Replace existing plan for floor, then insert new
+    await this.insertOrUpdate('apartment_plan', { floor_number: floor, room_data: roomData }, { replace: true });
     console.log(`✅ Apartment plan for floor ${floor} saved.`);
-    this.saveDatabase();
   }
 
   /**
@@ -201,18 +227,20 @@ export class DatabaseManager {
    *
    * @param {Object} ghost - Ghost object containing id (optional), name, status, progress.
    */
-  saveGhostState(ghost) {
+  async saveGhostState(ghost) {
     if (!this.db) {
       ErrorManager.logError("Database not initialized!", "saveGhostState");
       return;
     }
-    this.db.run(
-      `INSERT OR REPLACE INTO ghosts (id, name, status, progress)
-       VALUES ((SELECT id FROM ghosts WHERE id = ?), ?, ?, ?)`,
-      [ghost.id || null, ghost.name, ghost.status || "", ghost.progress || 0]
-    );
+    // Upsert by id
+    const data = {
+      id: ghost.id || null,
+      name: ghost.name,
+      status: ghost.status || "",
+      progress: ghost.progress || 0
+    };
+    await this.insertOrUpdate('ghosts', data, { replace: true });
     console.log("✅ Ghost state saved:", ghost);
-    this.saveDatabase();
   }
 
   /**
@@ -239,18 +267,18 @@ export class DatabaseManager {
    *
    * @param {Object} eventData - Object with properties: event_key, event_text, timestamp, completed (0 or 1).
    */
-  saveEvent(eventData) {
+  async saveEvent(eventData) {
     if (!this.db) {
       ErrorManager.logError("Database not initialized!", "saveEvent");
       return;
     }
-    this.db.run(
-      `INSERT INTO events (event_key, event_text, timestamp, completed)
-       VALUES (?, ?, ?, ?)`,
-      [eventData.event_key, eventData.event_text, eventData.timestamp, eventData.completed ? 1 : 0]
-    );
+    await this.insertOrUpdate('events', {
+      event_key: eventData.event_key,
+      event_text: eventData.event_text,
+      timestamp: eventData.timestamp,
+      completed: eventData.completed ? 1 : 0
+    });
     console.log("✅ Event saved:", eventData);
-    this.saveDatabase();
   }
 
   /**
@@ -281,18 +309,25 @@ export class DatabaseManager {
    *
    * @param {Object} questData - Object with properties: quest_key, status, current_stage, total_stages.
    */
-  saveQuestRecord(questData) {
+  async saveQuestRecord(questData) {
     if (!this.db) {
       ErrorManager.logError("Database not initialized!", "saveQuestRecord");
       return;
     }
-    this.db.run(
-      `INSERT OR REPLACE INTO quests (id, quest_key, status, current_stage, total_stages)
-       VALUES ((SELECT id FROM quests WHERE quest_key = ?), ?, ?, ?, ?)`,
-      [questData.quest_key, questData.quest_key, questData.status, questData.current_stage, questData.total_stages]
+    // Upsert by quest_key
+    const existingIdResult = this.db.exec(
+      "SELECT id FROM quests WHERE quest_key = ?",
+      [questData.quest_key]
     );
+    const id = existingIdResult.length ? existingIdResult[0].values[0][0] : null;
+    await this.insertOrUpdate('quests', {
+      id,
+      quest_key: questData.quest_key,
+      status: questData.status,
+      current_stage: questData.current_stage,
+      total_stages: questData.total_stages
+    }, { replace: true });
     console.log("✅ Quest record saved:", questData);
-    this.saveDatabase();
   }
 
   /**
@@ -318,46 +353,5 @@ export class DatabaseManager {
       };
     }
     return null;
-  }
-
-  // ===== New Methods for Chat Integration =====
-
-  /**
-   * addChatMessage – Inserts a new chat message record into the chat_messages table.
-   *
-   * @param {string} sender - The sender of the message (e.g., 'user' or 'spirit').
-   * @param {string} message - The chat message text.
-   * @param {string} [timestamp] - Optional timestamp; if not provided, current ISO string is used.
-   */
-  addChatMessage(sender, message, timestamp = new Date().toISOString()) {
-    if (!this.db) {
-      ErrorManager.logError("Database not initialized!", "addChatMessage");
-      return;
-    }
-    this.db.run("INSERT INTO chat_messages (sender, message, timestamp) VALUES (?, ?, ?)", [sender, message, timestamp]);
-    console.log(`✅ Chat message added: [${sender}] ${message}`);
-    this.saveDatabase();
-  }
-
-  /**
-   * getChatMessages – Retrieves all chat message records from the chat_messages table.
-   *
-   * @returns {Array} Array of chat message objects: { id, sender, message, timestamp }.
-   */
-  getChatMessages() {
-    if (!this.db) {
-      ErrorManager.logError("Database not initialized!", "getChatMessages");
-      return [];
-    }
-    const result = this.db.exec("SELECT * FROM chat_messages ORDER BY timestamp ASC");
-    if (result.length > 0) {
-      return result[0].values.map(row => ({
-        id: row[0],
-        sender: row[1],
-        message: row[2],
-        timestamp: row[3]
-      }));
-    }
-    return [];
   }
 }

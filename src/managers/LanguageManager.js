@@ -1,14 +1,11 @@
-// Import base locales and chat locales, then merge them
+// Import base locales, then merge them
 import baseLocales from '../locales/locales.js';
-import chatLocales_en from '../locales/chatLocales_en.js';
-import chatLocales_ru from '../locales/chatLocales_ru.js';
-import chatLocales_uk from '../locales/chatLocales_uk.js';
 
-// Merge base and chat locales for each language
+// Merge base locales for each language
 const mergedLocales = {
-  en: { ...baseLocales.en, ...chatLocales_en },
-  ru: { ...baseLocales.ru, ...chatLocales_ru },
-  uk: { ...baseLocales.uk, ...chatLocales_uk }
+  en: { ...baseLocales.en },
+  ru: { ...baseLocales.ru },
+  uk: { ...baseLocales.uk }
 };
 
 /**
@@ -29,7 +26,7 @@ export class LanguageManager {
    * - A change event listener is added to the selector to handle language switching.
    */
   constructor(selectorId) {
-    // Use merged locales (base + chat)
+    // Use merged locales (base)
     this.locales = mergedLocales;
 
     // Get the language selector element by its ID.

@@ -105,6 +105,68 @@
       z-index: 1100;
     }
     .active { box-shadow: 10px 5px 5px red; }
+
+/* --- styling for diary entries (feed) --- */
+#diary {
+  padding: 18px 26px 0 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-height: 370px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--fg2) var(--bg);
+}
+
+/* карточка поста */
+#diary .diary-entry {
+  display: flex;
+  align-items: flex-end;
+  max-width: 75%;
+  padding: 8px 12px 10px 12px;
+  background: #183524a0;
+  border: 1.8px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 0 8px 2px #1c301e88 inset;
+  color: var(--fg);
+  font-size: 1.04em;
+  position: relative;
+}
+
+/* текст и таймштамп */
+#diary .diary-entry p {
+  margin: 0;
+  font-size: 1.07em;
+}
+#diary .diary-entry .diary-timestamp {
+  margin-left: 8px;
+  color: var(--fg2);
+  font-size: 0.77em;
+}
+
+/* ghost-posts слева */
+#diary .ghost-post {
+  justify-content: flex-start;
+  align-self: flex-start;
+}
+
+/* user-posts справа */
+#diary .user-post {
+  justify-content: flex-end;
+  align-self: flex-end;
+}
+
+/* --- support for horizontal inversion (левша) --- */
+/* при добавлении класса .inverted на <body> поменяет стороны */
+body.inverted #diary .ghost-post {
+  justify-content: flex-end;
+  align-self: flex-end;
+}
+body.inverted #diary .user-post {
+  justify-content: flex-start;
+  align-self: flex-start;
+}
+
   </style>
 </head>
 <body>

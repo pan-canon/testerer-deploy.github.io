@@ -5,9 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>They're here</title>
   <link rel="manifest" href="manifest.json">
-  <!-- Include Bulma CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <style>
+    body {
+      margin: 0;
+      background-color: #0b0b10;
+      background-image:
+        linear-gradient(to right, rgba(102, 255, 102, 0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(102, 255, 102, 0.15) 1px, transparent 1px);
+      background-size: 32px 32px;
+      position: relative;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    /* 2. Виньетирование по углам */
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at top left,     rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 40%),
+        radial-gradient(circle at top right,    rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 40%),
+        radial-gradient(circle at bottom right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 40%),
+        radial-gradient(circle at bottom left,  rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 40%);
+    }
+
+    #controls-panel {
+      position: fixed;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2000;
+      padding: 0.5rem;
+      background: rgba(0,0,0,0.7);
+      border: 4px solid #66ff66;
+      border-radius: 12px;
+      box-shadow:
+        0 0 8px #66ff66,
+        inset 0 0 4px #66ff66;
+    }
+
     /* Preloader covers the full screen with a white background */
     #preloader {
       position: fixed;

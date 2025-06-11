@@ -96,5 +96,66 @@
       position: relative;
       z-index: 1100;
     }
-    .active { box-shadow: 10px 5px 5px red; }</style></head><body><div id="preloader"><div class="spinner"></div></div><div id="language-container" style="padding: 1rem; text-align: center;"><select id="language-selector"><option value="en">English</option><option value="ru">Русский</option><option value="uk">Українська</option></select></div><div id="global-content" class="container box"><section id="dummy-placeholder" style="display: none;"><div id="diary"></div></section></div><div id="global-camera"><div id="mirror-quest-status" style="display: none; position: absolute; top: 1rem; left: 50%; transform: translateX(-50%); 
+    .active { box-shadow: 10px 5px 5px red; }
+
+/* --- styling for diary entries (feed) --- */
+#diary {
+  padding: 18px 26px 0 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-height: 370px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--fg2) var(--bg);
+}
+
+/* карточка поста */
+#diary .diary-entry {
+  display: flex;
+  align-items: flex-end;
+  max-width: 75%;
+  padding: 8px 12px 10px 12px;
+  background: #183524a0;
+  border: 1.8px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 0 8px 2px #1c301e88 inset;
+  color: var(--fg);
+  font-size: 1.04em;
+  position: relative;
+}
+
+/* текст и таймштамп */
+#diary .diary-entry p {
+  margin: 0;
+  font-size: 1.07em;
+}
+#diary .diary-entry .diary-timestamp {
+  margin-left: 8px;
+  color: var(--fg2);
+  font-size: 0.77em;
+}
+
+/* ghost-posts слева */
+#diary .ghost-post {
+  justify-content: flex-start;
+  align-self: flex-start;
+}
+
+/* user-posts справа */
+#diary .user-post {
+  justify-content: flex-end;
+  align-self: flex-end;
+}
+
+/* --- support for horizontal inversion (левша) --- */
+/* при добавлении класса .inverted на <body> поменяет стороны */
+body.inverted #diary .ghost-post {
+  justify-content: flex-end;
+  align-self: flex-end;
+}
+body.inverted #diary .user-post {
+  justify-content: flex-start;
+  align-self: flex-start;
+}</style></head><body><div id="preloader"><div class="spinner"></div></div><div id="language-container" style="padding: 1rem; text-align: center;"><select id="language-selector"><option value="en">English</option><option value="ru">Русский</option><option value="uk">Українська</option></select></div><div id="global-content" class="container box"><section id="dummy-placeholder" style="display: none;"><div id="diary"></div></section></div><div id="global-camera"><div id="mirror-quest-status" style="display: none; position: absolute; top: 1rem; left: 50%; transform: translateX(-50%); 
                 background: rgba(0,0,0,0.5); color: #fff; padding: 0.5rem; z-index: 999;"></div><div class="camera-inner"><div id="camera-controls-overlay"></div></div></div><div id="controls-panel" class="box"><img id="selfie-thumbnail" src="" alt="Selfie Thumbnail" style="display: none; width: 50px; height: 50px; border-radius: 50%;"><div id="registration-buttons" class="buttons"><button class="button is-link" type="button" id="next-step-btn" data-i18n="next" disabled="disabled">Next</button> <button class="button is-info" type="button" id="import-profile-btn" data-i18n="import">Import Profile</button></div><div id="apartment-plan-buttons" class="buttons" style="display: none;"><button class="button" type="button" id="prev-floor-btn">Previous Floor</button> <button class="button" type="button" id="next-floor-btn">Next Floor</button> <button class="button is-link" type="button" id="apartment-plan-next-btn">Next</button></div><div id="selfie-buttons" class="buttons" style="display: none;"><button class="button is-primary" type="button" id="capture-btn" data-i18n="capture">Capture</button> <button class="button is-success" type="button" id="complete-registration" data-i18n="complete" disabled="disabled">Complete</button></div><div id="main-buttons" class="buttons" style="display: none;"><button class="button" id="post-btn" disabled="disabled">Post</button> <button class="button" type="button" id="btn_shoot" style="display: none;">Shoot</button> <button class="button" type="button" id="toggle-camera" data-i18n="open_camera">Open Camera</button> <button class="button" type="button" id="toggle-diary" data-i18n="open_diary">Open Diary</button> <button id="install-btn" style="display: none;" class="button is-primary">Add to Home Screen</button> <button class="button is-danger" type="button" id="reset-data" data-i18n="reset">Reset Data</button> <button class="button is-info" type="button" id="export-profile-btn" data-i18n="export">Export Profile</button> <button class="button is-warning" type="button" id="update-btn">Update</button></div></div><script type="module" src="main.min.js"></script></body></html>
